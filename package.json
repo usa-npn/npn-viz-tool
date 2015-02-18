@@ -1,0 +1,33 @@
+{
+  "name": "Regs-Dot-Gov-Directives",
+  "version": "0.1.0",
+  "description": "AngularJS Directives to pull data from proxied regs.gov web services.",
+  "author": "Paul Adams <paul@djcase.com>",
+  "private": true,
+  "devDependencies": {
+    "bower": "^1.3.12",
+    "grunt": "~0.4.0",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-concat": "*",
+    "grunt-contrib-copy": "*",
+    "grunt-contrib-cssmin": "*",
+    "grunt-contrib-jshint": "*",
+    "grunt-contrib-sass": "*",
+    "grunt-contrib-uglify": "*",
+    "grunt-contrib-watch": "*",
+    "grunt-cssc": "*",
+    "grunt-html2js": "*",
+    "grunt-htmlhint": "*",
+    "grunt-karma": "*",
+    "jasmine-core": "^2.1.3",
+    "karma-chrome-launcher": "^0.1.7",
+    "karma-coverage": "^0.2.7",
+    "karma-jasmine": "^0.3.3",
+    "matchdep": "*",
+    "mime-types": "^2.0.4",
+    "path": "^0.4.9",
+    "util": "^0.10.3",
+    "wrench": "^1.5.8",
+    "mime-types": "^2.0.4"
+  }
+}

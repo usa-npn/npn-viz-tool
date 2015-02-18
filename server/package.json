@@ -1,0 +1,11 @@
+{
+  "name": "Regs-Dot-Gov-Proxy",
+  "version": "0.1.0",
+  "description": "Simple HTTP Proxy to regulations.gov that caches responses for a time.",
+  "author": "Paul Adams <paul@djcase.com>",
+  "private": true,
+  "dependencies": {
+    "minimist": "*",
+    "node-static": "^0.7.6"
+  }
+}
