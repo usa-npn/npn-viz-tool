@@ -15,7 +15,14 @@ angular.module('npn-viz-tool.services',[
                 });
                 console.log('LayerService - layer list is loaded', layers);
             });
-        });
+        }),
+        baseStyle = {
+            strokeColor: '#ffffff',
+            strokeOpacity: null,
+            strokeWeight: 1,
+            fillColor: '#c0c5b8',
+            fillOpacity: null
+        };
     function loadLayerData(layer) {
         var def = $q.defer();
         if(layer.data) {
@@ -28,8 +35,26 @@ angular.module('npn-viz-tool.services',[
         }
         return def.promise;
     }
+    function restyleSync() {
+        map.data.setStyle(function(feature){
+            var overrides = feature.getProperty('$style');
+            if(overrides && typeof(overrides) === 'function') {
+                return overrides(feature);
+            }
+            return overrides ?
+                    angular.extend(baseStyle,overrides) : baseStyle;
+        });
+    }
 
     return {
+        restyleLayers: function() {
+            var def = $q.defer();
+            readyPromise.then(function(){
+                restyleSync();
+                def.resolve();
+            });
+            return def.promise;
+        },
         resetLayers: function() {
             var def = $q.defer();
             readyPromise.then(function(){
@@ -60,17 +85,7 @@ angular.module('npn-viz-tool.services',[
                     layer.loaded.forEach(function(feature){
                         feature.setProperty('$style',style);
                     });
-                    map.data.setStyle(function(feature){
-                        var base = {
-                            strokeColor: '#ffffff',
-                            strokeOpacity: null,
-                            strokeWeight: 1,
-                            fillColor: '#c0c5b8',
-                            fillOpacity: null
-                        }, overrides = feature.getProperty('$style');
-                        return overrides ?
-                                angular.extend(base,overrides) : base;
-                    });
+                    restyleSync();
                     def.resolve([map,layer.loaded]);
                 });
             });

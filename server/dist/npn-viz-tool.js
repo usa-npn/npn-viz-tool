@@ -51,14 +51,18 @@ angular.module('npn-viz-tool',[
 });
 
 angular.module('npn-viz-tool.map',[
+    'npn-viz-tool.services',
+    'npn-viz-tool.stations',
+    'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['uiGmapGoogleMapApi','uiGmapIsReady',function(uiGmapGoogleMapApi,uiGmapIsReady){
+.directive('npnVizMap',['$document','uiGmapGoogleMapApi','uiGmapIsReady',function($document,uiGmapGoogleMapApi,uiGmapIsReady){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
         scope: {
         },
         controller: ['$scope',function($scope) {
+            $scope.stationView = true;
             uiGmapGoogleMapApi.then(function(maps) {
                 console.log('maps',maps);
                 $scope.map = {
@@ -75,85 +79,14 @@ angular.module('npn-viz-tool.map',[
                     }
                 };
             });
-        }]
-    };
-}])
-.directive('npnVizLayers',['uiGmapIsReady','$http','LayerService',function(uiGmapIsReady,$http,LayerService){
-    return {
-        restrict: 'E',
-        template: '',
-        scope: {
-        },
-        controller: ['$scope',function($scope) {
-            LayerService.resetLayers().then(function(){
-                LayerService.loadLayer('US States',{strokeOpacity: 0, fillOpacity: 0}).then(function(results){
-                    $scope.map = results[0];
-                    $scope.featureMap = results[1].reduce(function(map,f){
-                        map[f.getProperty('NAME')] = f;
-                        return map;
-                    },{});
-                    /*
-                    var featureMap = {};
-                    map.data.setStyle(function(feature){
-                        featureMap[feature.getProperty('NAME')] = feature;
-                        console.log(feature.getProperty('NAME'),feature);
-                        var style = {
-                            strokeOpacity: 0,
-                            fillOpacity: 0
-                        };
-                        return style;
+            $document.bind('keypress',function(e){
+                if(e.charCode === 114 || e.key === 'R') {
+                    $scope.$apply(function(){
+                        $scope.stationView = !$scope.stationView;
                     });
-                    $scope.featureMap = featureMap;
-                    */
-                });
-            });
-            $http.get('/npn_portal/stations/getStationCountByState.json').success(function(counts){
-                $scope.countMap = counts.reduce(function(map,c){
-                    map[c.state] = c;
-                    c.number_stations = parseInt(c.number_stations);
-                    map.$min = Math.min(map.$min,c.number_stations);
-                    map.$max = Math.max(map.$max,c.number_stations);
-                    return map;
-                },{$max: 0,$min: 0});
-            });
-            function chorpleth() {
-                if($scope.featureMap && $scope.countMap) {
-                    console.log('$countMap',$scope.countMap);
-                    var map = $scope.map,
-                        colorScale = d3.scale.linear().domain([$scope.countMap.$min,$scope.countMap.$max]).range(['#F7FBFF','#08306B']);
-                    map.data.setStyle(function(feature){
-                        var name = feature.getProperty('NAME'),
-                            count = $scope.countMap[name],
-                            style = {
-                                strokeOpacity: 1,
-                                strokeColor: '#ffffff',
-                                strokeWeight: 1,
-                                fillOpacity: 0
-                            };
-                        if(count) {
-                            //count.$styled = true;
-                            style.fillOpacity = 0.8;
-                            style.fillColor = colorScale(count.number_stations);
-                            style.clickable = true;
-                            //console.log(name+' count='+count.number_stations+',color='+style.fillColor);
-                        } else {
-                            console.warn('no count for '+name);
-                        }
-                        return style;
-                    });
-                    map.data.addListener('mouseover',function(event){
-                        console.log('feature',event.feature);
-                        console.log('state',event.feature.getProperty('NAME'));
-                        map.data.overrideStyle(event.feature, {strokeWeight: 2});
-                    });
-                    map.data.addListener('mouseout',function(event){
-                        map.data.revertStyle();
-                    });
-                    LayerService.loadLayer('hij');
                 }
-            }
-            $scope.$watch('countMap',chorpleth);
-            $scope.$watch('featureMap',chorpleth);
+                console.log('kp',e);
+            });
         }]
     };
 }]);
@@ -162,10 +95,10 @@ angular.module('templates-npnvis', ['js/map/map.html']);
 angular.module("js/map/map.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/map/map.html",
     "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\">\n" +
-    "\n" +
+    "    <npn-stations ng-if=\"stationView\"></npn-stations>\n" +
     "</ui-gmap-google-map>\n" +
     "\n" +
-    "<npn-viz-layers></npn-viz-layers>");
+    "");
 }]);
 
 
@@ -185,7 +118,14 @@ angular.module('npn-viz-tool.services',[
                 });
                 console.log('LayerService - layer list is loaded', layers);
             });
-        });
+        }),
+        baseStyle = {
+            strokeColor: '#ffffff',
+            strokeOpacity: null,
+            strokeWeight: 1,
+            fillColor: '#c0c5b8',
+            fillOpacity: null
+        };
     function loadLayerData(layer) {
         var def = $q.defer();
         if(layer.data) {
@@ -198,8 +138,26 @@ angular.module('npn-viz-tool.services',[
         }
         return def.promise;
     }
+    function restyleSync() {
+        map.data.setStyle(function(feature){
+            var overrides = feature.getProperty('$style');
+            if(overrides && typeof(overrides) === 'function') {
+                return overrides(feature);
+            }
+            return overrides ?
+                    angular.extend(baseStyle,overrides) : baseStyle;
+        });
+    }
 
     return {
+        restyleLayers: function() {
+            var def = $q.defer();
+            readyPromise.then(function(){
+                restyleSync();
+                def.resolve();
+            });
+            return def.promise;
+        },
         resetLayers: function() {
             var def = $q.defer();
             readyPromise.then(function(){
@@ -230,21 +188,108 @@ angular.module('npn-viz-tool.services',[
                     layer.loaded.forEach(function(feature){
                         feature.setProperty('$style',style);
                     });
-                    map.data.setStyle(function(feature){
-                        var base = {
-                            strokeColor: '#ffffff',
-                            strokeOpacity: null,
-                            strokeWeight: 1,
-                            fillColor: '#c0c5b8',
-                            fillOpacity: null
-                        }, overrides = feature.getProperty('$style');
-                        return overrides ?
-                                angular.extend(base,overrides) : base;
-                    });
+                    restyleSync();
                     def.resolve([map,layer.loaded]);
                 });
             });
             return def.promise;
         }
+    };
+}]);
+angular.module('npn-viz-tool.stations',[
+    'npn-viz-tool.services'
+])
+.directive('npnStations',['$http','LayerService',function($http,LayerService){
+    return {
+        restrict: 'E',
+        template: '<ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="true"></ui-gmap-markers>',
+        scope: {
+        },
+        controller: ['$scope',function($scope) {
+            $scope.stations = {
+                states: [],
+                markers: []
+            };
+            var eventListeners = [];
+            $http.get('/npn_portal/stations/getStationCountByState.json').success(function(counts){
+                var countMap = counts.reduce(function(map,c){
+                    map[c.state] = c;
+                    c.number_stations = parseInt(c.number_stations);
+                    map.$min = Math.min(map.$min,c.number_stations);
+                    map.$max = Math.max(map.$max,c.number_stations);
+                    return map;
+                },{$max: 0,$min: 0}),
+                colorScale = d3.scale.linear().domain([countMap.$min,countMap.$max]).range(['#F7FBFF','#08306B']);
+
+                LayerService.resetLayers().then(function(){
+                    LayerService.loadLayer('US States',function(feature) {
+                        var name = feature.getProperty('NAME'),
+                            loaded = $scope.stations.states.indexOf(name) != -1,
+                            count = countMap[name],
+                            style = {
+                                strokeOpacity: 1,
+                                strokeColor: '#ffffff',
+                                strokeWeight: 1,
+                                fillOpacity: 0
+                            };
+                        if(count && !loaded ) {
+                            count.visited = true;
+                            style.fillOpacity = 0.8;
+                            style.fillColor = colorScale(count.number_stations);
+                            style.clickable = true;
+                        } else if (!loaded) {
+                            console.warn('no station count for '+name);
+                        }
+                        return style;
+                    }).then(function(results){
+                        var map = results[0];
+                        eventListeners.push(map.data.addListener('mouseover',function(event){
+                            map.data.overrideStyle(event.feature, {strokeWeight: 3});
+                        }));
+                        eventListeners.push(map.data.addListener('mouseout',function(event){
+                            map.data.revertStyle();
+                        }));
+                        eventListeners.push(map.data.addListener('click',function(event){
+                            var state = event.feature.getProperty('NAME');
+                            if($scope.stations.states.indexOf(state) === -1) {
+                                $scope.stations.states.push(state);
+                                map.panTo(event.latLng);
+                                map.setZoom(6);
+                                $http.get('/npn_portal/stations/getAllStations.json',
+                                            {params:{state_code:state}})
+                                    .success(function(data){
+                                        data.forEach(function(d){
+                                            d.markerOpts = {
+                                                title: d.station_name
+                                            };
+                                        });
+                                        $scope.stations.markers = $scope.stations.markers.concat(data);
+                                        // simply drop the feature as opposed to re-styling it
+                                        map.data.remove(event.feature);
+                                    });
+                            }
+                        }));
+                        /* can't explain why can't read c.visited here since
+                         * the other two log statements show the attribute as being there
+                         * but when iterating it's not there, even in a loop...
+                        var unvisited = counts.filter(function(c){
+                            return !c.visited;
+                        });
+                        console.log('counts',counts);
+                        console.log('countMap',countMap);
+                        console.log('unvisited',unvisited);
+                        */
+                    });
+                });
+            });
+            // may or may not be a good idea considering if other elements replace
+            // map layers
+            $scope.$on('$destroy',function(){
+                LayerService.resetLayers();
+                eventListeners.forEach(function(el){
+                    el.remove();
+                });
+            });
+        }]
     };
 }]);
