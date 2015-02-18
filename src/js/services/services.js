@@ -47,6 +47,11 @@ angular.module('npn-viz-tool.services',[
     }
 
     return {
+        /**
+         * Forces all features to be restyled.
+         *
+         * @return {promise} A promise that will be resolved once features have been restyled.
+         */
         restyleLayers: function() {
             var def = $q.defer();
             readyPromise.then(function(){
@@ -55,6 +60,11 @@ angular.module('npn-viz-tool.services',[
             });
             return def.promise;
         },
+        /**
+         * Removes all map layers.
+         *
+         * @return {promise} A promise that will be resolved when complete.
+         */
         resetLayers: function() {
             var def = $q.defer();
             readyPromise.then(function(){
@@ -62,6 +72,7 @@ angular.module('npn-viz-tool.services',[
                     var layer = layers[label],i;
                     if(layer.loaded) {
                         for(i = 0; i < layer.loaded.length; i++) {
+                            layer.loaded[i].removeProperty('$style');
                             map.data.remove(layer.loaded[i]);
                         }
                         delete layer.loaded;
@@ -71,6 +82,19 @@ angular.module('npn-viz-tool.services',[
             });
             return def.promise;
         },
+        /**
+         * Loads and adds a layer to the map.
+         *
+         * @param  {string} label The label of the layer to add.
+         * @param  {object|function} style (optional) If an object is a set of style overrides to apply to all added features
+         *                           (https://developers.google.com/maps/documentation/javascript/datalayer#style_options).
+         *                           If a function is provided then its signature it will be called when styling features so
+         *                           that all features can be individually styled as in
+         *                           https://developers.google.com/maps/documentation/javascript/datalayer#declarative_style_rules.
+         *                           This parameter will be stored and re-used so it can be re-applied during calls to restyleLayers.
+         *                           Keep this in mind if you pass a function and your code may go out of scope.
+         * @return {promise}       A promise that will be resolved when the layer has been added and its features styled.
+         */
         loadLayer: function(label,style) {
             var def = $q.defer();
             readyPromise.then(function(){
