@@ -1,84 +1,65 @@
 
 angular.module('npn-viz-tool.services',[
 'ngResource'
-]);
-/*
-.factory('Docket', ['$resource',
-    function($resource){
-        var Docket = $resource(rdg_svcs.getScriptLocation()+'/regulations/v3/docket.json?docketId=:id', {}, {
-            get: {
-                method: 'GET',
-                transformResponse: function(data, header) {
-                    return rdg_svcs.transformResponse(data,header,Docket);
-                }
-            }
-        });
-        return Docket;
-}])
-.factory('Document', ['$resource',
-    function($resource){
-        var scriptLoc = rdg_svcs.getScriptLocation(),
-            Document = $resource(scriptLoc+'/regulations/v3/document.json?documentId=:id', {}, {
-            get: {
-                method: 'GET',
-                transformResponse: function(data, header) {
-                    var wrapped = rdg_svcs.transformResponse(data,header,Document), a;
-                    wrapped.$attachments = [];
-                    angular.forEach(wrapped.attachments,function(attch){
-                        if((a = getSingleAttachment(attch))) {
-                            wrapped.$attachments.push(a);
-                        }
-                    });
-                    return wrapped;
-                }
-            }
-        });
-        function getQueryArgs(url) {
-            var q = url.indexOf('?'),
-                qargs = q > 0 ? url.substring(q+1) : null;
-            if(qargs) {
-                qargs = qargs.split('&').reduce(function(args,arg){
-                    var parts = arg.split('='), a = {};
-                    args[parts[0]] = parts[1];
-                    return args;
-                },[]);
-                return qargs;
-            }
-        }
-        function getSingleAttachment(attachment) {
-            var attachments = [],i;
-            angular.forEach(attachment.fileFormats,function(fmt){
-                var proxy = fmt.replace(/^http[s]*\:\/\/api\.data\.gov/,scriptLoc);
-                attachments.push({
-                    title: attachment.title,
-                    url: proxy,
-                    args: getQueryArgs(proxy)
+])
+.factory('LayerService',['$http','$q','uiGmapIsReady',function($http,$q,uiGmapIsReady){
+    var layers = null,
+        map = null,
+        readyPromise = uiGmapIsReady.promise(1).then(function(instances){
+            map = instances[0].map;
+            console.log('LayerService - map is ready');
+            return $http.get('layers/layers.json').success(function(data) {
+                layers = {};
+                data.forEach(function(layer){
+                    layers[layer.label] = layer;
                 });
+                console.log('LayerService - layer list is loaded', layers);
             });
-            if(attachments.length > 1) {
-                // look for a pdf attachment and prefer it.
-                for(i = 0; i < attachments.length; i++) {
-                    if(attachments[i].args && attachments[i].args.contentType === 'pdf') {
-                        return attachments[i];
+        });
+    function loadLayerData(layer) {
+        var def = $q.defer();
+        if(layer.data) {
+            def.resolve(layer);
+        } else {
+            $http.get('layers/'+layer.file).success(function(data){
+                layer.data = data;
+                def.resolve(layer);
+            });
+        }
+        return def.promise;
+    }
+
+    return {
+        resetLayers: function() {
+            var def = $q.defer();
+            readyPromise.then(function(){
+                for(var label in layers) {
+                    var layer = layers[label],i;
+                    if(layer.loaded) {
+                        for(i = 0; i < layer.loaded.length; i++) {
+                            map.data.remove(layer.loaded[i]);
+                        }
+                        delete layer.loaded;
                     }
                 }
-            }
-            return attachments.length ? attachments[0] : null;
-        }
-        return Document;
-}])
-.factory('Documents', ['$resource',
-    function($resource){
-        var Documents = $resource(rdg_svcs.getScriptLocation()+'/regulations/v3/documents.json', {}, {
-            query: {method:'GET',
-                transformResponse: function(data, header) {
-                    return rdg_svcs.transformResponse(data,header,Documents,'documents',function(d){
-                        d.$postedDate = new Date(d.postedDate);
-                        return d;
-                    });
+                def.resolve();
+            });
+            return def.promise;
+        },
+        loadLayer: function(label) {
+            var def = $q.defer();
+            readyPromise.then(function(){
+                var layer = layers[label];
+                if(!layer) {
+                    console.log('no such layer labeled',label);
+                    return def.reject(label);
                 }
-            }
-        });
-        return Documents;
+                loadLayerData(layer).then(function(l){
+                    layer.loaded = map.data.addGeoJson(layer.data);
+                    def.resolve(map,layer.loaded);
+                });
+            });
+            return def.promise;
+        }
+    };
 }]);
-*/

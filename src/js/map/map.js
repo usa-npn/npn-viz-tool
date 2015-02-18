@@ -26,13 +26,16 @@ angular.module('npn-viz-tool.map',[
         }]
     };
 }])
-.directive('npnVizLayers',['uiGmapIsReady','$http',function(uiGmapIsReady,$http){
+.directive('npnVizLayers',['uiGmapIsReady','$http','LayerService',function(uiGmapIsReady,$http,LayerService){
     return {
         restrict: 'E',
         template: '',
         scope: {
         },
         controller: ['$scope',function($scope) {
+            LayerService.loadLayer('abc');
+            LayerService.loadLayer('def');
+
             uiGmapIsReady.promise(1).then(function(instances) {
                 var map = instances[0].map;
                 $http.get('layers/us-states.geojson').success(function(geojson){
@@ -82,11 +85,20 @@ angular.module('npn-viz-tool.map',[
                                 //count.$styled = true;
                                 style.fillOpacity = 0.8;
                                 style.fillColor = colorScale(count.number_stations);
+                                style.clickable = true;
                                 //console.log(name+' count='+count.number_stations+',color='+style.fillColor);
                             } else {
                                 console.warn('no count for '+name);
                             }
                             return style;
+                        });
+                        map.data.addListener('mouseover',function(event){
+                            console.log('feature',event.feature);
+                            console.log('state',event.feature.getProperty('NAME'));
+                            map.data.overrideStyle(event.feature, {strokeWeight: 2});
+                        });
+                        map.data.addListener('mouseout',function(event){
+                            map.data.revertStyle();
                         });
                         /*
                         for(var key in $scope.countMap) {
@@ -94,6 +106,7 @@ angular.module('npn-viz-tool.map',[
                                 console.log('count for ' + key + ' was not styled.');
                             }
                         }*/
+                        LayerService.loadLayer('hij');
                     }
                 }
                 $scope.$watch('countMap',chorpleth);
