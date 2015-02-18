@@ -46,7 +46,7 @@ angular.module('npn-viz-tool.services',[
             });
             return def.promise;
         },
-        loadLayer: function(label) {
+        loadLayer: function(label,style) {
             var def = $q.defer();
             readyPromise.then(function(){
                 var layer = layers[label];
@@ -55,8 +55,23 @@ angular.module('npn-viz-tool.services',[
                     return def.reject(label);
                 }
                 loadLayerData(layer).then(function(l){
+                    layer.style = style;
                     layer.loaded = map.data.addGeoJson(layer.data);
-                    def.resolve(map,layer.loaded);
+                    layer.loaded.forEach(function(feature){
+                        feature.setProperty('$style',style);
+                    });
+                    map.data.setStyle(function(feature){
+                        var base = {
+                            strokeColor: '#ffffff',
+                            strokeOpacity: null,
+                            strokeWeight: 1,
+                            fillColor: '#c0c5b8',
+                            fillOpacity: null
+                        }, overrides = feature.getProperty('$style');
+                        return overrides ?
+                                angular.extend(base,overrides) : base;
+                    });
+                    def.resolve([map,layer.loaded]);
                 });
             });
             return def.promise;
