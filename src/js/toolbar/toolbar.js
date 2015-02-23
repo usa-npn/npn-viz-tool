@@ -27,8 +27,8 @@ angular.module('npn-viz-tool.toolbar',[
     templateUrl: 'js/toolbar/tool.html',
     transclude: true,
     scope: {
-      icon: '@',
-      tt: '@'
+      title: '@',
+      icon: '@'
     },
     link: function(scope, element, attrs, tabsCtrl) {
       tabsCtrl.addTool(scope);

@@ -62,12 +62,21 @@ body {
 // toolbar
 $tb-content-width: 350px;
 $tb-content-padding: 15px;
-$tb-open-close-duration: 1.0s;
-$tb-bg: #ccc;
+$tb-open-close-duration: 0.75s;
+$tb-bg: #fff;
 $tool-padding: 10px;
+// this overlap exists because the "tool" pane and its corresponding tab are animated separately
+// as a result the "tab" extends underneat the pane so that during animation no gap can be seen between the two.
 $tool-content-overlap: 40px;
+
+@mixin tb-transition() {
+    transition: left $tb-open-close-duration;
+    -webkit-transition: left $tb-open-close-duration;
+    -moz-transition: left $tb-open-close-duration;
+    -o-transition: left $tb-open-close-duration;
+}
 .toolbar {
-    position: fixed;
+    position: absolute;
     left: 0;
     //border: 1px solid red;
     display: inline-block;
@@ -75,36 +84,38 @@ $tool-content-overlap: 40px;
         list-style: none;
         display: inline-block;
         padding: 0px;
+        margin-top: 20px;
         li {
-            background-color: $tb-bg;
-            margin-top: 10px;
+            color: #fff;
+            background-color: rgba(0,0,0,0.6);
+            box-shadow: 0 0 8px #666;
+            margin-top: 5px;
             box-sizing: content-box;
             -webkit-box-sizing: content-box;
             -moz-box-sizing: content-box;
             border: 1px solid transparent;
             border-top-right-radius: 15px;
             border-bottom-right-radius: 15px;
-            padding: $tool-padding $tool-padding $tool-padding $tool-padding + $tool-content-overlap;
+            padding: $tool-padding ($tool-padding + 3px) $tool-padding ($tool-padding + $tool-content-overlap);
             display: inline-grid;
-            width: 20px;
-            font-size: 1.5em;
+            width: 25px;
+            font-size: 1.75em;
 
             position: relative;
             left: -$tool-content-overlap;
-            -webkit-transition-duration: $tb-open-close-duration;
-            -moz-transition-duration: $tb-open-close-duration;
-            transition-duration: $tb-open-close-duration;
-            -o-transition-duration: $tb-open-close-duration;
+
+            @include tb-transition();
+        }
+        li:hover {
+            cursor: pointer;
+            background-color: rgba(0,0,0,1.0);
         }
         li.open {
             position: absolute;
             z-index: 499;
             left: $tb-content-width - $tool-content-overlap;
 
-            -webkit-transition-duration: $tb-open-close-duration;
-            -moz-transition-duration: $tb-open-close-duration;
-            transition-duration: $tb-open-close-duration;
-            -o-transition-duration: $tb-open-close-duration;
+            @include tb-transition();
         }
     }
     .toolbar-content {
@@ -118,17 +129,12 @@ $tool-content-overlap: 40px;
         z-index: 500;
         background: $tb-bg;
 
-        -webkit-transition-duration: $tb-open-close-duration;
-        -moz-transition-duration: $tb-open-close-duration;
-        transition-duration: $tb-open-close-duration;
-        -o-transition-duration: $tb-open-close-duration;
+        @include tb-transition();
     }
     .toolbar-content.open {
         left: 0;
+        border-right: 1px solid #aaa;
 
-        -webkit-transition-duration: $tb-open-close-duration;
-        -moz-transition-duration: $tb-open-close-duration;
-        transition-duration: $tb-open-close-duration;
-        -o-transition-duration: $tb-open-close-duration;
+        @include tb-transition();
     }
 }

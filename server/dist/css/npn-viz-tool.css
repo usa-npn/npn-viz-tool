@@ -50,7 +50,7 @@ body {
 }
 
 .toolbar {
-  position: fixed;
+  position: absolute;
   left: 0;
   display: inline-block;
 }
@@ -58,35 +58,42 @@ body {
   list-style: none;
   display: inline-block;
   padding: 0px;
+  margin-top: 20px;
 }
 .toolbar ul li {
-  background-color: #ccc;
-  margin-top: 10px;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 8px #666;
+  margin-top: 5px;
   box-sizing: content-box;
   -webkit-box-sizing: content-box;
   -moz-box-sizing: content-box;
   border: 1px solid transparent;
   border-top-right-radius: 15px;
   border-bottom-right-radius: 15px;
-  padding: 10px 10px 10px 50px;
+  padding: 10px 13px 10px 50px;
   display: inline-grid;
-  width: 20px;
-  font-size: 1.5em;
+  width: 25px;
+  font-size: 1.75em;
   position: relative;
   left: -40px;
-  -webkit-transition-duration: 1s;
-  -moz-transition-duration: 1s;
-  transition-duration: 1s;
-  -o-transition-duration: 1s;
+  transition: left 0.75s;
+  -webkit-transition: left 0.75s;
+  -moz-transition: left 0.75s;
+  -o-transition: left 0.75s;
+}
+.toolbar ul li:hover {
+  cursor: pointer;
+  background-color: black;
 }
 .toolbar ul li.open {
   position: absolute;
   z-index: 499;
   left: 310px;
-  -webkit-transition-duration: 1s;
-  -moz-transition-duration: 1s;
-  transition-duration: 1s;
-  -o-transition-duration: 1s;
+  transition: left 0.75s;
+  -webkit-transition: left 0.75s;
+  -moz-transition: left 0.75s;
+  -o-transition: left 0.75s;
 }
 .toolbar .toolbar-content {
   width: 350px;
@@ -97,18 +104,19 @@ body {
   top: 0;
   left: -380px;
   z-index: 500;
-  background: #ccc;
-  -webkit-transition-duration: 1s;
-  -moz-transition-duration: 1s;
-  transition-duration: 1s;
-  -o-transition-duration: 1s;
+  background: #fff;
+  transition: left 0.75s;
+  -webkit-transition: left 0.75s;
+  -moz-transition: left 0.75s;
+  -o-transition: left 0.75s;
 }
 .toolbar .toolbar-content.open {
   left: 0;
-  -webkit-transition-duration: 1s;
-  -moz-transition-duration: 1s;
-  transition-duration: 1s;
-  -o-transition-duration: 1s;
+  border-right: 1px solid #aaa;
+  transition: left 0.75s;
+  -webkit-transition: left 0.75s;
+  -moz-transition: left 0.75s;
+  -o-transition: left 0.75s;
 }
 
 /*# sourceMappingURL=npn-viz-tool.css.map */

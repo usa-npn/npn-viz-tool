@@ -1,6 +1,7 @@
 angular.module('npn-viz-tool.map',[
     'npn-viz-tool.services',
     'npn-viz-tool.stations',
+    'npn-viz-tool.toolbar',
     'uiGmapgoogle-maps'
 ])
 .directive('npnVizMap',['$document','uiGmapGoogleMapApi','uiGmapIsReady',function($document,uiGmapGoogleMapApi,uiGmapIsReady){
