@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-02-18
+ * Version: 0.1.0 - 2015-02-23
  */
 
 angular.module('npn-viz-tool.filters',[
@@ -37,6 +37,7 @@ angular.module('npn-viz-tool',[
 'templates-npnvis',
 'npn-viz-tool.services',
 'npn-viz-tool.map',
+'npn-viz-tool.toolbar',
 'npn-viz-tool.filters',
 'uiGmapgoogle-maps',
 'ui.bootstrap',
@@ -90,7 +91,7 @@ angular.module('npn-viz-tool.map',[
         }]
     };
 }]);
-angular.module('templates-npnvis', ['js/map/map.html']);
+angular.module('templates-npnvis', ['js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
 
 angular.module("js/map/map.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/map/map.html",
@@ -99,6 +100,24 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "</ui-gmap-google-map>\n" +
     "\n" +
     "");
+}]);
+
+angular.module("js/toolbar/tool.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/toolbar/tool.html",
+    "<div class=\"tab-pane\" ng-show=\"selected\" ng-transclude>\n" +
+    "</div>");
+}]);
+
+angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/toolbar/toolbar.html",
+    "<div class=\"toolbar\">\n" +
+    "  <ul>\n" +
+    "    <li ng-repeat=\"t in tools\" ng-class=\"{open: t.selected}\">\n" +
+    "      <a href ng-click=\"select(t)\" tooltip-placement=\"right\" tooltip=\"{{t.tt}}\" tooltip-trigger=\"mouseenter\"><i class=\"fa {{t.icon}}\"></i></a>\n" +
+    "    </li>\n" +
+    "  </ul>\n" +
+    "  <div class=\"toolbar-content\" ng-class=\"{open: open}\" ng-transclude></div>\n" +
+    "</div>");
 }]);
 
 
@@ -317,3 +336,40 @@ angular.module('npn-viz-tool.stations',[
         }]
     };
 }]);
+angular.module('npn-viz-tool.toolbar',[
+])
+.directive('toolbar', function() {
+  return {
+    restrict: 'E',
+    templateUrl: 'js/toolbar/toolbar.html',
+    transclude: true,
+    scope: {},
+    controller: function($scope) {
+      var tools = $scope.tools = [];
+
+      $scope.select = function(t) {
+        t.selected = !t.selected;
+        $scope.open = t.selected;
+      };
+
+      this.addTool = function(t) {
+        tools.push(t);
+      };
+    }
+  };
+})
+.directive('tool', function() {
+  return {
+    restrict: 'E',
+    require: '^toolbar',
+    templateUrl: 'js/toolbar/tool.html',
+    transclude: true,
+    scope: {
+      icon: '@',
+      tt: '@'
+    },
+    link: function(scope, element, attrs, tabsCtrl) {
+      tabsCtrl.addTool(scope);
+    }
+  };
+});

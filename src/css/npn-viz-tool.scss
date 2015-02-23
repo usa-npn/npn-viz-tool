@@ -58,3 +58,77 @@ body {
     min-height: 0px;
     max-height: 2000px;
 }
+
+// toolbar
+$tb-content-width: 350px;
+$tb-content-padding: 15px;
+$tb-open-close-duration: 1.0s;
+$tb-bg: #ccc;
+$tool-padding: 10px;
+$tool-content-overlap: 40px;
+.toolbar {
+    position: fixed;
+    left: 0;
+    //border: 1px solid red;
+    display: inline-block;
+    ul {
+        list-style: none;
+        display: inline-block;
+        padding: 0px;
+        li {
+            background-color: $tb-bg;
+            margin-top: 10px;
+            box-sizing: content-box;
+            -webkit-box-sizing: content-box;
+            -moz-box-sizing: content-box;
+            border: 1px solid transparent;
+            border-top-right-radius: 15px;
+            border-bottom-right-radius: 15px;
+            padding: $tool-padding $tool-padding $tool-padding $tool-padding + $tool-content-overlap;
+            display: inline-grid;
+            width: 20px;
+            font-size: 1.5em;
+
+            position: relative;
+            left: -$tool-content-overlap;
+            -webkit-transition-duration: $tb-open-close-duration;
+            -moz-transition-duration: $tb-open-close-duration;
+            transition-duration: $tb-open-close-duration;
+            -o-transition-duration: $tb-open-close-duration;
+        }
+        li.open {
+            position: absolute;
+            z-index: 499;
+            left: $tb-content-width - $tool-content-overlap;
+
+            -webkit-transition-duration: $tb-open-close-duration;
+            -moz-transition-duration: $tb-open-close-duration;
+            transition-duration: $tb-open-close-duration;
+            -o-transition-duration: $tb-open-close-duration;
+        }
+    }
+    .toolbar-content {
+        width: $tb-content-width;
+        height: 100vh;
+        min-height: 1000px;
+        padding: $tb-content-padding;
+        position: absolute;
+        top: 0;
+        left: -($tb-content-width+(2*$tb-content-padding));
+        z-index: 500;
+        background: $tb-bg;
+
+        -webkit-transition-duration: $tb-open-close-duration;
+        -moz-transition-duration: $tb-open-close-duration;
+        transition-duration: $tb-open-close-duration;
+        -o-transition-duration: $tb-open-close-duration;
+    }
+    .toolbar-content.open {
+        left: 0;
+
+        -webkit-transition-duration: $tb-open-close-duration;
+        -moz-transition-duration: $tb-open-close-duration;
+        transition-duration: $tb-open-close-duration;
+        -o-transition-duration: $tb-open-close-duration;
+    }
+}

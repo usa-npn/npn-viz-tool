@@ -49,4 +49,66 @@ body {
   max-height: 2000px;
 }
 
+.toolbar {
+  position: fixed;
+  left: 0;
+  display: inline-block;
+}
+.toolbar ul {
+  list-style: none;
+  display: inline-block;
+  padding: 0px;
+}
+.toolbar ul li {
+  background-color: #ccc;
+  margin-top: 10px;
+  box-sizing: content-box;
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  border: 1px solid transparent;
+  border-top-right-radius: 15px;
+  border-bottom-right-radius: 15px;
+  padding: 10px 10px 10px 50px;
+  display: inline-grid;
+  width: 20px;
+  font-size: 1.5em;
+  position: relative;
+  left: -40px;
+  -webkit-transition-duration: 1s;
+  -moz-transition-duration: 1s;
+  transition-duration: 1s;
+  -o-transition-duration: 1s;
+}
+.toolbar ul li.open {
+  position: absolute;
+  z-index: 499;
+  left: 310px;
+  -webkit-transition-duration: 1s;
+  -moz-transition-duration: 1s;
+  transition-duration: 1s;
+  -o-transition-duration: 1s;
+}
+.toolbar .toolbar-content {
+  width: 350px;
+  height: 100vh;
+  min-height: 1000px;
+  padding: 15px;
+  position: absolute;
+  top: 0;
+  left: -380px;
+  z-index: 500;
+  background: #ccc;
+  -webkit-transition-duration: 1s;
+  -moz-transition-duration: 1s;
+  transition-duration: 1s;
+  -o-transition-duration: 1s;
+}
+.toolbar .toolbar-content.open {
+  left: 0;
+  -webkit-transition-duration: 1s;
+  -moz-transition-duration: 1s;
+  transition-duration: 1s;
+  -o-transition-duration: 1s;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */

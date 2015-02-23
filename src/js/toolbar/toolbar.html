@@ -1,0 +1,8 @@
+<div class="toolbar">
+  <ul>
+    <li ng-repeat="t in tools" ng-class="{open: t.selected}">
+      <a href ng-click="select(t)" tooltip-placement="right" tooltip="{{t.tt}}" tooltip-trigger="mouseenter"><i class="fa {{t.icon}}"></i></a>
+    </li>
+  </ul>
+  <div class="toolbar-content" ng-class="{open: open}" ng-transclude></div>
+</div>

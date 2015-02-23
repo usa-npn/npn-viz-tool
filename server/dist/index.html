@@ -4,11 +4,21 @@
     <meta charset="utf-8">
     <title>NPN Visualization Tool</title>
     <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/npn-viz-tool.css">
 </head>
 <body>
 
 <npn-viz-map></npn-viz-map>
+
+<toolbar>
+    <tool icon="fa-search" tt="Filter">
+        Here are my search controls
+    </tool>
+    <tool icon="fa-cog" tt="Settings">
+        Here are my admin stuff.
+    </tool>
+</toolbar>
 
 <script src="lib/angular/angular.min.js"></script>
 <script src="lib/angular-animate/angular-animate.min.js"></script>
