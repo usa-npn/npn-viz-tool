@@ -54,13 +54,13 @@ body {
   left: 0;
   display: inline-block;
 }
-.toolbar ul {
+.toolbar ul.tools-list {
   list-style: none;
   display: inline-block;
   padding: 0px;
   margin-top: 20px;
 }
-.toolbar ul li {
+.toolbar ul.tools-list li {
   color: #fff;
   background-color: rgba(0, 0, 0, 0.6);
   box-shadow: 0 0 8px #666;
@@ -82,11 +82,11 @@ body {
   -moz-transition: left 0.75s;
   -o-transition: left 0.75s;
 }
-.toolbar ul li:hover {
+.toolbar ul.tools-list li:hover {
   cursor: pointer;
   background-color: black;
 }
-.toolbar ul li.open {
+.toolbar ul.tools-list li.open {
   position: absolute;
   z-index: 499;
   left: 310px;
@@ -117,6 +117,17 @@ body {
   -webkit-transition: left 0.75s;
   -moz-transition: left 0.75s;
   -o-transition: left 0.75s;
+}
+
+.tool-content.filter label[for="species"] {
+  display: block;
+}
+.tool-content.filter input#species {
+  display: inline-block;
+  width: 85%;
+}
+.tool-content.filter li {
+  margin-bottom: 15px;
 }
 
 /*# sourceMappingURL=npn-viz-tool.css.map */

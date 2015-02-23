@@ -1,4 +1,60 @@
-angular.module('templates-npnvis', ['js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+angular.module('templates-npnvis', ['js/filter/filter.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+
+angular.module("js/filter/filter.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/filter.html",
+    "<ul class=\"list-unstyled\">\n" +
+    "    <li>\n" +
+    "        <label for=\"species\">Species</label>\n" +
+    "        <input id=\"species\"\n" +
+    "               type=\"text\" class=\"form-control\"\n" +
+    "               placeholder=\"Add Species To Filter\"\n" +
+    "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue}\"\n" +
+    "               typeahead-loading=\"findingSpecies\"\n" +
+    "               ng-model=\"addSpecies.selected\" />\n" +
+    "        <button class=\"btn btn-default\" ng-disabled=\"!addSpecies.speciesToAdd\">\n" +
+    "            <i class=\"fa\" ng-class=\"{'fa-cog fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
+    "        </button>\n" +
+    "    </li>\n" +
+    "    <li>\n" +
+    "        <label>Animal Types</label>\n" +
+    "        <div isteven-multi-select\n" +
+    "            max-labels=\"3\"\n" +
+    "            input-model=\"animalTypes\"\n" +
+    "            output-model=\"animals\"\n" +
+    "            button-label=\"species_type\"\n" +
+    "            item-label=\"species_type\"\n" +
+    "            tick-property=\"selected\"\n" +
+    "            orientation=\"horizontal\"\n" +
+    "            helper-elements=\"all none reset filter\"></div>\n" +
+    "    </li>\n" +
+    "    <li>\n" +
+    "        <label>Plant Types</label>\n" +
+    "        <div isteven-multi-select\n" +
+    "            max-labels=\"3\"\n" +
+    "            input-model=\"plantTypes\"\n" +
+    "            output-model=\"plants\"\n" +
+    "            button-label=\"species_type\"\n" +
+    "            item-label=\"species_type\"\n" +
+    "            tick-property=\"selected\"\n" +
+    "            orientation=\"horizontal\"\n" +
+    "            helper-elements=\"all none reset filter\"></div>\n" +
+    "    </li>\n" +
+    "    <li>\n" +
+    "        <label>Partners</label>\n" +
+    "        <div isteven-multi-select\n" +
+    "            max-labels=\"1\"\n" +
+    "            input-model=\"partners\"\n" +
+    "            output-model=\"networks\"\n" +
+    "            button-label=\"network_name\"\n" +
+    "            item-label=\"network_name\"\n" +
+    "            tick-property=\"selected\"\n" +
+    "            orientation=\"horizontal\"\n" +
+    "            selection-mode=\"single\"></div>\n" +
+    "    </li>\n" +
+    "</ul>\n" +
+    "\n" +
+    "");
+}]);
 
 angular.module("js/map/map.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/map/map.html",
@@ -8,7 +64,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "\n" +
     "<toolbar>\n" +
     "    <tool icon=\"fa-search\" title=\"Filter\">\n" +
-    "        filter content\n" +
+    "        <filter-control></filter-control>\n" +
     "    </tool>\n" +
     "    <tool icon=\"fa-bars\" title=\"Layers\">\n" +
     "        layer content\n" +
@@ -24,7 +80,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
 
 angular.module("js/toolbar/tool.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/toolbar/tool.html",
-    "<div class=\"tool-content\" ng-show=\"selected\">\n" +
+    "<div class=\"tool-content {{title.toLowerCase()}}\" ng-show=\"selected\">\n" +
     "    <h2>{{title}}</h2>\n" +
     "    <div ng-transclude>\n" +
     "    </div>\n" +
@@ -34,7 +90,7 @@ angular.module("js/toolbar/tool.html", []).run(["$templateCache", function($temp
 angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/toolbar/toolbar.html",
     "<div class=\"toolbar\">\n" +
-    "  <ul>\n" +
+    "  <ul class=\"tools-list\">\n" +
     "    <li ng-repeat=\"t in tools\" ng-class=\"{open: t.selected}\"\n" +
     "        popover-placement=\"right\" popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\"\n" +
     "        ng-click=\"select(t)\">\n" +

@@ -2,6 +2,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.services',
     'npn-viz-tool.stations',
     'npn-viz-tool.toolbar',
+    'npn-viz-tool.filter',
     'uiGmapgoogle-maps'
 ])
 .directive('npnVizMap',['$document','uiGmapGoogleMapApi','uiGmapIsReady',function($document,uiGmapGoogleMapApi,uiGmapIsReady){
@@ -28,6 +29,7 @@ angular.module('npn-viz-tool.map',[
                     }
                 };
             });
+            /*
             $document.bind('keypress',function(e){
                 if(e.charCode === 114 || e.key === 'R') {
                     $scope.$apply(function(){
@@ -35,7 +37,7 @@ angular.module('npn-viz-tool.map',[
                     });
                 }
                 console.log('kp',e);
-            });
+            });*/
         }]
     };
 }]);

@@ -80,7 +80,7 @@ $tool-content-overlap: 40px;
     left: 0;
     //border: 1px solid red;
     display: inline-block;
-    ul {
+    ul.tools-list {
         list-style: none;
         display: inline-block;
         padding: 0px;
@@ -136,5 +136,19 @@ $tool-content-overlap: 40px;
         border-right: 1px solid #aaa;
 
         @include tb-transition();
+    }
+}
+
+// filter
+.tool-content.filter {
+    label[for="species"] {
+        display: block;
+    }
+    input#species {
+        display: inline-block;
+        width: 85%;
+    }
+    li {
+        margin-bottom: 15px;
     }
 }

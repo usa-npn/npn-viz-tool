@@ -1,0 +1,51 @@
+<ul class="list-unstyled">
+    <li>
+        <label for="species">Species</label>
+        <input id="species"
+               type="text" class="form-control"
+               placeholder="Add Species To Filter"
+               typeahead="sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue}"
+               typeahead-loading="findingSpecies"
+               ng-model="addSpecies.selected" />
+        <button class="btn btn-default" ng-disabled="!addSpecies.speciesToAdd">
+            <i class="fa" ng-class="{'fa-cog fa-spin': findingSpecies, 'fa-plus': !findingSpecies}"></i>
+        </button>
+    </li>
+    <li>
+        <label>Animal Types</label>
+        <div isteven-multi-select
+            max-labels="3"
+            input-model="animalTypes"
+            output-model="animals"
+            button-label="species_type"
+            item-label="species_type"
+            tick-property="selected"
+            orientation="horizontal"
+            helper-elements="all none reset filter"></div>
+    </li>
+    <li>
+        <label>Plant Types</label>
+        <div isteven-multi-select
+            max-labels="3"
+            input-model="plantTypes"
+            output-model="plants"
+            button-label="species_type"
+            item-label="species_type"
+            tick-property="selected"
+            orientation="horizontal"
+            helper-elements="all none reset filter"></div>
+    </li>
+    <li>
+        <label>Partners</label>
+        <div isteven-multi-select
+            max-labels="1"
+            input-model="partners"
+            output-model="networks"
+            button-label="network_name"
+            item-label="network_name"
+            tick-property="selected"
+            orientation="horizontal"
+            selection-mode="single"></div>
+    </li>
+</ul>
+
