@@ -19,9 +19,12 @@ angular.module('npn-viz-tool.filter',[
             filter = {};
         },
         addToFilter: function(item) {
-            item.color = colorScale(Object.keys(filter).length);
             if(item && item.species_id) {
-                filter[parseInt(item.species_id)] = item;
+                var key = parseInt(item.species_id);
+                if(!filter[key]) {
+                    item.color = colorScale(Object.keys(filter).length);
+                    filter[key] = item;
+                }
             } else if(item.start_date && item.end_date) {
                 filter['date'] = item;
             }

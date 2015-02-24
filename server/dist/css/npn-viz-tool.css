@@ -153,6 +153,10 @@ ul.filter-tags {
 ul.filter-tags li {
   margin-top: 5px;
 }
+ul.filter-tags .filter-tag button:first-of-type {
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
 ul.filter-tags .filter-tag .phenophase-list {
   padding: 5px;
 }

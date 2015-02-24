@@ -179,6 +179,10 @@ ul.filter-tags {
     }
 
     .filter-tag {
+        button:first-of-type {
+            border-top-right-radius: 0px;
+            border-bottom-right-radius: 0px;
+        }
         .phenophase-list {
             padding: 5px;
         }

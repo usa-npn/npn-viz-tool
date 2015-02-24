@@ -3,12 +3,11 @@
         {{item.common_name}} <span class="badge">?</span> <span class="caret"></span>
     </button>
     <ul class="dropdown-menu phenophase-list" role="menu">
-        <li>
-            <a href ng-click="removeFromFilter(item)"><i class="fa fa-times-circle-o"> Remove From Filter</i></a>
-        </li>
-        <li class="divider"></li>
         <li ng-repeat="phenophase in item.phenophases">
             <input type="checkbox" ng-model="phenophase.selected"> {{phenophase.phenophase_name}}
         </li>
     </ul>
+    <button class="btn btn-primary" style="background-color: {{item.color}};" ng-click="removeFromFilter(item)">
+        <i class="fa fa-times-circle-o"></i>
+    </button>
 </div>

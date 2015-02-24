@@ -24,9 +24,12 @@ angular.module('npn-viz-tool.filter',[
             filter = {};
         },
         addToFilter: function(item) {
-            item.color = colorScale(Object.keys(filter).length);
             if(item && item.species_id) {
-                filter[parseInt(item.species_id)] = item;
+                var key = parseInt(item.species_id);
+                if(!filter[key]) {
+                    item.color = colorScale(Object.keys(filter).length);
+                    filter[key] = item;
+                }
             } else if(item.start_date && item.end_date) {
                 filter['date'] = item;
             }
@@ -323,7 +326,7 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "        <input id=\"species\"\n" +
     "               type=\"text\" class=\"form-control\"\n" +
     "               placeholder=\"Add Species To Filter\"\n" +
-    "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue}\"\n" +
+    "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:10\"\n" +
     "               typeahead-loading=\"findingSpecies\"\n" +
     "               ng-model=\"selected.addSpecies\"\n" +
     "               ng-disabled=\"findSpeciesParamsEmpty\" />\n" +
@@ -408,14 +411,13 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
     "        {{item.common_name}} <span class=\"badge\">?</span> <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
-    "        <li>\n" +
-    "            <a href ng-click=\"removeFromFilter(item)\"><i class=\"fa fa-times-circle-o\"> Remove From Filter</i></a>\n" +
-    "        </li>\n" +
-    "        <li class=\"divider\"></li>\n" +
     "        <li ng-repeat=\"phenophase in item.phenophases\">\n" +
     "            <input type=\"checkbox\" ng-model=\"phenophase.selected\"> {{phenophase.phenophase_name}}\n" +
     "        </li>\n" +
     "    </ul>\n" +
+    "    <button class=\"btn btn-primary\" style=\"background-color: {{item.color}};\" ng-click=\"removeFromFilter(item)\">\n" +
+    "        <i class=\"fa fa-times-circle-o\"></i>\n" +
+    "    </button>\n" +
     "</div>");
 }]);
 
