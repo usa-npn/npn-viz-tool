@@ -129,8 +129,18 @@ body {
 .tool-content.filter li {
   margin-bottom: 15px;
 }
+.tool-content.filter li.divider {
+  border-bottom: 1px solid #ccc;
+}
 .tool-content.filter .fa-refresh {
   color: orange;
+}
+.tool-content.filter label[for="yearInputForm"] {
+  display: block;
+}
+.tool-content.filter input#start_date, .tool-content.filter input#end_date {
+  display: inline-block;
+  width: 80px;
 }
 
 ul.filter-tags {

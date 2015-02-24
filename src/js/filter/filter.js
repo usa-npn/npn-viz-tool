@@ -12,6 +12,9 @@ angular.module('npn-viz-tool.filter',[
         isFilterEmpty: function() {
             return Object.keys(filter).length === 0;
         },
+        hasDate: function() {
+            return !!filter['date'];
+        },
         resetFilter: function() {
             filter = {};
         },
@@ -19,11 +22,15 @@ angular.module('npn-viz-tool.filter',[
             item.color = colorScale(Object.keys(filter).length);
             if(item && item.species_id) {
                 filter[parseInt(item.species_id)] = item;
+            } else if(item.start_date && item.end_date) {
+                filter['date'] = item;
             }
         },
         removeFromFilter: function(item) {
             if(item && item.species_id) {
                 delete filter[parseInt(item.species_id)];
+            } else if(item && item.start_date && item.end_date) {
+                delete filter['date'];
             }
         }
     };
@@ -40,11 +47,11 @@ angular.module('npn-viz-tool.filter',[
     };
 }])
 // TODO - dropdown closes when any phenophase checkbox is clicked, it needs to stay open
-.directive('filterTag',['$http','FilterService',function($http,FilterService){
+.directive('speciesFilterTag',['$http','FilterService',function($http,FilterService){
     return {
         restrict: 'E',
         require: '^filterTags',
-        templateUrl: 'js/filter/filterTag.html',
+        templateUrl: 'js/filter/speciesFilterTag.html',
         scope: {
             item: '='
         },
@@ -71,16 +78,44 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
+.directive('dateFilterTag',['FilterService',function(FilterService){
+    return {
+        restrict: 'E',
+        require: '^filterTags',
+        templateUrl: 'js/filter/dateFilterTag.html',
+        scope: {
+            item: '='
+        },
+        controller: function($scope){
+            $scope.removeFromFilter = FilterService.removeFromFilter;
+        }
+    };
+}])
 .directive('filterControl',['$http','$filter','FilterService',function($http,$filter,FilterService){
     return {
         restrict: 'E',
         templateUrl: 'js/filter/filter.html',
         controller: ['$scope',function($scope) {
+            $scope.selected = {addSpecies: undefined, date: {}};
+
+            $scope.addDateRangeToFilter = function() {
+                FilterService.addToFilter($scope.selected.date);
+                $scope.selected.date = {};
+            };
+
+            $scope.filterHasDate = FilterService.hasDate;
+            var thisYear = (new Date()).getYear()+1900,
+                validYears = [];
+            for(var i = 2010; i <= thisYear; i++) {
+                validYears.push(i);
+            }
+            $scope.thisYear = thisYear;
+            $scope.validYears = validYears;
+
             $scope.addSpeciesToFilter = function(species) {
                 FilterService.addToFilter(species);
-                $scope.addSpecies.speciesToAdd = $scope.addSpecies.selected = undefined;
+                $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
             };
-            $scope.addSpecies = {selected: undefined};
             $scope.animals = [];
             $scope.plants = [];
             $scope.networks = [];
@@ -89,7 +124,7 @@ angular.module('npn-viz-tool.filter',[
 
             function invalidateResults() {
                 $scope.serverResults = undefined;
-                $scope.addSpecies.speciesToAdd = undefined;
+                $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
                 var params = {},
                     sid_idx = 0;
                 angular.forEach([].concat($scope.animals).concat($scope.plants),function(s){
@@ -106,9 +141,9 @@ angular.module('npn-viz-tool.filter',[
             $scope.$watch('plants',invalidateResults);
             $scope.$watch('networks',invalidateResults);
 
-            $scope.$watch('addSpecies.selected',function(){
-                $scope.addSpecies.speciesToAdd = angular.isObject($scope.addSpecies.selected) ?
-                    $scope.addSpecies.selected : undefined;
+            $scope.$watch('selected.addSpecies',function(){
+                $scope.selected.speciesToAdd = angular.isObject($scope.selected.addSpecies) ?
+                    $scope.selected.addSpecies : undefined;
             });
 
             $scope.findSpecies = function() {

@@ -17,6 +17,9 @@ angular.module('npn-viz-tool.filter',[
         isFilterEmpty: function() {
             return Object.keys(filter).length === 0;
         },
+        hasDate: function() {
+            return !!filter['date'];
+        },
         resetFilter: function() {
             filter = {};
         },
@@ -24,11 +27,15 @@ angular.module('npn-viz-tool.filter',[
             item.color = colorScale(Object.keys(filter).length);
             if(item && item.species_id) {
                 filter[parseInt(item.species_id)] = item;
+            } else if(item.start_date && item.end_date) {
+                filter['date'] = item;
             }
         },
         removeFromFilter: function(item) {
             if(item && item.species_id) {
                 delete filter[parseInt(item.species_id)];
+            } else if(item && item.start_date && item.end_date) {
+                delete filter['date'];
             }
         }
     };
@@ -45,11 +52,11 @@ angular.module('npn-viz-tool.filter',[
     };
 }])
 // TODO - dropdown closes when any phenophase checkbox is clicked, it needs to stay open
-.directive('filterTag',['$http','FilterService',function($http,FilterService){
+.directive('speciesFilterTag',['$http','FilterService',function($http,FilterService){
     return {
         restrict: 'E',
         require: '^filterTags',
-        templateUrl: 'js/filter/filterTag.html',
+        templateUrl: 'js/filter/speciesFilterTag.html',
         scope: {
             item: '='
         },
@@ -76,16 +83,44 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
+.directive('dateFilterTag',['FilterService',function(FilterService){
+    return {
+        restrict: 'E',
+        require: '^filterTags',
+        templateUrl: 'js/filter/dateFilterTag.html',
+        scope: {
+            item: '='
+        },
+        controller: function($scope){
+            $scope.removeFromFilter = FilterService.removeFromFilter;
+        }
+    };
+}])
 .directive('filterControl',['$http','$filter','FilterService',function($http,$filter,FilterService){
     return {
         restrict: 'E',
         templateUrl: 'js/filter/filter.html',
         controller: ['$scope',function($scope) {
+            $scope.selected = {addSpecies: undefined, date: {}};
+
+            $scope.addDateRangeToFilter = function() {
+                FilterService.addToFilter($scope.selected.date);
+                $scope.selected.date = {};
+            };
+
+            $scope.filterHasDate = FilterService.hasDate;
+            var thisYear = (new Date()).getYear()+1900,
+                validYears = [];
+            for(var i = 2010; i <= thisYear; i++) {
+                validYears.push(i);
+            }
+            $scope.thisYear = thisYear;
+            $scope.validYears = validYears;
+
             $scope.addSpeciesToFilter = function(species) {
                 FilterService.addToFilter(species);
-                $scope.addSpecies.speciesToAdd = $scope.addSpecies.selected = undefined;
+                $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
             };
-            $scope.addSpecies = {selected: undefined};
             $scope.animals = [];
             $scope.plants = [];
             $scope.networks = [];
@@ -94,7 +129,7 @@ angular.module('npn-viz-tool.filter',[
 
             function invalidateResults() {
                 $scope.serverResults = undefined;
-                $scope.addSpecies.speciesToAdd = undefined;
+                $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
                 var params = {},
                     sid_idx = 0;
                 angular.forEach([].concat($scope.animals).concat($scope.plants),function(s){
@@ -111,9 +146,9 @@ angular.module('npn-viz-tool.filter',[
             $scope.$watch('plants',invalidateResults);
             $scope.$watch('networks',invalidateResults);
 
-            $scope.$watch('addSpecies.selected',function(){
-                $scope.addSpecies.speciesToAdd = angular.isObject($scope.addSpecies.selected) ?
-                    $scope.addSpecies.selected : undefined;
+            $scope.$watch('selected.addSpecies',function(){
+                $scope.selected.speciesToAdd = angular.isObject($scope.selected.addSpecies) ?
+                    $scope.selected.addSpecies : undefined;
             });
 
             $scope.findSpecies = function() {
@@ -151,6 +186,26 @@ angular.module('npn-viz-tool.filter',[
 }]);
 angular.module('npn-viz-tool.filters',[
 ])
+.filter('gte',function(){
+    return function(input,num) {
+        if(!num || !angular.isArray(input)) {
+            return input;
+        }
+        return input.filter(function(i){
+            return i >= num;
+        });
+    };
+})
+.filter('lte',function(){
+    return function(input,num) {
+        if(!num || !angular.isArray(input)) {
+            return input;
+        }
+        return input.filter(function(i){
+            return i <= num;
+        });
+    };
+})
 .filter('trim',function(){
     return function(input) {
         if(angular.isString(input)) {
@@ -246,7 +301,19 @@ angular.module('npn-viz-tool.map',[
         }]
     };
 }]);
-angular.module('templates-npnvis', ['js/filter/filter.html', 'js/filter/filterTag.html', 'js/filter/filterTags.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filter.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+
+angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/dateFilterTag.html",
+    "<div class=\"btn-group\">\n" +
+    "    <button class=\"btn btn-default\" disabled>\n" +
+    "        {{item.start_date}} - {{item.end_date}}\n" +
+    "    </button>\n" +
+    "    <button class=\"btn btn-default\" ng-click=\"removeFromFilter(item)\">\n" +
+    "        <i class=\"fa fa-times-circle-o\"></i>\n" +
+    "    </button>\n" +
+    "</div>");
+}]);
 
 angular.module("js/filter/filter.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/filter.html",
@@ -258,10 +325,10 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "               placeholder=\"Add Species To Filter\"\n" +
     "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue}\"\n" +
     "               typeahead-loading=\"findingSpecies\"\n" +
-    "               ng-model=\"addSpecies.selected\"\n" +
+    "               ng-model=\"selected.addSpecies\"\n" +
     "               ng-disabled=\"findSpeciesParamsEmpty\" />\n" +
-    "        <button class=\"btn btn-default\" ng-disabled=\"!addSpecies.speciesToAdd\"\n" +
-    "                ng-click=\"addSpeciesToFilter(addSpecies.speciesToAdd)\">\n" +
+    "        <button class=\"btn btn-default\" ng-disabled=\"!selected.speciesToAdd\"\n" +
+    "                ng-click=\"addSpeciesToFilter(selected.speciesToAdd)\">\n" +
     "            <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
     "        </button>\n" +
     "    </li>\n" +
@@ -301,12 +368,41 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "            orientation=\"horizontal\"\n" +
     "            selection-mode=\"single\"></div>\n" +
     "    </li>\n" +
+    "    <li class=\"divider\"></li>\n" +
+    "    <li>\n" +
+    "        <label for=\"yearInputForm\">Years (at most two)</label>\n" +
+    "        <form id=\"yearInputForm\" name=\"yearInputForm\">\n" +
+    "        <input id=\"start_date\" type=\"number\" class=\"form-control\"\n" +
+    "               max=\"{{selected.date.end_date || thisYear}}\"\n" +
+    "               ng-model=\"selected.date.start_date\"\n" +
+    "               typeahead=\"year for year in validYears | lte:selected.date.end_date | filter:$viewValue\"\n" +
+    "               required placeholder=\"From\" /> - \n" +
+    "        <input id=\"end_date\" type=\"number\" class=\"form-control\"\n" +
+    "                min=\"{{selected.date.start_date || 2010}}\"\n" +
+    "                ng-model=\"selected.date.end_date\"\n" +
+    "                typeahead=\"year for year in validYears | gte:selected.date.start_date | filter:$viewValue\"\n" +
+    "                required placeholder=\"To\" />\n" +
+    "        <button class=\"btn btn-default\"\n" +
+    "                ng-disabled=\"yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 2) || filterHasDate()\"\n" +
+    "                ng-click=\"addDateRangeToFilter()\"><i class=\"fa fa-plus\"></i></button>\n" +
+    "        </form>\n" +
+    "    </li>\n" +
     "</ul>\n" +
     "");
 }]);
 
-angular.module("js/filter/filterTag.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("js/filter/filterTag.html",
+angular.module("js/filter/filterTags.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/filterTags.html",
+    "<ul class=\"list-inline filter-tags\">\n" +
+    "    <li ng-repeat=\"(key, value) in getFilter()\">\n" +
+    "        <species-filter-tag ng-if=\"value.species_id\" item=\"value\"></species-filter-tag>\n" +
+    "        <date-filter-tag ng-if =\"value.start_date && value.end_date\" item=\"value\"></date-filter-tag>\n" +
+    "    </li>\n" +
+    "</ul>");
+}]);
+
+angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/speciesFilterTag.html",
     "<div class=\"btn-group filter-tag\" dropdown is-open=\"status.isopen\">\n" +
     "    <button type=\"button\" class=\"btn btn-primary dropdown-toggle\" style=\"background-color: {{item.color}};\" dropdown-toggle ng-disabled=\"!item.phenophases\">\n" +
     "        {{item.common_name}} <span class=\"badge\">?</span> <span class=\"caret\"></span>\n" +
@@ -321,15 +417,6 @@ angular.module("js/filter/filterTag.html", []).run(["$templateCache", function($
     "        </li>\n" +
     "    </ul>\n" +
     "</div>");
-}]);
-
-angular.module("js/filter/filterTags.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("js/filter/filterTags.html",
-    "<ul class=\"list-inline filter-tags\">\n" +
-    "    <li ng-repeat=\"(key, value) in getFilter()\">\n" +
-    "        <filter-tag item=\"value\"></filter-tag>\n" +
-    "    </li>\n" +
-    "</ul>");
 }]);
 
 angular.module("js/map/map.html", []).run(["$templateCache", function($templateCache) {

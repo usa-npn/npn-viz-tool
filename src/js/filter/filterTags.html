@@ -1,5 +1,6 @@
 <ul class="list-inline filter-tags">
     <li ng-repeat="(key, value) in getFilter()">
-        <filter-tag item="value"></filter-tag>
+        <species-filter-tag ng-if="value.species_id" item="value"></species-filter-tag>
+        <date-filter-tag ng-if ="value.start_date && value.end_date" item="value"></date-filter-tag>
     </li>
 </ul>

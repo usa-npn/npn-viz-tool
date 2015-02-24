@@ -151,8 +151,19 @@ $tool-content-overlap: 40px;
     li {
         margin-bottom: 15px;
     }
+    li.divider {
+        border-bottom: 1px solid #ccc;
+    }
     .fa-refresh {
         color: orange;
+    }
+
+    label[for="yearInputForm"] {
+        display: block;
+    }
+    input#start_date, input#end_date {
+        display: inline-block;
+        width: 80px;
     }
 }
 

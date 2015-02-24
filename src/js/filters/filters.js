@@ -1,5 +1,25 @@
 angular.module('npn-viz-tool.filters',[
 ])
+.filter('gte',function(){
+    return function(input,num) {
+        if(!num || !angular.isArray(input)) {
+            return input;
+        }
+        return input.filter(function(i){
+            return i >= num;
+        });
+    };
+})
+.filter('lte',function(){
+    return function(input,num) {
+        if(!num || !angular.isArray(input)) {
+            return input;
+        }
+        return input.filter(function(i){
+            return i <= num;
+        });
+    };
+})
 .filter('trim',function(){
     return function(input) {
         if(angular.isString(input)) {
