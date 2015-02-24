@@ -6,9 +6,11 @@
                placeholder="Add Species To Filter"
                typeahead="sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue}"
                typeahead-loading="findingSpecies"
-               ng-model="addSpecies.selected" />
-        <button class="btn btn-default" ng-disabled="!addSpecies.speciesToAdd">
-            <i class="fa" ng-class="{'fa-cog fa-spin': findingSpecies, 'fa-plus': !findingSpecies}"></i>
+               ng-model="addSpecies.selected"
+               ng-disabled="findSpeciesParamsEmpty" />
+        <button class="btn btn-default" ng-disabled="!addSpecies.speciesToAdd"
+                ng-click="addSpeciesToFilter(addSpecies.speciesToAdd)">
+            <i class="fa" ng-class="{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}"></i>
         </button>
     </li>
     <li>
@@ -48,4 +50,3 @@
             selection-mode="single"></div>
     </li>
 </ul>
-

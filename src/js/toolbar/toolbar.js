@@ -15,10 +15,10 @@ angular.module('npn-viz-tool.toolbar',[
       };
 
       this.addTool = function(t) {
-        /* TEMPORARY when devloping a specific tab
+        /* TEMPORARY when devloping a specific tab */
         if(tools.length === 0) {
           $scope.select(t);
-        }*/
+        }
         tools.push(t);
       };
     }

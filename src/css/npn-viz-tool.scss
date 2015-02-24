@@ -151,4 +151,25 @@ $tool-content-overlap: 40px;
     li {
         margin-bottom: 15px;
     }
+    .fa-refresh {
+        color: orange;
+    }
+}
+
+ul.filter-tags {
+    position: absolute;
+    right: 125px;
+    top: 0px;
+    z-index: 450;
+    margin-left: 100px;
+
+    li {
+        margin-top: 5px;
+    }
+
+    .filter-tag {
+        .phenophase-list {
+            padding: 5px;
+        }
+    }
 }

@@ -129,5 +129,22 @@ body {
 .tool-content.filter li {
   margin-bottom: 15px;
 }
+.tool-content.filter .fa-refresh {
+  color: orange;
+}
+
+ul.filter-tags {
+  position: absolute;
+  right: 125px;
+  top: 0px;
+  z-index: 450;
+  margin-left: 100px;
+}
+ul.filter-tags li {
+  margin-top: 5px;
+}
+ul.filter-tags .filter-tag .phenophase-list {
+  padding: 5px;
+}
 
 /*# sourceMappingURL=npn-viz-tool.css.map */

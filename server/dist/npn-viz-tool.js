@@ -1,31 +1,92 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-02-23
+ * Version: 0.1.0 - 2015-02-24
  */
 
 angular.module('npn-viz-tool.filter',[
     'isteven-multi-select'
-]).directive('filterControl',['$http','$filter',function($http,$filter){
+])
+.factory('FilterService',[function(){
+    // NOTE: this scale is limited to 20 colors
+    var colorScale = d3.scale.category20(),
+        filter = {};
+    return {
+        getFilter: function() {
+            return angular.extend({},filter);
+        },
+        resetFilter: function() {
+            filter = {};
+        },
+        addSpecies: function(species) {
+            species.color = colorScale(Object.keys(filter).length);
+            if(species && species.species_id) {
+                filter[parseInt(species.species_id)] = species;
+            }
+        }
+    };
+}])
+.directive('filterTags',['FilterService',function(FilterService){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/filter/filterTags.html',
+        scope: {
+        },
+        controller: function($scope){
+            $scope.getFilter = FilterService.getFilter;
+        }
+    };
+}])
+.directive('filterTag',['$http',function($http){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/filter/filterTag.html',
+        scope: {
+            item: '='
+        },
+        controller: function($scope){
+            $scope.status = {
+                isopen: false
+            };
+
+            // TODO cache ??
+            $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
+                params: {
+                    return_all: true,
+                    species_id: $scope.item.species_id
+                }
+            }).success(function(phases) {
+                console.log('phases',phases);
+                var seen = {}; // the call returns redundant data so filter it out.
+                $scope.item.phenophases = phases[0].phenophases.filter(function(pp){
+                    if(seen[pp.phenophase_id]) {
+                        return false;
+                    }
+                    seen[pp.phenophase_id] = pp;
+                    return (pp.selected = true);
+                });
+            });
+        }
+    };
+}])
+.directive('filterControl',['$http','$filter','FilterService',function($http,$filter,FilterService){
     return {
         restrict: 'E',
         templateUrl: 'js/filter/filter.html',
         controller: ['$scope',function($scope) {
+            $scope.addSpeciesToFilter = function(species) {
+                FilterService.addSpecies(species);
+                $scope.addSpecies.speciesToAdd = $scope.addSpecies.selected = undefined;
+            };
             $scope.addSpecies = {selected: undefined};
             $scope.animals = [];
             $scope.plants = [];
             $scope.networks = [];
+            $scope.findSpeciesParamsEmpty = true;
+            var findSpeciesParams;
+
             function invalidateResults() {
                 $scope.serverResults = undefined;
-            }
-            $scope.$watch('animals',invalidateResults);
-            $scope.$watch('plants',invalidateResults);
-            $scope.$watch('networks',invalidateResults);
-            $scope.$watch('addSpecies.selected',function(){
-                $scope.addSpecies.speciesToAdd = angular.isObject($scope.addSpecies.selected) ?
-                    $scope.addSpecies.selected : undefined;
-            });
-
-            function findSpeciesParams() {
+                $scope.addSpecies.speciesToAdd = undefined;
                 var params = {},
                     sid_idx = 0;
                 angular.forEach([].concat($scope.animals).concat($scope.plants),function(s){
@@ -34,13 +95,23 @@ angular.module('npn-viz-tool.filter',[
                 if($scope.networks.length) {
                     params['network_id'] = $scope.networks[0]['network_id'];
                 }
-                return params;
+                findSpeciesParams = params;
+                $scope.findSpeciesParamsEmpty = Object.keys(params).length === 0;
             }
+
+            $scope.$watch('animals',invalidateResults);
+            $scope.$watch('plants',invalidateResults);
+            $scope.$watch('networks',invalidateResults);
+
+            $scope.$watch('addSpecies.selected',function(){
+                $scope.addSpecies.speciesToAdd = angular.isObject($scope.addSpecies.selected) ?
+                    $scope.addSpecies.selected : undefined;
+            });
 
             $scope.findSpecies = function() {
                 if(!$scope.serverResults) {
                     $scope.serverResults = $http.get('/npn_portal/species/getSpeciesFilter.json',{
-                        params: findSpeciesParams()
+                        params: findSpeciesParams
                     }).then(function(response){
                         var species = [];
                         angular.forEach(response.data,function(s){
@@ -53,25 +124,19 @@ angular.module('npn-viz-tool.filter',[
                 }
                 return $scope.serverResults;
             };
-
-            function selectAll(types) {
-                angular.forEach(types,function(type) {
-                    type.selected = true;
-                });
-                return types;
-            }
-
             $http.get('/npn_portal/networks/getPartnerNetworks.json').success(function(partners){
                 angular.forEach(partners,function(p) {
                     p.network_name = p.network_name.trim();
                 });
                 $scope.partners = partners;
             });
+            // not selecting all by default to force the user to pick which should result
+            // in less expensive type-ahead queries later (e.g. 4s vs 60s).
             $http.get('/npn_portal/species/getPlantTypes.json').success(function(types){
-                $scope.plantTypes = selectAll(types);
+                $scope.plantTypes = types;
             });
             $http.get('/npn_portal/species/getAnimalTypes.json').success(function(types){
-                $scope.animalTypes = selectAll(types);
+                $scope.animalTypes = types;
             });
         }]
     };
@@ -167,7 +232,7 @@ angular.module('npn-viz-tool.map',[
         }]
     };
 }]);
-angular.module('templates-npnvis', ['js/filter/filter.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+angular.module('templates-npnvis', ['js/filter/filter.html', 'js/filter/filterTag.html', 'js/filter/filterTags.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
 
 angular.module("js/filter/filter.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/filter.html",
@@ -179,9 +244,11 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "               placeholder=\"Add Species To Filter\"\n" +
     "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue}\"\n" +
     "               typeahead-loading=\"findingSpecies\"\n" +
-    "               ng-model=\"addSpecies.selected\" />\n" +
-    "        <button class=\"btn btn-default\" ng-disabled=\"!addSpecies.speciesToAdd\">\n" +
-    "            <i class=\"fa\" ng-class=\"{'fa-cog fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
+    "               ng-model=\"addSpecies.selected\"\n" +
+    "               ng-disabled=\"findSpeciesParamsEmpty\" />\n" +
+    "        <button class=\"btn btn-default\" ng-disabled=\"!addSpecies.speciesToAdd\"\n" +
+    "                ng-click=\"addSpeciesToFilter(addSpecies.speciesToAdd)\">\n" +
+    "            <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
     "        </button>\n" +
     "    </li>\n" +
     "    <li>\n" +
@@ -221,8 +288,28 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "            selection-mode=\"single\"></div>\n" +
     "    </li>\n" +
     "</ul>\n" +
-    "\n" +
     "");
+}]);
+
+angular.module("js/filter/filterTag.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/filterTag.html",
+    "<div class=\"btn-group filter-tag\" dropdown is-open=\"status.isopen\">\n" +
+    "    <button type=\"button\" class=\"btn btn-primary dropdown-toggle\" style=\"background-color: {{item.color}};\" dropdown-toggle ng-disabled=\"disabled\">\n" +
+    "        {{item.common_name}} <span class=\"badge\">?</span> <span class=\"caret\"></span>\n" +
+    "    </button>\n" +
+    "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
+    "        <li ng-repeat=\"phenophase in item.phenophases\"><input type=\"checkbox\" ng-model=\"phenophase.selected\"> {{phenophase.phenophase_name}}</li>\n" +
+    "    </ul>\n" +
+    "</div>");
+}]);
+
+angular.module("js/filter/filterTags.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/filterTags.html",
+    "<ul class=\"list-inline filter-tags\">\n" +
+    "    <li ng-repeat=\"(key, value) in getFilter()\">\n" +
+    "        <filter-tag item=\"value\"></filter-tag>\n" +
+    "    </li>\n" +
+    "</ul>");
 }]);
 
 angular.module("js/map/map.html", []).run(["$templateCache", function($templateCache) {
@@ -230,6 +317,8 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\">\n" +
     "    <npn-stations ng-if=\"stationView\"></npn-stations>\n" +
     "</ui-gmap-google-map>\n" +
+    "\n" +
+    "<filter-tags></filter-tags>\n" +
     "\n" +
     "<toolbar>\n" +
     "    <tool icon=\"fa-search\" title=\"Filter\">\n" +
@@ -270,7 +359,7 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "</div>");
 }]);
 
-
+// roll LayerService into layer sub-directory rather than within a "services" module.
 angular.module('npn-viz-tool.services',[
 'ngResource'
 ])
@@ -503,10 +592,10 @@ angular.module('npn-viz-tool.toolbar',[
       };
 
       this.addTool = function(t) {
-        /* TEMPORARY when devloping a specific tab
+        /* TEMPORARY when devloping a specific tab */
         if(tools.length === 0) {
           $scope.select(t);
-        }*/
+        }
         tools.push(t);
       };
     }

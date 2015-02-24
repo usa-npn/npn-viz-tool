@@ -1,4 +1,4 @@
-
+// roll LayerService into layer sub-directory rather than within a "services" module.
 angular.module('npn-viz-tool.services',[
 'ngResource'
 ])

@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/filter/filter.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+angular.module('templates-npnvis', ['js/filter/filter.html', 'js/filter/filterTag.html', 'js/filter/filterTags.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
 
 angular.module("js/filter/filter.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/filter.html",
@@ -10,9 +10,11 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "               placeholder=\"Add Species To Filter\"\n" +
     "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue}\"\n" +
     "               typeahead-loading=\"findingSpecies\"\n" +
-    "               ng-model=\"addSpecies.selected\" />\n" +
-    "        <button class=\"btn btn-default\" ng-disabled=\"!addSpecies.speciesToAdd\">\n" +
-    "            <i class=\"fa\" ng-class=\"{'fa-cog fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
+    "               ng-model=\"addSpecies.selected\"\n" +
+    "               ng-disabled=\"findSpeciesParamsEmpty\" />\n" +
+    "        <button class=\"btn btn-default\" ng-disabled=\"!addSpecies.speciesToAdd\"\n" +
+    "                ng-click=\"addSpeciesToFilter(addSpecies.speciesToAdd)\">\n" +
+    "            <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
     "        </button>\n" +
     "    </li>\n" +
     "    <li>\n" +
@@ -52,8 +54,28 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "            selection-mode=\"single\"></div>\n" +
     "    </li>\n" +
     "</ul>\n" +
-    "\n" +
     "");
+}]);
+
+angular.module("js/filter/filterTag.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/filterTag.html",
+    "<div class=\"btn-group filter-tag\" dropdown is-open=\"status.isopen\">\n" +
+    "    <button type=\"button\" class=\"btn btn-primary dropdown-toggle\" style=\"background-color: {{item.color}};\" dropdown-toggle ng-disabled=\"disabled\">\n" +
+    "        {{item.common_name}} <span class=\"badge\">?</span> <span class=\"caret\"></span>\n" +
+    "    </button>\n" +
+    "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
+    "        <li ng-repeat=\"phenophase in item.phenophases\"><input type=\"checkbox\" ng-model=\"phenophase.selected\"> {{phenophase.phenophase_name}}</li>\n" +
+    "    </ul>\n" +
+    "</div>");
+}]);
+
+angular.module("js/filter/filterTags.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/filterTags.html",
+    "<ul class=\"list-inline filter-tags\">\n" +
+    "    <li ng-repeat=\"(key, value) in getFilter()\">\n" +
+    "        <filter-tag item=\"value\"></filter-tag>\n" +
+    "    </li>\n" +
+    "</ul>");
 }]);
 
 angular.module("js/map/map.html", []).run(["$templateCache", function($templateCache) {
@@ -61,6 +83,8 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\">\n" +
     "    <npn-stations ng-if=\"stationView\"></npn-stations>\n" +
     "</ui-gmap-google-map>\n" +
+    "\n" +
+    "<filter-tags></filter-tags>\n" +
     "\n" +
     "<toolbar>\n" +
     "    <tool icon=\"fa-search\" title=\"Filter\">\n" +
