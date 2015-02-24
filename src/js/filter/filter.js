@@ -236,6 +236,16 @@ angular.module('npn-viz-tool.filter',[
         },
         controller: function($scope){
             $scope.removeFromFilter = FilterService.removeFromFilter;
+            $scope.count = '?';
+            $scope.$on('filter-phase1-start',function(event,data) {
+                $scope.count = '?';
+            });
+            $scope.$on('filter-phase2-start',function(event,data) {
+                $scope.count = 0;
+            });
+            $scope.$on('filter-phase2-end',function(event,data) {
+                $scope.count = data.count;
+            });
         }
     };
 }])

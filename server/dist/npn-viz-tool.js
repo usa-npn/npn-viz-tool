@@ -241,6 +241,16 @@ angular.module('npn-viz-tool.filter',[
         },
         controller: function($scope){
             $scope.removeFromFilter = FilterService.removeFromFilter;
+            $scope.count = '?';
+            $scope.$on('filter-phase1-start',function(event,data) {
+                $scope.count = '?';
+            });
+            $scope.$on('filter-phase2-start',function(event,data) {
+                $scope.count = 0;
+            });
+            $scope.$on('filter-phase2-end',function(event,data) {
+                $scope.count = data.count;
+            });
         }
     };
 }])
@@ -455,7 +465,7 @@ angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", functi
   $templateCache.put("js/filter/dateFilterTag.html",
     "<div class=\"btn-group\">\n" +
     "    <button class=\"btn btn-default\" disabled>\n" +
-    "        {{item.start_date}} - {{item.end_date}}\n" +
+    "        {{item.start_date}} - {{item.end_date}} <span class=\"badge\">{{count}}</span>\n" +
     "    </button>\n" +
     "    <button class=\"btn btn-default\" ng-click=\"removeFromFilter(item)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
