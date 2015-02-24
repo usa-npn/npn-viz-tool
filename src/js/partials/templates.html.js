@@ -102,7 +102,7 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
   $templateCache.put("js/filter/speciesFilterTag.html",
     "<div class=\"btn-group filter-tag\" dropdown is-open=\"status.isopen\">\n" +
     "    <button type=\"button\" class=\"btn btn-primary dropdown-toggle\" style=\"background-color: {{item.color}};\" dropdown-toggle ng-disabled=\"!item.phenophases\">\n" +
-    "        {{item.common_name}} <span class=\"badge\">?</span> <span class=\"caret\"></span>\n" +
+    "        {{item.common_name}} <span class=\"badge\">{{count}}</span> <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
     "        <li ng-repeat=\"phenophase in item.phenophases\">\n" +
@@ -119,6 +119,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
   $templateCache.put("js/map/map.html",
     "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\">\n" +
     "    <npn-stations ng-if=\"stationView\"></npn-stations>\n" +
+    "    <npn-filter-results></npn-filter-results>\n" +
     "</ui-gmap-google-map>\n" +
     "\n" +
     "<filter-tags></filter-tags>\n" +
