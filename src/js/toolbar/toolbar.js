@@ -1,6 +1,6 @@
 angular.module('npn-viz-tool.toolbar',[
 ])
-.directive('toolbar', function() {
+.directive('toolbar', ['$rootScope',function($rootScope) {
   return {
     restrict: 'E',
     templateUrl: 'js/toolbar/toolbar.html',
@@ -12,6 +12,10 @@ angular.module('npn-viz-tool.toolbar',[
       $scope.select = function(t) {
         t.selected = !t.selected;
         $scope.open = t.selected;
+        // broadcast an event for open/close that others can listen to
+        $rootScope.$broadcast('tool-'+(t.selected ? 'open' : 'close'),{
+          tool: t
+        });
       };
 
       this.addTool = function(t) {
@@ -23,14 +27,15 @@ angular.module('npn-viz-tool.toolbar',[
       };
     }
   };
-})
-.directive('tool', function() {
+}])
+.directive('tool', [function() {
   return {
     restrict: 'E',
     require: '^toolbar',
     templateUrl: 'js/toolbar/tool.html',
     transclude: true,
     scope: {
+      id: '@',
       title: '@',
       icon: '@'
     },
@@ -38,4 +43,4 @@ angular.module('npn-viz-tool.toolbar',[
       tabsCtrl.addTool(scope);
     }
   };
-});
+}]);

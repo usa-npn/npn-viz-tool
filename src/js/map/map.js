@@ -5,7 +5,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.filter',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['$document','uiGmapGoogleMapApi','uiGmapIsReady',function($document,uiGmapGoogleMapApi,uiGmapIsReady){
+.directive('npnVizMap',['$document','uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function($document,uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
@@ -28,6 +28,12 @@ angular.module('npn-viz-tool.map',[
                         }
                     }
                 };
+            });
+            $scope.$on('tool-close',function(event,data) {
+                if(data.tool.id === 'filter' && !FilterService.isFilterEmpty()) {
+                    // hide the station view
+                    $scope.stationView = false;
+                }
             });
             /*
             $document.bind('keypress',function(e){

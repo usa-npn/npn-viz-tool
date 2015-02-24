@@ -60,11 +60,17 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
 angular.module("js/filter/filterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/filterTag.html",
     "<div class=\"btn-group filter-tag\" dropdown is-open=\"status.isopen\">\n" +
-    "    <button type=\"button\" class=\"btn btn-primary dropdown-toggle\" style=\"background-color: {{item.color}};\" dropdown-toggle ng-disabled=\"disabled\">\n" +
+    "    <button type=\"button\" class=\"btn btn-primary dropdown-toggle\" style=\"background-color: {{item.color}};\" dropdown-toggle ng-disabled=\"!item.phenophases\">\n" +
     "        {{item.common_name}} <span class=\"badge\">?</span> <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
-    "        <li ng-repeat=\"phenophase in item.phenophases\"><input type=\"checkbox\" ng-model=\"phenophase.selected\"> {{phenophase.phenophase_name}}</li>\n" +
+    "        <li>\n" +
+    "            <a href ng-click=\"removeFromFilter(item)\"><i class=\"fa fa-times-circle-o\"> Remove From Filter</i></a>\n" +
+    "        </li>\n" +
+    "        <li class=\"divider\"></li>\n" +
+    "        <li ng-repeat=\"phenophase in item.phenophases\">\n" +
+    "            <input type=\"checkbox\" ng-model=\"phenophase.selected\"> {{phenophase.phenophase_name}}\n" +
+    "        </li>\n" +
     "    </ul>\n" +
     "</div>");
 }]);
@@ -87,16 +93,16 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "<filter-tags></filter-tags>\n" +
     "\n" +
     "<toolbar>\n" +
-    "    <tool icon=\"fa-search\" title=\"Filter\">\n" +
+    "    <tool id=\"filter\" icon=\"fa-search\" title=\"Filter\">\n" +
     "        <filter-control></filter-control>\n" +
     "    </tool>\n" +
-    "    <tool icon=\"fa-bars\" title=\"Layers\">\n" +
+    "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Layers\">\n" +
     "        layer content\n" +
     "    </tool>\n" +
-    "    <tool icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
+    "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
     "        visualization content\n" +
     "    </tool>\n" +
-    "    <tool icon=\"fa-cog\" title=\"Settings\">\n" +
+    "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
     "        settings content\n" +
     "    </tool>\n" +
     "</toolbar>");

@@ -14,13 +14,21 @@ angular.module('npn-viz-tool.filter',[
         getFilter: function() {
             return angular.extend({},filter);
         },
+        isFilterEmpty: function() {
+            return Object.keys(filter).length === 0;
+        },
         resetFilter: function() {
             filter = {};
         },
-        addSpecies: function(species) {
-            species.color = colorScale(Object.keys(filter).length);
-            if(species && species.species_id) {
-                filter[parseInt(species.species_id)] = species;
+        addToFilter: function(item) {
+            item.color = colorScale(Object.keys(filter).length);
+            if(item && item.species_id) {
+                filter[parseInt(item.species_id)] = item;
+            }
+        },
+        removeFromFilter: function(item) {
+            if(item && item.species_id) {
+                delete filter[parseInt(item.species_id)];
             }
         }
     };
@@ -36,26 +44,26 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('filterTag',['$http',function($http){
+// TODO - dropdown closes when any phenophase checkbox is clicked, it needs to stay open
+.directive('filterTag',['$http','FilterService',function($http,FilterService){
     return {
         restrict: 'E',
+        require: '^filterTags',
         templateUrl: 'js/filter/filterTag.html',
         scope: {
             item: '='
         },
         controller: function($scope){
+            $scope.removeFromFilter = FilterService.removeFromFilter;
             $scope.status = {
                 isopen: false
             };
-
-            // TODO cache ??
-            $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
+            $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{ // cache ??
                 params: {
                     return_all: true,
                     species_id: $scope.item.species_id
                 }
             }).success(function(phases) {
-                console.log('phases',phases);
                 var seen = {}; // the call returns redundant data so filter it out.
                 $scope.item.phenophases = phases[0].phenophases.filter(function(pp){
                     if(seen[pp.phenophase_id]) {
@@ -74,7 +82,7 @@ angular.module('npn-viz-tool.filter',[
         templateUrl: 'js/filter/filter.html',
         controller: ['$scope',function($scope) {
             $scope.addSpeciesToFilter = function(species) {
-                FilterService.addSpecies(species);
+                FilterService.addToFilter(species);
                 $scope.addSpecies.speciesToAdd = $scope.addSpecies.selected = undefined;
             };
             $scope.addSpecies = {selected: undefined};
@@ -196,7 +204,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.filter',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['$document','uiGmapGoogleMapApi','uiGmapIsReady',function($document,uiGmapGoogleMapApi,uiGmapIsReady){
+.directive('npnVizMap',['$document','uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function($document,uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
@@ -219,6 +227,12 @@ angular.module('npn-viz-tool.map',[
                         }
                     }
                 };
+            });
+            $scope.$on('tool-close',function(event,data) {
+                if(data.tool.id === 'filter' && !FilterService.isFilterEmpty()) {
+                    // hide the station view
+                    $scope.stationView = false;
+                }
             });
             /*
             $document.bind('keypress',function(e){
@@ -294,11 +308,17 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
 angular.module("js/filter/filterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/filterTag.html",
     "<div class=\"btn-group filter-tag\" dropdown is-open=\"status.isopen\">\n" +
-    "    <button type=\"button\" class=\"btn btn-primary dropdown-toggle\" style=\"background-color: {{item.color}};\" dropdown-toggle ng-disabled=\"disabled\">\n" +
+    "    <button type=\"button\" class=\"btn btn-primary dropdown-toggle\" style=\"background-color: {{item.color}};\" dropdown-toggle ng-disabled=\"!item.phenophases\">\n" +
     "        {{item.common_name}} <span class=\"badge\">?</span> <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
-    "        <li ng-repeat=\"phenophase in item.phenophases\"><input type=\"checkbox\" ng-model=\"phenophase.selected\"> {{phenophase.phenophase_name}}</li>\n" +
+    "        <li>\n" +
+    "            <a href ng-click=\"removeFromFilter(item)\"><i class=\"fa fa-times-circle-o\"> Remove From Filter</i></a>\n" +
+    "        </li>\n" +
+    "        <li class=\"divider\"></li>\n" +
+    "        <li ng-repeat=\"phenophase in item.phenophases\">\n" +
+    "            <input type=\"checkbox\" ng-model=\"phenophase.selected\"> {{phenophase.phenophase_name}}\n" +
+    "        </li>\n" +
     "    </ul>\n" +
     "</div>");
 }]);
@@ -321,16 +341,16 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "<filter-tags></filter-tags>\n" +
     "\n" +
     "<toolbar>\n" +
-    "    <tool icon=\"fa-search\" title=\"Filter\">\n" +
+    "    <tool id=\"filter\" icon=\"fa-search\" title=\"Filter\">\n" +
     "        <filter-control></filter-control>\n" +
     "    </tool>\n" +
-    "    <tool icon=\"fa-bars\" title=\"Layers\">\n" +
+    "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Layers\">\n" +
     "        layer content\n" +
     "    </tool>\n" +
-    "    <tool icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
+    "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
     "        visualization content\n" +
     "    </tool>\n" +
-    "    <tool icon=\"fa-cog\" title=\"Settings\">\n" +
+    "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
     "        settings content\n" +
     "    </tool>\n" +
     "</toolbar>");
@@ -577,7 +597,7 @@ angular.module('npn-viz-tool.stations',[
 }]);
 angular.module('npn-viz-tool.toolbar',[
 ])
-.directive('toolbar', function() {
+.directive('toolbar', ['$rootScope',function($rootScope) {
   return {
     restrict: 'E',
     templateUrl: 'js/toolbar/toolbar.html',
@@ -589,6 +609,10 @@ angular.module('npn-viz-tool.toolbar',[
       $scope.select = function(t) {
         t.selected = !t.selected;
         $scope.open = t.selected;
+        // broadcast an event for open/close that others can listen to
+        $rootScope.$broadcast('tool-'+(t.selected ? 'open' : 'close'),{
+          tool: t
+        });
       };
 
       this.addTool = function(t) {
@@ -600,14 +624,15 @@ angular.module('npn-viz-tool.toolbar',[
       };
     }
   };
-})
-.directive('tool', function() {
+}])
+.directive('tool', [function() {
   return {
     restrict: 'E',
     require: '^toolbar',
     templateUrl: 'js/toolbar/tool.html',
     transclude: true,
     scope: {
+      id: '@',
       title: '@',
       icon: '@'
     },
@@ -615,4 +640,4 @@ angular.module('npn-viz-tool.toolbar',[
       tabsCtrl.addTool(scope);
     }
   };
-});
+}]);
