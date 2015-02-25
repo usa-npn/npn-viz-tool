@@ -261,7 +261,8 @@ angular.module('npn-viz-tool.filter',[
             };
             $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{ // cache ??
                 params: {
-                    date: FilterService.getDate().start_date+'-01-01',
+                    return_all: true,
+                    //date: FilterService.getDate().end_date+'-12-31',
                     species_id: $scope.item.species_id
                 }
             }).success(function(phases) {
