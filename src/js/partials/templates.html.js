@@ -111,7 +111,7 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
     "        <li class=\"inline\">Select <a href ng-click=\"selectAll(true)\">all</a> <a href ng-click=\"selectAll(false)\">none</a></li>\n" +
     "        <li class=\"divider\"></li>\n" +
     "        <li ng-repeat=\"phenophase in item.phenophases\">\n" +
-    "            <input type=\"checkbox\" ng-model=\"phenophase.selected\"> {{phenophase.phenophase_name}}\n" +
+    "            <input type=\"checkbox\" ng-model=\"phenophase.selected\"> <span class=\"badge\">{{phenophase.count}}</span> {{phenophase.phenophase_name}}\n" +
     "        </li>\n" +
     "    </ul>\n" +
     "    <button class=\"btn btn-primary\" style=\"background-color: {{item.color}};\" ng-click=\"removeFromFilter(item)\">\n" +

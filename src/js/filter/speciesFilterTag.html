@@ -6,7 +6,7 @@
         <li class="inline">Select <a href ng-click="selectAll(true)">all</a> <a href ng-click="selectAll(false)">none</a></li>
         <li class="divider"></li>
         <li ng-repeat="phenophase in item.phenophases">
-            <input type="checkbox" ng-model="phenophase.selected"> {{phenophase.phenophase_name}}
+            <input type="checkbox" ng-model="phenophase.selected"> <span class="badge">{{phenophase.count}}</span> {{phenophase.phenophase_name}}
         </li>
     </ul>
     <button class="btn btn-primary" style="background-color: {{item.color}};" ng-click="removeFromFilter(item)">

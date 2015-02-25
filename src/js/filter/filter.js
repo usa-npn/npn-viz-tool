@@ -210,9 +210,15 @@ angular.module('npn-viz-tool.filter',[
         controller: function($scope){
             $scope.$on('filter-phase2-start',function(event,data) {
                 $scope.count = 0;
+                angular.forEach($scope.item.phenophases,function(pp){
+                    pp.count = 0;
+                });
             });
             $scope.$on('filter-phase1-start',function(event,data) {
                 $scope.count = '?';
+                angular.forEach($scope.item.phenophases,function(pp){
+                    pp.count = '?';
+                });
             });
             $scope.item.$speciesFilter = function(species) {
                 if(species.species_id != $scope.item.species_id) {
@@ -220,6 +226,7 @@ angular.module('npn-viz-tool.filter',[
                 }
                 // TODO - keep track of the "all selected" situation...
                 var filtered = species.phenophases.filter(function(pp) {
+                    $scope.item.phenophasesMap[pp.phenophase_id].count++;
                     return $scope.item.phenophasesMap[pp.phenophase_id].selected;
                 });
                 if(filtered.length > 0) {
