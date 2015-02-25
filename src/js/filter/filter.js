@@ -1,11 +1,23 @@
 angular.module('npn-viz-tool.filter',[
     'isteven-multi-select'
 ])
-.factory('FilterService',['$q','$http','$rootScope',function($q,$http,$rootScope){
+.factory('FilterService',['$q','$http','$rootScope','uiGmapGoogleMapApi',function($q,$http,$rootScope,uiGmapGoogleMapApi){
     // NOTE: this scale is limited to 20 colors
     var colorScale = d3.scale.category20(),
         filter = {},
+        defaultIcon = {
+            //path: google.maps.SymbolPath.CIRCLE,
+            //'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
+            fillColor: '#00ff00',
+            fillOpacity: 0.95,
+            scale: 8,
+            strokeColor: '#204d74',
+            strokeWeight: 1
+        },
         last;
+    uiGmapGoogleMapApi.then(function(maps) {
+        defaultIcon.path = maps.SymbolPath.CIRCLE;
+    });
     function isFilterEmpty() {
         return Object.keys(filter).length === 0;
     }
@@ -31,9 +43,13 @@ angular.module('npn-viz-tool.filter',[
             count: markers.length
         });
         var filtered =  markers.filter(function(station){
-            var sid,speciesFilter,keeps = 0;
+            station.markerOpts.icon.fillColor = defaultIcon.fillColor;
+
+            var sid,speciesFilter,keeps = 0,
+                hitMap = {};
             for(sid in station.species) {
                 speciesFilter = filter[sid];
+                hitMap[sid] = 0;
                 if(!speciesFilter) {
                     console.warn('species found in results but not in filter',station.species[sid]);
                     continue;
@@ -42,6 +58,7 @@ angular.module('npn-viz-tool.filter',[
                     continue;
                 }
                 if(speciesFilter.$speciesFilter(station.species[sid])) {
+                    hitMap[sid]++;
                     keeps++;
                     if(keeps === 1) {
                         // this is the first "hit" and dictates the marker color
@@ -49,6 +66,14 @@ angular.module('npn-viz-tool.filter',[
                     }
                 }
             }
+            // look through the hitMap and see if there were multiple hits for multiple species
+            hitMap['n'] = 0;
+            for(sid in hitMap) {
+                if(sid != 'n' && hitMap[sid] > 0) {
+                    hitMap['n']++;
+                }
+            }
+            station.markerOpts.icon.strokeColor = (hitMap['n'] > 1) ? '#00ff00' : defaultIcon.strokeColor;
             return keeps > 0;
         });
         $rootScope.$broadcast('filter-phase2-end',{
@@ -70,15 +95,7 @@ angular.module('npn-viz-tool.filter',[
                 for(i = 0; i < d.station_list.length; i++) {
                     d.station_list[i].markerOpts = {
                         title: d.station_list[i].station_name,
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            //'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
-                            fillColor: '#00ff00',
-                            fillOpacity: 0.95,
-                            scale: 8,
-                            strokeColor: '#204d74',
-                            strokeWeight: 1
-                        }
+                        icon: angular.extend({},defaultIcon)
                     };
                     d.stations[d.station_list[i].station_id] = d.station_list[i];
                 }
