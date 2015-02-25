@@ -23,7 +23,7 @@
         <input id="species"
                type="text" class="form-control"
                placeholder="Add Species To Filter"
-               typeahead="sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:10"
+               typeahead="sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:15"
                typeahead-loading="findingSpecies"
                ng-model="selected.addSpecies"
                ng-disabled="findSpeciesParamsEmpty || !filterHasDate()" />

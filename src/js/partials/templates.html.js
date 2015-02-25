@@ -39,7 +39,7 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "        <input id=\"species\"\n" +
     "               type=\"text\" class=\"form-control\"\n" +
     "               placeholder=\"Add Species To Filter\"\n" +
-    "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:10\"\n" +
+    "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:15\"\n" +
     "               typeahead-loading=\"findingSpecies\"\n" +
     "               ng-model=\"selected.addSpecies\"\n" +
     "               ng-disabled=\"findSpeciesParamsEmpty || !filterHasDate()\" />\n" +

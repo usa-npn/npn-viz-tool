@@ -139,6 +139,15 @@ angular.module('npn-viz-tool.filter',[
         filter = {};
         $rootScope.$broadcast('filter-reset',{});
     }
+    function updateColors() {
+        var key,fc,idx = 0;
+        for(key in filter) {
+            fc = filter[key];
+            if(fc.species_id) {
+                fc.color = colorScale(idx++);
+            }
+        }
+    }
     return {
         getFilter: function() {
             return angular.extend({},filter);
@@ -159,9 +168,8 @@ angular.module('npn-viz-tool.filter',[
             if(item && item.species_id) {
                 var key = parseInt(item.species_id);
                 if(!filter[key]) {
-                    item.colorIdx = Object.keys(filter).length;
-                    item.color = colorScale(item.colorIdx);
                     filter[key] = item;
+                    updateColors();
                     broadcastFilterUpdate();
                 }
             } else if(item.start_date && item.end_date) {
@@ -420,11 +428,19 @@ angular.module('npn-viz-tool.filter',[
                     }).then(function(response){
                         var species = [];
                         angular.forEach(response.data,function(s){
+                            s.number_observations = parseInt(s.number_observations);
                             s.$display = s.common_name+' ('+s.number_observations+')';
                             species.push(s);
                         });
-                        console.log('species',species);
-                        return ($scope.serverResults = species);
+                        return ($scope.serverResults = species.sort(function(a,b){
+                            if(a.number_observations < b.number_observations) {
+                                return 1;
+                            }
+                            if(a.number_observations > b.number_observations) {
+                                return -1;
+                            }
+                            return 0;
+                        }));
                     });
                 }
                 return $scope.serverResults;
