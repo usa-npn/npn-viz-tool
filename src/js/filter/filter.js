@@ -146,7 +146,8 @@ angular.module('npn-viz-tool.filter',[
             if(item && item.species_id) {
                 delete filter[parseInt(item.species_id)];
             } else if(item && item.start_date && item.end_date) {
-                delete filter['date'];
+                // date is required so removal of it invalidates the entire filter
+                filter = {};
             }
         }
     };
@@ -300,7 +301,6 @@ angular.module('npn-viz-tool.filter',[
         restrict: 'E',
         templateUrl: 'js/filter/filter.html',
         controller: ['$scope',function($scope) {
-            $scope.selected = {addSpecies: undefined, date: {}};
 
             $scope.addDateRangeToFilter = function() {
                 FilterService.addToFilter($scope.selected.date);
@@ -315,6 +315,11 @@ angular.module('npn-viz-tool.filter',[
             }
             $scope.thisYear = thisYear;
             $scope.validYears = validYears;
+
+            $scope.selected = {addSpecies: undefined, date: {
+                start_date: (thisYear-1),
+                end_date: thisYear
+            }};
 
             $scope.addSpeciesToFilter = function(species) {
                 FilterService.addToFilter(species);

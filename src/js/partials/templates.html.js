@@ -16,57 +16,6 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
   $templateCache.put("js/filter/filter.html",
     "<ul class=\"list-unstyled\">\n" +
     "    <li>\n" +
-    "        <label for=\"species\">Species</label>\n" +
-    "        <input id=\"species\"\n" +
-    "               type=\"text\" class=\"form-control\"\n" +
-    "               placeholder=\"Add Species To Filter\"\n" +
-    "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:10\"\n" +
-    "               typeahead-loading=\"findingSpecies\"\n" +
-    "               ng-model=\"selected.addSpecies\"\n" +
-    "               ng-disabled=\"findSpeciesParamsEmpty\" />\n" +
-    "        <button class=\"btn btn-default\" ng-disabled=\"!selected.speciesToAdd\"\n" +
-    "                ng-click=\"addSpeciesToFilter(selected.speciesToAdd)\">\n" +
-    "            <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
-    "        </button>\n" +
-    "    </li>\n" +
-    "    <li>\n" +
-    "        <label>Animal Types</label>\n" +
-    "        <div isteven-multi-select\n" +
-    "            max-labels=\"3\"\n" +
-    "            input-model=\"animalTypes\"\n" +
-    "            output-model=\"animals\"\n" +
-    "            button-label=\"species_type\"\n" +
-    "            item-label=\"species_type\"\n" +
-    "            tick-property=\"selected\"\n" +
-    "            orientation=\"horizontal\"\n" +
-    "            helper-elements=\"all none reset filter\"></div>\n" +
-    "    </li>\n" +
-    "    <li>\n" +
-    "        <label>Plant Types</label>\n" +
-    "        <div isteven-multi-select\n" +
-    "            max-labels=\"3\"\n" +
-    "            input-model=\"plantTypes\"\n" +
-    "            output-model=\"plants\"\n" +
-    "            button-label=\"species_type\"\n" +
-    "            item-label=\"species_type\"\n" +
-    "            tick-property=\"selected\"\n" +
-    "            orientation=\"horizontal\"\n" +
-    "            helper-elements=\"all none reset filter\"></div>\n" +
-    "    </li>\n" +
-    "    <li>\n" +
-    "        <label>Partners</label>\n" +
-    "        <div isteven-multi-select\n" +
-    "            max-labels=\"1\"\n" +
-    "            input-model=\"partners\"\n" +
-    "            output-model=\"networks\"\n" +
-    "            button-label=\"network_name\"\n" +
-    "            item-label=\"network_name\"\n" +
-    "            tick-property=\"selected\"\n" +
-    "            orientation=\"horizontal\"\n" +
-    "            selection-mode=\"single\"></div>\n" +
-    "    </li>\n" +
-    "    <li class=\"divider\"></li>\n" +
-    "    <li>\n" +
     "        <label for=\"yearInputForm\">Years (at most two)</label>\n" +
     "        <form id=\"yearInputForm\" name=\"yearInputForm\">\n" +
     "        <input id=\"start_date\" type=\"number\" class=\"form-control\"\n" +
@@ -83,6 +32,60 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "                ng-disabled=\"yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 2) || filterHasDate()\"\n" +
     "                ng-click=\"addDateRangeToFilter()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "        </form>\n" +
+    "    </li>\n" +
+    "    <li class=\"divider\"></li>\n" +
+    "    <li>\n" +
+    "        <label for=\"species\">Species</label>\n" +
+    "        <input id=\"species\"\n" +
+    "               type=\"text\" class=\"form-control\"\n" +
+    "               placeholder=\"Add Species To Filter\"\n" +
+    "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:10\"\n" +
+    "               typeahead-loading=\"findingSpecies\"\n" +
+    "               ng-model=\"selected.addSpecies\"\n" +
+    "               ng-disabled=\"findSpeciesParamsEmpty || !filterHasDate()\" />\n" +
+    "        <button class=\"btn btn-default\" ng-disabled=\"!selected.speciesToAdd\"\n" +
+    "                ng-click=\"addSpeciesToFilter(selected.speciesToAdd)\">\n" +
+    "            <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
+    "        </button>\n" +
+    "    </li>\n" +
+    "    <li>\n" +
+    "        <label>Animal Types</label>\n" +
+    "        <div isteven-multi-select\n" +
+    "            max-labels=\"3\"\n" +
+    "            input-model=\"animalTypes\"\n" +
+    "            output-model=\"animals\"\n" +
+    "            button-label=\"species_type\"\n" +
+    "            item-label=\"species_type\"\n" +
+    "            tick-property=\"selected\"\n" +
+    "            orientation=\"horizontal\"\n" +
+    "            is-disabled=\"!filterHasDate()\"\n" +
+    "            helper-elements=\"all none reset filter\"></div>\n" +
+    "    </li>\n" +
+    "    <li>\n" +
+    "        <label>Plant Types</label>\n" +
+    "        <div isteven-multi-select\n" +
+    "            max-labels=\"3\"\n" +
+    "            input-model=\"plantTypes\"\n" +
+    "            output-model=\"plants\"\n" +
+    "            button-label=\"species_type\"\n" +
+    "            item-label=\"species_type\"\n" +
+    "            tick-property=\"selected\"\n" +
+    "            orientation=\"horizontal\"\n" +
+    "            is-disabled=\"!filterHasDate()\"\n" +
+    "            helper-elements=\"all none reset filter\"></div>\n" +
+    "    </li>\n" +
+    "    <li>\n" +
+    "        <label>Partners</label>\n" +
+    "        <div isteven-multi-select\n" +
+    "            max-labels=\"1\"\n" +
+    "            input-model=\"partners\"\n" +
+    "            output-model=\"networks\"\n" +
+    "            button-label=\"network_name\"\n" +
+    "            item-label=\"network_name\"\n" +
+    "            tick-property=\"selected\"\n" +
+    "            orientation=\"horizontal\"\n" +
+    "            is-disabled=\"!filterHasDate()\"\n" +
+    "            selection-mode=\"single\"></div>\n" +
     "    </li>\n" +
     "</ul>\n" +
     "");
