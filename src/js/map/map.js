@@ -1,5 +1,5 @@
 angular.module('npn-viz-tool.map',[
-    'npn-viz-tool.services',
+    'npn-viz-tool.layers',
     'npn-viz-tool.stations',
     'npn-viz-tool.toolbar',
     'npn-viz-tool.filter',

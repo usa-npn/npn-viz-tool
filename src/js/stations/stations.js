@@ -1,5 +1,5 @@
 angular.module('npn-viz-tool.stations',[
-    'npn-viz-tool.services'
+    'npn-viz-tool.layers'
 ])
 .directive('npnStations',['$http','LayerService',function($http,LayerService){
     return {

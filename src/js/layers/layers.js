@@ -1,5 +1,4 @@
-// roll LayerService into layer sub-directory rather than within a "services" module.
-angular.module('npn-viz-tool.services',[
+angular.module('npn-viz-tool.layers',[
 'ngResource'
 ])
 .factory('LayerService',['$http','$q','uiGmapIsReady',function($http,$q,uiGmapIsReady){

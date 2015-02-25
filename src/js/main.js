@@ -1,6 +1,6 @@
 angular.module('npn-viz-tool',[
 'templates-npnvis',
-'npn-viz-tool.services',
+'npn-viz-tool.layers',
 'npn-viz-tool.map',
 'npn-viz-tool.toolbar',
 'npn-viz-tool.filters',
