@@ -160,6 +160,9 @@ angular.module('npn-viz-tool.filter',[
                     });
                 }
             });
+            $scope.$on('filter-rerun-phase2',function(event,data) {
+                $scope.results.markers = FilterService.reExecute();
+            });
         }
     };
 }])
@@ -174,8 +177,7 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-// TODO - dropdown closes when any phenophase checkbox is clicked, it needs to stay open
-.directive('speciesFilterTag',['$http','FilterService',function($http,FilterService){
+.directive('speciesFilterTag',['$rootScope','$http','FilterService',function($rootScope,$http,FilterService){
     return {
         restrict: 'E',
         require: '^filterTags',
@@ -209,6 +211,22 @@ angular.module('npn-viz-tool.filter',[
             $scope.status = {
                 isopen: false
             };
+            // keep track of selected phenophases during open/close of the list
+            // if on close something changed ask that the currently filtered data
+            // be re-filtered.
+            var saved_pheno_state;
+            $scope.$watch('status.isopen',function() {
+                if($scope.status.isopen) {
+                    saved_pheno_state = $scope.item.phenophases.map(function(pp) { return pp.selected; });
+                } else if (saved_pheno_state) {
+                    for(var i = 0; i < saved_pheno_state.length; i++) {
+                        if(saved_pheno_state[i] != $scope.item.phenophases[i].selected) {
+                            $rootScope.$broadcast('filter-rerun-phase2',{});
+                            break;
+                        }
+                    }
+                }
+            });
             $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{ // cache ??
                 params: {
                     return_all: true,
