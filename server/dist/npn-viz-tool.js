@@ -137,6 +137,13 @@ angular.module('npn-viz-tool.filter',[
         }
         return def.promise;
     }
+    function broadcastFilterUpdate() {
+        $rootScope.$broadcast('filter-update',{});
+    }
+    function resetFilter() {
+        filter = {};
+        $rootScope.$broadcast('filter-reset',{});
+    }
     return {
         getFilter: function() {
             return angular.extend({},filter);
@@ -152,9 +159,7 @@ angular.module('npn-viz-tool.filter',[
         getDate: function() {
             return filter['date'];
         },
-        resetFilter: function() {
-            filter = {};
-        },
+        resetFilter: resetFilter,
         addToFilter: function(item) {
             if(item && item.species_id) {
                 var key = parseInt(item.species_id);
@@ -162,17 +167,24 @@ angular.module('npn-viz-tool.filter',[
                     item.colorIdx = Object.keys(filter).length;
                     item.color = colorScale(item.colorIdx);
                     filter[key] = item;
+                    broadcastFilterUpdate();
                 }
             } else if(item.start_date && item.end_date) {
                 filter['date'] = item;
+                broadcastFilterUpdate();
             }
         },
         removeFromFilter: function(item) {
             if(item && item.species_id) {
                 delete filter[parseInt(item.species_id)];
+                if(isFilterEmpty()) {
+                    resetFilter(); // so that events go out
+                } else {
+                    broadcastFilterUpdate();
+                }
             } else if(item && item.start_date && item.end_date) {
                 // date is required so removal of it invalidates the entire filter
-                filter = {};
+                resetFilter();
             }
         }
     };
@@ -184,17 +196,35 @@ angular.module('npn-viz-tool.filter',[
         scope: {
         },
         controller: function($scope) {
+            var filter_control_open = false;
             $scope.results = {
                 markers: []
             };
             $scope.doCluster = true;
-            $scope.$on('tool-close',function(event,data) {
-                if(data.tool.id === 'filter' && !FilterService.isFilterEmpty()) {
+            function executeFilter() {
+                if(!FilterService.isFilterEmpty()) {
                     $scope.results.markers = [];
                     FilterService.execute().then(function(markers) {
                         $scope.results.markers = markers;
                     });
                 }
+            }
+            $scope.$on('tool-open',function(event,data){
+                filter_control_open = (data.tool.id === 'filter');
+            });
+            $scope.$on('tool-close',function(event,data) {
+                if(data.tool.id === 'filter') {
+                    filter_control_open = false;
+                    executeFilter();
+                }
+            });
+            $scope.$on('filter-update',function(event,data){
+                if(!filter_control_open) {
+                    executeFilter();
+                }
+            });
+            $scope.$on('filter-reset',function(event,data){
+                $scope.results.markers = [];
             });
             $scope.$on('filter-rerun-phase2',function(event,data) {
                 $scope.results.markers = FilterService.reExecute();
@@ -520,11 +550,18 @@ angular.module('npn-viz-tool.map',[
                     }
                 };
             });
+            /*
             $scope.$on('tool-close',function(event,data) {
                 if(data.tool.id === 'filter' && !FilterService.isFilterEmpty()) {
                     // hide the station view
                     $scope.stationView = false;
                 }
+            });*/
+            $scope.$on('filter-phase1-start',function(event,data){
+                $scope.stationView = false;
+            });
+            $scope.$on('filter-reset',function(event,data){
+                $scope.stationView = true;
             });
             /*
             $document.bind('keypress',function(e){
@@ -536,6 +573,25 @@ angular.module('npn-viz-tool.map',[
                 console.log('kp',e);
             });*/
         }]
+    };
+}])
+.directive('npnWorking',['uiGmapIsReady',function(uiGmapIsReady){
+    return {
+        restrict: 'E',
+        template: '<div id="npn-working" ng-if="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>',
+        scope: {
+        },
+        controller: function($scope) {
+            $scope.working = true;
+            uiGmapIsReady.promise(1).then(function(instances){
+                $scope.working = false;
+            });
+            function startWorking(event,data) { $scope.working = true; }
+            function stopWorking(event,data) { $scope.working = false; }
+            $scope.$on('filter-phase1-start',startWorking);
+            $scope.$on('filter-phase2-start',startWorking);
+            $scope.$on('filter-phase2-end',stopWorking);
+        }
     };
 }]);
 angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filter.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
@@ -662,6 +718,8 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
 
 angular.module("js/map/map.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/map/map.html",
+    "<npn-working></npn-working>\n" +
+    "\n" +
     "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\">\n" +
     "    <npn-stations ng-if=\"stationView\"></npn-stations>\n" +
     "    <npn-filter-results></npn-filter-results>\n" +
@@ -945,10 +1003,10 @@ angular.module('npn-viz-tool.toolbar',[
       };
 
       this.addTool = function(t) {
-        /* TEMPORARY when devloping a specific tab */
+        /* TEMPORARY when devloping a specific tab
         if(tools.length === 0) {
           $scope.select(t);
-        }
+        }*/
         tools.push(t);
       };
     }

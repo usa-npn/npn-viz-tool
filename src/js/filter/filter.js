@@ -132,6 +132,13 @@ angular.module('npn-viz-tool.filter',[
         }
         return def.promise;
     }
+    function broadcastFilterUpdate() {
+        $rootScope.$broadcast('filter-update',{});
+    }
+    function resetFilter() {
+        filter = {};
+        $rootScope.$broadcast('filter-reset',{});
+    }
     return {
         getFilter: function() {
             return angular.extend({},filter);
@@ -147,9 +154,7 @@ angular.module('npn-viz-tool.filter',[
         getDate: function() {
             return filter['date'];
         },
-        resetFilter: function() {
-            filter = {};
-        },
+        resetFilter: resetFilter,
         addToFilter: function(item) {
             if(item && item.species_id) {
                 var key = parseInt(item.species_id);
@@ -157,17 +162,24 @@ angular.module('npn-viz-tool.filter',[
                     item.colorIdx = Object.keys(filter).length;
                     item.color = colorScale(item.colorIdx);
                     filter[key] = item;
+                    broadcastFilterUpdate();
                 }
             } else if(item.start_date && item.end_date) {
                 filter['date'] = item;
+                broadcastFilterUpdate();
             }
         },
         removeFromFilter: function(item) {
             if(item && item.species_id) {
                 delete filter[parseInt(item.species_id)];
+                if(isFilterEmpty()) {
+                    resetFilter(); // so that events go out
+                } else {
+                    broadcastFilterUpdate();
+                }
             } else if(item && item.start_date && item.end_date) {
                 // date is required so removal of it invalidates the entire filter
-                filter = {};
+                resetFilter();
             }
         }
     };
@@ -179,17 +191,35 @@ angular.module('npn-viz-tool.filter',[
         scope: {
         },
         controller: function($scope) {
+            var filter_control_open = false;
             $scope.results = {
                 markers: []
             };
             $scope.doCluster = true;
-            $scope.$on('tool-close',function(event,data) {
-                if(data.tool.id === 'filter' && !FilterService.isFilterEmpty()) {
+            function executeFilter() {
+                if(!FilterService.isFilterEmpty()) {
                     $scope.results.markers = [];
                     FilterService.execute().then(function(markers) {
                         $scope.results.markers = markers;
                     });
                 }
+            }
+            $scope.$on('tool-open',function(event,data){
+                filter_control_open = (data.tool.id === 'filter');
+            });
+            $scope.$on('tool-close',function(event,data) {
+                if(data.tool.id === 'filter') {
+                    filter_control_open = false;
+                    executeFilter();
+                }
+            });
+            $scope.$on('filter-update',function(event,data){
+                if(!filter_control_open) {
+                    executeFilter();
+                }
+            });
+            $scope.$on('filter-reset',function(event,data){
+                $scope.results.markers = [];
             });
             $scope.$on('filter-rerun-phase2',function(event,data) {
                 $scope.results.markers = FilterService.reExecute();

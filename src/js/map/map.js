@@ -29,11 +29,18 @@ angular.module('npn-viz-tool.map',[
                     }
                 };
             });
+            /*
             $scope.$on('tool-close',function(event,data) {
                 if(data.tool.id === 'filter' && !FilterService.isFilterEmpty()) {
                     // hide the station view
                     $scope.stationView = false;
                 }
+            });*/
+            $scope.$on('filter-phase1-start',function(event,data){
+                $scope.stationView = false;
+            });
+            $scope.$on('filter-reset',function(event,data){
+                $scope.stationView = true;
             });
             /*
             $document.bind('keypress',function(e){
@@ -45,5 +52,24 @@ angular.module('npn-viz-tool.map',[
                 console.log('kp',e);
             });*/
         }]
+    };
+}])
+.directive('npnWorking',['uiGmapIsReady',function(uiGmapIsReady){
+    return {
+        restrict: 'E',
+        template: '<div id="npn-working" ng-if="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>',
+        scope: {
+        },
+        controller: function($scope) {
+            $scope.working = true;
+            uiGmapIsReady.promise(1).then(function(instances){
+                $scope.working = false;
+            });
+            function startWorking(event,data) { $scope.working = true; }
+            function stopWorking(event,data) { $scope.working = false; }
+            $scope.$on('filter-phase1-start',startWorking);
+            $scope.$on('filter-phase2-start',startWorking);
+            $scope.$on('filter-phase2-end',stopWorking);
+        }
     };
 }]);

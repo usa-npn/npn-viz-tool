@@ -59,6 +59,21 @@ body {
     max-height: 2000px;
 }
 
+#npn-working {
+    width: 100%;
+    height: 100%;
+    color: #fff;
+    background-color: rgba(0,0,0,.6);
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 2000;
+    text-align: center;;
+    i {
+        margin-top: 30%;
+    }
+}
+
 // toolbar
 $tb-content-width: 350px;
 $tb-content-padding: 15px;
