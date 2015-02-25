@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-02-24
+ * Version: 0.1.0 - 2015-02-25
  */
 
 angular.module('npn-viz-tool.filter',[
@@ -561,8 +561,8 @@ angular.module("js/filter/filterTags.html", []).run(["$templateCache", function(
 
 angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/speciesFilterTag.html",
-    "<div class=\"btn-group filter-tag\" dropdown is-open=\"status.isopen\">\n" +
-    "    <button type=\"button\" class=\"btn btn-primary dropdown-toggle\" style=\"background-color: {{item.color}};\" dropdown-toggle ng-disabled=\"!item.phenophases\">\n" +
+    "<div class=\"btn-group filter-tag\" ng-class=\"{open: status.isopen}\">\n" +
+    "    <button type=\"button\" class=\"btn btn-primary\" style=\"background-color: {{item.color}};\" ng-disabled=\"!item.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
     "        {{item.common_name}} <span class=\"badge\">{{count}}</span> <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +

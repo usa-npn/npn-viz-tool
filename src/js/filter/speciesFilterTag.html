@@ -1,5 +1,5 @@
-<div class="btn-group filter-tag" dropdown is-open="status.isopen">
-    <button type="button" class="btn btn-primary dropdown-toggle" style="background-color: {{item.color}};" dropdown-toggle ng-disabled="!item.phenophases">
+<div class="btn-group filter-tag" ng-class="{open: status.isopen}">
+    <button type="button" class="btn btn-primary" style="background-color: {{item.color}};" ng-disabled="!item.phenophases" ng-click="status.isopen = !status.isopen">
         {{item.common_name}} <span class="badge">{{count}}</span> <span class="caret"></span>
     </button>
     <ul class="dropdown-menu phenophase-list" role="menu">
