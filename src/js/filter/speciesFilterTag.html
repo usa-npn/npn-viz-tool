@@ -3,6 +3,8 @@
         {{item.common_name}} <span class="badge">{{count}}</span> <span class="caret"></span>
     </button>
     <ul class="dropdown-menu phenophase-list" role="menu">
+        <li class="inline">Select <a href ng-click="selectAll(true)">all</a> <a href ng-click="selectAll(false)">none</a></li>
+        <li class="divider"></li>
         <li ng-repeat="phenophase in item.phenophases">
             <input type="checkbox" ng-model="phenophase.selected"> {{phenophase.phenophase_name}}
         </li>

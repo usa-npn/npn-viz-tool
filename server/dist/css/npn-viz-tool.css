@@ -143,6 +143,11 @@ body {
   width: 80px;
 }
 
+ul.dropdown-menu li.inline a {
+  display: inline-block;
+  padding: 3px 5px;
+}
+
 ul.filter-tags {
   position: absolute;
   right: 125px;

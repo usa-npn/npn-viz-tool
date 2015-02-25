@@ -156,16 +156,17 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$rootScope','$http','FilterService',function($rootScope,$http,FilterService){
+.directive('npnFilterResults',['$document','$rootScope','$http','FilterService',function($document,$rootScope,$http,FilterService){
     return {
         restrict: 'E',
-        template: '<ui-gmap-markers models="results.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="true"></ui-gmap-markers>',
+        template: '<ui-gmap-markers models="results.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
         scope: {
         },
         controller: function($scope) {
             $scope.results = {
                 markers: []
             };
+            $scope.doCluster = true;
             $scope.$on('tool-close',function(event,data) {
                 if(data.tool.id === 'filter' && !FilterService.isFilterEmpty()) {
                     $scope.results.markers = [];
@@ -176,6 +177,14 @@ angular.module('npn-viz-tool.filter',[
             });
             $scope.$on('filter-rerun-phase2',function(event,data) {
                 $scope.results.markers = FilterService.reExecute();
+            });
+            // TEMPORARY try toggling clustering on/off
+            $document.bind('keypress',function(e){
+                if(e.charCode === 99 || e.key === 'C') {
+                    $scope.$apply(function(){
+                        $scope.doCluster = !$scope.doCluster;
+                    });
+                }
             });
         }
     };
@@ -241,6 +250,11 @@ angular.module('npn-viz-tool.filter',[
                     }
                 }
             });
+            $scope.selectAll = function(state) {
+                angular.forEach($scope.item.phenophases,function(pp){
+                    pp.selected = state;
+                });
+            };
             $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{ // cache ??
                 params: {
                     return_all: true,
@@ -598,6 +612,8 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
     "        {{item.common_name}} <span class=\"badge\">{{count}}</span> <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
+    "        <li class=\"inline\">Select <a href ng-click=\"selectAll(true)\">all</a> <a href ng-click=\"selectAll(false)\">none</a></li>\n" +
+    "        <li class=\"divider\"></li>\n" +
     "        <li ng-repeat=\"phenophase in item.phenophases\">\n" +
     "            <input type=\"checkbox\" ng-model=\"phenophase.selected\"> {{phenophase.phenophase_name}}\n" +
     "        </li>\n" +
