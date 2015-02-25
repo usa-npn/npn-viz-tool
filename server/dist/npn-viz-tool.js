@@ -79,6 +79,8 @@ angular.module('npn-viz-tool.filter',[
                 }
             }
             station.markerOpts.icon.strokeColor = (hitMap['n'] > 1) ? '#00ff00' : defaultIcon.strokeColor;
+            // set key on the marker that uniquely identifies it based on its id and colors
+            station.$markerKey = station.station_id+'.'+station.markerOpts.icon.fillColor+'.'+station.markerOpts.icon.strokeColor;
             return keeps > 0;
         });
         $rootScope.$broadcast('filter-phase2-end',{
@@ -200,7 +202,7 @@ angular.module('npn-viz-tool.filter',[
 .directive('npnFilterResults',['$document','$rootScope','$http','FilterService',function($document,$rootScope,$http,FilterService){
     return {
         restrict: 'E',
-        template: '<ui-gmap-markers models="results.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
+        template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
         scope: {
         },
         controller: function($scope) {
@@ -284,7 +286,6 @@ angular.module('npn-viz-tool.filter',[
                 if(species.species_id != $scope.item.species_id) {
                     console.warn('$filter called on wrong species', $scope.item, species);
                 }
-                // TODO - keep track of the "all selected" situation...
                 var filtered = species.phenophases.filter(function(pp) {
                     $scope.item.phenophasesMap[pp.phenophase_id].count++;
                     return $scope.item.phenophasesMap[pp.phenophase_id].selected;
