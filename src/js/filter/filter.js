@@ -5,6 +5,7 @@ angular.module('npn-viz-tool.filter',[
     // NOTE: this scale is limited to 20 colors
     var colorScale = d3.scale.category20(),
         filter = {},
+        geoFilter = {},
         defaultIcon = {
             //path: google.maps.SymbolPath.CIRCLE,
             //'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
@@ -43,6 +44,17 @@ angular.module('npn-viz-tool.filter',[
             count: markers.length
         });
         var filtered =  markers.filter(function(station){
+            if(Object.keys(geoFilter).length > 0) {
+                var gid,hit = false;
+                for(gid in geoFilter) {
+                    if((hit=geoFilter[gid].$geoFilter(station))) {
+                        break;
+                    }
+                }
+                if(!hit) {
+                    return false;
+                }
+            }
             station.markerOpts.icon.fillColor = defaultIcon.fillColor;
 
             var sid,speciesFilter,keeps = 0,
@@ -174,9 +186,11 @@ angular.module('npn-viz-tool.filter',[
                     updateColors();
                     broadcastFilterUpdate();
                 }
-            } else if(item.start_date && item.end_date) {
+            } else if(item && item.start_date && item.end_date) {
                 filter['date'] = item;
                 broadcastFilterUpdate();
+            } else if(item && item.geoKey) {
+                geoFilter[item.geoKey] = item;
             }
         },
         removeFromFilter: function(item) {
@@ -190,6 +204,8 @@ angular.module('npn-viz-tool.filter',[
             } else if(item && item.start_date && item.end_date) {
                 // date is required so removal of it invalidates the entire filter
                 resetFilter();
+            } else if(item && item.geoKey) {
+                delete geoFilter[item.geoKey];
             }
         }
     };

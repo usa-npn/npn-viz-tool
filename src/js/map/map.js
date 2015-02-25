@@ -5,7 +5,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.filter',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['$document','uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function($document,uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
+.directive('npnVizMap',['uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function(uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
@@ -29,35 +29,25 @@ angular.module('npn-viz-tool.map',[
                     }
                 };
             });
-            /*
-            $scope.$on('tool-close',function(event,data) {
-                if(data.tool.id === 'filter' && !FilterService.isFilterEmpty()) {
-                    // hide the station view
+            $scope.$on('tool-open',function(event,data){
+                if(data.tool.id === 'layers') {
                     $scope.stationView = false;
                 }
-            });*/
+            });
             $scope.$on('filter-phase1-start',function(event,data){
                 $scope.stationView = false;
             });
             $scope.$on('filter-reset',function(event,data){
                 $scope.stationView = true;
             });
-            /*
-            $document.bind('keypress',function(e){
-                if(e.charCode === 114 || e.key === 'R') {
-                    $scope.$apply(function(){
-                        $scope.stationView = !$scope.stationView;
-                    });
-                }
-                console.log('kp',e);
-            });*/
         }]
     };
 }])
+// TODO - bug where during filter-phase2 the working div is NOT displayed
 .directive('npnWorking',['uiGmapIsReady',function(uiGmapIsReady){
     return {
         restrict: 'E',
-        template: '<div id="npn-working" ng-if="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>',
+        template: '<div id="npn-working" ng-show="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>',
         scope: {
         },
         controller: function($scope) {
@@ -65,8 +55,14 @@ angular.module('npn-viz-tool.map',[
             uiGmapIsReady.promise(1).then(function(instances){
                 $scope.working = false;
             });
-            function startWorking(event,data) { $scope.working = true; }
-            function stopWorking(event,data) { $scope.working = false; }
+            function startWorking(event,data) {
+                console.log('startWorking',event,data);
+                $scope.working = true;
+            }
+            function stopWorking(event,data) {
+                console.log('stopWorking',event,data);
+                $scope.working = false;
+            }
             $scope.$on('filter-phase1-start',startWorking);
             $scope.$on('filter-phase2-start',startWorking);
             $scope.$on('filter-phase2-end',stopWorking);

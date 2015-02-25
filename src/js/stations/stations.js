@@ -24,7 +24,7 @@ angular.module('npn-viz-tool.stations',[
                 colorScale = d3.scale.linear().domain([countMap.$min,countMap.$max]).range(['#F7FBFF','#08306B']);
 
                 LayerService.resetLayers().then(function(){
-                    LayerService.loadLayer('US States',function(feature) {
+                    LayerService.loadLayer('primary-boundaries',function(feature) {
                         var name = feature.getProperty('NAME'),
                             loaded = $scope.stations.states.indexOf(name) != -1,
                             count = countMap[name],

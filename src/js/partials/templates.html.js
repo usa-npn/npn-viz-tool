@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filter.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filter.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
 
 angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/dateFilterTag.html",
@@ -117,6 +117,15 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
     "</div>");
 }]);
 
+angular.module("js/layers/layerControl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/layers/layerControl.html",
+    "<ul class=\"list-unstyled\">\n" +
+    "    <li ng-repeat=\"layer in layers\">\n" +
+    "        <input type=\"checkbox\" ng-model=\"layer.$onMap\" ng-change=\"toggle(layer)\"/> {{layer.label}}\n" +
+    "    </li>\n" +
+    "</ul>");
+}]);
+
 angular.module("js/map/map.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/map/map.html",
     "<npn-working></npn-working>\n" +
@@ -133,7 +142,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "        <filter-control></filter-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Layers\">\n" +
-    "        layer content\n" +
+    "        <layer-control></layer-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
     "        visualization content\n" +
