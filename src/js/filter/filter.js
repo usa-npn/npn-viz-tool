@@ -43,6 +43,10 @@ angular.module('npn-viz-tool.filter',[
                 }
                 if(speciesFilter.$speciesFilter(station.species[sid])) {
                     keeps++;
+                    if(keeps === 1) {
+                        // this is the first "hit" and dictates the marker color
+                        station.markerOpts.icon.fillColor = speciesFilter.color;
+                    }
                 }
             }
             return keeps > 0;
@@ -65,7 +69,16 @@ angular.module('npn-viz-tool.filter',[
                 d.stations = {};
                 for(i = 0; i < d.station_list.length; i++) {
                     d.station_list[i].markerOpts = {
-                        title: d.station_list[i].station_name
+                        title: d.station_list[i].station_name,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            //'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
+                            fillColor: '#00ff00',
+                            fillOpacity: 0.95,
+                            scale: 8,
+                            strokeColor: '#204d74',
+                            strokeWeight: 1
+                        }
                     };
                     d.stations[d.station_list[i].station_id] = d.station_list[i];
                 }
@@ -121,7 +134,8 @@ angular.module('npn-viz-tool.filter',[
             if(item && item.species_id) {
                 var key = parseInt(item.species_id);
                 if(!filter[key]) {
-                    item.color = colorScale(Object.keys(filter).length);
+                    item.colorIdx = Object.keys(filter).length;
+                    item.color = colorScale(item.colorIdx);
                     filter[key] = item;
                 }
             } else if(item.start_date && item.end_date) {
