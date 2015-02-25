@@ -376,7 +376,7 @@ angular.module('npn-viz-tool.filter',[
 
             $scope.addDateRangeToFilter = function() {
                 FilterService.addToFilter($scope.selected.date);
-                $scope.selected.date = {};
+                //$scope.selected.date = {};
             };
 
             $scope.filterHasDate = FilterService.hasDate;
@@ -397,9 +397,11 @@ angular.module('npn-viz-tool.filter',[
                 FilterService.addToFilter(species);
                 $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
             };
-            $scope.animals = [];
-            $scope.plants = [];
-            $scope.networks = [];
+            $scope.speciesInput = {
+                animals: [],
+                plants: [],
+                networks: []
+            };
             $scope.findSpeciesParamsEmpty = true;
             var findSpeciesParams;
 
@@ -408,19 +410,19 @@ angular.module('npn-viz-tool.filter',[
                 $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
                 var params = {},
                     sid_idx = 0;
-                angular.forEach([].concat($scope.animals).concat($scope.plants),function(s){
+                angular.forEach([].concat($scope.speciesInput.animals).concat($scope.speciesInput.plants),function(s){
                     params['group_ids['+(sid_idx++)+']'] = s['species_type_id'];
                 });
-                if($scope.networks.length) {
-                    params['network_id'] = $scope.networks[0]['network_id'];
+                if($scope.speciesInput.networks.length) {
+                    params['network_id'] = $scope.speciesInput.networks[0]['network_id'];
                 }
                 findSpeciesParams = params;
                 $scope.findSpeciesParamsEmpty = Object.keys(params).length === 0;
             }
 
-            $scope.$watch('animals',invalidateResults);
-            $scope.$watch('plants',invalidateResults);
-            $scope.$watch('networks',invalidateResults);
+            $scope.$watch('speciesInput.animals',invalidateResults);
+            $scope.$watch('speciesInput.plants',invalidateResults);
+            $scope.$watch('speciesInput.networks',invalidateResults);
 
             $scope.$watch('selected.addSpecies',function(){
                 $scope.selected.speciesToAdd = angular.isObject($scope.selected.addSpecies) ?
@@ -646,8 +648,8 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "                ng-click=\"addDateRangeToFilter()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "        </form>\n" +
     "    </li>\n" +
-    "    <li class=\"divider\"></li>\n" +
-    "    <li>\n" +
+    "    <li class=\"divider\" ng-if=\"filterHasDate()\"></li>\n" +
+    "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label for=\"species\">Species</label>\n" +
     "        <input id=\"species\"\n" +
     "               type=\"text\" class=\"form-control\"\n" +
@@ -655,49 +657,46 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:15\"\n" +
     "               typeahead-loading=\"findingSpecies\"\n" +
     "               ng-model=\"selected.addSpecies\"\n" +
-    "               ng-disabled=\"findSpeciesParamsEmpty || !filterHasDate()\" />\n" +
+    "               ng-disabled=\"findSpeciesParamsEmpty\" />\n" +
     "        <button class=\"btn btn-default\" ng-disabled=\"!selected.speciesToAdd\"\n" +
     "                ng-click=\"addSpeciesToFilter(selected.speciesToAdd)\">\n" +
     "            <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
     "        </button>\n" +
     "    </li>\n" +
-    "    <li>\n" +
+    "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label>Animal Types</label>\n" +
     "        <div isteven-multi-select\n" +
     "            max-labels=\"3\"\n" +
     "            input-model=\"animalTypes\"\n" +
-    "            output-model=\"animals\"\n" +
+    "            output-model=\"speciesInput.animals\"\n" +
     "            button-label=\"species_type\"\n" +
     "            item-label=\"species_type\"\n" +
     "            tick-property=\"selected\"\n" +
     "            orientation=\"horizontal\"\n" +
-    "            is-disabled=\"!filterHasDate()\"\n" +
     "            helper-elements=\"all none reset filter\"></div>\n" +
     "    </li>\n" +
-    "    <li>\n" +
+    "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label>Plant Types</label>\n" +
     "        <div isteven-multi-select\n" +
     "            max-labels=\"3\"\n" +
     "            input-model=\"plantTypes\"\n" +
-    "            output-model=\"plants\"\n" +
+    "            output-model=\"speciesInput.plants\"\n" +
     "            button-label=\"species_type\"\n" +
     "            item-label=\"species_type\"\n" +
     "            tick-property=\"selected\"\n" +
     "            orientation=\"horizontal\"\n" +
-    "            is-disabled=\"!filterHasDate()\"\n" +
     "            helper-elements=\"all none reset filter\"></div>\n" +
     "    </li>\n" +
-    "    <li>\n" +
+    "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label>Partners</label>\n" +
     "        <div isteven-multi-select\n" +
     "            max-labels=\"1\"\n" +
     "            input-model=\"partners\"\n" +
-    "            output-model=\"networks\"\n" +
+    "            output-model=\"speciesInput.networks\"\n" +
     "            button-label=\"network_name\"\n" +
     "            item-label=\"network_name\"\n" +
     "            tick-property=\"selected\"\n" +
     "            orientation=\"horizontal\"\n" +
-    "            is-disabled=\"!filterHasDate()\"\n" +
     "            selection-mode=\"single\"></div>\n" +
     "    </li>\n" +
     "</ul>\n" +

@@ -17,8 +17,8 @@
                 ng-click="addDateRangeToFilter()"><i class="fa fa-plus"></i></button>
         </form>
     </li>
-    <li class="divider"></li>
-    <li>
+    <li class="divider" ng-if="filterHasDate()"></li>
+    <li ng-if="filterHasDate()">
         <label for="species">Species</label>
         <input id="species"
                type="text" class="form-control"
@@ -26,49 +26,46 @@
                typeahead="sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:15"
                typeahead-loading="findingSpecies"
                ng-model="selected.addSpecies"
-               ng-disabled="findSpeciesParamsEmpty || !filterHasDate()" />
+               ng-disabled="findSpeciesParamsEmpty" />
         <button class="btn btn-default" ng-disabled="!selected.speciesToAdd"
                 ng-click="addSpeciesToFilter(selected.speciesToAdd)">
             <i class="fa" ng-class="{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}"></i>
         </button>
     </li>
-    <li>
+    <li ng-if="filterHasDate()">
         <label>Animal Types</label>
         <div isteven-multi-select
             max-labels="3"
             input-model="animalTypes"
-            output-model="animals"
+            output-model="speciesInput.animals"
             button-label="species_type"
             item-label="species_type"
             tick-property="selected"
             orientation="horizontal"
-            is-disabled="!filterHasDate()"
             helper-elements="all none reset filter"></div>
     </li>
-    <li>
+    <li ng-if="filterHasDate()">
         <label>Plant Types</label>
         <div isteven-multi-select
             max-labels="3"
             input-model="plantTypes"
-            output-model="plants"
+            output-model="speciesInput.plants"
             button-label="species_type"
             item-label="species_type"
             tick-property="selected"
             orientation="horizontal"
-            is-disabled="!filterHasDate()"
             helper-elements="all none reset filter"></div>
     </li>
-    <li>
+    <li ng-if="filterHasDate()">
         <label>Partners</label>
         <div isteven-multi-select
             max-labels="1"
             input-model="partners"
-            output-model="networks"
+            output-model="speciesInput.networks"
             button-label="network_name"
             item-label="network_name"
             tick-property="selected"
             orientation="horizontal"
-            is-disabled="!filterHasDate()"
             selection-mode="single"></div>
     </li>
 </ul>

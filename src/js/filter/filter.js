@@ -371,7 +371,7 @@ angular.module('npn-viz-tool.filter',[
 
             $scope.addDateRangeToFilter = function() {
                 FilterService.addToFilter($scope.selected.date);
-                $scope.selected.date = {};
+                //$scope.selected.date = {};
             };
 
             $scope.filterHasDate = FilterService.hasDate;
@@ -392,9 +392,11 @@ angular.module('npn-viz-tool.filter',[
                 FilterService.addToFilter(species);
                 $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
             };
-            $scope.animals = [];
-            $scope.plants = [];
-            $scope.networks = [];
+            $scope.speciesInput = {
+                animals: [],
+                plants: [],
+                networks: []
+            };
             $scope.findSpeciesParamsEmpty = true;
             var findSpeciesParams;
 
@@ -403,19 +405,19 @@ angular.module('npn-viz-tool.filter',[
                 $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
                 var params = {},
                     sid_idx = 0;
-                angular.forEach([].concat($scope.animals).concat($scope.plants),function(s){
+                angular.forEach([].concat($scope.speciesInput.animals).concat($scope.speciesInput.plants),function(s){
                     params['group_ids['+(sid_idx++)+']'] = s['species_type_id'];
                 });
-                if($scope.networks.length) {
-                    params['network_id'] = $scope.networks[0]['network_id'];
+                if($scope.speciesInput.networks.length) {
+                    params['network_id'] = $scope.speciesInput.networks[0]['network_id'];
                 }
                 findSpeciesParams = params;
                 $scope.findSpeciesParamsEmpty = Object.keys(params).length === 0;
             }
 
-            $scope.$watch('animals',invalidateResults);
-            $scope.$watch('plants',invalidateResults);
-            $scope.$watch('networks',invalidateResults);
+            $scope.$watch('speciesInput.animals',invalidateResults);
+            $scope.$watch('speciesInput.plants',invalidateResults);
+            $scope.$watch('speciesInput.networks',invalidateResults);
 
             $scope.$watch('selected.addSpecies',function(){
                 $scope.selected.speciesToAdd = angular.isObject($scope.selected.addSpecies) ?

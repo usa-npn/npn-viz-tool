@@ -164,6 +164,7 @@ $tool-content-overlap: 40px;
         width: 85%;
     }
     li {
+        @extend .animated-show-hide;
         margin-bottom: 15px;
     }
     li.divider {
