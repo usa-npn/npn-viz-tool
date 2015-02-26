@@ -59,6 +59,8 @@ angular.module('npn-viz-tool.map',[
             $scope.$on('filter-phase2-start',startWorking);
             $scope.$on('filter-rerun-phase2',startWorking);
             $scope.$on('filter-phase2-end',stopWorking);
+            $scope.$on('layer-load-start',startWorking);
+            $scope.$on('layer-load-end',stopWorking);
         }
     };
 }]);

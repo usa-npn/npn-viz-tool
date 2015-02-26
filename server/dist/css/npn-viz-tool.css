@@ -123,6 +123,7 @@ body {
   left: -380px;
   z-index: 500;
   background: #fff;
+  overflow: auto;
   transition: left 0.75s;
   -webkit-transition: left 0.75s;
   -moz-transition: left 0.75s;
@@ -135,6 +136,10 @@ body {
   -webkit-transition: left 0.75s;
   -moz-transition: left 0.75s;
   -o-transition: left 0.75s;
+}
+
+.tool-content {
+  padding: 0px 10px 10px 10px;
 }
 
 .tool-content.filter label[for="species"] {
@@ -182,6 +187,18 @@ ul.filter-tags .filter-tag button:first-of-type {
 }
 ul.filter-tags .filter-tag .phenophase-list {
   padding: 5px;
+}
+
+.tool-content.layers li {
+  margin-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+}
+.tool-content.layers li img {
+  width: 262.5px;
+}
+.tool-content.layers li:first-of-type {
+  margin-top: 0px;
 }
 
 /*# sourceMappingURL=npn-viz-tool.css.map */

@@ -558,7 +558,7 @@ angular.module('npn-viz-tool.layers',[
 'npn-viz-tool.filter',
 'ngResource'
 ])
-.factory('LayerService',['$http','$q','uiGmapIsReady',function($http,$q,uiGmapIsReady){
+.factory('LayerService',['$rootScope','$http','$q','uiGmapIsReady',function($rootScope,$http,$q,uiGmapIsReady){
     var layers = null,
         map = null,
         readyPromise = uiGmapIsReady.promise(1).then(function(instances){
@@ -585,9 +585,25 @@ angular.module('npn-viz-tool.layers',[
         if(layer.data) {
             def.resolve(layer);
         } else {
+            $rootScope.$broadcast('layer-load-start',{});
             $http.get('layers/'+layer.file).success(function(data){
+                if(data.type === 'GeometryCollection') {
+                    console.log('Translating GeometryCollection to FeatureCollection');
+                    // translate to FeatureCollection
+                    data.features = [];
+                    angular.forEach(data.geometries,function(geo,idx){
+                        data.features.push({
+                            type: 'Feature',
+                            properties: { NAME: layer.id+'-'+idx },
+                            geometry: geo
+                        });
+                    });
+                    data.type = 'FeatureCollection';
+                    delete data.geometries;
+                }
                 layer.data = data;
                 def.resolve(layer);
+                $rootScope.$broadcast('layer-load-end',{});
             });
         }
         return def.promise;
@@ -629,7 +645,10 @@ angular.module('npn-viz-tool.layers',[
                     arr.push({
                         id: l.id,
                         index: l.index,
-                        label: l.label
+                        label: l.label,
+                        source: l.source,
+                        img: l.img,
+                        link: l.link
                     });
                 }
                 def.resolve(arr.sort(function(a,b){
@@ -745,75 +764,15 @@ angular.module('npn-viz-tool.layers',[
                 console.log('av.layers',layers);
                 $scope.layers = layers;
             });
-            $scope.toggle = function(layer) {
-                if(layer.$onMap) {
-                    LayerService.loadLayer(layer.id,function(feature) {
-                        var style = {
-                                strokeOpacity: 1,
-                                strokeColor: '#ffffff',
-                                strokeWeight: 1,
-                                fillOpacity: 0
-                            };
-                        if(feature.getProperty('$FILTER')) {
-                            style.fillColor = '#800000';
-                            style.fillOpacity = 0.5;
-                        }
-                        return style;
-                    })
-                    .then(function(results){
-                        if(!eventListeners.length) {
-                            var map = results[0];
-                            // this feels kind of like a workaround since the markers aren't
-                            // refreshed until the map moves so forcibly moving the map
-                            $scope.$on('filter-phase2-end',function(event,data) {
-                                if(lastClick) {
-                                    map.panTo(lastClick.latLng);
-                                    lastClick = null;
-                                }
-                            });
-                            eventListeners.push(map.data.addListener('mouseover',function(event){
-                                map.data.overrideStyle(event.feature, {strokeWeight: 3});
-                            }));
-                            eventListeners.push(map.data.addListener('mouseout',function(event){
-                                map.data.revertStyle();
-                            }));
-                            eventListeners.push(map.data.addListener('click',function(event){
-                                $scope.$apply(function(){
-                                    lastClick = event;
-                                    // TODO "NAME" may or may not be suitable, probably should use id...
-                                    var feature = event.feature,
-                                        name = feature.getProperty('NAME'),
-                                        filterArg = feature.getProperty('$FILTER');
-                                    console.log('name',name,filterArg);
-                                    if(!filterArg) {
-                                        filterArg = {
-                                            geoKey: name,
-                                            feature: feature,
-                                            $geoFilter: function(marker) {
-                                                return geoContains(
-                                                    new google.maps.LatLng(parseFloat(marker.latitude), parseFloat(marker.longitude)),
-                                                    filterArg.feature.getGeometry());
-                                            }
-                                        };
-                                        FilterService.addToFilter(filterArg);
-                                        // TODO - different layers will probably have different styles, duplicating hard coded color...
-                                        // over-ride so the change shows up immediately and will be applied on the restyle (o/w there's a pause)
-                                        map.data.overrideStyle(feature, {fillColor: '#800000'});
-                                    } else {
-                                        FilterService.removeFromFilter(filterArg);
-                                        filterArg = null;
-                                    }
-                                    feature.setProperty('$FILTER',filterArg);
-                                    LayerService.restyleLayers().then(function(){
-                                        $rootScope.$broadcast('filter-rerun-phase2',{});
-                                    });
-                                });
 
-                            }));
-                        }
-                    });
-                } else {
-                    LayerService.unloadLayer(layer.id).then(function(unloaded){
+            $scope.layerOnMap = {
+                layer: 'none'
+            };
+            $scope.$watch('layerOnMap.layer',function(newLayer,oldLayer){
+                console.log('layerOnMap.new',newLayer);
+                console.log('layerOnMap.old',oldLayer);
+                if(oldLayer && oldLayer != 'none') {
+                    LayerService.unloadLayer(oldLayer.id).then(function(unloaded){
                         var filterUpdate = false;
                         unloaded.forEach(function(feature) {
                             var filterArg = feature.getProperty('$FILTER');
@@ -823,12 +782,90 @@ angular.module('npn-viz-tool.layers',[
                                 feature.setProperty('$FILTER',null);
                             }
                         });
-                        if(filterUpdate) {
+                        // TODO - maybe instead the filter should just broadcast the "end" event
+                        if(filterUpdate && !FilterService.isFilterEmpty()) {
                             $rootScope.$broadcast('filter-rerun-phase2',{});
                         }
+                        loadLayer(newLayer);
                     });
+                } else if(newLayer){
+                    loadLayer(newLayer);
                 }
-            };
+            });
+
+            function loadLayer(layer) {
+                if(layer === 'none') {
+                    return;
+                }
+                LayerService.loadLayer(layer.id,function(feature) {
+                    var style = {
+                            strokeOpacity: 1,
+                            strokeColor: '#ffffff',
+                            strokeWeight: 1,
+                            fillOpacity: 0
+                        };
+                    if(feature.getProperty('$FILTER')) {
+                        style.fillColor = '#800000';
+                        style.fillOpacity = 0.5;
+                    }
+                    return style;
+                })
+                .then(function(results){
+                    if(!eventListeners.length) {
+                        var map = results[0];
+                        // this feels kind of like a workaround since the markers aren't
+                        // refreshed until the map moves so forcibly moving the map
+                        $scope.$on('filter-phase2-end',function(event,data) {
+                            if(lastClick) {
+                                map.panTo(lastClick.latLng);
+                                lastClick = null;
+                            }
+                        });
+                        eventListeners.push(map.data.addListener('mouseover',function(event){
+                            map.data.overrideStyle(event.feature, {strokeWeight: 3});
+                        }));
+                        eventListeners.push(map.data.addListener('mouseout',function(event){
+                            map.data.revertStyle();
+                        }));
+                        eventListeners.push(map.data.addListener('click',function(event){
+                            $scope.$apply(function(){
+                                lastClick = event;
+                                // TODO "NAME" may or may not be suitable, probably should use id...
+                                var feature = event.feature,
+                                    name = feature.getProperty('NAME'),
+                                    filterArg = feature.getProperty('$FILTER');
+                                console.log('name',name,filterArg);
+                                if(!filterArg) {
+                                    filterArg = {
+                                        geoKey: name,
+                                        feature: feature,
+                                        $geoFilter: function(marker) {
+                                            return geoContains(
+                                                new google.maps.LatLng(parseFloat(marker.latitude), parseFloat(marker.longitude)),
+                                                filterArg.feature.getGeometry());
+                                        }
+                                    };
+                                    FilterService.addToFilter(filterArg);
+                                    // TODO - different layers will probably have different styles, duplicating hard coded color...
+                                    // over-ride so the change shows up immediately and will be applied on the restyle (o/w there's a pause)
+                                    map.data.overrideStyle(feature, {fillColor: '#800000'});
+                                } else {
+                                    FilterService.removeFromFilter(filterArg);
+                                    filterArg = null;
+                                }
+                                feature.setProperty('$FILTER',filterArg);
+                                LayerService.restyleLayers().then(function(){
+                                    // TODO - maybe instead the filter should just broadcast the "end" event
+                                    if(!FilterService.isFilterEmpty()) {
+                                        $rootScope.$broadcast('filter-rerun-phase2',{});
+                                    }
+                                });
+                            });
+
+                        }));
+                    }
+                });
+            }
             // shouldn't happen
             $scope.$on('$destroy',function(){
                 LayerService.resetLayers();
@@ -918,6 +955,8 @@ angular.module('npn-viz-tool.map',[
             $scope.$on('filter-phase2-start',startWorking);
             $scope.$on('filter-rerun-phase2',startWorking);
             $scope.$on('filter-phase2-end',stopWorking);
+            $scope.$on('layer-load-start',startWorking);
+            $scope.$on('layer-load-end',stopWorking);
         }
     };
 }]);
@@ -1043,8 +1082,14 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
 angular.module("js/layers/layerControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/layers/layerControl.html",
     "<ul class=\"list-unstyled\">\n" +
+    "    <li><input type=\"radio\" id=\"layer-none\" ng-model=\"layerOnMap.layer\" value=\"none\"/> <label for=\"layer-none\">None</label></li>\n" +
     "    <li ng-repeat=\"layer in layers\">\n" +
-    "        <input type=\"checkbox\" ng-model=\"layer.$onMap\" ng-change=\"toggle(layer)\"/> {{layer.label}}\n" +
+    "        <input type=\"radio\" id=\"layer-{{layer.id}}\" ng-model=\"layerOnMap.layer\" ng-value=\"layer\"/> <label for=\"layer-{{layer.id}}\">{{layer.label}}</label>\n" +
+    "        <span ng-if=\"layer.source\">(<a href=\"{{layer.source}}\" target=\"_blank\">Source</a>)</span>\n" +
+    "        <span ng-if=\"layer.img\">\n" +
+    "            <a ng-if=\"layer.link\" href=\"{{layer.link}}\" target=\"_blank\"><img src=\"{{layer.img}}\" /></a>\n" +
+    "            <img ng-if=\"!layer.link\" src=\"{{layer.img}}\" />\n" +
+    "        </span>\n" +
     "    </li>\n" +
     "</ul>");
 }]);

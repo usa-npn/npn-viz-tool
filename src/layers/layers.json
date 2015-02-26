@@ -1,5 +1,33 @@
 [{
     "id" : "primary-boundaries",
     "label" : "US States",
-    "file" : "us-states.geojson"
+    "file" : "us-states.geojson",
+    "img" : "layers/usa-map.jpg"
+},{
+    "id" : "fws-regions",
+    "label" : "USFWS Regions",
+    "file" : "FWS_Regional_Boundaries.json",
+    "source" : "http://www.fws.gov/gis/data/national/#REGIONAL BOUNDARIES",
+    "img" : "layers/FWS_Regions.jpg",
+    "link" : "http://www.fws.gov/refuges/realty/index.html"
+},{
+    "id" : "fws-eco-regions",
+    "label" : "USFWS Ecosystem Regions",
+    "file" : "FWS_Ecoregions.json",
+    "img" : "layers/FWS_Ecoregions.jpg",
+    "source" : "http://www.fws.gov/gis/data/national/#ECOSYSTEM REGIONS"
+},{
+    "id" : "lccs",
+    "label" : "LCCs",
+    "file" : "FWS_LCC.json",
+    "source" : "http://www.fws.gov/gis/data/national/#LCC",
+    "img" : "layers/LCCs.jpg",
+    "link" : "http://www.fws.gov/landscape-conservation/lcc.html"
+},{
+    "id" : "nps-boundaries",
+    "label" : "National Park Boundaries",
+    "file" : "nps_boundary.json",
+    "source" : "https://catalog.data.gov/dataset/national-park-boundariesf0a4c",
+    "img" : "layers/yosemite.jpg",
+    "link" : "http://www.nps.gov/index.htm"
 }]

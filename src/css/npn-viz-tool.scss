@@ -143,6 +143,7 @@ $tool-content-overlap: 40px;
         left: -($tb-content-width+(2*$tb-content-padding));
         z-index: 500;
         background: $tb-bg;
+        overflow: auto;
 
         @include tb-transition();
     }
@@ -152,6 +153,10 @@ $tool-content-overlap: 40px;
 
         @include tb-transition();
     }
+}
+
+.tool-content {
+    padding: 0px 10px 10px 10px;
 }
 
 // filter
@@ -209,5 +214,20 @@ ul.filter-tags {
         .phenophase-list {
             padding: 5px;
         }
+    }
+}
+
+// layers
+.tool-content.layers {
+    li {
+        margin-top: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ccc;
+        img {
+            width: ($tb-content-width * .75);
+        }
+    }
+    li:first-of-type {
+        margin-top: 0px;
     }
 }

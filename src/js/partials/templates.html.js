@@ -120,8 +120,14 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
 angular.module("js/layers/layerControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/layers/layerControl.html",
     "<ul class=\"list-unstyled\">\n" +
+    "    <li><input type=\"radio\" id=\"layer-none\" ng-model=\"layerOnMap.layer\" value=\"none\"/> <label for=\"layer-none\">None</label></li>\n" +
     "    <li ng-repeat=\"layer in layers\">\n" +
-    "        <input type=\"checkbox\" ng-model=\"layer.$onMap\" ng-change=\"toggle(layer)\"/> {{layer.label}}\n" +
+    "        <input type=\"radio\" id=\"layer-{{layer.id}}\" ng-model=\"layerOnMap.layer\" ng-value=\"layer\"/> <label for=\"layer-{{layer.id}}\">{{layer.label}}</label>\n" +
+    "        <span ng-if=\"layer.source\">(<a href=\"{{layer.source}}\" target=\"_blank\">Source</a>)</span>\n" +
+    "        <span ng-if=\"layer.img\">\n" +
+    "            <a ng-if=\"layer.link\" href=\"{{layer.link}}\" target=\"_blank\"><img src=\"{{layer.img}}\" /></a>\n" +
+    "            <img ng-if=\"!layer.link\" src=\"{{layer.img}}\" />\n" +
+    "        </span>\n" +
     "    </li>\n" +
     "</ul>");
 }]);
