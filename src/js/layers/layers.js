@@ -199,7 +199,7 @@ angular.module('npn-viz-tool.layers',[
                                 fillOpacity: 0
                             };
                         if(feature.getProperty('$FILTER')) {
-                            style.fillColor = '#FF34B3';
+                            style.fillColor = '#800000';
                             style.fillOpacity = 0.5;
                         }
                         return style;
@@ -240,14 +240,19 @@ angular.module('npn-viz-tool.layers',[
                                             }
                                         };
                                         FilterService.addToFilter(filterArg);
+                                        // TODO - different layers will probably have different styles, duplicating hard coded color...
+                                        // over-ride so the change shows up immediately and will be applied on the restyle (o/w there's a pause)
+                                        map.data.overrideStyle(feature, {fillColor: '#800000'});
                                     } else {
                                         FilterService.removeFromFilter(filterArg);
                                         filterArg = null;
                                     }
                                     feature.setProperty('$FILTER',filterArg);
-                                    LayerService.restyleLayers();
-                                    $rootScope.$broadcast('filter-rerun-phase2',{});
+                                    LayerService.restyleLayers().then(function(){
+                                        $rootScope.$broadcast('filter-rerun-phase2',{});
+                                    });
                                 });
+
                             }));
                         }
                     });

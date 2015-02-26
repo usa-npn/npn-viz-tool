@@ -1,7 +1,16 @@
 angular.module('npn-viz-tool.filter',[
     'isteven-multi-select'
 ])
-.factory('FilterService',['$q','$http','$rootScope','uiGmapGoogleMapApi',function($q,$http,$rootScope,uiGmapGoogleMapApi){
+/**
+ * TODO - need to nail down the event model and probably even formalize it via a service because it's all
+ * pretty loosey goosey at the moment.  Bad enough duplicating strings around...
+ *
+ * TODO - the filter components (date, species and geo) are untyped objects.  it would be much cleaner to
+ * strongly type them and create factory methods for them.
+ * E.g.
+ * var filterArg = FilterService.newSpeciesArg() || newDateArg() || newGeoArg();
+ */
+.factory('FilterService',['$q','$http','$rootScope','$timeout','uiGmapGoogleMapApi',function($q,$http,$rootScope,$timeout,uiGmapGoogleMapApi){
     // NOTE: this scale is limited to 20 colors
     var colorScale = d3.scale.category20(),
         filter = {},
@@ -39,6 +48,14 @@ angular.module('npn-viz-tool.filter',[
             return params;
         }
     }
+    $rootScope.$on('filter-rerun-phase2',function(event,data){
+        $timeout(function(){
+            if(last) {
+                var markers = post_filter(last);
+                $rootScope.$broadcast('filter-marker-updates',{markers: markers});
+            }
+        },500);
+    });
     function post_filter(markers) {
         $rootScope.$broadcast('filter-phase2-start',{
             count: markers.length
@@ -247,8 +264,9 @@ angular.module('npn-viz-tool.filter',[
             $scope.$on('filter-reset',function(event,data){
                 $scope.results.markers = [];
             });
-            $scope.$on('filter-rerun-phase2',function(event,data) {
-                $scope.results.markers = FilterService.reExecute();
+            $scope.$on('filter-marker-updates',function(event,data){
+                console.log('update data',data);
+                $scope.results.markers = data.markers;
             });
             // TEMPORARY try toggling clustering on/off
             $document.bind('keypress',function(e){

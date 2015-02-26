@@ -51,20 +51,13 @@ angular.module('npn-viz-tool.map',[
         scope: {
         },
         controller: function($scope) {
-            $scope.working = true;
-            uiGmapIsReady.promise(1).then(function(instances){
-                $scope.working = false;
-            });
-            function startWorking(event,data) {
-                console.log('startWorking',event,data);
-                $scope.working = true;
-            }
-            function stopWorking(event,data) {
-                console.log('stopWorking',event,data);
-                $scope.working = false;
-            }
+            function startWorking() { $scope.working = true; }
+            function stopWorking() { $scope.working = false;}
+            startWorking();
+            uiGmapIsReady.promise(1).then(stopWorking);
             $scope.$on('filter-phase1-start',startWorking);
             $scope.$on('filter-phase2-start',startWorking);
+            $scope.$on('filter-rerun-phase2',startWorking);
             $scope.$on('filter-phase2-end',stopWorking);
         }
     };

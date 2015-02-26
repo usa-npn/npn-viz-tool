@@ -1,12 +1,21 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-02-25
+ * Version: 0.1.0 - 2015-02-26
  */
 
 angular.module('npn-viz-tool.filter',[
     'isteven-multi-select'
 ])
-.factory('FilterService',['$q','$http','$rootScope','uiGmapGoogleMapApi',function($q,$http,$rootScope,uiGmapGoogleMapApi){
+/**
+ * TODO - need to nail down the event model and probably even formalize it via a service because it's all
+ * pretty loosey goosey at the moment.  Bad enough duplicating strings around...
+ *
+ * TODO - the filter components (date, species and geo) are untyped objects.  it would be much cleaner to
+ * strongly type them and create factory methods for them.
+ * E.g.
+ * var filterArg = FilterService.newSpeciesArg() || newDateArg() || newGeoArg();
+ */
+.factory('FilterService',['$q','$http','$rootScope','$timeout','uiGmapGoogleMapApi',function($q,$http,$rootScope,$timeout,uiGmapGoogleMapApi){
     // NOTE: this scale is limited to 20 colors
     var colorScale = d3.scale.category20(),
         filter = {},
@@ -44,6 +53,14 @@ angular.module('npn-viz-tool.filter',[
             return params;
         }
     }
+    $rootScope.$on('filter-rerun-phase2',function(event,data){
+        $timeout(function(){
+            if(last) {
+                var markers = post_filter(last);
+                $rootScope.$broadcast('filter-marker-updates',{markers: markers});
+            }
+        },500);
+    });
     function post_filter(markers) {
         $rootScope.$broadcast('filter-phase2-start',{
             count: markers.length
@@ -252,8 +269,9 @@ angular.module('npn-viz-tool.filter',[
             $scope.$on('filter-reset',function(event,data){
                 $scope.results.markers = [];
             });
-            $scope.$on('filter-rerun-phase2',function(event,data) {
-                $scope.results.markers = FilterService.reExecute();
+            $scope.$on('filter-marker-updates',function(event,data){
+                console.log('update data',data);
+                $scope.results.markers = data.markers;
             });
             // TEMPORARY try toggling clustering on/off
             $document.bind('keypress',function(e){
@@ -737,7 +755,7 @@ angular.module('npn-viz-tool.layers',[
                                 fillOpacity: 0
                             };
                         if(feature.getProperty('$FILTER')) {
-                            style.fillColor = '#FF34B3';
+                            style.fillColor = '#800000';
                             style.fillOpacity = 0.5;
                         }
                         return style;
@@ -778,14 +796,19 @@ angular.module('npn-viz-tool.layers',[
                                             }
                                         };
                                         FilterService.addToFilter(filterArg);
+                                        // TODO - different layers will probably have different styles, duplicating hard coded color...
+                                        // over-ride so the change shows up immediately and will be applied on the restyle (o/w there's a pause)
+                                        map.data.overrideStyle(feature, {fillColor: '#800000'});
                                     } else {
                                         FilterService.removeFromFilter(filterArg);
                                         filterArg = null;
                                     }
                                     feature.setProperty('$FILTER',filterArg);
-                                    LayerService.restyleLayers();
-                                    $rootScope.$broadcast('filter-rerun-phase2',{});
+                                    LayerService.restyleLayers().then(function(){
+                                        $rootScope.$broadcast('filter-rerun-phase2',{});
+                                    });
                                 });
+
                             }));
                         }
                     });
@@ -887,20 +910,13 @@ angular.module('npn-viz-tool.map',[
         scope: {
         },
         controller: function($scope) {
-            $scope.working = true;
-            uiGmapIsReady.promise(1).then(function(instances){
-                $scope.working = false;
-            });
-            function startWorking(event,data) {
-                console.log('startWorking',event,data);
-                $scope.working = true;
-            }
-            function stopWorking(event,data) {
-                console.log('stopWorking',event,data);
-                $scope.working = false;
-            }
+            function startWorking() { $scope.working = true; }
+            function stopWorking() { $scope.working = false;}
+            startWorking();
+            uiGmapIsReady.promise(1).then(stopWorking);
             $scope.$on('filter-phase1-start',startWorking);
             $scope.$on('filter-phase2-start',startWorking);
+            $scope.$on('filter-rerun-phase2',startWorking);
             $scope.$on('filter-phase2-end',stopWorking);
         }
     };
