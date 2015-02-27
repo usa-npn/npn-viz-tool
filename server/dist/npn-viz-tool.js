@@ -423,7 +423,7 @@ angular.module('npn-viz-tool.filter',[
 .directive('filterControl',['$http','$filter','FilterService',function($http,$filter,FilterService){
     return {
         restrict: 'E',
-        templateUrl: 'js/filter/filter.html',
+        templateUrl: 'js/filter/filterControl.html',
         controller: ['$scope',function($scope) {
 
             $scope.addDateRangeToFilter = function() {
@@ -984,7 +984,7 @@ angular.module('npn-viz-tool.map',[
         }
     };
 }]);
-angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filter.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
 
 angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/dateFilterTag.html",
@@ -998,8 +998,8 @@ angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", functi
     "</div>");
 }]);
 
-angular.module("js/filter/filter.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("js/filter/filter.html",
+angular.module("js/filter/filterControl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/filterControl.html",
     "<ul class=\"list-unstyled\">\n" +
     "    <li>\n" +
     "        <label for=\"yearInputForm\">Years (at most two)</label>\n" +

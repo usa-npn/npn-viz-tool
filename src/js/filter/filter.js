@@ -418,7 +418,7 @@ angular.module('npn-viz-tool.filter',[
 .directive('filterControl',['$http','$filter','FilterService',function($http,$filter,FilterService){
     return {
         restrict: 'E',
-        templateUrl: 'js/filter/filter.html',
+        templateUrl: 'js/filter/filterControl.html',
         controller: ['$scope',function($scope) {
 
             $scope.addDateRangeToFilter = function() {
