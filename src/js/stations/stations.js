@@ -1,15 +1,16 @@
 angular.module('npn-viz-tool.stations',[
+    'npn-viz-tool.settings',
     'npn-viz-tool.layers'
 ])
-.directive('npnStations',['$http','LayerService',function($http,LayerService){
+.directive('npnStations',['$http','LayerService','SettingsService',function($http,LayerService,SettingsService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
         scope: {
         },
         controller: ['$scope',function($scope) {
-            $scope.doCluster = true;
-            $scope.$on('setting-update-cluster-markers',function(event,data){
+            $scope.doCluster = SettingsService.getSettingValue('clusterMarkers');
+            $scope.$on('setting-update-clusterMarkers',function(event,data){
                 $scope.doCluster = data.value;
             });
             $scope.stations = {

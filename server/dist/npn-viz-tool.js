@@ -4,6 +4,7 @@
  */
 
 angular.module('npn-viz-tool.filter',[
+    'npn-viz-tool.settings',
     'isteven-multi-select'
 ])
 /**
@@ -232,7 +233,7 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$rootScope','$http','FilterService',function($rootScope,$http,FilterService){
+.directive('npnFilterResults',['$rootScope','$http','FilterService','SettingsService',function($rootScope,$http,FilterService,SettingsService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
@@ -243,8 +244,8 @@ angular.module('npn-viz-tool.filter',[
             $scope.results = {
                 markers: []
             };
-            $scope.doCluster = true;
-            $scope.$on('setting-update-cluster-markers',function(event,data){
+            $scope.doCluster = SettingsService.getSettingValue('clusterMarkers');
+            $scope.$on('setting-update-clusterMarkers',function(event,data){
                 $scope.doCluster = data.value;
             });
             function executeFilter() {
@@ -304,7 +305,7 @@ angular.module('npn-viz-tool.filter',[
         return counts;
     };
 })
-.directive('speciesFilterTag',['$rootScope','$http','FilterService',function($rootScope,$http,FilterService){
+.directive('speciesFilterTag',['$rootScope','$http','FilterService','SettingsService',function($rootScope,$http,FilterService,SettingsService){
     return {
         restrict: 'E',
         require: '^filterTags',
@@ -313,8 +314,8 @@ angular.module('npn-viz-tool.filter',[
             item: '='
         },
         controller: function($scope){
-            $scope.badgeFormat = 'observation-count';
-            $scope.$on('setting-update-tag-badge-format',function(event,data){
+            $scope.badgeFormat = SettingsService.getSettingValue('tagBadgeFormat');
+            $scope.$on('setting-update-tagBadgeFormat',function(event,data){
                 $scope.badgeFormat = data.value;
             });
             $scope.counts = {
@@ -1197,34 +1198,43 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
 
 angular.module('npn-viz-tool.settings',[
     'npn-viz-tool.filters'
-]).directive('settingsControl',['$rootScope','$document',function($rootScope,$document){
+])
+.factory('SettingsService',[function(){
+    var settings = {
+        clusterMarkers: {
+            name: 'cluster-markers',
+            value: true
+        },
+        tagBadgeFormat: {
+            name: 'tag-badge-format',
+            value: 'observation-count',
+            options: [{
+                value: 'observation-count',
+                label: 'Observation Count'
+            },{
+                value: 'station-count',
+                label: 'Station Count'
+            },{
+                value: 'station-observation-count',
+                label: 'Station Count/Observation Count'
+            }]
+        }
+    };
+    return {
+        getSettings: function() { return settings; },
+        getSetting: function(key) { return settings[key]; },
+        getSettingValue: function(key) { return settings[key].value; }
+    };
+}])
+.directive('settingsControl',['$rootScope','$document','SettingsService',function($rootScope,$document,SettingsService){
     return {
         restrict: 'E',
         templateUrl: 'js/settings/settingsControl.html',
         controller: function($scope) {
-            $scope.settings = {
-                clusterMarkers: {
-                    name: 'cluster-markers',
-                    value: true
-                },
-                tagBadgeFormat: {
-                    name: 'tag-badge-format',
-                    value: 'observation-count',
-                    options: [{
-                        value: 'observation-count',
-                        label: 'Observation Count'
-                    },{
-                        value: 'station-count',
-                        label: 'Station Count'
-                    },{
-                        value: 'station-observation-count',
-                        label: 'Station Count/Observation Count'
-                    }]
-                }
-            };
+            $scope.settings = SettingsService.getSettings();
             function broadcastSettingChange(key) {
                 console.log('broadcastSettingChange',$scope.settings[key]);
-                $rootScope.$broadcast('setting-update-'+$scope.settings[key].name,$scope.settings[key]);
+                $rootScope.$broadcast('setting-update-'+key,$scope.settings[key]);
             }
             $scope.$watch('settings.clusterMarkers.value',function(oldV,newV){
                 broadcastSettingChange('clusterMarkers');
@@ -1243,17 +1253,18 @@ angular.module('npn-viz-tool.settings',[
     };
 }]);
 angular.module('npn-viz-tool.stations',[
+    'npn-viz-tool.settings',
     'npn-viz-tool.layers'
 ])
-.directive('npnStations',['$http','LayerService',function($http,LayerService){
+.directive('npnStations',['$http','LayerService','SettingsService',function($http,LayerService,SettingsService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
         scope: {
         },
         controller: ['$scope',function($scope) {
-            $scope.doCluster = true;
-            $scope.$on('setting-update-cluster-markers',function(event,data){
+            $scope.doCluster = SettingsService.getSettingValue('clusterMarkers');
+            $scope.$on('setting-update-clusterMarkers',function(event,data){
                 $scope.doCluster = data.value;
             });
             $scope.stations = {

@@ -1,4 +1,5 @@
 angular.module('npn-viz-tool.filter',[
+    'npn-viz-tool.settings',
     'isteven-multi-select'
 ])
 /**
@@ -227,7 +228,7 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$rootScope','$http','FilterService',function($rootScope,$http,FilterService){
+.directive('npnFilterResults',['$rootScope','$http','FilterService','SettingsService',function($rootScope,$http,FilterService,SettingsService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
@@ -238,8 +239,8 @@ angular.module('npn-viz-tool.filter',[
             $scope.results = {
                 markers: []
             };
-            $scope.doCluster = true;
-            $scope.$on('setting-update-cluster-markers',function(event,data){
+            $scope.doCluster = SettingsService.getSettingValue('clusterMarkers');
+            $scope.$on('setting-update-clusterMarkers',function(event,data){
                 $scope.doCluster = data.value;
             });
             function executeFilter() {
@@ -299,7 +300,7 @@ angular.module('npn-viz-tool.filter',[
         return counts;
     };
 })
-.directive('speciesFilterTag',['$rootScope','$http','FilterService',function($rootScope,$http,FilterService){
+.directive('speciesFilterTag',['$rootScope','$http','FilterService','SettingsService',function($rootScope,$http,FilterService,SettingsService){
     return {
         restrict: 'E',
         require: '^filterTags',
@@ -308,8 +309,8 @@ angular.module('npn-viz-tool.filter',[
             item: '='
         },
         controller: function($scope){
-            $scope.badgeFormat = 'observation-count';
-            $scope.$on('setting-update-tag-badge-format',function(event,data){
+            $scope.badgeFormat = SettingsService.getSettingValue('tagBadgeFormat');
+            $scope.$on('setting-update-tagBadgeFormat',function(event,data){
                 $scope.badgeFormat = data.value;
             });
             $scope.counts = {
