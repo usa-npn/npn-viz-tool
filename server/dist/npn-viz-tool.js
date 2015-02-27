@@ -232,7 +232,7 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$document','$rootScope','$http','FilterService',function($document,$rootScope,$http,FilterService){
+.directive('npnFilterResults',['$rootScope','$http','FilterService',function($rootScope,$http,FilterService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
@@ -244,6 +244,9 @@ angular.module('npn-viz-tool.filter',[
                 markers: []
             };
             $scope.doCluster = true;
+            $scope.$on('setting-update-cluster-markers',function(event,data){
+                $scope.doCluster = data.value;
+            });
             function executeFilter() {
                 if(!FilterService.isFilterEmpty()) {
                     $scope.results.markers = [];
@@ -273,14 +276,6 @@ angular.module('npn-viz-tool.filter',[
                 console.log('update data',data);
                 $scope.results.markers = data.markers;
             });
-            // TEMPORARY try toggling clustering on/off
-            $document.bind('keypress',function(e){
-                if(e.charCode === 99 || e.key === 'C') {
-                    $scope.$apply(function(){
-                        $scope.doCluster = !$scope.doCluster;
-                    });
-                }
-            });
         }
     };
 }])
@@ -295,6 +290,20 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
+.filter('speciesBadge',function(){
+    return function(counts,format){
+        if(format === 'observation-count') {
+            return counts.observation;
+        }
+        if(format === 'station-count') {
+            return counts.station;
+        }
+        if(format === 'station-observation-count') {
+            return counts.station+'/'+counts.observation;
+        }
+        return counts;
+    };
+})
 .directive('speciesFilterTag',['$rootScope','$http','FilterService',function($rootScope,$http,FilterService){
     return {
         restrict: 'E',
@@ -304,14 +313,22 @@ angular.module('npn-viz-tool.filter',[
             item: '='
         },
         controller: function($scope){
+            $scope.badgeFormat = 'observation-count';
+            $scope.$on('setting-update-tag-badge-format',function(event,data){
+                $scope.badgeFormat = data.value;
+            });
+            $scope.counts = {
+                station: '?',
+                observation: '?'
+            };
             $scope.$on('filter-phase2-start',function(event,data) {
-                $scope.count = 0;
+                $scope.counts.station = $scope.counts.observation = 0;
                 angular.forEach($scope.item.phenophases,function(pp){
                     pp.count = 0;
                 });
             });
             $scope.$on('filter-phase1-start',function(event,data) {
-                $scope.count = '?';
+                $scope.counts.station = $scope.counts.observation = '?';
                 angular.forEach($scope.item.phenophases,function(pp){
                     pp.count = '?';
                 });
@@ -322,15 +339,16 @@ angular.module('npn-viz-tool.filter',[
                 }
                 var filtered = species.phenophases.filter(function(pp) {
                     $scope.item.phenophasesMap[pp.phenophase_id].count++;
+                    if($scope.item.phenophasesMap[pp.phenophase_id].selected) {
+                        $scope.counts.observation++;
+                    }
                     return $scope.item.phenophasesMap[pp.phenophase_id].selected;
                 });
                 if(filtered.length > 0) {
-                    // TODO - the # here is the number of stations with a hit?
-                    $scope.count++;
+                    $scope.counts.station++;
                 }
                 return filtered.length > 0;
             };
-            $scope.count = '?';
             $scope.removeFromFilter = FilterService.removeFromFilter;
             $scope.status = {
                 isopen: false
@@ -416,7 +434,7 @@ angular.module('npn-viz-tool.filter',[
             $scope.filterHasDate = FilterService.hasDate;
             var thisYear = (new Date()).getYear()+1900,
                 validYears = [];
-            for(var i = 2010; i <= thisYear; i++) {
+            for(var i = 2008; i <= thisYear; i++) {
                 validYears.push(i);
             }
             $scope.thisYear = thisYear;
@@ -506,6 +524,11 @@ angular.module('npn-viz-tool.filter',[
 }]);
 angular.module('npn-viz-tool.filters',[
 ])
+.filter('yesNo',function(){
+    return function(input) {
+        return input ? 'Yes' : 'No';
+    };
+})
 .filter('gte',function(){
     return function(input,num) {
         if(!num || !angular.isArray(input)) {
@@ -899,6 +922,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.stations',
     'npn-viz-tool.toolbar',
     'npn-viz-tool.filter',
+    'npn-viz-tool.settings',
     'uiGmapgoogle-maps'
 ])
 .directive('npnVizMap',['uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function(uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
@@ -960,7 +984,7 @@ angular.module('npn-viz-tool.map',[
         }
     };
 }]);
-angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filter.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filter.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
 
 angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/dateFilterTag.html",
@@ -986,7 +1010,7 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "               typeahead=\"year for year in validYears | lte:selected.date.end_date | filter:$viewValue\"\n" +
     "               required placeholder=\"From\" /> - \n" +
     "        <input id=\"end_date\" type=\"number\" class=\"form-control\"\n" +
-    "                min=\"{{selected.date.start_date || 2010}}\"\n" +
+    "                min=\"{{selected.date.start_date || 2008}}\"\n" +
     "                ng-model=\"selected.date.end_date\"\n" +
     "                typeahead=\"year for year in validYears | gte:selected.date.start_date | filter:$viewValue\"\n" +
     "                required placeholder=\"To\" />\n" +
@@ -1064,7 +1088,7 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
   $templateCache.put("js/filter/speciesFilterTag.html",
     "<div class=\"btn-group filter-tag\" ng-class=\"{open: status.isopen}\">\n" +
     "    <button type=\"button\" class=\"btn btn-primary\" style=\"background-color: {{item.color}};\" ng-disabled=\"!item.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
-    "        {{item.common_name}} <span class=\"badge\">{{count}}</span> <span class=\"caret\"></span>\n" +
+    "        {{item.common_name}} <span class=\"badge\">{{counts | speciesBadge:badgeFormat}}</span> <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
     "        <li class=\"inline\">Select <a href ng-click=\"selectAll(true)\">all</a> <a href ng-click=\"selectAll(false)\">none</a></li>\n" +
@@ -1087,8 +1111,8 @@ angular.module("js/layers/layerControl.html", []).run(["$templateCache", functio
     "        <input type=\"radio\" id=\"layer-{{layer.id}}\" ng-model=\"layerOnMap.layer\" ng-value=\"layer\"/> <label for=\"layer-{{layer.id}}\">{{layer.label}}</label>\n" +
     "        <span ng-if=\"layer.source\">(<a href=\"{{layer.source}}\" target=\"_blank\">Source</a>)</span>\n" +
     "        <span ng-if=\"layer.img\">\n" +
-    "            <a ng-if=\"layer.link\" href=\"{{layer.link}}\" target=\"_blank\"><img src=\"{{layer.img}}\" /></a>\n" +
-    "            <img ng-if=\"!layer.link\" src=\"{{layer.img}}\" />\n" +
+    "            <a ng-if=\"layer.link\" href=\"{{layer.link}}\" target=\"_blank\"><img ng-src=\"{{layer.img}}\" /></a>\n" +
+    "            <img ng-if=\"!layer.link\" ng-src=\"{{layer.img}}\" />\n" +
     "        </span>\n" +
     "    </li>\n" +
     "</ul>");
@@ -1116,9 +1140,36 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "        visualization content\n" +
     "    </tool>\n" +
     "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
-    "        settings content\n" +
+    "        <settings-control></settings-control>\n" +
     "    </tool>\n" +
     "</toolbar>");
+}]);
+
+angular.module("js/settings/settingsControl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/settings/settingsControl.html",
+    "<ul class=\"list-unstyled\">\n" +
+    "    <li>\n" +
+    "        <Label for=\"clusterMarkersSetting\">Cluster Markers</label>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li ng-repeat=\"option in [true,false]\">\n" +
+    "                <input type=\"radio\" id=\"clusterMarkers{{option}}\" ng-model=\"settings.clusterMarkers.value\"\n" +
+    "                       ng-value=\"{{option}}\" /> <label for=\"clusterMarkers{{option}}\">{{option | yesNo}}</label>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "    </li>\n" +
+    "    <li class=\"divider\"></li>\n" +
+    "    <li>\n" +
+    "        <label>Species Badge Contents</label>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li ng-repeat=\"option in settings.tagBadgeFormat.options\">\n" +
+    "                <input type=\"radio\"\n" +
+    "                       id=\"{{option.value}}\" ng-model=\"settings.tagBadgeFormat.value\"\n" +
+    "                       value=\"{{option.value}}\"> <label for=\"{{option.value}}\">{{option.label}}</label>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "\n" +
+    "    </li>\n" +
+    "</ul>");
 }]);
 
 angular.module("js/toolbar/tool.html", []).run(["$templateCache", function($templateCache) {
@@ -1144,16 +1195,67 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "</div>");
 }]);
 
+angular.module('npn-viz-tool.settings',[
+    'npn-viz-tool.filters'
+]).directive('settingsControl',['$rootScope','$document',function($rootScope,$document){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/settings/settingsControl.html',
+        controller: function($scope) {
+            $scope.settings = {
+                clusterMarkers: {
+                    name: 'cluster-markers',
+                    value: true
+                },
+                tagBadgeFormat: {
+                    name: 'tag-badge-format',
+                    value: 'observation-count',
+                    options: [{
+                        value: 'observation-count',
+                        label: 'Observation Count'
+                    },{
+                        value: 'station-count',
+                        label: 'Station Count'
+                    },{
+                        value: 'station-observation-count',
+                        label: 'Station Count/Observation Count'
+                    }]
+                }
+            };
+            function broadcastSettingChange(key) {
+                console.log('broadcastSettingChange',$scope.settings[key]);
+                $rootScope.$broadcast('setting-update-'+$scope.settings[key].name,$scope.settings[key]);
+            }
+            $scope.$watch('settings.clusterMarkers.value',function(oldV,newV){
+                broadcastSettingChange('clusterMarkers');
+            });
+            $scope.$watch('settings.tagBadgeFormat.value',function(oldV,newV){
+                broadcastSettingChange('tagBadgeFormat');
+            });
+            $document.bind('keypress',function(e){
+                if(e.charCode === 99 || e.key === 'C') {
+                    $scope.$apply(function(){
+                        $scope.settings.clusterMarkers.value = !$scope.settings.clusterMarkers.value;
+                    });
+                }
+            });
+        }
+    };
+}]);
 angular.module('npn-viz-tool.stations',[
     'npn-viz-tool.layers'
 ])
 .directive('npnStations',['$http','LayerService',function($http,LayerService){
     return {
         restrict: 'E',
-        template: '<ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="true"></ui-gmap-markers>',
+        template: '<ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
         scope: {
         },
         controller: ['$scope',function($scope) {
+            $scope.doCluster = true;
+            $scope.$on('setting-update-cluster-markers',function(event,data){
+                $scope.doCluster = data.value;
+            });
             $scope.stations = {
                 states: [],
                 markers: []

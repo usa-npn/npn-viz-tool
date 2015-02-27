@@ -8,7 +8,7 @@
                typeahead="year for year in validYears | lte:selected.date.end_date | filter:$viewValue"
                required placeholder="From" /> - 
         <input id="end_date" type="number" class="form-control"
-                min="{{selected.date.start_date || 2010}}"
+                min="{{selected.date.start_date || 2008}}"
                 ng-model="selected.date.end_date"
                 typeahead="year for year in validYears | gte:selected.date.start_date | filter:$viewValue"
                 required placeholder="To" />

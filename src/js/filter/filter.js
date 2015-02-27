@@ -227,7 +227,7 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$document','$rootScope','$http','FilterService',function($document,$rootScope,$http,FilterService){
+.directive('npnFilterResults',['$rootScope','$http','FilterService',function($rootScope,$http,FilterService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
@@ -239,6 +239,9 @@ angular.module('npn-viz-tool.filter',[
                 markers: []
             };
             $scope.doCluster = true;
+            $scope.$on('setting-update-cluster-markers',function(event,data){
+                $scope.doCluster = data.value;
+            });
             function executeFilter() {
                 if(!FilterService.isFilterEmpty()) {
                     $scope.results.markers = [];
@@ -268,14 +271,6 @@ angular.module('npn-viz-tool.filter',[
                 console.log('update data',data);
                 $scope.results.markers = data.markers;
             });
-            // TEMPORARY try toggling clustering on/off
-            $document.bind('keypress',function(e){
-                if(e.charCode === 99 || e.key === 'C') {
-                    $scope.$apply(function(){
-                        $scope.doCluster = !$scope.doCluster;
-                    });
-                }
-            });
         }
     };
 }])
@@ -290,6 +285,20 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
+.filter('speciesBadge',function(){
+    return function(counts,format){
+        if(format === 'observation-count') {
+            return counts.observation;
+        }
+        if(format === 'station-count') {
+            return counts.station;
+        }
+        if(format === 'station-observation-count') {
+            return counts.station+'/'+counts.observation;
+        }
+        return counts;
+    };
+})
 .directive('speciesFilterTag',['$rootScope','$http','FilterService',function($rootScope,$http,FilterService){
     return {
         restrict: 'E',
@@ -299,14 +308,22 @@ angular.module('npn-viz-tool.filter',[
             item: '='
         },
         controller: function($scope){
+            $scope.badgeFormat = 'observation-count';
+            $scope.$on('setting-update-tag-badge-format',function(event,data){
+                $scope.badgeFormat = data.value;
+            });
+            $scope.counts = {
+                station: '?',
+                observation: '?'
+            };
             $scope.$on('filter-phase2-start',function(event,data) {
-                $scope.count = 0;
+                $scope.counts.station = $scope.counts.observation = 0;
                 angular.forEach($scope.item.phenophases,function(pp){
                     pp.count = 0;
                 });
             });
             $scope.$on('filter-phase1-start',function(event,data) {
-                $scope.count = '?';
+                $scope.counts.station = $scope.counts.observation = '?';
                 angular.forEach($scope.item.phenophases,function(pp){
                     pp.count = '?';
                 });
@@ -317,15 +334,16 @@ angular.module('npn-viz-tool.filter',[
                 }
                 var filtered = species.phenophases.filter(function(pp) {
                     $scope.item.phenophasesMap[pp.phenophase_id].count++;
+                    if($scope.item.phenophasesMap[pp.phenophase_id].selected) {
+                        $scope.counts.observation++;
+                    }
                     return $scope.item.phenophasesMap[pp.phenophase_id].selected;
                 });
                 if(filtered.length > 0) {
-                    // TODO - the # here is the number of stations with a hit?
-                    $scope.count++;
+                    $scope.counts.station++;
                 }
                 return filtered.length > 0;
             };
-            $scope.count = '?';
             $scope.removeFromFilter = FilterService.removeFromFilter;
             $scope.status = {
                 isopen: false
@@ -411,7 +429,7 @@ angular.module('npn-viz-tool.filter',[
             $scope.filterHasDate = FilterService.hasDate;
             var thisYear = (new Date()).getYear()+1900,
                 validYears = [];
-            for(var i = 2010; i <= thisYear; i++) {
+            for(var i = 2008; i <= thisYear; i++) {
                 validYears.push(i);
             }
             $scope.thisYear = thisYear;

@@ -3,6 +3,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.stations',
     'npn-viz-tool.toolbar',
     'npn-viz-tool.filter',
+    'npn-viz-tool.settings',
     'uiGmapgoogle-maps'
 ])
 .directive('npnVizMap',['uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function(uiGmapGoogleMapApi,uiGmapIsReady,FilterService){

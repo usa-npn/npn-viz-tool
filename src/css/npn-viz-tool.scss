@@ -231,3 +231,13 @@ ul.filter-tags {
         margin-top: 0px;
     }
 }
+
+.tool-content.settings {
+    li {
+        @extend .animated-show-hide;
+        margin-bottom: 15px;
+    }
+    li.divider {
+        border-bottom: 1px solid #ccc;
+    }
+}

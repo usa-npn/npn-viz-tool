@@ -1,0 +1,23 @@
+<ul class="list-unstyled">
+    <li>
+        <Label for="clusterMarkersSetting">Cluster Markers</label>
+        <ul class="list-unstyled">
+            <li ng-repeat="option in [true,false]">
+                <input type="radio" id="clusterMarkers{{option}}" ng-model="settings.clusterMarkers.value"
+                       ng-value="{{option}}" /> <label for="clusterMarkers{{option}}">{{option | yesNo}}</label>
+            </li>
+        </ul>
+    </li>
+    <li class="divider"></li>
+    <li>
+        <label>Species Badge Contents</label>
+        <ul class="list-unstyled">
+            <li ng-repeat="option in settings.tagBadgeFormat.options">
+                <input type="radio"
+                       id="{{option.value}}" ng-model="settings.tagBadgeFormat.value"
+                       value="{{option.value}}"> <label for="{{option.value}}">{{option.label}}</label>
+            </li>
+        </ul>
+
+    </li>
+</ul>

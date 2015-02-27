@@ -4,8 +4,8 @@
         <input type="radio" id="layer-{{layer.id}}" ng-model="layerOnMap.layer" ng-value="layer"/> <label for="layer-{{layer.id}}">{{layer.label}}</label>
         <span ng-if="layer.source">(<a href="{{layer.source}}" target="_blank">Source</a>)</span>
         <span ng-if="layer.img">
-            <a ng-if="layer.link" href="{{layer.link}}" target="_blank"><img src="{{layer.img}}" /></a>
-            <img ng-if="!layer.link" src="{{layer.img}}" />
+            <a ng-if="layer.link" href="{{layer.link}}" target="_blank"><img ng-src="{{layer.img}}" /></a>
+            <img ng-if="!layer.link" ng-src="{{layer.img}}" />
         </span>
     </li>
 </ul>

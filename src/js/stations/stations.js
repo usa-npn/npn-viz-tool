@@ -4,10 +4,14 @@ angular.module('npn-viz-tool.stations',[
 .directive('npnStations',['$http','LayerService',function($http,LayerService){
     return {
         restrict: 'E',
-        template: '<ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="true"></ui-gmap-markers>',
+        template: '<ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
         scope: {
         },
         controller: ['$scope',function($scope) {
+            $scope.doCluster = true;
+            $scope.$on('setting-update-cluster-markers',function(event,data){
+                $scope.doCluster = data.value;
+            });
             $scope.stations = {
                 states: [],
                 markers: []

@@ -1,6 +1,6 @@
 <div class="btn-group filter-tag" ng-class="{open: status.isopen}">
     <button type="button" class="btn btn-primary" style="background-color: {{item.color}};" ng-disabled="!item.phenophases" ng-click="status.isopen = !status.isopen">
-        {{item.common_name}} <span class="badge">{{count}}</span> <span class="caret"></span>
+        {{item.common_name}} <span class="badge">{{counts | speciesBadge:badgeFormat}}</span> <span class="caret"></span>
     </button>
     <ul class="dropdown-menu phenophase-list" role="menu">
         <li class="inline">Select <a href ng-click="selectAll(true)">all</a> <a href ng-click="selectAll(false)">none</a></li>

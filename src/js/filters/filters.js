@@ -1,5 +1,10 @@
 angular.module('npn-viz-tool.filters',[
 ])
+.filter('yesNo',function(){
+    return function(input) {
+        return input ? 'Yes' : 'No';
+    };
+})
 .filter('gte',function(){
     return function(input,num) {
         if(!num || !angular.isArray(input)) {

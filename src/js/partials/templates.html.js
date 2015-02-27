@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filter.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filter.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
 
 angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/dateFilterTag.html",
@@ -24,7 +24,7 @@ angular.module("js/filter/filter.html", []).run(["$templateCache", function($tem
     "               typeahead=\"year for year in validYears | lte:selected.date.end_date | filter:$viewValue\"\n" +
     "               required placeholder=\"From\" /> - \n" +
     "        <input id=\"end_date\" type=\"number\" class=\"form-control\"\n" +
-    "                min=\"{{selected.date.start_date || 2010}}\"\n" +
+    "                min=\"{{selected.date.start_date || 2008}}\"\n" +
     "                ng-model=\"selected.date.end_date\"\n" +
     "                typeahead=\"year for year in validYears | gte:selected.date.start_date | filter:$viewValue\"\n" +
     "                required placeholder=\"To\" />\n" +
@@ -102,7 +102,7 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
   $templateCache.put("js/filter/speciesFilterTag.html",
     "<div class=\"btn-group filter-tag\" ng-class=\"{open: status.isopen}\">\n" +
     "    <button type=\"button\" class=\"btn btn-primary\" style=\"background-color: {{item.color}};\" ng-disabled=\"!item.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
-    "        {{item.common_name}} <span class=\"badge\">{{count}}</span> <span class=\"caret\"></span>\n" +
+    "        {{item.common_name}} <span class=\"badge\">{{counts | speciesBadge:badgeFormat}}</span> <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
     "        <li class=\"inline\">Select <a href ng-click=\"selectAll(true)\">all</a> <a href ng-click=\"selectAll(false)\">none</a></li>\n" +
@@ -125,8 +125,8 @@ angular.module("js/layers/layerControl.html", []).run(["$templateCache", functio
     "        <input type=\"radio\" id=\"layer-{{layer.id}}\" ng-model=\"layerOnMap.layer\" ng-value=\"layer\"/> <label for=\"layer-{{layer.id}}\">{{layer.label}}</label>\n" +
     "        <span ng-if=\"layer.source\">(<a href=\"{{layer.source}}\" target=\"_blank\">Source</a>)</span>\n" +
     "        <span ng-if=\"layer.img\">\n" +
-    "            <a ng-if=\"layer.link\" href=\"{{layer.link}}\" target=\"_blank\"><img src=\"{{layer.img}}\" /></a>\n" +
-    "            <img ng-if=\"!layer.link\" src=\"{{layer.img}}\" />\n" +
+    "            <a ng-if=\"layer.link\" href=\"{{layer.link}}\" target=\"_blank\"><img ng-src=\"{{layer.img}}\" /></a>\n" +
+    "            <img ng-if=\"!layer.link\" ng-src=\"{{layer.img}}\" />\n" +
     "        </span>\n" +
     "    </li>\n" +
     "</ul>");
@@ -154,9 +154,36 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "        visualization content\n" +
     "    </tool>\n" +
     "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
-    "        settings content\n" +
+    "        <settings-control></settings-control>\n" +
     "    </tool>\n" +
     "</toolbar>");
+}]);
+
+angular.module("js/settings/settingsControl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/settings/settingsControl.html",
+    "<ul class=\"list-unstyled\">\n" +
+    "    <li>\n" +
+    "        <Label for=\"clusterMarkersSetting\">Cluster Markers</label>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li ng-repeat=\"option in [true,false]\">\n" +
+    "                <input type=\"radio\" id=\"clusterMarkers{{option}}\" ng-model=\"settings.clusterMarkers.value\"\n" +
+    "                       ng-value=\"{{option}}\" /> <label for=\"clusterMarkers{{option}}\">{{option | yesNo}}</label>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "    </li>\n" +
+    "    <li class=\"divider\"></li>\n" +
+    "    <li>\n" +
+    "        <label>Species Badge Contents</label>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li ng-repeat=\"option in settings.tagBadgeFormat.options\">\n" +
+    "                <input type=\"radio\"\n" +
+    "                       id=\"{{option.value}}\" ng-model=\"settings.tagBadgeFormat.value\"\n" +
+    "                       value=\"{{option.value}}\"> <label for=\"{{option.value}}\">{{option.label}}</label>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "\n" +
+    "    </li>\n" +
+    "</ul>");
 }]);
 
 angular.module("js/toolbar/tool.html", []).run(["$templateCache", function($templateCache) {

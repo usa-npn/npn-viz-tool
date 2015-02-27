@@ -20,9 +20,10 @@ body {
   max-width: none;
 }
 
-.animated-show-hide.ng-enter, .tool-content.filter li.ng-enter,
+.animated-show-hide.ng-enter, .tool-content.filter li.ng-enter, .tool-content.settings li.ng-enter,
 .animated-show-hide.ng-leave,
-.tool-content.filter li.ng-leave {
+.tool-content.filter li.ng-leave,
+.tool-content.settings li.ng-leave {
   min-height: 0px;
   max-height: 0px;
   overflow: hidden;
@@ -34,18 +35,20 @@ body {
   transition-timing-function: ease-in-out;
 }
 
-.animated-show-hide.ng-enter, .tool-content.filter li.ng-enter,
+.animated-show-hide.ng-enter, .tool-content.filter li.ng-enter, .tool-content.settings li.ng-enter,
 .animated-show-hide.ng-leave.ng-leave-active,
-.tool-content.filter li.ng-leave.ng-leave-active {
+.tool-content.filter li.ng-leave.ng-leave-active,
+.tool-content.settings li.ng-leave.ng-leave-active {
   opacity: 0;
   min-height: 0px;
   max-height: 0px;
   overflow: hidden;
 }
 
-.animated-show-hide.ng-leave, .tool-content.filter li.ng-leave,
+.animated-show-hide.ng-leave, .tool-content.filter li.ng-leave, .tool-content.settings li.ng-leave,
 .animated-show-hide.ng-enter.ng-enter-active,
-.tool-content.filter li.ng-enter.ng-enter-active {
+.tool-content.filter li.ng-enter.ng-enter-active,
+.tool-content.settings li.ng-enter.ng-enter-active {
   opacity: 1;
   height: auto;
   min-height: 0px;
@@ -199,6 +202,13 @@ ul.filter-tags .filter-tag .phenophase-list {
 }
 .tool-content.layers li:first-of-type {
   margin-top: 0px;
+}
+
+.tool-content.settings li {
+  margin-bottom: 15px;
+}
+.tool-content.settings li.divider {
+  border-bottom: 1px solid #ccc;
 }
 
 /*# sourceMappingURL=npn-viz-tool.css.map */
