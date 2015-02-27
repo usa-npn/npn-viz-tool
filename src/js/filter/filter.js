@@ -61,7 +61,8 @@ angular.module('npn-viz-tool.filter',[
         $rootScope.$broadcast('filter-phase2-start',{
             count: markers.length
         });
-        var filtered =  markers.filter(function(station){
+        var observationCount = 0,
+            filtered =  markers.filter(function(station){
             if(Object.keys(geoFilter).length > 0) {
                 var gid,hit = false;
                 for(gid in geoFilter) {
@@ -76,7 +77,7 @@ angular.module('npn-viz-tool.filter',[
             station.markerOpts.icon.fillColor = defaultIcon.fillColor;
 
             var sid,speciesFilter,keeps = 0,
-                hitMap = {};
+                n,hitMap = {};
             for(sid in station.species) {
                 speciesFilter = filter[sid];
                 hitMap[sid] = 0;
@@ -87,7 +88,8 @@ angular.module('npn-viz-tool.filter',[
                     console.warn('speciesFilterTag does not expose a $speciesFilter function.');
                     continue;
                 }
-                if(speciesFilter.$speciesFilter(station.species[sid])) {
+                if((n=speciesFilter.$speciesFilter(station.species[sid]))) {
+                    observationCount += n;
                     hitMap[sid]++;
                     keeps++;
                     if(keeps === 1) {
@@ -109,7 +111,8 @@ angular.module('npn-viz-tool.filter',[
             return keeps > 0;
         });
         $rootScope.$broadcast('filter-phase2-end',{
-            count: filtered.length
+            station: filtered.length,
+            observation: observationCount
         });
         return filtered;
     }
@@ -330,20 +333,22 @@ angular.module('npn-viz-tool.filter',[
                 });
             });
             $scope.item.$speciesFilter = function(species) {
+                var hitCount = 0;
                 if(species.species_id != $scope.item.species_id) {
                     console.warn('$filter called on wrong species', $scope.item, species);
                 }
                 var filtered = species.phenophases.filter(function(pp) {
                     $scope.item.phenophasesMap[pp.phenophase_id].count++;
                     if($scope.item.phenophasesMap[pp.phenophase_id].selected) {
-                        $scope.counts.observation++;
+                        hitCount++;
                     }
                     return $scope.item.phenophasesMap[pp.phenophase_id].selected;
                 });
                 if(filtered.length > 0) {
                     $scope.counts.station++;
                 }
-                return filtered.length > 0;
+                $scope.counts.observation += hitCount;
+                return hitCount;
             };
             $scope.removeFromFilter = FilterService.removeFromFilter;
             $scope.status = {
@@ -393,7 +398,7 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('dateFilterTag',['FilterService',function(FilterService){
+.directive('dateFilterTag',['FilterService','SettingsService',function(FilterService,SettingsService){
     return {
         restrict: 'E',
         require: '^filterTags',
@@ -402,16 +407,23 @@ angular.module('npn-viz-tool.filter',[
             item: '='
         },
         controller: function($scope){
+            $scope.badgeFormat = SettingsService.getSettingValue('tagBadgeFormat');
+            $scope.$on('setting-update-tagBadgeFormat',function(event,data){
+                $scope.badgeFormat = data.value;
+            });
             $scope.removeFromFilter = FilterService.removeFromFilter;
-            $scope.count = '?';
+            $scope.counts = {
+                station: '?',
+                observation: '?'
+            };
             $scope.$on('filter-phase1-start',function(event,data) {
-                $scope.count = '?';
+                $scope.counts.station = $scope.counts.observation = '?';
             });
             $scope.$on('filter-phase2-start',function(event,data) {
-                $scope.count = 0;
+                $scope.counts.station = $scope.counts.observation = 0;
             });
             $scope.$on('filter-phase2-end',function(event,data) {
-                $scope.count = data.count;
+                $scope.counts = data;
             });
         }
     };
