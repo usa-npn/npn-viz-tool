@@ -102,7 +102,7 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
   $templateCache.put("js/filter/speciesFilterTag.html",
     "<div class=\"btn-group filter-tag\" ng-class=\"{open: status.isopen}\">\n" +
     "    <button type=\"button\" class=\"btn btn-primary\" style=\"background-color: {{item.color}};\" ng-disabled=\"!item.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
-    "        {{item.common_name}} <span class=\"badge\">{{counts | speciesBadge:badgeFormat}}</span> <span class=\"caret\"></span>\n" +
+    "        {{item | speciesTitle:titleFormat}} <span class=\"badge\">{{counts | speciesBadge:badgeFormat}}</span> <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
     "        <li class=\"inline\">Select <a href ng-click=\"selectAll(true)\">all</a> <a href ng-click=\"selectAll(false)\">none</a></li>\n" +
@@ -178,6 +178,18 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "            <li ng-repeat=\"option in settings.tagBadgeFormat.options\">\n" +
     "                <input type=\"radio\"\n" +
     "                       id=\"{{option.value}}\" ng-model=\"settings.tagBadgeFormat.value\"\n" +
+    "                       value=\"{{option.value}}\"> <label for=\"{{option.value}}\">{{option.label}}</label>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "\n" +
+    "    </li>\n" +
+    "    <li class=\"divider\"></li>\n" +
+    "    <li>\n" +
+    "        <label>Species Tag Title</label>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li ng-repeat=\"option in settings.tagSpeciesTitle.options\">\n" +
+    "                <input type=\"radio\"\n" +
+    "                       id=\"{{option.value}}\" ng-model=\"settings.tagSpeciesTitle.value\"\n" +
     "                       value=\"{{option.value}}\"> <label for=\"{{option.value}}\">{{option.label}}</label>\n" +
     "            </li>\n" +
     "        </ul>\n" +

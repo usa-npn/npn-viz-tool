@@ -303,6 +303,16 @@ angular.module('npn-viz-tool.filter',[
         return counts;
     };
 })
+.filter('speciesTitle',function(){
+    return function(item,format) {
+        if(format === 'common-name') {
+            return item.common_name;
+        } else if (format === 'genus-species') {
+            return item.genus+' '+item.species;
+        }
+        return item;
+    };
+})
 .directive('speciesFilterTag',['$rootScope','$http','FilterService','SettingsService',function($rootScope,$http,FilterService,SettingsService){
     return {
         restrict: 'E',
@@ -312,6 +322,10 @@ angular.module('npn-viz-tool.filter',[
             item: '='
         },
         controller: function($scope){
+            $scope.titleFormat = SettingsService.getSettingValue('tagSpeciesTitle');
+            $scope.$on('setting-update-tagSpeciesTitle',function(event,data){
+                $scope.titleFormat = data.value;
+            });
             $scope.badgeFormat = SettingsService.getSettingValue('tagBadgeFormat');
             $scope.$on('setting-update-tagBadgeFormat',function(event,data){
                 $scope.badgeFormat = data.value;

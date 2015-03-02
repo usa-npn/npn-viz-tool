@@ -7,6 +7,17 @@ angular.module('npn-viz-tool.settings',[
             name: 'cluster-markers',
             value: true
         },
+        tagSpeciesTitle: {
+            name: 'tag-species-title',
+            value: 'common-name',
+            options: [{
+                value: 'common-name',
+                label: 'Common Name'
+            },{
+                value: 'genus-species',
+                label: 'Genus Species'
+            }]
+        },
         tagBadgeFormat: {
             name: 'tag-badge-format',
             value: 'observation-count',
@@ -38,12 +49,14 @@ angular.module('npn-viz-tool.settings',[
                 console.log('broadcastSettingChange',$scope.settings[key]);
                 $rootScope.$broadcast('setting-update-'+key,$scope.settings[key]);
             }
-            $scope.$watch('settings.clusterMarkers.value',function(oldV,newV){
-                broadcastSettingChange('clusterMarkers');
-            });
-            $scope.$watch('settings.tagBadgeFormat.value',function(oldV,newV){
-                broadcastSettingChange('tagBadgeFormat');
-            });
+            function setupBroadcast(key) {
+                $scope.$watch('settings.'+key+'.value',function(oldV,newV){
+                    broadcastSettingChange(key);
+                });
+            }
+            for(var key in $scope.settings) {
+                setupBroadcast(key);
+            }
             $document.bind('keypress',function(e){
                 if(e.charCode === 99 || e.key === 'C') {
                     $scope.$apply(function(){

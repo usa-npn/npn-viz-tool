@@ -20,4 +20,16 @@
         </ul>
 
     </li>
+    <li class="divider"></li>
+    <li>
+        <label>Species Tag Title</label>
+        <ul class="list-unstyled">
+            <li ng-repeat="option in settings.tagSpeciesTitle.options">
+                <input type="radio"
+                       id="{{option.value}}" ng-model="settings.tagSpeciesTitle.value"
+                       value="{{option.value}}"> <label for="{{option.value}}">{{option.label}}</label>
+            </li>
+        </ul>
+
+    </li>
 </ul>

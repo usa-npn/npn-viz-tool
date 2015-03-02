@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-02-26
+ * Version: 0.1.0 - 2015-03-02
  */
 
 angular.module('npn-viz-tool.filter',[
@@ -308,6 +308,16 @@ angular.module('npn-viz-tool.filter',[
         return counts;
     };
 })
+.filter('speciesTitle',function(){
+    return function(item,format) {
+        if(format === 'common-name') {
+            return item.common_name;
+        } else if (format === 'genus-species') {
+            return item.genus+' '+item.species;
+        }
+        return item;
+    };
+})
 .directive('speciesFilterTag',['$rootScope','$http','FilterService','SettingsService',function($rootScope,$http,FilterService,SettingsService){
     return {
         restrict: 'E',
@@ -317,6 +327,10 @@ angular.module('npn-viz-tool.filter',[
             item: '='
         },
         controller: function($scope){
+            $scope.titleFormat = SettingsService.getSettingValue('tagSpeciesTitle');
+            $scope.$on('setting-update-tagSpeciesTitle',function(event,data){
+                $scope.titleFormat = data.value;
+            });
             $scope.badgeFormat = SettingsService.getSettingValue('tagBadgeFormat');
             $scope.$on('setting-update-tagBadgeFormat',function(event,data){
                 $scope.badgeFormat = data.value;
@@ -1101,7 +1115,7 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
   $templateCache.put("js/filter/speciesFilterTag.html",
     "<div class=\"btn-group filter-tag\" ng-class=\"{open: status.isopen}\">\n" +
     "    <button type=\"button\" class=\"btn btn-primary\" style=\"background-color: {{item.color}};\" ng-disabled=\"!item.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
-    "        {{item.common_name}} <span class=\"badge\">{{counts | speciesBadge:badgeFormat}}</span> <span class=\"caret\"></span>\n" +
+    "        {{item | speciesTitle:titleFormat}} <span class=\"badge\">{{counts | speciesBadge:badgeFormat}}</span> <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
     "        <li class=\"inline\">Select <a href ng-click=\"selectAll(true)\">all</a> <a href ng-click=\"selectAll(false)\">none</a></li>\n" +
@@ -1182,6 +1196,18 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "        </ul>\n" +
     "\n" +
     "    </li>\n" +
+    "    <li class=\"divider\"></li>\n" +
+    "    <li>\n" +
+    "        <label>Species Tag Title</label>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li ng-repeat=\"option in settings.tagSpeciesTitle.options\">\n" +
+    "                <input type=\"radio\"\n" +
+    "                       id=\"{{option.value}}\" ng-model=\"settings.tagSpeciesTitle.value\"\n" +
+    "                       value=\"{{option.value}}\"> <label for=\"{{option.value}}\">{{option.label}}</label>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "\n" +
+    "    </li>\n" +
     "</ul>");
 }]);
 
@@ -1217,6 +1243,17 @@ angular.module('npn-viz-tool.settings',[
             name: 'cluster-markers',
             value: true
         },
+        tagSpeciesTitle: {
+            name: 'tag-species-title',
+            value: 'common-name',
+            options: [{
+                value: 'common-name',
+                label: 'Common Name'
+            },{
+                value: 'genus-species',
+                label: 'Genus Species'
+            }]
+        },
         tagBadgeFormat: {
             name: 'tag-badge-format',
             value: 'observation-count',
@@ -1248,12 +1285,14 @@ angular.module('npn-viz-tool.settings',[
                 console.log('broadcastSettingChange',$scope.settings[key]);
                 $rootScope.$broadcast('setting-update-'+key,$scope.settings[key]);
             }
-            $scope.$watch('settings.clusterMarkers.value',function(oldV,newV){
-                broadcastSettingChange('clusterMarkers');
-            });
-            $scope.$watch('settings.tagBadgeFormat.value',function(oldV,newV){
-                broadcastSettingChange('tagBadgeFormat');
-            });
+            function setupBroadcast(key) {
+                $scope.$watch('settings.'+key+'.value',function(oldV,newV){
+                    broadcastSettingChange(key);
+                });
+            }
+            for(var key in $scope.settings) {
+                setupBroadcast(key);
+            }
             $document.bind('keypress',function(e){
                 if(e.charCode === 99 || e.key === 'C') {
                     $scope.$apply(function(){
