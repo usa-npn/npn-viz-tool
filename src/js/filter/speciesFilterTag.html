@@ -1,15 +1,15 @@
 <div class="btn-group filter-tag" ng-class="{open: status.isopen}">
-    <button type="button" class="btn btn-primary" style="background-color: {{item.color}};" ng-disabled="!item.phenophases" ng-click="status.isopen = !status.isopen">
-        {{item | speciesTitle:titleFormat}} <span class="badge">{{counts | speciesBadge:badgeFormat}}</span> <span class="caret"></span>
+    <button type="button" class="btn btn-primary" style="background-color: {{arg.color}};" ng-disabled="!arg.phenophases" ng-click="status.isopen = !status.isopen">
+        {{arg.arg | speciesTitle:titleFormat}} <span class="badge">{{arg.counts | speciesBadge:badgeFormat}}</span> <span class="caret"></span>
     </button>
     <ul class="dropdown-menu phenophase-list" role="menu">
         <li class="inline">Select <a href ng-click="selectAll(true)">all</a> <a href ng-click="selectAll(false)">none</a></li>
         <li class="divider"></li>
-        <li ng-repeat="phenophase in item.phenophases">
+        <li ng-repeat="phenophase in arg.phenophases">
             <input type="checkbox" ng-model="phenophase.selected"> <span class="badge">{{phenophase.count}}</span> {{phenophase.phenophase_name}}
         </li>
     </ul>
-    <button class="btn btn-primary" style="background-color: {{item.color}};" ng-click="removeFromFilter(item)">
+    <button class="btn btn-primary" style="background-color: {{arg.color}};" ng-click="removeFromFilter(arg)">
         <i class="fa fa-times-circle-o"></i>
     </button>
 </div>

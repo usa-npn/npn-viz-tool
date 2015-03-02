@@ -1,8 +1,8 @@
 <div class="btn-group">
     <button class="btn btn-default" disabled>
-        {{item.start_date}} - {{item.end_date}} <span class="badge">{{counts | speciesBadge:badgeFormat}}</span>
+        {{arg.arg.start_date}} - {{arg.arg.end_date}} <span class="badge">{{counts | speciesBadge:badgeFormat}}</span>
     </button>
-    <button class="btn btn-default" ng-click="removeFromFilter(item)">
+    <button class="btn btn-default" ng-click="removeFromFilter(arg)">
         <i class="fa fa-times-circle-o"></i>
     </button>
 </div>

@@ -4,9 +4,9 @@ angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", functi
   $templateCache.put("js/filter/dateFilterTag.html",
     "<div class=\"btn-group\">\n" +
     "    <button class=\"btn btn-default\" disabled>\n" +
-    "        {{item.start_date}} - {{item.end_date}} <span class=\"badge\">{{counts | speciesBadge:badgeFormat}}</span>\n" +
+    "        {{arg.arg.start_date}} - {{arg.arg.end_date}} <span class=\"badge\">{{counts | speciesBadge:badgeFormat}}</span>\n" +
     "    </button>\n" +
-    "    <button class=\"btn btn-default\" ng-click=\"removeFromFilter(item)\">\n" +
+    "    <button class=\"btn btn-default\" ng-click=\"removeFromFilter(arg)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
     "    </button>\n" +
     "</div>");
@@ -91,27 +91,25 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
 angular.module("js/filter/filterTags.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/filterTags.html",
     "<ul class=\"list-inline filter-tags\">\n" +
-    "    <li ng-repeat=\"(key, value) in getFilter()\">\n" +
-    "        <species-filter-tag ng-if=\"value.species_id\" item=\"value\"></species-filter-tag>\n" +
-    "        <date-filter-tag ng-if =\"value.start_date && value.end_date\" item=\"value\"></date-filter-tag>\n" +
-    "    </li>\n" +
+    "    <li ng-repeat=\"s in getFilter().getSpeciesArgs()\"><species-filter-tag arg=\"s\"></species-filter-tag></li>\n" +
+    "    <li ng-if=\"(date = getFilter().getDateArg())\"><date-filter-tag arg=\"date\"></date-filter-tag></li>\n" +
     "</ul>");
 }]);
 
 angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/speciesFilterTag.html",
     "<div class=\"btn-group filter-tag\" ng-class=\"{open: status.isopen}\">\n" +
-    "    <button type=\"button\" class=\"btn btn-primary\" style=\"background-color: {{item.color}};\" ng-disabled=\"!item.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
-    "        {{item | speciesTitle:titleFormat}} <span class=\"badge\">{{counts | speciesBadge:badgeFormat}}</span> <span class=\"caret\"></span>\n" +
+    "    <button type=\"button\" class=\"btn btn-primary\" style=\"background-color: {{arg.color}};\" ng-disabled=\"!arg.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
+    "        {{arg.arg | speciesTitle:titleFormat}} <span class=\"badge\">{{arg.counts | speciesBadge:badgeFormat}}</span> <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
     "        <li class=\"inline\">Select <a href ng-click=\"selectAll(true)\">all</a> <a href ng-click=\"selectAll(false)\">none</a></li>\n" +
     "        <li class=\"divider\"></li>\n" +
-    "        <li ng-repeat=\"phenophase in item.phenophases\">\n" +
+    "        <li ng-repeat=\"phenophase in arg.phenophases\">\n" +
     "            <input type=\"checkbox\" ng-model=\"phenophase.selected\"> <span class=\"badge\">{{phenophase.count}}</span> {{phenophase.phenophase_name}}\n" +
     "        </li>\n" +
     "    </ul>\n" +
-    "    <button class=\"btn btn-primary\" style=\"background-color: {{item.color}};\" ng-click=\"removeFromFilter(item)\">\n" +
+    "    <button class=\"btn btn-primary\" style=\"background-color: {{arg.color}};\" ng-click=\"removeFromFilter(arg)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
     "    </button>\n" +
     "</div>");

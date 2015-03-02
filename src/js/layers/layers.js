@@ -177,26 +177,7 @@ angular.module('npn-viz-tool.layers',[
         }
     };
 }])
-.directive('layerControl',['$rootScope','LayerService','FilterService',function($rootScope,LayerService,FilterService){
-    function geoContains(point,geo) {
-        //console.debug("geoContains",geo);
-        var polyType = geo.getType(),
-            poly,arr,i;
-        //console.debug("geoContains.type",polyType);
-        if(polyType == 'Polygon') {
-            poly = new google.maps.Polygon({paths: geo.getArray()[0].getArray()});
-            return google.maps.geometry.poly.containsLocation(point,poly) ||
-                   google.maps.geometry.poly.isLocationOnEdge(point,poly);
-        } else if (polyType === 'MultiPolygon' || polyType == 'GeometryCollection') {
-            arr = geo.getArray();
-            for(i = 0; i < arr.length; i++) {
-                if(geoContains(point,arr[i])) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+.directive('layerControl',['$rootScope','LayerService','FilterService','GeoFilterArg',function($rootScope,LayerService,FilterService,GeoFilterArg){
     return {
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
@@ -280,15 +261,7 @@ angular.module('npn-viz-tool.layers',[
                                     filterArg = feature.getProperty('$FILTER');
                                 console.log('name',name,filterArg);
                                 if(!filterArg) {
-                                    filterArg = {
-                                        geoKey: name,
-                                        feature: feature,
-                                        $geoFilter: function(marker) {
-                                            return geoContains(
-                                                new google.maps.LatLng(parseFloat(marker.latitude), parseFloat(marker.longitude)),
-                                                filterArg.feature.getGeometry());
-                                        }
-                                    };
+                                    filterArg = new GeoFilterArg(feature);
                                     FilterService.addToFilter(filterArg);
                                     // TODO - different layers will probably have different styles, duplicating hard coded color...
                                     // over-ride so the change shows up immediately and will be applied on the restyle (o/w there's a pause)
