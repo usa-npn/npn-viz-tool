@@ -1467,30 +1467,38 @@ angular.module('npn-viz-tool.settings',[
     var settings = {
         clusterMarkers: {
             name: 'cluster-markers',
+            q: 'cm',
             value: true
         },
         tagSpeciesTitle: {
             name: 'tag-species-title',
+            q: 'tst',
             value: 'common-name',
             options: [{
                 value: 'common-name',
+                q: 'cn',
                 label: 'Common Name'
             },{
                 value: 'genus-species',
+                q: 'gs',
                 label: 'Genus Species'
             }]
         },
         tagBadgeFormat: {
             name: 'tag-badge-format',
+            q: 'tbf',
             value: 'observation-count',
             options: [{
                 value: 'observation-count',
+                q: 'oc',
                 label: 'Observation Count'
             },{
                 value: 'station-count',
+                q: 'sc',
                 label: 'Station Count'
             },{
                 value: 'station-observation-count',
+                q: 'soc',
                 label: 'Station Count/Observation Count'
             }]
         }
@@ -1498,14 +1506,56 @@ angular.module('npn-viz-tool.settings',[
     return {
         getSettings: function() { return settings; },
         getSetting: function(key) { return settings[key]; },
-        getSettingValue: function(key) { return settings[key].value; }
+        getSettingValue: function(key) { return settings[key].value; },
+        getSharingUrlArgs: function() {
+            var arg = '',key,s,i;
+            for(key in settings) {
+                s = settings[key];
+                arg+=(arg !== '' ? ';':'')+s.q+'=';
+                if(!s.options) {
+                    arg+=s.value;
+                } else {
+                    for(i = 0; i < s.options.length; i++) {
+                        if(s.value === s.options[i].value) {
+                            arg += s.options[i].q;
+                            break;
+                        }
+                    }
+                }
+            }
+            return 'ss='+encodeURIComponent(arg);
+        },
+        populateFromSharingUrlArgs: function(ss) {
+            if(ss) {
+                ss.split(';').forEach(function(st){
+                    var pts = st.split('='),
+                        q = pts[0], v = pts[1],key,i;
+                    for(key in settings) {
+                        if(settings[key].q === q) {
+                            if(settings[key].options) {
+                                for(i = 0; i < settings[key].options.length; i++) {
+                                    if(settings[key].options[i].q === v) {
+                                        settings[key].value = settings[key].options[i].value;
+                                        break;
+                                    }
+                                }
+                            } else {
+                                settings[key].value = (v === 'true' || v === 'false') ? (v === 'true') : v;
+                            }
+                            break;
+                        }
+                    }
+                });
+            }
+        }
     };
 }])
-.directive('settingsControl',['$rootScope','$document','SettingsService',function($rootScope,$document,SettingsService){
+.directive('settingsControl',['$rootScope','$document','$location','SettingsService',function($rootScope,$document,$location,SettingsService){
     return {
         restrict: 'E',
         templateUrl: 'js/settings/settingsControl.html',
         controller: function($scope) {
+            SettingsService.populateFromSharingUrlArgs($location.search()['ss']);
             $scope.settings = SettingsService.getSettings();
             function broadcastSettingChange(key) {
                 console.log('broadcastSettingChange',$scope.settings[key]);
@@ -1532,6 +1582,7 @@ angular.module('npn-viz-tool.settings',[
 angular.module('npn-viz-tool.share',[
     'npn-viz-tool.filter',
     'npn-viz-tool.layers',
+    'npn-viz-tool.settings',
     'uiGmapgoogle-maps'
 ])
 /**
@@ -1539,8 +1590,8 @@ angular.module('npn-viz-tool.share',[
  * because upon instantiation it examines the current URL query args and uses its contents to
  * populate the filter, etc.
  */
-.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','GeoFilterArg','$location',
-    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,GeoFilterArg,$location){
+.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','GeoFilterArg','$location','SettingsService',
+    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,GeoFilterArg,$location,SettingsService){
     return {
         restrict: 'E',
         template: '<a href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
@@ -1591,6 +1642,7 @@ angular.module('npn-viz-tool.share',[
                 Object.keys(params).forEach(function(key,i){
                     absUrl += (i > 0 ? '&' : '') + key + '=' + encodeURIComponent(params[key]);
                 });
+                absUrl+='&'+SettingsService.getSharingUrlArgs();
                 console.log('absUrl',absUrl);
                 $scope.url = absUrl;
             };

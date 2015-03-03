@@ -1,6 +1,7 @@
 angular.module('npn-viz-tool.share',[
     'npn-viz-tool.filter',
     'npn-viz-tool.layers',
+    'npn-viz-tool.settings',
     'uiGmapgoogle-maps'
 ])
 /**
@@ -8,8 +9,8 @@ angular.module('npn-viz-tool.share',[
  * because upon instantiation it examines the current URL query args and uses its contents to
  * populate the filter, etc.
  */
-.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','GeoFilterArg','$location',
-    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,GeoFilterArg,$location){
+.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','GeoFilterArg','$location','SettingsService',
+    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,GeoFilterArg,$location,SettingsService){
     return {
         restrict: 'E',
         template: '<a href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
@@ -60,6 +61,7 @@ angular.module('npn-viz-tool.share',[
                 Object.keys(params).forEach(function(key,i){
                     absUrl += (i > 0 ? '&' : '') + key + '=' + encodeURIComponent(params[key]);
                 });
+                absUrl+='&'+SettingsService.getSharingUrlArgs();
                 console.log('absUrl',absUrl);
                 $scope.url = absUrl;
             };
