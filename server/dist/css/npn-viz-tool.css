@@ -241,4 +241,8 @@ ul.filter-tags .filter-tag .phenophase-list {
   border-bottom: 1px solid #ccc;
 }
 
+.station-count {
+  font-weight: bold;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */

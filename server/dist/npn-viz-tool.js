@@ -1694,7 +1694,7 @@ angular.module('npn-viz-tool.stations',[
 .directive('npnStations',['$http','LayerService','SettingsService',function($http,LayerService,SettingsService){
     return {
         restrict: 'E',
-        template: '<ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
+        template: '<ui-gmap-markers models="regions.markers" idKey="\'name\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" isLabel="true"></ui-gmap-markers><ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
         scope: {
         },
         controller: ['$scope',function($scope) {
@@ -1702,6 +1702,9 @@ angular.module('npn-viz-tool.stations',[
             $scope.$on('setting-update-clusterMarkers',function(event,data){
                 $scope.doCluster = data.value;
             });
+            $scope.regions = {
+                markers: []
+            };
             $scope.stations = {
                 states: [],
                 markers: []
@@ -1733,6 +1736,34 @@ angular.module('npn-viz-tool.stations',[
                             style.fillOpacity = 0.8;
                             style.fillColor = colorScale(count.number_stations);
                             style.clickable = true;
+                            var center = feature.getProperty('CENTER'),
+                                regionMarker = angular.extend({
+                                    name: name,
+                                    icon: {
+                                        path: google.maps.SymbolPath.CIRCLE,
+                                        fillColor: '#ffffff',
+                                        fillOpacity: 0.95,
+                                        scale: 16,
+                                        strokeColor: '#204d74',
+                                        strokeWeight: 1
+                                    },
+                                    markerOpts: {
+                                        title: name,
+                                        labelClass: 'station-count',
+                                        labelContent: ''+count.number_stations
+                                        }},center);
+                            if(count.number_stations < 10) {
+                                regionMarker.markerOpts.labelAnchor = '4 8';
+                            } else if(count.number_stations < 100) {
+                                regionMarker.markerOpts.labelAnchor = '8 8';
+                            } else if(count.number_stations < 1000) {
+                                regionMarker.markerOpts.labelAnchor = '10 8';
+                            } else {
+                                regionMarker.markerOpts.labelAnchor = '13 8';
+                            }
+                            $scope.$apply(function(){
+                                $scope.regions.markers.push(regionMarker);
+                            });
                         } else if (!loaded) {
                             console.warn('no station count for '+name);
                         }
@@ -1762,6 +1793,16 @@ angular.module('npn-viz-tool.stations',[
                                         $scope.stations.markers = $scope.stations.markers.concat(data);
                                         // simply drop the feature as opposed to re-styling it
                                         map.data.remove(event.feature);
+                                        // remove the station count marker
+                                        // UGH splice isn't triggering the marker to get removed so re-build the
+                                        // marker array...
+                                        var region_markers = [];
+                                        for(var i = 0; i < $scope.regions.markers.length; i++) {
+                                            if($scope.regions.markers[i].name !== state) {
+                                                region_markers.push($scope.regions.markers[i]);
+                                            }
+                                        }
+                                        $scope.regions.markers = region_markers;
                                     });
                             }
                         }));
