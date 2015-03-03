@@ -64,10 +64,13 @@ angular.module('npn-viz-tool.stations',[
                                         labelContent: ''+count.number_stations
                                         }},center);
                             if(count.number_stations < 10) {
+                                regionMarker.icon.scale = 8;
                                 regionMarker.markerOpts.labelAnchor = '4 8';
                             } else if(count.number_stations < 100) {
+                                regionMarker.icon.scale = 12;
                                 regionMarker.markerOpts.labelAnchor = '8 8';
                             } else if(count.number_stations < 1000) {
+                                regionMarker.icon.scale = 14;
                                 regionMarker.markerOpts.labelAnchor = '10 8';
                             } else {
                                 regionMarker.markerOpts.labelAnchor = '13 8';
