@@ -177,7 +177,7 @@ angular.module('npn-viz-tool.layers',[
         }
     };
 }])
-.directive('layerControl',['$rootScope','LayerService','FilterService','GeoFilterArg',function($rootScope,LayerService,FilterService,GeoFilterArg){
+.directive('layerControl',['$rootScope','$q','$location','LayerService','FilterService','GeoFilterArg',function($rootScope,$q,$location,LayerService,FilterService,GeoFilterArg){
     return {
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
@@ -188,12 +188,70 @@ angular.module('npn-viz-tool.layers',[
             LayerService.getAvailableLayers().then(function(layers){
                 console.log('av.layers',layers);
                 $scope.layers = layers;
+                var qargs = $location.search();
+                if(qargs['g']) {
+                    console.log('init layers from query arg',qargs['g']);
+                    // only one layer at a time is supported so the "first" id is sufficient.
+                    var featureList = qargs['g'].split(';'),
+                        featureIds = featureList.map(function(f) {
+                            return f.substring(f.indexOf(':')+1);
+                        }),
+                        layerId = featureList[0].substring(0,featureList[0].indexOf(':')),
+                        layer,i;
+                    for(i = 0; i < layers.length; i++) {
+                        if(layers[i].id === layerId) {
+                            layer = layers[i];
+                            break;
+                        }
+                    }
+                    if(layer) {
+                        loadLayer(layer).then(function(results) {
+                            var map = results[0],
+                                features = results[1];
+                            $scope.layerOnMap.skipLoad = true;
+                            $scope.layerOnMap.layer = layer; // only update this -after- the fact
+                            features.forEach(function(f) {
+                                if(featureIds.indexOf(f.getProperty('NAME')) != -1) {
+                                    clickFeature(f,layer,map);
+                                }
+                            });
+                        });
+                    }
+                }
             });
+
+            function clickFeature(feature,layer,map) {
+                // TODO "NAME" may or may not be suitable, probably should use id...
+                var name = feature.getProperty('NAME'),
+                    filterArg = feature.getProperty('$FILTER');
+                console.log('name',name,filterArg);
+                if(!filterArg) {
+                    filterArg = new GeoFilterArg(feature,layer.id);
+                    FilterService.addToFilter(filterArg);
+                    // TODO - different layers will probably have different styles, duplicating hard coded color...
+                    // over-ride so the change shows up immediately and will be applied on the restyle (o/w there's a pause)
+                    map.data.overrideStyle(feature, {fillColor: '#800000'});
+                } else {
+                    FilterService.removeFromFilter(filterArg);
+                    filterArg = null;
+                }
+                feature.setProperty('$FILTER',filterArg);
+                LayerService.restyleLayers().then(function(){
+                    // TODO - maybe instead the filter should just broadcast the "end" event
+                    if(!FilterService.isFilterEmpty()) {
+                        $rootScope.$broadcast('filter-rerun-phase2',{});
+                    }
+                });
+            }
 
             $scope.layerOnMap = {
                 layer: 'none'
             };
             $scope.$watch('layerOnMap.layer',function(newLayer,oldLayer){
+                if($scope.layerOnMap.skipLoad) {
+                    $scope.layerOnMap.skipLoad = false;
+                    return;
+                }
                 console.log('layerOnMap.new',newLayer);
                 console.log('layerOnMap.old',oldLayer);
                 if(oldLayer && oldLayer != 'none') {
@@ -219,8 +277,9 @@ angular.module('npn-viz-tool.layers',[
             });
 
             function loadLayer(layer) {
+                var def = $q.defer();
                 if(layer === 'none') {
-                    return;
+                    def.resolve(null);
                 }
                 LayerService.loadLayer(layer.id,function(feature) {
                     var style = {
@@ -255,33 +314,14 @@ angular.module('npn-viz-tool.layers',[
                         eventListeners.push(map.data.addListener('click',function(event){
                             $scope.$apply(function(){
                                 lastClick = event;
-                                // TODO "NAME" may or may not be suitable, probably should use id...
-                                var feature = event.feature,
-                                    name = feature.getProperty('NAME'),
-                                    filterArg = feature.getProperty('$FILTER');
-                                console.log('name',name,filterArg);
-                                if(!filterArg) {
-                                    filterArg = new GeoFilterArg(feature);
-                                    FilterService.addToFilter(filterArg);
-                                    // TODO - different layers will probably have different styles, duplicating hard coded color...
-                                    // over-ride so the change shows up immediately and will be applied on the restyle (o/w there's a pause)
-                                    map.data.overrideStyle(feature, {fillColor: '#800000'});
-                                } else {
-                                    FilterService.removeFromFilter(filterArg);
-                                    filterArg = null;
-                                }
-                                feature.setProperty('$FILTER',filterArg);
-                                LayerService.restyleLayers().then(function(){
-                                    // TODO - maybe instead the filter should just broadcast the "end" event
-                                    if(!FilterService.isFilterEmpty()) {
-                                        $rootScope.$broadcast('filter-rerun-phase2',{});
-                                    }
-                                });
+                                clickFeature(event.feature,layer,map);
                             });
 
                         }));
                     }
+                    def.resolve(results);
                 });
+                return def.promise;
             }
             // shouldn't happen
             $scope.$on('$destroy',function(){

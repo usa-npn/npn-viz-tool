@@ -4,16 +4,17 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.toolbar',
     'npn-viz-tool.filter',
     'npn-viz-tool.settings',
+    'npn-viz-tool.share',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function(uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
+.directive('npnVizMap',['$location','uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function($location,uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
         scope: {
         },
         controller: ['$scope',function($scope) {
-            $scope.stationView = true;
+            $scope.stationView = false;
             uiGmapGoogleMapApi.then(function(maps) {
                 console.log('maps',maps);
                 $scope.map = {
@@ -30,6 +31,11 @@ angular.module('npn-viz-tool.map',[
                     }
                 };
             });
+            uiGmapIsReady.promise(1).then(function(){
+                var qargs = $location.search();
+                // this is a little leaky, the map knows which args the "share" control cares about...
+                $scope.stationView = !qargs['d'] && !qargs['s'];
+            });
             $scope.$on('tool-open',function(event,data){
                 if(data.tool.id === 'layers') {
                     $scope.stationView = false;
@@ -44,7 +50,6 @@ angular.module('npn-viz-tool.map',[
         }]
     };
 }])
-// TODO - bug where during filter-phase2 the working div is NOT displayed
 .directive('npnWorking',['uiGmapIsReady',function(uiGmapIsReady){
     return {
         restrict: 'E',

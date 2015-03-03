@@ -4,6 +4,7 @@ angular.module('npn-viz-tool',[
 'npn-viz-tool.map',
 'npn-viz-tool.toolbar',
 'npn-viz-tool.filters',
+'npn-viz-tool.share',
 'uiGmapgoogle-maps',
 'ui.bootstrap',
 'ngAnimate'

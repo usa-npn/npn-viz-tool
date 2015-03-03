@@ -139,6 +139,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <npn-filter-results></npn-filter-results>\n" +
     "</ui-gmap-google-map>\n" +
     "\n" +
+    "<share-control></share-control>\n" +
     "<filter-tags></filter-tags>\n" +
     "\n" +
     "<toolbar>\n" +

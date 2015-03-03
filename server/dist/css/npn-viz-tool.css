@@ -174,9 +174,20 @@ ul.dropdown-menu li.inline a {
   padding: 3px 5px;
 }
 
+#maptype {
+  right: 30px !important;
+}
+
+#share-control {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 2;
+}
+
 ul.filter-tags {
   position: absolute;
-  right: 125px;
+  right: 135px;
   top: 0px;
   z-index: 450;
   margin-left: 100px;

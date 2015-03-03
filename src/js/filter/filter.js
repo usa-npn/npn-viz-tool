@@ -40,6 +40,16 @@ angular.module('npn-viz-tool.filter',[
     DateFilterArg.prototype.getEndDate = function() {
         return this.arg.end_date+'-12-31';
     };
+    DateFilterArg.prototype.toString = function() {
+        return this.arg.start_date+'-'+this.arg.end_date;
+    };
+    DateFilterArg.fromString = function(s) {
+        var dash = s.indexOf('-');
+        return new DateFilterArg({
+                start_date: s.substring(0,dash),
+                end_date: s.substring(dash+1)
+            });
+    };
     return DateFilterArg;
 }])
 .factory('SpeciesFilterArg',['$http','FilterArg',function($http,FilterArg){
@@ -51,12 +61,16 @@ angular.module('npn-viz-tool.filter',[
      *
      * @param {Object} species A species record as returned by getSpeciesFilter.json.
      */
-    var SpeciesFilterArg = function(species) {
+    var SpeciesFilterArg = function(species,selectedPhenoIds) {
         FilterArg.apply(this,arguments);
         this.counts = {
             station: '?',
             observation: '?'
         };
+        console.log('this.arg',this.arg);
+        if(selectedPhenoIds && selectedPhenoIds != '*') {
+            this.phenophaseSelections = selectedPhenoIds.split(',');
+        }
         var self = this;
         $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{ // cache ??
                 params: {
@@ -71,7 +85,8 @@ angular.module('npn-viz-tool.filter',[
                         return false;
                     }
                     seen[pp.phenophase_id] = pp;
-                    return (pp.selected = true);
+                    pp.selected = !self.phenophaseSelections || self.phenophaseSelections.indexOf(pp.phenophase_id) != -1;
+                    return true;
                 });
                 self.phenophasesMap = {}; // create a map for faster lookup during filtering.
                 angular.forEach(self.phenophases,function(pp){
@@ -107,6 +122,34 @@ angular.module('npn-viz-tool.filter',[
         self.counts.observation += hitCount;
         return hitCount;
     };
+    SpeciesFilterArg.prototype.toString = function() {
+        var s = this.arg.species_id+':',
+            selected = this.phenophases.filter(function(pp){
+                return pp.selected;
+            });
+        if(selected.length === this.phenophases.length) {
+            s += '*';
+        } else {
+            selected.forEach(function(pp,i){
+                s += (i>0?',':'')+pp.phenophase_id;
+            });
+        }
+        return s;
+    };
+    SpeciesFilterArg.fromString = function(s) {
+        var colon = s.indexOf(':'),
+            sid = s.substring(0,colon),
+            ppids = s.substring(colon+1);
+        return $http.get('/npn_portal/species/getSpeciesById.json',{
+            params: {
+                species_id: sid
+            }
+        }).then(function(response){
+            // odd that this ws call doesn't return the species_id...
+            response.data['species_id'] = sid;
+            return new SpeciesFilterArg(response.data,ppids);
+        });
+    };
     return SpeciesFilterArg;
 }])
 .factory('GeoFilterArg',['FilterArg',function(FilterArg){
@@ -133,14 +176,24 @@ angular.module('npn-viz-tool.filter',[
      *
      * @param {Object} feature A Google Maps GeoJson Feature object.
      */
-    var GeoFilterArg = function(feature){
+    var GeoFilterArg = function(feature,sourceId){
         FilterArg.apply(this,arguments);
+        this.sourceId = sourceId;
     };
     GeoFilterArg.prototype.getId = function() {
         return this.arg.getProperty('NAME');
     };
+    GeoFilterArg.prototype.getSourceId = function() {
+        return this.sourceId;
+    };
     GeoFilterArg.prototype.$filter = function(marker) {
         return geoContains(new google.maps.LatLng(parseFloat(marker.latitude), parseFloat(marker.longitude)),this.arg.getGeometry());
+    };
+    GeoFilterArg.prototype.toString = function() {
+        return this.sourceId+':'+this.arg.getProperty('NAME');
+    };
+    GeoFilterArg.fromString = function(s) {
+
     };
     return GeoFilterArg;
 }])
@@ -168,6 +221,9 @@ angular.module('npn-viz-tool.filter',[
             return true;
         }
         return Object.keys(this.species).length > 0;
+    };
+    NpnFilter.prototype.hasSufficientCriteria = function() {
+        return this.date && Object.keys(this.species).length > 0;
     };
     NpnFilter.prototype.getDateArg = function() {
         return this.date;

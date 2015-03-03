@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-02
+ * Version: 0.1.0 - 2015-03-03
  */
 
 angular.module('npn-viz-tool.filter',[
@@ -45,6 +45,16 @@ angular.module('npn-viz-tool.filter',[
     DateFilterArg.prototype.getEndDate = function() {
         return this.arg.end_date+'-12-31';
     };
+    DateFilterArg.prototype.toString = function() {
+        return this.arg.start_date+'-'+this.arg.end_date;
+    };
+    DateFilterArg.fromString = function(s) {
+        var dash = s.indexOf('-');
+        return new DateFilterArg({
+                start_date: s.substring(0,dash),
+                end_date: s.substring(dash+1)
+            });
+    };
     return DateFilterArg;
 }])
 .factory('SpeciesFilterArg',['$http','FilterArg',function($http,FilterArg){
@@ -56,12 +66,16 @@ angular.module('npn-viz-tool.filter',[
      *
      * @param {Object} species A species record as returned by getSpeciesFilter.json.
      */
-    var SpeciesFilterArg = function(species) {
+    var SpeciesFilterArg = function(species,selectedPhenoIds) {
         FilterArg.apply(this,arguments);
         this.counts = {
             station: '?',
             observation: '?'
         };
+        console.log('this.arg',this.arg);
+        if(selectedPhenoIds && selectedPhenoIds != '*') {
+            this.phenophaseSelections = selectedPhenoIds.split(',');
+        }
         var self = this;
         $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{ // cache ??
                 params: {
@@ -76,7 +90,8 @@ angular.module('npn-viz-tool.filter',[
                         return false;
                     }
                     seen[pp.phenophase_id] = pp;
-                    return (pp.selected = true);
+                    pp.selected = !self.phenophaseSelections || self.phenophaseSelections.indexOf(pp.phenophase_id) != -1;
+                    return true;
                 });
                 self.phenophasesMap = {}; // create a map for faster lookup during filtering.
                 angular.forEach(self.phenophases,function(pp){
@@ -112,6 +127,34 @@ angular.module('npn-viz-tool.filter',[
         self.counts.observation += hitCount;
         return hitCount;
     };
+    SpeciesFilterArg.prototype.toString = function() {
+        var s = this.arg.species_id+':',
+            selected = this.phenophases.filter(function(pp){
+                return pp.selected;
+            });
+        if(selected.length === this.phenophases.length) {
+            s += '*';
+        } else {
+            selected.forEach(function(pp,i){
+                s += (i>0?',':'')+pp.phenophase_id;
+            });
+        }
+        return s;
+    };
+    SpeciesFilterArg.fromString = function(s) {
+        var colon = s.indexOf(':'),
+            sid = s.substring(0,colon),
+            ppids = s.substring(colon+1);
+        return $http.get('/npn_portal/species/getSpeciesById.json',{
+            params: {
+                species_id: sid
+            }
+        }).then(function(response){
+            // odd that this ws call doesn't return the species_id...
+            response.data['species_id'] = sid;
+            return new SpeciesFilterArg(response.data,ppids);
+        });
+    };
     return SpeciesFilterArg;
 }])
 .factory('GeoFilterArg',['FilterArg',function(FilterArg){
@@ -138,14 +181,24 @@ angular.module('npn-viz-tool.filter',[
      *
      * @param {Object} feature A Google Maps GeoJson Feature object.
      */
-    var GeoFilterArg = function(feature){
+    var GeoFilterArg = function(feature,sourceId){
         FilterArg.apply(this,arguments);
+        this.sourceId = sourceId;
     };
     GeoFilterArg.prototype.getId = function() {
         return this.arg.getProperty('NAME');
     };
+    GeoFilterArg.prototype.getSourceId = function() {
+        return this.sourceId;
+    };
     GeoFilterArg.prototype.$filter = function(marker) {
         return geoContains(new google.maps.LatLng(parseFloat(marker.latitude), parseFloat(marker.longitude)),this.arg.getGeometry());
+    };
+    GeoFilterArg.prototype.toString = function() {
+        return this.sourceId+':'+this.arg.getProperty('NAME');
+    };
+    GeoFilterArg.fromString = function(s) {
+
     };
     return GeoFilterArg;
 }])
@@ -173,6 +226,9 @@ angular.module('npn-viz-tool.filter',[
             return true;
         }
         return Object.keys(this.species).length > 0;
+    };
+    NpnFilter.prototype.hasSufficientCriteria = function() {
+        return this.date && Object.keys(this.species).length > 0;
     };
     NpnFilter.prototype.getDateArg = function() {
         return this.date;
@@ -907,7 +963,7 @@ angular.module('npn-viz-tool.layers',[
         }
     };
 }])
-.directive('layerControl',['$rootScope','LayerService','FilterService','GeoFilterArg',function($rootScope,LayerService,FilterService,GeoFilterArg){
+.directive('layerControl',['$rootScope','$q','$location','LayerService','FilterService','GeoFilterArg',function($rootScope,$q,$location,LayerService,FilterService,GeoFilterArg){
     return {
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
@@ -918,12 +974,70 @@ angular.module('npn-viz-tool.layers',[
             LayerService.getAvailableLayers().then(function(layers){
                 console.log('av.layers',layers);
                 $scope.layers = layers;
+                var qargs = $location.search();
+                if(qargs['g']) {
+                    console.log('init layers from query arg',qargs['g']);
+                    // only one layer at a time is supported so the "first" id is sufficient.
+                    var featureList = qargs['g'].split(';'),
+                        featureIds = featureList.map(function(f) {
+                            return f.substring(f.indexOf(':')+1);
+                        }),
+                        layerId = featureList[0].substring(0,featureList[0].indexOf(':')),
+                        layer,i;
+                    for(i = 0; i < layers.length; i++) {
+                        if(layers[i].id === layerId) {
+                            layer = layers[i];
+                            break;
+                        }
+                    }
+                    if(layer) {
+                        loadLayer(layer).then(function(results) {
+                            var map = results[0],
+                                features = results[1];
+                            $scope.layerOnMap.skipLoad = true;
+                            $scope.layerOnMap.layer = layer; // only update this -after- the fact
+                            features.forEach(function(f) {
+                                if(featureIds.indexOf(f.getProperty('NAME')) != -1) {
+                                    clickFeature(f,layer,map);
+                                }
+                            });
+                        });
+                    }
+                }
             });
+
+            function clickFeature(feature,layer,map) {
+                // TODO "NAME" may or may not be suitable, probably should use id...
+                var name = feature.getProperty('NAME'),
+                    filterArg = feature.getProperty('$FILTER');
+                console.log('name',name,filterArg);
+                if(!filterArg) {
+                    filterArg = new GeoFilterArg(feature,layer.id);
+                    FilterService.addToFilter(filterArg);
+                    // TODO - different layers will probably have different styles, duplicating hard coded color...
+                    // over-ride so the change shows up immediately and will be applied on the restyle (o/w there's a pause)
+                    map.data.overrideStyle(feature, {fillColor: '#800000'});
+                } else {
+                    FilterService.removeFromFilter(filterArg);
+                    filterArg = null;
+                }
+                feature.setProperty('$FILTER',filterArg);
+                LayerService.restyleLayers().then(function(){
+                    // TODO - maybe instead the filter should just broadcast the "end" event
+                    if(!FilterService.isFilterEmpty()) {
+                        $rootScope.$broadcast('filter-rerun-phase2',{});
+                    }
+                });
+            }
 
             $scope.layerOnMap = {
                 layer: 'none'
             };
             $scope.$watch('layerOnMap.layer',function(newLayer,oldLayer){
+                if($scope.layerOnMap.skipLoad) {
+                    $scope.layerOnMap.skipLoad = false;
+                    return;
+                }
                 console.log('layerOnMap.new',newLayer);
                 console.log('layerOnMap.old',oldLayer);
                 if(oldLayer && oldLayer != 'none') {
@@ -949,8 +1063,9 @@ angular.module('npn-viz-tool.layers',[
             });
 
             function loadLayer(layer) {
+                var def = $q.defer();
                 if(layer === 'none') {
-                    return;
+                    def.resolve(null);
                 }
                 LayerService.loadLayer(layer.id,function(feature) {
                     var style = {
@@ -985,33 +1100,14 @@ angular.module('npn-viz-tool.layers',[
                         eventListeners.push(map.data.addListener('click',function(event){
                             $scope.$apply(function(){
                                 lastClick = event;
-                                // TODO "NAME" may or may not be suitable, probably should use id...
-                                var feature = event.feature,
-                                    name = feature.getProperty('NAME'),
-                                    filterArg = feature.getProperty('$FILTER');
-                                console.log('name',name,filterArg);
-                                if(!filterArg) {
-                                    filterArg = new GeoFilterArg(feature);
-                                    FilterService.addToFilter(filterArg);
-                                    // TODO - different layers will probably have different styles, duplicating hard coded color...
-                                    // over-ride so the change shows up immediately and will be applied on the restyle (o/w there's a pause)
-                                    map.data.overrideStyle(feature, {fillColor: '#800000'});
-                                } else {
-                                    FilterService.removeFromFilter(filterArg);
-                                    filterArg = null;
-                                }
-                                feature.setProperty('$FILTER',filterArg);
-                                LayerService.restyleLayers().then(function(){
-                                    // TODO - maybe instead the filter should just broadcast the "end" event
-                                    if(!FilterService.isFilterEmpty()) {
-                                        $rootScope.$broadcast('filter-rerun-phase2',{});
-                                    }
-                                });
+                                clickFeature(event.feature,layer,map);
                             });
 
                         }));
                     }
+                    def.resolve(results);
                 });
+                return def.promise;
             }
             // shouldn't happen
             $scope.$on('$destroy',function(){
@@ -1029,6 +1125,7 @@ angular.module('npn-viz-tool',[
 'npn-viz-tool.map',
 'npn-viz-tool.toolbar',
 'npn-viz-tool.filters',
+'npn-viz-tool.share',
 'uiGmapgoogle-maps',
 'ui.bootstrap',
 'ngAnimate'
@@ -1047,16 +1144,17 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.toolbar',
     'npn-viz-tool.filter',
     'npn-viz-tool.settings',
+    'npn-viz-tool.share',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function(uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
+.directive('npnVizMap',['$location','uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function($location,uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
         scope: {
         },
         controller: ['$scope',function($scope) {
-            $scope.stationView = true;
+            $scope.stationView = false;
             uiGmapGoogleMapApi.then(function(maps) {
                 console.log('maps',maps);
                 $scope.map = {
@@ -1073,6 +1171,11 @@ angular.module('npn-viz-tool.map',[
                     }
                 };
             });
+            uiGmapIsReady.promise(1).then(function(){
+                var qargs = $location.search();
+                // this is a little leaky, the map knows which args the "share" control cares about...
+                $scope.stationView = !qargs['d'] && !qargs['s'];
+            });
             $scope.$on('tool-open',function(event,data){
                 if(data.tool.id === 'layers') {
                     $scope.stationView = false;
@@ -1087,7 +1190,6 @@ angular.module('npn-viz-tool.map',[
         }]
     };
 }])
-// TODO - bug where during filter-phase2 the working div is NOT displayed
 .directive('npnWorking',['uiGmapIsReady',function(uiGmapIsReady){
     return {
         restrict: 'E',
@@ -1249,6 +1351,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <npn-filter-results></npn-filter-results>\n" +
     "</ui-gmap-google-map>\n" +
     "\n" +
+    "<share-control></share-control>\n" +
     "<filter-tags></filter-tags>\n" +
     "\n" +
     "<toolbar>\n" +
@@ -1395,6 +1498,75 @@ angular.module('npn-viz-tool.settings',[
                     });
                 }
             });
+        }
+    };
+}]);
+angular.module('npn-viz-tool.share',[
+    'npn-viz-tool.filter',
+    'npn-viz-tool.layers',
+    'uiGmapgoogle-maps'
+])
+/**
+ * Important one and only one instance of this directive should ever be in use in the application
+ * because upon instantiation it examines the current URL query args and uses its contents to
+ * populate the filter, etc.
+ */
+.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','GeoFilterArg','$location',
+    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,GeoFilterArg,$location){
+    return {
+        restrict: 'E',
+        template: '<a href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a>',
+        scope: {},
+        controller: function($scope){
+            function addSpeciesToFilter(s){
+                SpeciesFilterArg.fromString(s).then(FilterService.addToFilter);
+            }
+            function addGeoToFilter(g) {
+                console.log('geo',g);
+            }
+            uiGmapIsReady.promise(1).then(function(){
+                var qargs = $location.search();
+                console.log('qargs',qargs);
+                if(qargs['d'] && qargs['s']) {
+                    if(qargs['g']) {
+                        qargs['g'].split(';').forEach(addGeoToFilter);
+                    }
+                    // we have sufficient criteria to alter the filter...
+                    FilterService.addToFilter(DateFilterArg.fromString(qargs['d']));
+                    qargs['s'].split(';').forEach(addSpeciesToFilter);
+                }
+            });
+
+            $scope.getFilter = FilterService.getFilter;
+            $scope.share = function() {
+                var filter = FilterService.getFilter(),
+                    params = {},
+                    absUrl = $location.absUrl(),
+                    q = absUrl.indexOf('?');
+                params['d'] = filter.getDateArg().toString();
+                filter.getSpeciesArgs().forEach(function(s){
+                    if(!params['s']) {
+                        params['s'] = s.toString();
+                    } else {
+                        params['s'] += ';'+s.toString();
+                    }
+                });
+                filter.getGeoArgs().forEach(function(g){
+                    if(!params['g']) {
+                        params['g'] = g.toString();
+                    } else {
+                        params['g'] += ';'+g.toString();
+                    }
+                });
+                if(q != -1) {
+                    absUrl = absUrl.substring(0,q);
+                }
+                absUrl += '#?';
+                Object.keys(params).forEach(function(key,i){
+                    absUrl += (i > 0 ? '&' : '') + key + '=' + encodeURIComponent(params[key]);
+                });
+                console.log('absUrl',absUrl);
+            };
         }
     };
 }]);

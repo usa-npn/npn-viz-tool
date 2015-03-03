@@ -195,9 +195,22 @@ ul.dropdown-menu {
     }
 }
 
+$gmaps-maptype-right: 30px;
+// re-position a GoogleMaps generated element....
+#maptype {
+    right: $gmaps-maptype-right !important;
+}
+// put the share-control in its original place...
+#share-control {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 2;
+}
+
 ul.filter-tags {
     position: absolute;
-    right: 125px;
+    right: 105px + $gmaps-maptype-right;
     top: 0px;
     z-index: 450;
     margin-left: 100px;
