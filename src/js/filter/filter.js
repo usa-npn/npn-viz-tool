@@ -67,7 +67,6 @@ angular.module('npn-viz-tool.filter',[
             station: '?',
             observation: '?'
         };
-        console.log('this.arg',this.arg);
         if(selectedPhenoIds && selectedPhenoIds != '*') {
             this.phenophaseSelections = selectedPhenoIds.split(',');
         }
@@ -191,9 +190,6 @@ angular.module('npn-viz-tool.filter',[
     };
     GeoFilterArg.prototype.toString = function() {
         return this.sourceId+':'+this.arg.getProperty('NAME');
-    };
-    GeoFilterArg.fromString = function(s) {
-
     };
     return GeoFilterArg;
 }])

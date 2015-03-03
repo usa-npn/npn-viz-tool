@@ -12,22 +12,16 @@ angular.module('npn-viz-tool.share',[
     function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,GeoFilterArg,$location){
     return {
         restrict: 'E',
-        template: '<a href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a>',
+        template: '<a href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
         scope: {},
         controller: function($scope){
             function addSpeciesToFilter(s){
                 SpeciesFilterArg.fromString(s).then(FilterService.addToFilter);
             }
-            function addGeoToFilter(g) {
-                console.log('geo',g);
-            }
             uiGmapIsReady.promise(1).then(function(){
                 var qargs = $location.search();
                 console.log('qargs',qargs);
                 if(qargs['d'] && qargs['s']) {
-                    if(qargs['g']) {
-                        qargs['g'].split(';').forEach(addGeoToFilter);
-                    }
                     // we have sufficient criteria to alter the filter...
                     FilterService.addToFilter(DateFilterArg.fromString(qargs['d']));
                     qargs['s'].split(';').forEach(addSpeciesToFilter);
@@ -36,6 +30,10 @@ angular.module('npn-viz-tool.share',[
 
             $scope.getFilter = FilterService.getFilter;
             $scope.share = function() {
+                if($scope.url) {
+                    $scope.url = null;
+                    return;
+                }
                 var filter = FilterService.getFilter(),
                     params = {},
                     absUrl = $location.absUrl(),
@@ -58,11 +56,12 @@ angular.module('npn-viz-tool.share',[
                 if(q != -1) {
                     absUrl = absUrl.substring(0,q);
                 }
-                absUrl += '#?';
+                absUrl += absUrl.indexOf('#') === -1 ? '#?' : '?';
                 Object.keys(params).forEach(function(key,i){
                     absUrl += (i > 0 ? '&' : '') + key + '=' + encodeURIComponent(params[key]);
                 });
                 console.log('absUrl',absUrl);
+                $scope.url = absUrl;
             };
         }
     };

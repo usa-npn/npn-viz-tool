@@ -206,6 +206,21 @@ $gmaps-maptype-right: 30px;
     top: 5px;
     right: 5px;
     z-index: 2;
+    box-shadow: rgba(0, 0, 0, 0.298039) 0px 1px 4px -1px;
+}
+#share-content {
+    position: absolute;
+    top: 50px;
+    right: 40px;
+    box-shadow: rgba(0, 0, 0, 0.29804) 0px 1px 4px -1px;
+    z-index: 1000;
+    padding: 10px;
+    background: #eee;
+    @include rounded(4px);
+    border: 1px solid #aaa;
+    input {
+        width: 400px;
+    }
 }
 
 ul.filter-tags {

@@ -1,17 +1,17 @@
 [{
-    "id" : "primary-boundaries",
+    "id" : "primary",
     "label" : "US States",
     "file" : "us-states.geojson",
     "img" : "layers/usa-map.jpg"
 },{
-    "id" : "fws-regions",
+    "id" : "fwsr",
     "label" : "USFWS Regions",
     "file" : "FWS_Regional_Boundaries.json",
     "source" : "http://www.fws.gov/gis/data/national/#REGIONAL BOUNDARIES",
     "img" : "layers/FWS_Regions.jpg",
     "link" : "http://www.fws.gov/refuges/realty/index.html"
 },{
-    "id" : "fws-eco-regions",
+    "id" : "fwser",
     "label" : "USFWS Ecosystem Regions",
     "file" : "FWS_Ecoregions.json",
     "img" : "layers/FWS_Ecoregions.jpg",
@@ -24,7 +24,7 @@
     "img" : "layers/LCCs.jpg",
     "link" : "http://www.fws.gov/landscape-conservation/lcc.html"
 },{
-    "id" : "nps-boundaries",
+    "id" : "nps",
     "label" : "National Park Boundaries",
     "file" : "nps_boundary.json",
     "source" : "https://catalog.data.gov/dataset/national-park-boundariesf0a4c",

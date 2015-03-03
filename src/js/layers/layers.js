@@ -24,6 +24,36 @@ angular.module('npn-viz-tool.layers',[
             fillColor: '#c0c5b8',
             fillOpacity: null
         };
+    function calculateCenter(feature) {
+        if(!feature.properties.CENTER) {
+            // [0], per GeoJson spec first array in Polygon coordinates is
+            // external ring, other indices are internal rings or "holes"
+            var geo = feature.geometry,
+                coordinates = geo.type === 'Polygon' ?
+                    geo.coordinates[0] :
+                    geo.coordinates.reduce(function(p,c){
+                        return p.concat(c[0]);
+                    },[]),
+                i,coord,
+                mxLat,mnLat,mxLon,mnLon;
+            for(i = 0; i < coordinates.length; i++) {
+                coord = coordinates[i];
+                if(i === 0) {
+                    mxLon = mnLon = coord[0];
+                    mxLat = mnLat = coord[1];
+                } else {
+                    mxLon = Math.max(mxLon,coord[0]);
+                    mnLon = Math.min(mnLon,coord[0]);
+                    mxLat = Math.max(mxLat,coord[1]);
+                    mnLat = Math.min(mnLat,coord[1]);
+                }
+            }
+            feature.properties.CENTER = {
+                latitude: (mnLat+((mxLat-mnLat)/2)),
+                longitude: (mnLon+((mxLon-mnLon)/2))
+            };
+        }
+    }
     function loadLayerData(layer) {
         var def = $q.defer();
         if(layer.data) {
@@ -38,13 +68,15 @@ angular.module('npn-viz-tool.layers',[
                     angular.forEach(data.geometries,function(geo,idx){
                         data.features.push({
                             type: 'Feature',
-                            properties: { NAME: layer.id+'-'+idx },
+                            properties: { NAME: ''+idx },
                             geometry: geo
                         });
                     });
                     data.type = 'FeatureCollection';
                     delete data.geometries;
                 }
+                // calculate centers
+                data.features.forEach(calculateCenter);
                 layer.data = data;
                 def.resolve(layer);
                 $rootScope.$broadcast('layer-load-end',{});
@@ -183,7 +215,11 @@ angular.module('npn-viz-tool.layers',[
         templateUrl: 'js/layers/layerControl.html',
         controller: function($scope) {
             var eventListeners = [],
-                lastClick;
+                lastFeature;
+
+            $scope.layerOnMap = {
+                layer: 'none'
+            };
 
             LayerService.getAvailableLayers().then(function(layers){
                 console.log('av.layers',layers);
@@ -197,22 +233,22 @@ angular.module('npn-viz-tool.layers',[
                             return f.substring(f.indexOf(':')+1);
                         }),
                         layerId = featureList[0].substring(0,featureList[0].indexOf(':')),
-                        layer,i;
+                        lyr,i;
                     for(i = 0; i < layers.length; i++) {
                         if(layers[i].id === layerId) {
-                            layer = layers[i];
+                            lyr = layers[i];
                             break;
                         }
                     }
-                    if(layer) {
-                        loadLayer(layer).then(function(results) {
+                    if(lyr) {
+                        loadLayer(lyr).then(function(results) {
                             var map = results[0],
                                 features = results[1];
                             $scope.layerOnMap.skipLoad = true;
-                            $scope.layerOnMap.layer = layer; // only update this -after- the fact
+                            $scope.layerOnMap.layer = lyr; // only update this -after- the fact
                             features.forEach(function(f) {
                                 if(featureIds.indexOf(f.getProperty('NAME')) != -1) {
-                                    clickFeature(f,layer,map);
+                                    clickFeature(f,map);
                                 }
                             });
                         });
@@ -220,13 +256,13 @@ angular.module('npn-viz-tool.layers',[
                 }
             });
 
-            function clickFeature(feature,layer,map) {
+            function clickFeature(feature,map) {
                 // TODO "NAME" may or may not be suitable, probably should use id...
                 var name = feature.getProperty('NAME'),
                     filterArg = feature.getProperty('$FILTER');
-                console.log('name',name,filterArg);
+                lastFeature = feature;
                 if(!filterArg) {
-                    filterArg = new GeoFilterArg(feature,layer.id);
+                    filterArg = new GeoFilterArg(feature,$scope.layerOnMap.layer.id);
                     FilterService.addToFilter(filterArg);
                     // TODO - different layers will probably have different styles, duplicating hard coded color...
                     // over-ride so the change shows up immediately and will be applied on the restyle (o/w there's a pause)
@@ -244,16 +280,12 @@ angular.module('npn-viz-tool.layers',[
                 });
             }
 
-            $scope.layerOnMap = {
-                layer: 'none'
-            };
+
             $scope.$watch('layerOnMap.layer',function(newLayer,oldLayer){
                 if($scope.layerOnMap.skipLoad) {
                     $scope.layerOnMap.skipLoad = false;
                     return;
                 }
-                console.log('layerOnMap.new',newLayer);
-                console.log('layerOnMap.old',oldLayer);
                 if(oldLayer && oldLayer != 'none') {
                     LayerService.unloadLayer(oldLayer.id).then(function(unloaded){
                         var filterUpdate = false;
@@ -279,7 +311,7 @@ angular.module('npn-viz-tool.layers',[
             function loadLayer(layer) {
                 var def = $q.defer();
                 if(layer === 'none') {
-                    def.resolve(null);
+                    return def.resolve(null);
                 }
                 LayerService.loadLayer(layer.id,function(feature) {
                     var style = {
@@ -300,9 +332,10 @@ angular.module('npn-viz-tool.layers',[
                         // this feels kind of like a workaround since the markers aren't
                         // refreshed until the map moves so forcibly moving the map
                         $scope.$on('filter-phase2-end',function(event,data) {
-                            if(lastClick) {
-                                map.panTo(lastClick.latLng);
-                                lastClick = null;
+                            if(lastFeature) {
+                                var center = lastFeature.getProperty('CENTER');
+                                map.panTo(new google.maps.LatLng(center.latitude,center.longitude));
+                                lastFeature = null;
                             }
                         });
                         eventListeners.push(map.data.addListener('mouseover',function(event){
@@ -313,8 +346,7 @@ angular.module('npn-viz-tool.layers',[
                         }));
                         eventListeners.push(map.data.addListener('click',function(event){
                             $scope.$apply(function(){
-                                lastClick = event;
-                                clickFeature(event.feature,layer,map);
+                                clickFeature(event.feature,map);
                             });
 
                         }));
