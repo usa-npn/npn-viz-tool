@@ -16,16 +16,44 @@ angular.module('npn-viz-tool.share',[
         template: '<a href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
         scope: {},
         controller: function($scope){
-            function addSpeciesToFilter(s){
-                SpeciesFilterArg.fromString(s).then(FilterService.addToFilter);
-            }
+            FilterService.pause();
             uiGmapIsReady.promise(1).then(function(){
-                var qargs = $location.search();
+                var qargs = $location.search(),
+                    speciesFilterCount = 0,
+                    speciesFilterReadyCount = 0,
+                    layersReady = false,
+                    layerListener,speciesListener;
+                function checkReady() {
+                    if(layersReady && speciesFilterReadyCount === speciesFilterCount) {
+                        console.log('ready..');
+                        // unsubscribe
+                        layerListener();
+                        speciesListener();
+                        FilterService.resume();
+                    }
+                }
+                layerListener = $scope.$on('layers-ready',function(event,data){
+                    console.log('layers ready...');
+                    layersReady = true;
+                    checkReady();
+                });
+                speciesListener = $scope.$on('species-filter-ready',function(event,data){
+                    console.log('species filter ready...',data);
+                    speciesFilterReadyCount++;
+                    checkReady();
+                });
+                function addSpeciesToFilter(s){
+                    SpeciesFilterArg.fromString(s).then(FilterService.addToFilter);
+                }
                 console.log('qargs',qargs);
                 if(qargs['d'] && qargs['s']) {
                     // we have sufficient criteria to alter the filter...
                     FilterService.addToFilter(DateFilterArg.fromString(qargs['d']));
-                    qargs['s'].split(';').forEach(addSpeciesToFilter);
+                    var speciesList = qargs['s'].split(';');
+                    speciesFilterCount = speciesList.length;
+                    speciesList.forEach(addSpeciesToFilter);
+                } else {
+                    FilterService.resume();
                 }
             });
 

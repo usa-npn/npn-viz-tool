@@ -57,7 +57,7 @@ angular.module('npn-viz-tool.filter',[
     };
     return DateFilterArg;
 }])
-.factory('SpeciesFilterArg',['$http','FilterArg',function($http,FilterArg){
+.factory('SpeciesFilterArg',['$http','$rootScope','FilterArg',function($http,$rootScope,FilterArg){
     /**
      * Constructs a SpeciesFilterArg.  This type of arg spans both side of the wire.  It's id is used as input
      * to web services and its $filter method deals with post-processing phenophase filtering.  It exposes additional
@@ -96,6 +96,7 @@ angular.module('npn-viz-tool.filter',[
                 angular.forEach(self.phenophases,function(pp){
                     self.phenophasesMap[pp.phenophase_id] = pp;
                 });
+                $rootScope.$broadcast('species-filter-ready',{filter:self});
             });
     };
     SpeciesFilterArg.prototype.getId = function() {
@@ -277,6 +278,7 @@ angular.module('npn-viz-tool.filter',[
     // NOTE: this scale is limited to 20 colors
     var colorScale = d3.scale.category20(),
         filter = new NpnFilter(),
+        paused = false,
         defaultIcon = {
             //path: google.maps.SymbolPath.CIRCLE,
             //'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
@@ -305,12 +307,14 @@ angular.module('npn-viz-tool.filter',[
         }
     }
     $rootScope.$on('filter-rerun-phase2',function(event,data){
-        $timeout(function(){
-            if(last) {
-                var markers = post_filter(last);
-                $rootScope.$broadcast('filter-marker-updates',{markers: markers});
-            }
-        },500);
+        if(!paused) {
+            $timeout(function(){
+                if(last) {
+                    var markers = post_filter(last);
+                    $rootScope.$broadcast('filter-marker-updates',{markers: markers});
+                }
+            },500);
+        }
     });
     function post_filter(markers) {
         $rootScope.$broadcast('filter-phase2-start',{
@@ -373,7 +377,7 @@ angular.module('npn-viz-tool.filter',[
     function execute() {
         var def = $q.defer(),
             filterParams = getFilterParams();
-        if(filterParams) {
+        if(!paused && filterParams) {
             $rootScope.$broadcast('filter-phase1-start',{});
             $http.get('/npn_portal/observations/getAllObservationsForSpecies.json',{
                 params: filterParams
@@ -434,6 +438,13 @@ angular.module('npn-viz-tool.filter',[
     }
     return {
         execute: execute,
+        pause: function() {
+            paused = true;
+        },
+        resume: function() {
+            paused = false;
+            broadcastFilterUpdate();
+        },
         getFilter: function() {
             return filter;
         },
@@ -1004,6 +1015,9 @@ angular.module('npn-viz-tool.layers',[
             };
 
             LayerService.getAvailableLayers().then(function(layers){
+                function broadcastLayersReady() {
+                    $rootScope.$broadcast('layers-ready',{});
+                }
                 console.log('av.layers',layers);
                 $scope.layers = layers;
                 var qargs = $location.search();
@@ -1033,8 +1047,11 @@ angular.module('npn-viz-tool.layers',[
                                     clickFeature(f,map);
                                 }
                             });
+                            broadcastLayersReady();
                         });
                     }
+                } else {
+                    broadcastLayersReady();
                 }
             });
 
@@ -1550,7 +1567,7 @@ angular.module('npn-viz-tool.settings',[
         }
     };
 }])
-.directive('settingsControl',['$rootScope','$document','$location','SettingsService',function($rootScope,$document,$location,SettingsService){
+.directive('settingsControl',['$rootScope','$location','SettingsService',function($rootScope,$location,SettingsService){
     return {
         restrict: 'E',
         templateUrl: 'js/settings/settingsControl.html',
@@ -1569,13 +1586,6 @@ angular.module('npn-viz-tool.settings',[
             for(var key in $scope.settings) {
                 setupBroadcast(key);
             }
-            $document.bind('keypress',function(e){
-                if(e.charCode === 99 || e.key === 'C') {
-                    $scope.$apply(function(){
-                        $scope.settings.clusterMarkers.value = !$scope.settings.clusterMarkers.value;
-                    });
-                }
-            });
         }
     };
 }]);
@@ -1597,16 +1607,44 @@ angular.module('npn-viz-tool.share',[
         template: '<a href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
         scope: {},
         controller: function($scope){
-            function addSpeciesToFilter(s){
-                SpeciesFilterArg.fromString(s).then(FilterService.addToFilter);
-            }
+            FilterService.pause();
             uiGmapIsReady.promise(1).then(function(){
-                var qargs = $location.search();
+                var qargs = $location.search(),
+                    speciesFilterCount = 0,
+                    speciesFilterReadyCount = 0,
+                    layersReady = false,
+                    layerListener,speciesListener;
+                function checkReady() {
+                    if(layersReady && speciesFilterReadyCount === speciesFilterCount) {
+                        console.log('ready..');
+                        // unsubscribe
+                        layerListener();
+                        speciesListener();
+                        FilterService.resume();
+                    }
+                }
+                layerListener = $scope.$on('layers-ready',function(event,data){
+                    console.log('layers ready...');
+                    layersReady = true;
+                    checkReady();
+                });
+                speciesListener = $scope.$on('species-filter-ready',function(event,data){
+                    console.log('species filter ready...',data);
+                    speciesFilterReadyCount++;
+                    checkReady();
+                });
+                function addSpeciesToFilter(s){
+                    SpeciesFilterArg.fromString(s).then(FilterService.addToFilter);
+                }
                 console.log('qargs',qargs);
                 if(qargs['d'] && qargs['s']) {
                     // we have sufficient criteria to alter the filter...
                     FilterService.addToFilter(DateFilterArg.fromString(qargs['d']));
-                    qargs['s'].split(';').forEach(addSpeciesToFilter);
+                    var speciesList = qargs['s'].split(';');
+                    speciesFilterCount = speciesList.length;
+                    speciesList.forEach(addSpeciesToFilter);
+                } else {
+                    FilterService.resume();
                 }
             });
 

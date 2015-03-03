@@ -88,7 +88,7 @@ angular.module('npn-viz-tool.settings',[
         }
     };
 }])
-.directive('settingsControl',['$rootScope','$document','$location','SettingsService',function($rootScope,$document,$location,SettingsService){
+.directive('settingsControl',['$rootScope','$location','SettingsService',function($rootScope,$location,SettingsService){
     return {
         restrict: 'E',
         templateUrl: 'js/settings/settingsControl.html',
@@ -107,13 +107,6 @@ angular.module('npn-viz-tool.settings',[
             for(var key in $scope.settings) {
                 setupBroadcast(key);
             }
-            $document.bind('keypress',function(e){
-                if(e.charCode === 99 || e.key === 'C') {
-                    $scope.$apply(function(){
-                        $scope.settings.clusterMarkers.value = !$scope.settings.clusterMarkers.value;
-                    });
-                }
-            });
         }
     };
 }]);

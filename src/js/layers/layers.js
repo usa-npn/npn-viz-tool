@@ -222,6 +222,9 @@ angular.module('npn-viz-tool.layers',[
             };
 
             LayerService.getAvailableLayers().then(function(layers){
+                function broadcastLayersReady() {
+                    $rootScope.$broadcast('layers-ready',{});
+                }
                 console.log('av.layers',layers);
                 $scope.layers = layers;
                 var qargs = $location.search();
@@ -251,8 +254,11 @@ angular.module('npn-viz-tool.layers',[
                                     clickFeature(f,map);
                                 }
                             });
+                            broadcastLayersReady();
                         });
                     }
+                } else {
+                    broadcastLayersReady();
                 }
             });
 
