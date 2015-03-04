@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-03
+ * Version: 0.1.0 - 2015-03-04
  */
 
 angular.module('npn-viz-tool.filter',[
@@ -1604,7 +1604,7 @@ angular.module('npn-viz-tool.share',[
     function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,GeoFilterArg,$location,SettingsService){
     return {
         restrict: 'E',
-        template: '<a href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
+        template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
         scope: {},
         controller: function($scope){
             FilterService.pause();
@@ -1741,10 +1741,10 @@ angular.module('npn-viz-tool.stations',[
                                     name: name,
                                     icon: {
                                         path: google.maps.SymbolPath.CIRCLE,
-                                        fillColor: '#ffffff',
-                                        fillOpacity: 0.95,
+                                        fillColor: '#000',
+                                        fillOpacity: 0.5,
                                         scale: 16,
-                                        strokeColor: '#204d74',
+                                        strokeColor: '#ccc',
                                         strokeWeight: 1
                                     },
                                     markerOpts: {

@@ -52,10 +52,10 @@ angular.module('npn-viz-tool.stations',[
                                     name: name,
                                     icon: {
                                         path: google.maps.SymbolPath.CIRCLE,
-                                        fillColor: '#ffffff',
-                                        fillOpacity: 0.95,
+                                        fillColor: '#000',
+                                        fillOpacity: 0.5,
                                         scale: 16,
-                                        strokeColor: '#204d74',
+                                        strokeColor: '#ccc',
                                         strokeWeight: 1
                                     },
                                     markerOpts: {

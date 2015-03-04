@@ -13,7 +13,7 @@ angular.module('npn-viz-tool.share',[
     function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,GeoFilterArg,$location,SettingsService){
     return {
         restrict: 'E',
-        template: '<a href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
+        template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
         scope: {},
         controller: function($scope){
             FilterService.pause();
