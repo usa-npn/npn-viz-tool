@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/scatterPlot.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
 
 angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/dateFilterTag.html",
@@ -150,7 +150,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "        <layer-control></layer-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
-    "        visualization content\n" +
+    "        <vis-control></vis-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
     "        <settings-control></settings-control>\n" +
@@ -217,5 +217,32 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "    </li>\n" +
     "  </ul>\n" +
     "  <div class=\"toolbar-content\" ng-class=\"{open: open}\" ng-transclude></div>\n" +
+    "</div>");
+}]);
+
+angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/vis/scatterPlot.html",
+    "<vis-dialog title=\"Scatter Plot\" modal=\"modal\">\n" +
+    "{{foo}}\n" +
+    "</vis-dialog>");
+}]);
+
+angular.module("js/vis/visControl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/vis/visControl.html",
+    "<ul class=\"list-unstyled\">\n" +
+    "    <li ng-repeat=\"vis in visualizations\">\n" +
+    "        <a href ng-click=\"open(vis)\">{{vis.title}}</a>\n" +
+    "        <p>{{vis.description}}</p>\n" +
+    "    </li>\n" +
+    "</ul>");
+}]);
+
+angular.module("js/vis/visDialog.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/vis/visDialog.html",
+    "<div class=\"modal-header\">\n" +
+    "    <a href class=\"modal-dismiss\" ng-click=\"modal.dismiss()\"><i class=\"fa fa-times-circle-o fa-2x\"></i></a>\n" +
+    "    <h3 class=\"modal-title\">{{title}}</h3>\n" +
+    "</div>\n" +
+    "<div class=\"modal-body vis-dialog {{title | cssClassify}}\" ng-transclude>\n" +
     "</div>");
 }]);

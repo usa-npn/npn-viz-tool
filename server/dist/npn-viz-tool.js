@@ -738,6 +738,14 @@ angular.module('npn-viz-tool.filter',[
 }]);
 angular.module('npn-viz-tool.filters',[
 ])
+.filter('cssClassify',function(){
+    return function(input) {
+        if(typeof(input) === 'string') {
+            return input.trim().toLowerCase().replace(/\s+/g,'-');
+        }
+        return input;
+    };
+})
 .filter('yesNo',function(){
     return function(input) {
         return input ? 'Yes' : 'No';
@@ -1185,6 +1193,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.toolbar',
     'npn-viz-tool.filter',
     'npn-viz-tool.settings',
+    'npn-viz-tool.vis',
     'npn-viz-tool.share',
     'uiGmapgoogle-maps'
 ])
@@ -1251,7 +1260,7 @@ angular.module('npn-viz-tool.map',[
         }
     };
 }]);
-angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html']);
+angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/scatterPlot.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
 
 angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/dateFilterTag.html",
@@ -1403,7 +1412,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "        <layer-control></layer-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
-    "        visualization content\n" +
+    "        <vis-control></vis-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
     "        <settings-control></settings-control>\n" +
@@ -1470,6 +1479,33 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "    </li>\n" +
     "  </ul>\n" +
     "  <div class=\"toolbar-content\" ng-class=\"{open: open}\" ng-transclude></div>\n" +
+    "</div>");
+}]);
+
+angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/vis/scatterPlot.html",
+    "<vis-dialog title=\"Scatter Plot\" modal=\"modal\">\n" +
+    "{{foo}}\n" +
+    "</vis-dialog>");
+}]);
+
+angular.module("js/vis/visControl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/vis/visControl.html",
+    "<ul class=\"list-unstyled\">\n" +
+    "    <li ng-repeat=\"vis in visualizations\">\n" +
+    "        <a href ng-click=\"open(vis)\">{{vis.title}}</a>\n" +
+    "        <p>{{vis.description}}</p>\n" +
+    "    </li>\n" +
+    "</ul>");
+}]);
+
+angular.module("js/vis/visDialog.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/vis/visDialog.html",
+    "<div class=\"modal-header\">\n" +
+    "    <a href class=\"modal-dismiss\" ng-click=\"modal.dismiss()\"><i class=\"fa fa-times-circle-o fa-2x\"></i></a>\n" +
+    "    <h3 class=\"modal-title\">{{title}}</h3>\n" +
+    "</div>\n" +
+    "<div class=\"modal-body vis-dialog {{title | cssClassify}}\" ng-transclude>\n" +
     "</div>");
 }]);
 
@@ -1874,4 +1910,54 @@ angular.module('npn-viz-tool.toolbar',[
       tabsCtrl.addTool(scope);
     }
   };
+}]);
+angular.module('npn-viz-tool.vis',[
+    'npn-viz-tool.filter',
+    'npn-viz-tool.filters',
+    'ui.bootstrap'
+])
+.directive('visDialog',[function(){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/vis/visDialog.html',
+        transclude: true,
+        scope: {
+            title: '@',
+            modal: '='
+        },
+        controller: ['$scope',function($scope) {
+        }]
+    };
+}])
+.directive('visControl',['$modal',function($modal){
+    var visualizations = [{
+        title: 'Scatter Plot',
+        controller: 'ScatterPlotCtrl',
+        template: 'js/vis/scatterPlot.html',
+        description: 'This visualization uses site-level data and allows users to set different variables as the X and Y axes. The user can select a number of geographic or climatic variables on the X axis and phenometric type variables on the Y axis. The graph presents a legend for multiple species, as well as produces a regression line.'
+    }];
+    return {
+        restrict: 'E',
+        templateUrl: 'js/vis/visControl.html',
+        scope: {
+
+        },
+        controller: function($scope) {
+            $scope.visualizations = visualizations;
+            $scope.open = function(vis) {
+                $modal.open({
+                    templateUrl: vis.template,
+                    controller: vis.controller,
+                    windowClass: 'vis-dialog-window',
+                    backdrop: 'static',
+                    keyboard: false,
+                    size: 'lg'
+                });
+            };
+        }
+    };
+}])
+.controller('ScatterPlotCtrl',['$scope','$modalInstance',function($scope,$modalInstance){
+    $scope.modal = $modalInstance;
+    $scope.foo = 'bar';
 }]);

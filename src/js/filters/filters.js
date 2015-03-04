@@ -1,5 +1,13 @@
 angular.module('npn-viz-tool.filters',[
 ])
+.filter('cssClassify',function(){
+    return function(input) {
+        if(typeof(input) === 'string') {
+            return input.trim().toLowerCase().replace(/\s+/g,'-');
+        }
+        return input;
+    };
+})
 .filter('yesNo',function(){
     return function(input) {
         return input ? 'Yes' : 'No';

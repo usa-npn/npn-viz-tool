@@ -246,4 +246,22 @@ ul.filter-tags .filter-tag .phenophase-list {
   color: #fff;
 }
 
+.modal-dismiss {
+  float: right;
+  color: #000;
+}
+
+.modal-dismiss:hover {
+  color: #666;
+}
+
+.vis-dialog-window .modal-dialog {
+  margin: 0px;
+  width: 100%;
+  height: 100%;
+}
+.vis-dialog-window .modal-dialog .modal-content {
+  height: 100%;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */
