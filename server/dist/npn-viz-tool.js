@@ -1166,11 +1166,7 @@ angular.module('npn-viz-tool.layers',[
 }]);
 angular.module('npn-viz-tool',[
 'templates-npnvis',
-'npn-viz-tool.layers',
 'npn-viz-tool.map',
-'npn-viz-tool.toolbar',
-'npn-viz-tool.filters',
-'npn-viz-tool.share',
 'uiGmapgoogle-maps',
 'ui.bootstrap',
 'ngAnimate'
