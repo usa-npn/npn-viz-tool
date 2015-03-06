@@ -1,6 +1,6 @@
 <ul class="list-unstyled">
     <li>
-        <label for="yearInputForm">Years (at most two)</label>
+        <label for="yearInputForm">Years (at most ten)</label>
         <form id="yearInputForm" name="yearInputForm">
         <input id="start_date" type="number" class="form-control"
                max="{{selected.date.end_date || thisYear}}"
@@ -13,7 +13,7 @@
                 typeahead="year for year in validYears | gte:selected.date.start_date | filter:$viewValue"
                 required placeholder="To" />
         <button class="btn btn-default"
-                ng-disabled="yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 2) || filterHasDate()"
+                ng-disabled="yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 10)"
                 ng-click="addDateRangeToFilter()"><i class="fa fa-plus"></i></button>
         </form>
     </li>

@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-04
+ * Version: 0.1.0 - 2015-03-06
  */
 
 angular.module('npn-viz-tool.filter',[
@@ -1278,7 +1278,7 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
   $templateCache.put("js/filter/filterControl.html",
     "<ul class=\"list-unstyled\">\n" +
     "    <li>\n" +
-    "        <label for=\"yearInputForm\">Years (at most two)</label>\n" +
+    "        <label for=\"yearInputForm\">Years (at most ten)</label>\n" +
     "        <form id=\"yearInputForm\" name=\"yearInputForm\">\n" +
     "        <input id=\"start_date\" type=\"number\" class=\"form-control\"\n" +
     "               max=\"{{selected.date.end_date || thisYear}}\"\n" +
@@ -1291,7 +1291,7 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                typeahead=\"year for year in validYears | gte:selected.date.start_date | filter:$viewValue\"\n" +
     "                required placeholder=\"To\" />\n" +
     "        <button class=\"btn btn-default\"\n" +
-    "                ng-disabled=\"yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 2) || filterHasDate()\"\n" +
+    "                ng-disabled=\"yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 10)\"\n" +
     "                ng-click=\"addDateRangeToFilter()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "        </form>\n" +
     "    </li>\n" +
