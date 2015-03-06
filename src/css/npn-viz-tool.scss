@@ -195,15 +195,18 @@ ul.dropdown-menu {
     }
 }
 
+/*
 $gmaps-maptype-right: 30px;
 // re-position a GoogleMaps generated element....
+// cannot rely on google maps to keep this ID in place (it disappeared)
 #maptype {
     right: $gmaps-maptype-right !important;
 }
+*/
 // put the share-control in its original place...
 #share-control {
     position: absolute;
-    top: 5px;
+    top: 80px;
     right: 5px;
     z-index: 2;
     box-shadow: rgba(0, 0, 0, 0.298039) 0px 1px 4px -1px;
@@ -225,7 +228,7 @@ $gmaps-maptype-right: 30px;
 
 ul.filter-tags {
     position: absolute;
-    right: 105px + $gmaps-maptype-right;
+    right: 105px;// + $gmaps-maptype-right;
     top: 0px;
     z-index: 450;
     margin-left: 100px;
