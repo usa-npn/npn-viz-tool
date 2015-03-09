@@ -554,16 +554,17 @@ angular.module('npn-viz-tool.filter',[
         return counts;
     };
 })
-.filter('speciesTitle',function(){
+.filter('speciesTitle',['SettingsService',function(SettingsService){
     return function(item,format) {
-        if(format === 'common-name') {
+        var fmt = format||SettingsService.getSettingValue('tagSpeciesTitle');
+        if(fmt === 'common-name') {
             return item.common_name;
-        } else if (format === 'genus-species') {
+        } else if (fmt === 'genus-species') {
             return item.genus+' '+item.species;
         }
         return item;
     };
-})
+}])
 .directive('speciesFilterTag',['$rootScope','FilterService','SettingsService','SpeciesFilterArg',function($rootScope,FilterService,SettingsService,SpeciesFilterArg){
     return {
         restrict: 'E',
@@ -1524,7 +1525,36 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
 angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/vis/scatterPlot.html",
     "<vis-dialog title=\"Scatter Plot\" modal=\"modal\">\n" +
-    "{{foo}}\n" +
+    "<form class=\"form-inline\">\n" +
+    "    <div class=\"form-group\">\n" +
+    "        <label for=\"toPlotInput\">Select up to three Species/Phenophase pairs</label>\n" +
+    "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
+    "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
+    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
+    "            &nbsp; <span class=\"caret\"></span>\n" +
+    "          </button>\n" +
+    "          <ul class=\"dropdown-menu\" role=\"menu\">\n" +
+    "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorScale($index)}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
+    "          </ul>\n" +
+    "        </div>\n" +
+    "    </div>\n" +
+    "    <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
+    "</form>\n" +
+    "\n" +
+    "<div class=\"panel panel-default animated-show-hide main-vis-panel\" ng-if=\"toPlot.length\">\n" +
+    "    <div class=\"panel-body\">\n" +
+    "        <ul class=\"to-plot list-inline\">\n" +
+    "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
+    "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times\"></i></a>\n" +
+    "            </li>\n" +
+    "            <li>\n" +
+    "                <select class=\"form-control vis-axis\" ng-model=\"selection.axis\" ng-options=\"o.key as o.label for o in axis\"></select>\n" +
+    "            </li>\n" +
+    "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "        </ul>\n" +
+    "    </div>\n" +
+    "</div>\n" +
+    "\n" +
     "</vis-dialog>");
 }]);
 
@@ -1999,7 +2029,70 @@ angular.module('npn-viz-tool.vis',[
         }
     };
 }])
-.controller('ScatterPlotCtrl',['$scope','$modalInstance',function($scope,$modalInstance){
+.controller('ScatterPlotCtrl',['$scope','$modalInstance','$http','FilterService',function($scope,$modalInstance,$http,FilterService){
     $scope.modal = $modalInstance;
-    $scope.foo = 'bar';
+    $scope.colorScale = d3.scale.category20();
+    $scope.colors = new Array(20);
+    $scope.selection = {
+        color: 0,
+        axis: 'latitude'
+    };
+    $scope.plottable = [];
+    angular.forEach(FilterService.getFilter().getSpeciesArgs(),function(sarg) {
+        angular.forEach(sarg.phenophases,function(pp){
+            $scope.plottable.push(angular.extend({},sarg.arg,pp));
+        });
+    });
+    $scope.toPlot = [];
+    $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation'}];
+    function getNewToPlot() {
+        return angular.extend({},$scope.selection.toPlot,{color: $scope.selection.color});
+    }
+    $scope.canAddToPlot = function() {
+        if(!$scope.selection.toPlot || $scope.toPlot.length === 3) {
+            return false;
+        }
+        if($scope.toPlot.length === 0) {
+            return true;
+        }
+        var next = getNewToPlot(),i;
+        for(i = 0; i < $scope.toPlot.length; i++) {
+            if(angular.equals($scope.toPlot[i],next)) {
+                return false;
+            }
+        }
+        for(i = 0; i < $scope.toPlot.length; i++) {
+            if(next.color === $scope.toPlot[i].color) {
+                return false;
+            }
+        }
+        return true;
+    };
+    $scope.addToPlot = function() {
+        if($scope.selection.toPlot) {
+            $scope.toPlot.push(getNewToPlot());
+            $scope.selection.color++;
+        }
+    };
+    $scope.removeFromPlot = function(idx) {
+        $scope.toPlot.splice(idx,1);
+    };
+    $scope.visualize = function() {
+        console.log('key',$scope.selection.axis);
+        console.log('toPlot',$scope.toPlot);
+        var dateArg = FilterService.getFilter().getDateArg(),
+            params = {
+                request_src: 'npn-vis-scatter-plot',
+                start_date: dateArg.getStartDate(),
+                end_date: dateArg.getEndDate()
+            },
+            i = 0;
+        angular.forEach($scope.toPlot,function(tp) {
+            params['species_id['+i+']'] = tp.species_id;
+            params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
+        });
+        $http.get('/npn_portal/observations/getSummarizedData.json',{params:params}).success(function(data){
+            console.log(data);
+        });
+    };
 }]);

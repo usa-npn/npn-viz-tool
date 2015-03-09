@@ -315,7 +315,9 @@ ul.filter-tags {
     }
 }
 .vis-dialog {
-    .scatter-plot {
-
+    &.scatter-plot {
+        .main-vis-panel {
+            margin-top: 15px;
+        }
     }
 }

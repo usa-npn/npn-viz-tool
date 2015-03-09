@@ -549,16 +549,17 @@ angular.module('npn-viz-tool.filter',[
         return counts;
     };
 })
-.filter('speciesTitle',function(){
+.filter('speciesTitle',['SettingsService',function(SettingsService){
     return function(item,format) {
-        if(format === 'common-name') {
+        var fmt = format||SettingsService.getSettingValue('tagSpeciesTitle');
+        if(fmt === 'common-name') {
             return item.common_name;
-        } else if (format === 'genus-species') {
+        } else if (fmt === 'genus-species') {
             return item.genus+' '+item.species;
         }
         return item;
     };
-})
+}])
 .directive('speciesFilterTag',['$rootScope','FilterService','SettingsService','SpeciesFilterArg',function($rootScope,FilterService,SettingsService,SpeciesFilterArg){
     return {
         restrict: 'E',

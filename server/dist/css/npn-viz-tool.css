@@ -286,4 +286,8 @@ ul.filter-tags .filter-tag .phenophase-list {
   height: 100%;
 }
 
+.vis-dialog.scatter-plot .main-vis-panel {
+  margin-top: 15px;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */
