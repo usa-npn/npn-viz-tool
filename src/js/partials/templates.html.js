@@ -254,6 +254,7 @@ angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($t
     "            </li>\n" +
     "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
+    "        <svg class=\"chart\"></svg>\n" +
     "    </div>\n" +
     "</div>\n" +
     "\n" +
