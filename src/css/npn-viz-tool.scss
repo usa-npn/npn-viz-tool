@@ -203,13 +203,26 @@ $gmaps-maptype-right: 30px;
     right: $gmaps-maptype-right !important;
 }
 */
+$controls-top: 80px;
+$control-height: 22px;
+$control-margin: 5px;
+.little-npn-control {
+    height: $control-height;
+    width: $control-height;
+}
 // put the share-control in its original place...
-#share-control {
+#reset-control,#share-control {
+    @extend .little-npn-control;
     position: absolute;
-    top: 80px;
     right: 5px;
     z-index: 2;
     box-shadow: rgba(0, 0, 0, 0.298039) 0px 1px 4px -1px;
+}
+#share-control {
+    top: $controls-top;
+}
+#reset-control {
+    top: $controls-top + $control-height + $control-margin;
 }
 #share-content {
     position: absolute;

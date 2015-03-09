@@ -132,6 +132,8 @@ angular.module("js/layers/layerControl.html", []).run(["$templateCache", functio
 
 angular.module("js/map/map.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/map/map.html",
+    "<a title=\"Reset\" href id=\"reset-control\" class=\"btn btn-default btn-xs\" ng-click=\"reset()\"><i class=\"fa fa-refresh\"></i></a>\n" +
+    "\n" +
     "<npn-working></npn-working>\n" +
     "\n" +
     "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\">\n" +

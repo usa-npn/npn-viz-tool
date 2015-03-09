@@ -217,9 +217,13 @@ angular.module('npn-viz-tool.layers',[
             var eventListeners = [],
                 lastFeature;
 
-            $scope.layerOnMap = {
-                layer: 'none'
-            };
+            function reset() {
+                $scope.layerOnMap = {
+                    layer: 'none'
+                };
+            }
+            reset();
+            $scope.$on('filter-reset',reset);
 
             LayerService.getAvailableLayers().then(function(layers){
                 function broadcastLayersReady() {

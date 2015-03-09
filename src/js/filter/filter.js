@@ -207,8 +207,7 @@ angular.module('npn-viz-tool.filter',[
      * a list of 1 or more species (SpeciesFilterArg) and zero or more geographic filters (GeoFilterArgs).
      */
     var NpnFilter = function(){
-        this.species = {};
-        this.geo = {};
+        this.reset();
     };
     NpnFilter.prototype.hasDate = function() {
         return !!this.date;
@@ -261,6 +260,11 @@ angular.module('npn-viz-tool.filter',[
             delete this.geo[item.getId()];
         }
         return (!(item instanceof GeoFilterArg));
+    };
+    NpnFilter.prototype.reset = function() {
+        this.date = undefined;
+        this.species = {};
+        this.geo = {};
     };
     return NpnFilter;
 }])
@@ -463,6 +467,10 @@ angular.module('npn-viz-tool.filter',[
                     broadcastFilterReset();
                 }
             }
+        },
+        resetFilter: function() {
+            filter.reset();
+            broadcastFilterReset();
         }
     };
 }])

@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-06
+ * Version: 0.1.0 - 2015-03-09
  */
 
 angular.module('npn-viz-tool.filter',[
@@ -212,8 +212,7 @@ angular.module('npn-viz-tool.filter',[
      * a list of 1 or more species (SpeciesFilterArg) and zero or more geographic filters (GeoFilterArgs).
      */
     var NpnFilter = function(){
-        this.species = {};
-        this.geo = {};
+        this.reset();
     };
     NpnFilter.prototype.hasDate = function() {
         return !!this.date;
@@ -266,6 +265,11 @@ angular.module('npn-viz-tool.filter',[
             delete this.geo[item.getId()];
         }
         return (!(item instanceof GeoFilterArg));
+    };
+    NpnFilter.prototype.reset = function() {
+        this.date = undefined;
+        this.species = {};
+        this.geo = {};
     };
     return NpnFilter;
 }])
@@ -468,6 +472,10 @@ angular.module('npn-viz-tool.filter',[
                     broadcastFilterReset();
                 }
             }
+        },
+        resetFilter: function() {
+            filter.reset();
+            broadcastFilterReset();
         }
     };
 }])
@@ -1018,9 +1026,13 @@ angular.module('npn-viz-tool.layers',[
             var eventListeners = [],
                 lastFeature;
 
-            $scope.layerOnMap = {
-                layer: 'none'
-            };
+            function reset() {
+                $scope.layerOnMap = {
+                    layer: 'none'
+                };
+            }
+            reset();
+            $scope.$on('filter-reset',reset);
 
             LayerService.getAvailableLayers().then(function(layers){
                 function broadcastLayersReady() {
@@ -1197,19 +1209,22 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.share',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['$location','uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function($location,uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
+.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
         scope: {
         },
         controller: ['$scope',function($scope) {
+            var dfltCenter = { latitude: 38.8402805, longitude: -97.61142369999999 },
+                dfltZoom = 4,
+                map;
             $scope.stationView = false;
             uiGmapGoogleMapApi.then(function(maps) {
                 console.log('maps',maps);
                 $scope.map = {
-                    center: { latitude: 38.8402805, longitude: -97.61142369999999 },
-                    zoom: 4,
+                    center: dfltCenter,
+                    zoom: dfltZoom,
                     options: {
                         streetViewControl: false,
                         panControl: false,
@@ -1221,22 +1236,37 @@ angular.module('npn-viz-tool.map',[
                     }
                 };
             });
-            uiGmapIsReady.promise(1).then(function(){
+            uiGmapIsReady.promise(1).then(function(instances){
+                map = instances[0].map;
                 var qargs = $location.search();
                 // this is a little leaky, the map knows which args the "share" control cares about...
                 $scope.stationView = !qargs['d'] && !qargs['s'];
             });
+            function stationViewOff() {
+                $scope.stationView = false;
+            }
+            function stationViewOn() {
+                if(map) {
+                    map.panTo(new google.maps.LatLng(dfltCenter.latitude,dfltCenter.longitude));
+                    map.setZoom(4);
+                }
+                $scope.stationView = true;
+            }
             $scope.$on('tool-open',function(event,data){
                 if(data.tool.id === 'layers') {
-                    $scope.stationView = false;
+                    stationViewOff();
                 }
             });
-            $scope.$on('filter-phase1-start',function(event,data){
-                $scope.stationView = false;
-            });
-            $scope.$on('filter-reset',function(event,data){
-                $scope.stationView = true;
-            });
+            $scope.$on('filter-phase1-start',stationViewOff);
+            $scope.$on('filter-reset',stationViewOn);
+            $scope.reset = function() {
+                if(!$scope.stationView) {
+                    FilterService.resetFilter();
+                } else {
+                    $scope.stationView = false;
+                    $timeout(stationViewOn,500);
+                }
+            };
         }]
     };
 }])
@@ -1394,6 +1424,8 @@ angular.module("js/layers/layerControl.html", []).run(["$templateCache", functio
 
 angular.module("js/map/map.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/map/map.html",
+    "<a title=\"Reset\" href id=\"reset-control\" class=\"btn btn-default btn-xs\" ng-click=\"reset()\"><i class=\"fa fa-refresh\"></i></a>\n" +
+    "\n" +
     "<npn-working></npn-working>\n" +
     "\n" +
     "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\">\n" +

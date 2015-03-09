@@ -182,12 +182,24 @@ $gmaps-maptype-right: 30px;
     right: $gmaps-maptype-right !important;
 }
 */
-#share-control {
+.little-npn-control, #reset-control, #share-control {
+  height: 22px;
+  width: 22px;
+}
+
+#reset-control, #share-control {
   position: absolute;
-  top: 80px;
   right: 5px;
   z-index: 2;
   box-shadow: rgba(0, 0, 0, 0.29804) 0px 1px 4px -1px;
+}
+
+#share-control {
+  top: 80px;
+}
+
+#reset-control {
+  top: 107px;
 }
 
 #share-content {
