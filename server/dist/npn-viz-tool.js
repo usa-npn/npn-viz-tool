@@ -458,6 +458,9 @@ angular.module('npn-viz-tool.filter',[
         hasDate: function() {
             return filter.hasDate();
         },
+        hasSufficientCriteria: function() {
+            return filter.hasSufficientCriteria();
+        },
         addToFilter: function(item) {
             if(filter.add(item)) {
                 updateColors();
@@ -654,6 +657,7 @@ angular.module('npn-viz-tool.filter',[
             };
 
             $scope.filterHasDate = FilterService.hasDate;
+            $scope.filterHasSufficientCriteria = FilterService.hasSufficientCriteria;
             var thisYear = (new Date()).getYear()+1900,
                 validYears = [];
             for(var i = 2008; i <= thisYear; i++) {
@@ -1306,6 +1310,8 @@ angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", functi
 
 angular.module("js/filter/filterControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/filterControl.html",
+    "<a class=\"btn btn-default\" id=\"filter-placebo\" href ng-click=\"$parent.close()\" ng-disabled=\"!filterHasSufficientCriteria()\">Execute Filter <i class=\"fa fa-search\"></i></a>\n" +
+    "\n" +
     "<ul class=\"list-unstyled\">\n" +
     "    <li>\n" +
     "        <label for=\"yearInputForm\">Years (at most ten)</label>\n" +
@@ -1907,22 +1913,22 @@ angular.module('npn-viz-tool.toolbar',[
     scope: {},
     controller: function($scope) {
       var tools = $scope.tools = [];
-
-      $scope.select = function(t) {
-        t.selected = !t.selected;
-        $scope.open = t.selected;
-        // broadcast an event for open/close that others can listen to
+      function broadcastChange(t) {
         $rootScope.$broadcast('tool-'+(t.selected ? 'open' : 'close'),{
           tool: t
         });
+      }
+      $scope.select = function(t) {
+        t.selected = !t.selected;
+        $scope.open = t.selected;
+        broadcastChange(t);
       };
-
       this.addTool = function(t) {
-        /* TEMPORARY when devloping a specific tab
-        if(tools.length === 0) {
-          $scope.select(t);
-        }*/
         tools.push(t);
+      };
+      this.closeTool = function(t) {
+        $scope.open = t.selected = false;
+        broadcastChange(t);
       };
     }
   };
@@ -1940,6 +1946,9 @@ angular.module('npn-viz-tool.toolbar',[
     },
     link: function(scope, element, attrs, tabsCtrl) {
       tabsCtrl.addTool(scope);
+      scope.close = function() {
+        tabsCtrl.closeTool(scope);
+      };
     }
   };
 }]);

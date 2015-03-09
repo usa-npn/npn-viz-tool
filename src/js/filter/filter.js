@@ -453,6 +453,9 @@ angular.module('npn-viz-tool.filter',[
         hasDate: function() {
             return filter.hasDate();
         },
+        hasSufficientCriteria: function() {
+            return filter.hasSufficientCriteria();
+        },
         addToFilter: function(item) {
             if(filter.add(item)) {
                 updateColors();
@@ -649,6 +652,7 @@ angular.module('npn-viz-tool.filter',[
             };
 
             $scope.filterHasDate = FilterService.hasDate;
+            $scope.filterHasSufficientCriteria = FilterService.hasSufficientCriteria;
             var thisYear = (new Date()).getYear()+1900,
                 validYears = [];
             for(var i = 2008; i <= thisYear; i++) {

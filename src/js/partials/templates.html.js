@@ -14,6 +14,8 @@ angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", functi
 
 angular.module("js/filter/filterControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/filterControl.html",
+    "<a class=\"btn btn-default\" id=\"filter-placebo\" href ng-click=\"$parent.close()\" ng-disabled=\"!filterHasSufficientCriteria()\">Execute Filter <i class=\"fa fa-search\"></i></a>\n" +
+    "\n" +
     "<ul class=\"list-unstyled\">\n" +
     "    <li>\n" +
     "        <label for=\"yearInputForm\">Years (at most ten)</label>\n" +

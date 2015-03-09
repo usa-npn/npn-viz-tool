@@ -160,6 +160,11 @@ $tool-content-overlap: 40px;
 }
 
 // filter
+#filter-placebo {
+    position: absolute;
+    top: 34px;
+    left: 190px;
+}
 .tool-content.filter {
     label[for="species"] {
         display: block;

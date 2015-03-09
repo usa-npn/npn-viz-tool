@@ -8,22 +8,22 @@ angular.module('npn-viz-tool.toolbar',[
     scope: {},
     controller: function($scope) {
       var tools = $scope.tools = [];
-
-      $scope.select = function(t) {
-        t.selected = !t.selected;
-        $scope.open = t.selected;
-        // broadcast an event for open/close that others can listen to
+      function broadcastChange(t) {
         $rootScope.$broadcast('tool-'+(t.selected ? 'open' : 'close'),{
           tool: t
         });
+      }
+      $scope.select = function(t) {
+        t.selected = !t.selected;
+        $scope.open = t.selected;
+        broadcastChange(t);
       };
-
       this.addTool = function(t) {
-        /* TEMPORARY when devloping a specific tab
-        if(tools.length === 0) {
-          $scope.select(t);
-        }*/
         tools.push(t);
+      };
+      this.closeTool = function(t) {
+        $scope.open = t.selected = false;
+        broadcastChange(t);
       };
     }
   };
@@ -41,6 +41,9 @@ angular.module('npn-viz-tool.toolbar',[
     },
     link: function(scope, element, attrs, tabsCtrl) {
       tabsCtrl.addTool(scope);
+      scope.close = function() {
+        tabsCtrl.closeTool(scope);
+      };
     }
   };
 }]);
