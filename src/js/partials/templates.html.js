@@ -77,14 +77,14 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label>Partners</label>\n" +
     "        <div isteven-multi-select\n" +
-    "            max-labels=\"1\"\n" +
+    "            max-labels=\"3\"\n" +
     "            input-model=\"partners\"\n" +
     "            output-model=\"speciesInput.networks\"\n" +
     "            button-label=\"network_name\"\n" +
     "            item-label=\"network_name\"\n" +
     "            tick-property=\"selected\"\n" +
     "            orientation=\"horizontal\"\n" +
-    "            selection-mode=\"single\"></div>\n" +
+    "            helper-elements=\"all none reset filter\"></div>\n" +
     "    </li>\n" +
     "</ul>\n" +
     "");

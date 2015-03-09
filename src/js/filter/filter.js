@@ -682,13 +682,14 @@ angular.module('npn-viz-tool.filter',[
                 $scope.serverResults = undefined;
                 $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
                 var params = {},
-                    sid_idx = 0;
+                    idx = 0;
                 angular.forEach([].concat($scope.speciesInput.animals).concat($scope.speciesInput.plants),function(s){
-                    params['group_ids['+(sid_idx++)+']'] = s['species_type_id'];
+                    params['group_ids['+(idx++)+']'] = s['species_type_id'];
                 });
-                if($scope.speciesInput.networks.length) {
-                    params['network_id'] = $scope.speciesInput.networks[0]['network_id'];
-                }
+                idx = 0;
+                angular.forEach($scope.speciesInput.networks,function(n){
+                    params['network_id['+(idx++)+']'] = n['network_id'];
+                });
                 findSpeciesParams = params;
                 $scope.findSpeciesParamsEmpty = Object.keys(params).length === 0;
             }

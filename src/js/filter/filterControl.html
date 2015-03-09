@@ -61,13 +61,13 @@
     <li ng-if="filterHasDate()">
         <label>Partners</label>
         <div isteven-multi-select
-            max-labels="1"
+            max-labels="3"
             input-model="partners"
             output-model="speciesInput.networks"
             button-label="network_name"
             item-label="network_name"
             tick-property="selected"
             orientation="horizontal"
-            selection-mode="single"></div>
+            helper-elements="all none reset filter"></div>
     </li>
 </ul>
