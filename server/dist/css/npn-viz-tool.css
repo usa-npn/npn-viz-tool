@@ -300,4 +300,8 @@ ul.filter-tags .filter-tag .phenophase-list {
   shape-rendering: crispEdges;
 }
 
+svg {
+  border: 1px solid #aaa;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */

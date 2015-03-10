@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-09
+ * Version: 0.1.0 - 2015-03-10
  */
 
 angular.module('npn-viz-tool.filter',[
@@ -1541,9 +1541,9 @@ angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($t
     "    <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "</form>\n" +
     "\n" +
-    "<div class=\"panel panel-default animated-show-hide main-vis-panel\" ng-if=\"toPlot.length\">\n" +
+    "<div class=\"panel panel-default main-vis-panel\" >\n" +
     "    <div class=\"panel-body\">\n" +
-    "        <ul class=\"to-plot list-inline\">\n" +
+    "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
     "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times\"></i></a>\n" +
     "            </li>\n" +
@@ -1552,7 +1552,7 @@ angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($t
     "            </li>\n" +
     "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
-    "        <svg class=\"chart\"></svg>\n" +
+    "        <center><svg class=\"chart\"></svg></center>\n" +
     "    </div>\n" +
     "</div>\n" +
     "\n" +
@@ -1989,6 +1989,33 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.filters',
     'ui.bootstrap'
 ])
+.factory('ChartService',['$window',function($window){
+    // TODO - currently this is hard coded info but should eventually
+    // be dynamically generated based on available screen realestate.
+    var CHART_W = 930,
+        CHART_H =500,
+        MARGIN = {top: 20, right: 30, bottom: 60, left: 40},
+        WIDTH = CHART_W - MARGIN.left - MARGIN.right,
+        HEIGHT = CHART_H - MARGIN.top - MARGIN.bottom,
+        SIZING = {
+            margin: MARGIN,
+            width: WIDTH,
+            height: HEIGHT
+        };
+    var service = {
+        getSizeInfo: function(){
+            // make the chart 92% of the window width
+            var cw = Math.round($window.innerWidth*0.92),
+                ch = Math.round(cw*0.5376), // ratio based on initial w/h of 930/500
+                w = cw  - MARGIN.left - MARGIN.right,
+                h = ch  - MARGIN.top - MARGIN.bottom,
+                sizing = angular.extend({},SIZING,{width: w, height : h});
+            console.log('sizing',sizing);
+            return sizing;
+        }
+    };
+    return service;
+}])
 .directive('visDialog',[function(){
     return {
         restrict: 'E',
@@ -2030,7 +2057,7 @@ angular.module('npn-viz-tool.vis',[
         }
     };
 }])
-.controller('ScatterPlotCtrl',['$scope','$modalInstance','$http','FilterService',function($scope,$modalInstance,$http,FilterService){
+.controller('ScatterPlotCtrl',['$scope','$modalInstance','$http','$timeout','FilterService','ChartService',function($scope,$modalInstance,$http,$timeout,FilterService,ChartService){
     $scope.modal = $modalInstance;
     $scope.colorScale = d3.scale.category20();
     $scope.colors = new Array(20);
@@ -2069,16 +2096,82 @@ angular.module('npn-viz-tool.vis',[
         }
         return true;
     };
+
+    var data, // the data from the server....
+        dateArg = FilterService.getFilter().getDateArg(),
+        start_year = dateArg.arg.start_date,
+        end_year = dateArg.arg.end_date,
+        sizing = ChartService.getSizeInfo(),
+        chart,
+        x = d3.scale.linear().range([0,sizing.width]).domain([0,100]), // bogus domain initially
+        xAxis = d3.svg.axis().scale(x).orient('bottom'),
+        y = d3.scale.linear().range([sizing.height,0]).domain([1,(((end_year-start_year)+1)*365)]),
+        yAxis = d3.svg.axis().scale(y).orient('left');
+    // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
+    $timeout(function(){
+        chart = d3.select('.chart')
+            .attr('width', sizing.width + sizing.margin.left + sizing.margin.right)
+            .attr('height', sizing.height + sizing.margin.top + sizing.margin.bottom)
+          .append('g')
+            .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')');
+
+          chart.append('g')
+              .attr('class', 'x axis')
+              .attr('transform', 'translate(0,' + sizing.height + ')')
+              .call(xAxis)
+            .selectAll('text')
+            .style('text-anchor', 'end')
+            .attr('dx', '-.8em')
+            .attr('dy', '.15em')
+            .attr('transform', 'rotate(-65)');
+
+          chart.append('g')
+              .attr('class', 'y axis')
+              .call(yAxis)
+            .append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('y', 6)
+            .attr('dy', '.71em')
+            .style('text-anchor', 'end')
+            .text('Onset DOY');
+    },500);
+
     $scope.addToPlot = function() {
         if($scope.selection.toPlot) {
             $scope.toPlot.push(getNewToPlot());
             $scope.selection.color++;
+            data = undefined;
         }
     };
     $scope.removeFromPlot = function(idx) {
         $scope.toPlot.splice(idx,1);
+        data = undefined;
     };
+
+    function draw() {
+        if(!data) {
+            return;
+        }
+        // update the x-axis
+        function xData(d) { return d[$scope.selection.axis]; }
+        x.domain([d3.min(data,xData),d3.max(data,xData)]);
+        xAxis.scale(x);
+        chart.selectAll('g .x.axis').call(xAxis);
+        // update the chart data (TODO transitions??)
+        var circles = chart.selectAll('.circle').data(data,function(d) { return d.id; });
+        circles.exit().remove();
+        circles.enter().append('circle')
+          .attr('class', 'circle');
+
+        circles.attr('cx', function(d) { return x(d[$scope.selection.axis]); })
+          .attr('cy', function(d) { return y(d.day_in_range); })
+          .attr('r', '5')
+          .attr('fill',function(d) { return d.color; });
+    }
     $scope.visualize = function() {
+        if(data) {
+            return draw();
+        }
         console.log('key',$scope.selection.axis);
         console.log('toPlot',$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
@@ -2094,11 +2187,8 @@ angular.module('npn-viz-tool.vis',[
             params['species_id['+i+']'] = tp.species_id;
             params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
         });
-        $http.get('/npn_portal/observations/getSummarizedData.json',{params:params}).success(function(data){
-            var start_year = dateArg.arg.start_date,
-                end_year = dateArg.arg.end_date,
-                i;
-            data.forEach(function(d,i){
+        $http.get('/npn_portal/observations/getSummarizedData.json',{params:params}).success(function(response){
+            response.forEach(function(d,i){
                 d.id = i;
                 d.latitude = parseFloat(d.latitude);
                 d.longitude = parseFloat(d.longitude);
@@ -2108,102 +2198,17 @@ angular.module('npn-viz-tool.vis',[
                 // this is the day # that will get plotted 1 being the first day of the start_year
                 // 366 being the first day of start_year+1, etc.
                 d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
+                d.color = $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]);
+            });
+            data = response.filter(function(d,i){
+                var bad = (d.latitude === 0.0 || d.longitude === 0.0 || d.elevation_in_meters < 0);
+                if(bad) {
+                    console.warn('suspect station data',d);
+                }
+                return !bad;
             });
             console.log(data);
-
-            var npn = {
-                    CHART_W: 930,
-                    CHART_H: 500
-                },
-                margin = {top: 20, right: 30, bottom: 60, left: 40},
-                width = npn.CHART_W - margin.left - margin.right,
-                height = npn.CHART_H - margin.top - margin.bottom;
-
-
-            function dataId(d) { return d.id; }
-            function xData(d) { return d[$scope.selection.axis]; }
-            var x = d3.scale.linear()
-                .range([0,width])
-                .domain([ d3.min(data,xData),d3.max(data,xData)]);
-
-            var yDomain = [],yDomainMax = (((end_year-start_year)+1)*365);
-            for(i = 1; i <= yDomainMax; i++) { yDomain.push(i); }
-
-/*
-            var y = d3.scale.ordinal()
-                .range([height,0])
-                .domain(yDomain);
-            console.log('y.domain()',y.domain());
-            */
-           var y = d3.scale.linear()
-               .range([height,0])
-               .domain([1,yDomainMax]);
-
-            var xAxis = d3.svg.axis()
-                .scale(x)
-                .orient('bottom');
-
-            var yAxis = d3.svg.axis()
-                .scale(y)
-                .orient('left');
-/*
-                .tickValues(y.domain().filter(function(d,i) {
-                    if(d === 1 || (d%365) === 0) {
-                        console.log('yTick',d);
-                        return true;
-                    }
-                    return false;
-                }));*/
-
-            var chart = d3.select('.chart')
-                .attr('width', width + margin.left + margin.right)
-                .attr('height', height + margin.top + margin.bottom)
-              .append('g')
-                .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
-              chart.append('g')
-                  .attr('class', 'x axis')
-                  .attr('transform', 'translate(0,' + height + ')')
-                  .call(xAxis)
-                .selectAll('text')
-                .style('text-anchor', 'end')
-                .attr('dx', '-.8em')
-                .attr('dy', '.15em')
-                .attr('transform', 'rotate(-65)');
-
-              chart.append('g')
-                  .attr('class', 'y axis')
-                  .call(yAxis)
-                .append('text')
-                .attr('transform', 'rotate(-90)')
-                .attr('y', 6)
-                .attr('dy', '.71em')
-                .style('text-anchor', 'end')
-                .text('Onset DOY');
-
-            var circles = chart.selectAll('.circle').data(data,dataId);
-                circles.exit().remove();
-                circles.enter().append('circle')
-                  .attr('class', 'circle');
-
-                circles.attr('cx', function(d) { return x(d[$scope.selection.axis]); })
-                  .attr('cy', function(d) { return y(d.day_in_range); })
-                  .attr('r', '5')
-                  .attr('fill',function(d) { return $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]); });
-                  /*
-                  .append('title')
-                  .text(function(d) { return '"'+d.station_name+'" '+d.count+' observations @ '+d.distance.miles+' Miles from equator ('+d.name+').'; });*/
-/*
-              chart.selectAll(".bar")
-                  .data(data)
-                .enter().append("rect")
-                  .attr("class", "bar")
-                  .attr("x", function(d) { return x(d.name); })
-                  .attr("y", function(d) { return y(d.value); })
-                  .attr("height", function(d) { return height - y(d.value); })
-                  .attr("width", x.rangeBand());
-              },100);
-*/
+            draw();
         });
     };
 }]);

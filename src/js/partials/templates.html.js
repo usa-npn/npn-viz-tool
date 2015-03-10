@@ -243,9 +243,9 @@ angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($t
     "    <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "</form>\n" +
     "\n" +
-    "<div class=\"panel panel-default animated-show-hide main-vis-panel\" ng-if=\"toPlot.length\">\n" +
+    "<div class=\"panel panel-default main-vis-panel\" >\n" +
     "    <div class=\"panel-body\">\n" +
-    "        <ul class=\"to-plot list-inline\">\n" +
+    "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
     "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times\"></i></a>\n" +
     "            </li>\n" +
@@ -254,7 +254,7 @@ angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($t
     "            </li>\n" +
     "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
-    "        <svg class=\"chart\"></svg>\n" +
+    "        <center><svg class=\"chart\"></svg></center>\n" +
     "    </div>\n" +
     "</div>\n" +
     "\n" +
