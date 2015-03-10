@@ -17,13 +17,14 @@ angular.module('npn-viz-tool.vis',[
             height: HEIGHT
         };
     var service = {
-        getSizeInfo: function(){
+        getSizeInfo: function(marginOverride){
             // make the chart 92% of the window width
-            var cw = Math.round($window.innerWidth*0.92),
+            var margin = angular.extend({},MARGIN,marginOverride),
+                cw = Math.round($window.innerWidth*0.92),
                 ch = Math.round(cw*0.5376), // ratio based on initial w/h of 930/500
-                w = cw  - MARGIN.left - MARGIN.right,
-                h = ch  - MARGIN.top - MARGIN.bottom,
-                sizing = angular.extend({},SIZING,{width: w, height : h});
+                w = cw  - margin.left - margin.right,
+                h = ch  - margin.top - margin.bottom,
+                sizing = {width: w, height : h, margin: margin};
             console.log('sizing',sizing);
             return sizing;
         }
@@ -114,13 +115,23 @@ angular.module('npn-viz-tool.vis',[
     var data, // the data from the server....
         dateArg = FilterService.getFilter().getDateArg(),
         start_year = dateArg.arg.start_date,
+        start_date = new Date(start_year,0),
+        ONE_DAY = 24*60*60*1000,
         end_year = dateArg.arg.end_date,
-        sizing = ChartService.getSizeInfo(),
+        sizing = ChartService.getSizeInfo({left: 80}),
         chart,
         x = d3.scale.linear().range([0,sizing.width]).domain([0,100]), // bogus domain initially
         xAxis = d3.svg.axis().scale(x).orient('bottom'),
-        y = d3.scale.linear().range([sizing.height,0]).domain([1,(((end_year-start_year)+1)*365)]),
-        yAxis = d3.svg.axis().scale(y).orient('left');
+        y = d3.scale.linear().range([sizing.height,0]).domain([1,(((end_year-start_year)+1)*365)]).nice(),
+        d3_date_fmt = d3.time.format('%x'),
+        local_date_fmt = function(d){
+                var time = ((d-1)*ONE_DAY)+start_date.getTime(),
+                    date = new Date(time);
+                //console.log('format',d,date);
+                return d3_date_fmt(date);
+            },
+        yAxis = d3.svg.axis().scale(y).orient('left')
+            .tickFormat(local_date_fmt);
     // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
     $timeout(function(){
         chart = d3.select('.chart')
@@ -167,9 +178,10 @@ angular.module('npn-viz-tool.vis',[
             return;
         }
         // update the x-axis
+        var padding = 1;
         function xData(d) { return d[$scope.selection.axis]; }
-        x.domain([d3.min(data,xData),d3.max(data,xData)]);
-        xAxis.scale(x);
+        x.domain([d3.min(data,xData)-padding,d3.max(data,xData)+padding]);
+        xAxis.scale(x).tickFormat(d3.format(',f'));
         chart.selectAll('g .x.axis').call(xAxis);
         // update the chart data (TODO transitions??)
         var circles = chart.selectAll('.circle').data(data,function(d) { return d.id; });
@@ -180,7 +192,17 @@ angular.module('npn-viz-tool.vis',[
         circles.attr('cx', function(d) { return x(d[$scope.selection.axis]); })
           .attr('cy', function(d) { return y(d.day_in_range); })
           .attr('r', '5')
-          .attr('fill',function(d) { return d.color; });
+          .attr('fill',function(d) { return d.color; })
+          .on('click',function(d){
+            if (d3.event.defaultPrevented){
+                return;
+            }
+            $scope.$apply(function(){
+                $scope.record = d;
+            });
+          })
+          .append('title')
+          .text(function(d) { return local_date_fmt(d.day_in_range)+ ' ['+d.latitude+','+d.longitude+']'; });
     }
     $scope.visualize = function() {
         if(data) {

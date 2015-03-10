@@ -257,6 +257,7 @@ angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($t
     "        <center><svg class=\"chart\"></svg></center>\n" +
     "    </div>\n" +
     "</div>\n" +
+    "<pre ng-if=\"record\">{{record | json}}</pre>\n" +
     "\n" +
     "</vis-dialog>");
 }]);
