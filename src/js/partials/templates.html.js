@@ -247,10 +247,10 @@ angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($t
     "    <div class=\"panel-body\">\n" +
     "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
     "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
-    "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times\"></i></a>\n" +
+    "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
     "            <li>\n" +
-    "                <select class=\"form-control vis-axis\" ng-model=\"selection.axis\" ng-options=\"o.key as o.label for o in axis\"></select>\n" +
+    "                <select class=\"form-control vis-axis\" ng-model=\"selection.axis\" ng-options=\"o as o.label for o in axis\"></select>\n" +
     "            </li>\n" +
     "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +

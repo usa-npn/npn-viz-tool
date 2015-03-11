@@ -19,10 +19,10 @@
     <div class="panel-body">
         <ul class="to-plot list-inline animated-show-hide" ng-if="toPlot.length">
             <li ng-repeat="tp in toPlot">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style="color: {{colorScale(tp.color)}};" class="fa fa-circle"></i>
-                <a href ng-click="removeFromPlot($index)"><i class="fa fa-times"></i></a>
+                <a href ng-click="removeFromPlot($index)"><i class="fa fa-times-circle-o"></i></a>
             </li>
             <li>
-                <select class="form-control vis-axis" ng-model="selection.axis" ng-options="o.key as o.label for o in axis"></select>
+                <select class="form-control vis-axis" ng-model="selection.axis" ng-options="o as o.label for o in axis"></select>
             </li>
             <li class="animated-show-hide"><button class="btn btn-default" ng-click="visualize()">Visualize</button></li>
         </ul>

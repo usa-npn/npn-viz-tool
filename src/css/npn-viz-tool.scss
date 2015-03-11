@@ -318,6 +318,9 @@ ul.filter-tags {
     &.scatter-plot {
         .main-vis-panel {
             margin-top: 15px;
+            a {
+                color: #000;
+            }
         }
     }
 }

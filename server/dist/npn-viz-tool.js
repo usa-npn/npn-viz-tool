@@ -1545,10 +1545,10 @@ angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($t
     "    <div class=\"panel-body\">\n" +
     "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
     "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
-    "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times\"></i></a>\n" +
+    "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
     "            <li>\n" +
-    "                <select class=\"form-control vis-axis\" ng-model=\"selection.axis\" ng-options=\"o.key as o.label for o in axis\"></select>\n" +
+    "                <select class=\"form-control vis-axis\" ng-model=\"selection.axis\" ng-options=\"o as o.label for o in axis\"></select>\n" +
     "            </li>\n" +
     "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
@@ -2091,9 +2091,10 @@ angular.module('npn-viz-tool.vis',[
     $scope.modal = $modalInstance;
     $scope.colorScale = d3.scale.category20();
     $scope.colors = new Array(20);
+    $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation'}];
     $scope.selection = {
         color: 0,
-        axis: 'latitude'
+        axis: $scope.axis[0]
     };
     $scope.plottable = [];
     angular.forEach(FilterService.getFilter().getSpeciesArgs(),function(sarg) {
@@ -2102,7 +2103,6 @@ angular.module('npn-viz-tool.vis',[
         });
     });
     $scope.toPlot = [];
-    $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation'}];
     function getNewToPlot() {
         return angular.extend({},$scope.selection.toPlot,{color: $scope.selection.color});
     }
@@ -2142,7 +2142,6 @@ angular.module('npn-viz-tool.vis',[
         local_date_fmt = function(d){
                 var time = ((d-1)*ONE_DAY)+start_date.getTime(),
                     date = new Date(time);
-                //console.log('format',d,date);
                 return d3_date_fmt(date);
             },
         yAxis = d3.svg.axis().scale(y).orient('left');
@@ -2188,7 +2187,7 @@ angular.module('npn-viz-tool.vis',[
         }
         // update the x-axis
         var padding = 1;
-        function xData(d) { return d[$scope.selection.axis]; }
+        function xData(d) { return d[$scope.selection.axis.key]; }
         x.domain([d3.min(data,xData)-padding,d3.max(data,xData)+padding]);
         xAxis.scale(x).tickFormat(d3.format('.2f')); // TODO per-selection tick formatting
         var xA = chart.selectAll('g .x.axis');
@@ -2199,14 +2198,14 @@ angular.module('npn-viz-tool.vis',[
           .attr('x',sizing.width-6)
           .attr('dy', '-.71em')
           .style('text-anchor', 'end')
-          .text($scope.selection.axis);
+          .text($scope.selection.axis.label);
         // update the chart data (TODO transitions??)
         var circles = chart.selectAll('.circle').data(data,function(d) { return d.id; });
         circles.exit().remove();
         circles.enter().append('circle')
           .attr('class', 'circle');
 
-        circles.attr('cx', function(d) { return x(d[$scope.selection.axis]); })
+        circles.attr('cx', function(d) { return x(d[$scope.selection.axis.key]); })
           .attr('cy', function(d) { return y(d.first_yes_doy); })
           .attr('r', '5')
           .attr('fill',function(d) { return d.color; })
@@ -2226,16 +2225,15 @@ angular.module('npn-viz-tool.vis',[
             var color = $scope.colorScale(pair.color),
                 seriesData = data.filter(function(d) { return d.color === color; }),
                 datas = seriesData.sort(function(o1,o2){ // sorting isn't necessary but makes it easy to pick min/max x
-                    return o1[$scope.selection.axis] - o2[$scope.selection.axis];
+                    return o1[$scope.selection.axis.key] - o2[$scope.selection.axis.key];
                 }),
-                xSeries = datas.map(function(d) { return d[$scope.selection.axis]; }),
+                xSeries = datas.map(function(d) { return d[$scope.selection.axis.key]; }),
                 ySeries = datas.map(function(d) { return d.first_yes_doy; }),
                 leastSquaresCoeff = ChartService.leastSquares(xSeries,ySeries),
                 x1 = xSeries[0],
                 y1 = ChartService.approxY(leastSquaresCoeff,x1),
                 x2 = xSeries[xSeries.length-1],
                 y2 = ChartService.approxY(leastSquaresCoeff,x2);
-            console.log('lsc',pair,leastSquaresCoeff);
             regressionLines.push({
                 id: pair.species_id+'.'+pair.phenophase_id,
                 legend: $filter('speciesTitle')(pair)+'/'+pair.phenophase_name+' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')',
@@ -2244,7 +2242,6 @@ angular.module('npn-viz-tool.vis',[
                 p2: [x2,y2]
             });
         });
-        console.log('regressionLines',regressionLines);
         var regression = chart.selectAll('.regression')
             .data(regressionLines,function(d) { return d.id; });
         regression.exit().remove();
@@ -2278,8 +2275,7 @@ angular.module('npn-viz-tool.vis',[
         if(data) {
             return draw();
         }
-        console.log('key',$scope.selection.axis);
-        console.log('toPlot',$scope.toPlot);
+        console.log('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {
                 request_src: 'npn-vis-scatter-plot',
@@ -2313,7 +2309,7 @@ angular.module('npn-viz-tool.vis',[
                 }
                 return !bad;
             });
-            console.log(data);
+            console.log('scatterPlot data',data);
             draw();
         });
     };
