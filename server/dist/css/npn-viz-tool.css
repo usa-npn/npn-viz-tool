@@ -304,4 +304,10 @@ svg {
   border: 1px solid #aaa;
 }
 
+.legend rect {
+  fill: white;
+  stroke: black;
+  opacity: 0.8;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */

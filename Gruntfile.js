@@ -21,7 +21,6 @@ module.exports = function(grunt){
                      ' */\n'].join('\n')
         },
         clean: [
-          '<%= dist %>',
           'coverage',
           'bower_components'
         ],

@@ -29,8 +29,6 @@ angular.module('npn-viz-tool.vis',[
             return sizing;
         },
         leastSquares: function(xSeries,ySeries) {
-            console.log('xSeries',xSeries);
-            console.log('ySeries',ySeries);
             var reduceSumFunc = function(prev, cur) { return prev + cur; };
 
             var xBar = xSeries.reduce(reduceSumFunc) * 1.0 / xSeries.length;
@@ -101,7 +99,8 @@ angular.module('npn-viz-tool.vis',[
         }
     };
 }])
-.controller('ScatterPlotCtrl',['$scope','$modalInstance','$http','$timeout','FilterService','ChartService',function($scope,$modalInstance,$http,$timeout,FilterService,ChartService){
+.controller('ScatterPlotCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService',
+    function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService){
     $scope.modal = $modalInstance;
     $scope.colorScale = d3.scale.category20();
     $scope.colors = new Array(20);
@@ -147,7 +146,7 @@ angular.module('npn-viz-tool.vis',[
         start_date = new Date(start_year,0),
         ONE_DAY = 24*60*60*1000,
         end_year = dateArg.arg.end_date,
-        sizing = ChartService.getSizeInfo(),
+        sizing = ChartService.getSizeInfo({top: 80}),
         chart,
         x = d3.scale.linear().range([0,sizing.width]).domain([0,100]), // bogus domain initially
         xAxis = d3.svg.axis().scale(x).orient('bottom'),
@@ -232,32 +231,58 @@ angular.module('npn-viz-tool.vis',[
           .append('title')
           .text(function(d) { return local_date_fmt(d.day_in_range)+ ' ['+d.latitude+','+d.longitude+']'; });
 
-        // for now just working with 1 regression line so only plot one set...
-        var datas = data.sort(function(o1,o2){
-                return o1[$scope.selection.axis] - o2[$scope.selection.axis];
-            }),
-            xSeries = datas.map(function(d) { return d[$scope.selection.axis]; }),
-            ySeries = datas.map(function(d) { return d.first_yes_doy; }),
-            leastSquaresCoeff = ChartService.leastSquares(xSeries,ySeries);
-
-        var x1 = xSeries[0];
-        var y1 = ChartService.approxY(leastSquaresCoeff,x1);
-        var x2 = xSeries[xSeries.length-1];
-        var y2 = ChartService.approxY(leastSquaresCoeff,x2);
-        var trendData = [[x1,y1,x2,y2]];
-
-        var trendline = chart.selectAll('.trendline')
-            .data(trendData);
-
-        trendline.enter()
-            .append('line')
-            .attr('class', 'trendline')
-            .attr('x1', function(d) { return x(d[0]); })
-            .attr('y1', function(d) { return y(d[1]); })
-            .attr('x2', function(d) { return x(d[2]); })
-            .attr('y2', function(d) { return y(d[3]); })
-            .attr('stroke', data[0].color) // temp
+        var regressionLines = [],float_fmt = d3.format('.2f');
+        angular.forEach($scope.toPlot,function(pair){
+            var color = $scope.colorScale(pair.color),
+                seriesData = data.filter(function(d) { return d.color === color; }),
+                datas = seriesData.sort(function(o1,o2){ // sorting isn't necessary but makes it easy to pick min/max x
+                    return o1[$scope.selection.axis] - o2[$scope.selection.axis];
+                }),
+                xSeries = datas.map(function(d) { return d[$scope.selection.axis]; }),
+                ySeries = datas.map(function(d) { return d.first_yes_doy; }),
+                leastSquaresCoeff = ChartService.leastSquares(xSeries,ySeries),
+                x1 = xSeries[0],
+                y1 = ChartService.approxY(leastSquaresCoeff,x1),
+                x2 = xSeries[xSeries.length-1],
+                y2 = ChartService.approxY(leastSquaresCoeff,x2);
+            console.log('lsc',pair,leastSquaresCoeff);
+            regressionLines.push({
+                id: pair.species_id+'.'+pair.phenophase_id,
+                legend: $filter('speciesTitle')(pair)+'/'+pair.phenophase_name+' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')',
+                color: color,
+                p1: [x1,y1],
+                p2: [x2,y2]
+            });
+        });
+        console.log('regressionLines',regressionLines);
+        var regression = chart.selectAll('.regression')
+            .data(regressionLines,function(d) { return d.id; });
+        regression.exit().remove();
+        function enter_or_update(s) {
+            s.attr('class','regression')
+            .attr('data-legend',function(d) { return d.legend; } )
+            .attr('data-legend-color',function(d) { return d.color; })
+            .attr('x1', function(d) { return x(d.p1[0]); })
+            .attr('y1', function(d) { return y(d.p1[1]); })
+            .attr('x2', function(d) { return x(d.p2[0]); })
+            .attr('y2', function(d) { return y(d.p2[1]); })
+            .attr('stroke', function(d) { return d.color; })
             .attr('stroke-width', 2);
+        }
+        enter_or_update(regression);
+        enter_or_update(regression.enter().append('line'));
+
+        chart.select('.legend').remove();
+        var legend = chart.append('g')
+          .attr('class','legend')
+          .attr('transform','translate(30,-45)') // relative to the chart, not the svg
+          .style('font-size','12px')
+          .call(d3.legend);
+
+        // TODO superscript in the legend?
+        // d3.legend deals with, not onreasonably, data-legend as a simple string
+        // alternatively extend d3.legend or do what it does here manually...
+        // replace 'R^2' with 'R<tspan baseline-shift = "super">2</tspan>'
     }
     $scope.visualize = function() {
         if(data) {
