@@ -170,12 +170,7 @@ angular.module('npn-viz-tool.vis',[
           chart.append('g')
               .attr('class', 'x axis')
               .attr('transform', 'translate(0,' + sizing.height + ')')
-              .call(xAxis)
-            .selectAll('text')
-            .style('text-anchor', 'end')
-            .attr('dx', '-.8em')
-            .attr('dy', '.15em')
-            .attr('transform', 'rotate(-65)');
+              .call(xAxis);
 
           chart.append('g')
               .attr('class', 'y axis')
@@ -208,8 +203,16 @@ angular.module('npn-viz-tool.vis',[
         var padding = 1;
         function xData(d) { return d[$scope.selection.axis]; }
         x.domain([d3.min(data,xData)-padding,d3.max(data,xData)+padding]);
-        xAxis.scale(x).tickFormat(d3.format(',f'));
-        chart.selectAll('g .x.axis').call(xAxis);
+        xAxis.scale(x).tickFormat(d3.format('.2f')); // TODO per-selection tick formatting
+        var xA = chart.selectAll('g .x.axis');
+        xA.call(xAxis);
+        xA.selectAll('.axis-label').remove();
+        xA.append('text')
+          .attr('class','axis-label')
+          .attr('x',sizing.width-6)
+          .attr('dy', '-.71em')
+          .style('text-anchor', 'end')
+          .text($scope.selection.axis);
         // update the chart data (TODO transitions??)
         var circles = chart.selectAll('.circle').data(data,function(d) { return d.id; });
         circles.exit().remove();
