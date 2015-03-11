@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-10
+ * Version: 0.1.0 - 2015-03-11
  */
 
 angular.module('npn-viz-tool.filter',[
@@ -2014,6 +2014,35 @@ angular.module('npn-viz-tool.vis',[
                 sizing = {width: w, height : h, margin: margin};
             console.log('sizing',sizing);
             return sizing;
+        },
+        leastSquares: function(xSeries,ySeries) {
+            console.log('xSeries',xSeries);
+            console.log('ySeries',ySeries);
+            var reduceSumFunc = function(prev, cur) { return prev + cur; };
+
+            var xBar = xSeries.reduce(reduceSumFunc) * 1.0 / xSeries.length;
+            var yBar = ySeries.reduce(reduceSumFunc) * 1.0 / ySeries.length;
+
+            var ssXX = xSeries.map(function(d) { return Math.pow(d - xBar, 2); })
+                .reduce(reduceSumFunc);
+
+            var ssYY = ySeries.map(function(d) { return Math.pow(d - yBar, 2); })
+                .reduce(reduceSumFunc);
+
+            var ssXY = xSeries.map(function(d, i) { return (d - xBar) * (ySeries[i] - yBar); })
+                .reduce(reduceSumFunc);
+
+            var slope = ssXY / ssXX;
+            var intercept = yBar - (xBar * slope);
+            var rSquare = Math.pow(ssXY, 2) / (ssXX * ssYY);
+
+            return [slope, intercept, rSquare];
+        },
+        approxY: function(leastSquaresCoeff,x) {
+            // y = a + bx
+            var a = leastSquaresCoeff[1],
+                b = leastSquaresCoeff[0];
+            return a + (b*x);
         }
     };
     return service;
@@ -2105,11 +2134,11 @@ angular.module('npn-viz-tool.vis',[
         start_date = new Date(start_year,0),
         ONE_DAY = 24*60*60*1000,
         end_year = dateArg.arg.end_date,
-        sizing = ChartService.getSizeInfo({left: 80}),
+        sizing = ChartService.getSizeInfo(),
         chart,
         x = d3.scale.linear().range([0,sizing.width]).domain([0,100]), // bogus domain initially
         xAxis = d3.svg.axis().scale(x).orient('bottom'),
-        y = d3.scale.linear().range([sizing.height,0]).domain([1,(((end_year-start_year)+1)*365)]).nice(),
+        y = d3.scale.linear().range([sizing.height,0]).domain([1,365]),
         d3_date_fmt = d3.time.format('%x'),
         local_date_fmt = function(d){
                 var time = ((d-1)*ONE_DAY)+start_date.getTime(),
@@ -2117,8 +2146,7 @@ angular.module('npn-viz-tool.vis',[
                 //console.log('format',d,date);
                 return d3_date_fmt(date);
             },
-        yAxis = d3.svg.axis().scale(y).orient('left')
-            .tickFormat(local_date_fmt);
+        yAxis = d3.svg.axis().scale(y).orient('left');
     // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
     $timeout(function(){
         chart = d3.select('.chart')
@@ -2177,7 +2205,7 @@ angular.module('npn-viz-tool.vis',[
           .attr('class', 'circle');
 
         circles.attr('cx', function(d) { return x(d[$scope.selection.axis]); })
-          .attr('cy', function(d) { return y(d.day_in_range); })
+          .attr('cy', function(d) { return y(d.first_yes_doy); })
           .attr('r', '5')
           .attr('fill',function(d) { return d.color; })
           .on('click',function(d){
@@ -2190,6 +2218,33 @@ angular.module('npn-viz-tool.vis',[
           })
           .append('title')
           .text(function(d) { return local_date_fmt(d.day_in_range)+ ' ['+d.latitude+','+d.longitude+']'; });
+
+        // for now just working with 1 regression line so only plot one set...
+        var datas = data.sort(function(o1,o2){
+                return o1[$scope.selection.axis] - o2[$scope.selection.axis];
+            }),
+            xSeries = datas.map(function(d) { return d[$scope.selection.axis]; }),
+            ySeries = datas.map(function(d) { return d.first_yes_doy; }),
+            leastSquaresCoeff = ChartService.leastSquares(xSeries,ySeries);
+
+        var x1 = xSeries[0];
+        var y1 = ChartService.approxY(leastSquaresCoeff,x1);
+        var x2 = xSeries[xSeries.length-1];
+        var y2 = ChartService.approxY(leastSquaresCoeff,x2);
+        var trendData = [[x1,y1,x2,y2]];
+
+        var trendline = chart.selectAll('.trendline')
+            .data(trendData);
+
+        trendline.enter()
+            .append('line')
+            .attr('class', 'trendline')
+            .attr('x1', function(d) { return x(d[0]); })
+            .attr('y1', function(d) { return y(d[1]); })
+            .attr('x2', function(d) { return x(d[2]); })
+            .attr('y2', function(d) { return y(d[3]); })
+            .attr('stroke', data[0].color) // temp
+            .attr('stroke-width', 2);
     }
     $scope.visualize = function() {
         if(data) {
