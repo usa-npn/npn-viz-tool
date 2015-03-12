@@ -553,6 +553,10 @@ angular.module('npn-viz-tool.filter',[
     return function(item,format) {
         var fmt = format||SettingsService.getSettingValue('tagSpeciesTitle');
         if(fmt === 'common-name') {
+            if(item.common_name) {
+                var lower = item.common_name.toLowerCase();
+                return lower.substring(0,1).toUpperCase()+lower.substring(1);
+            }
             return item.common_name;
         } else if (fmt === 'genus-species') {
             return item.genus+' '+item.species;
