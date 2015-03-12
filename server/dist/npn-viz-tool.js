@@ -380,6 +380,17 @@ angular.module('npn-viz-tool.filter',[
                 // set key on the marker that uniquely identifies it based on its id and colors
                 station.$markerKey = station.station_id+'.'+station.markerOpts.icon.fillColor+'.'+station.markerOpts.icon.strokeColor;
                 return keeps > 0;
+            }).map(function(m){
+                // simplify the contents of the filtered marker results o/w there's a ton of data that
+                // angular copies on a watch which slows things WAY down for some browsers in particular (FireFox ahem)
+                return {
+                    $markerKey: m.$markerKey,
+                    latitude: m.latitude,
+                    longitude: m.longitude,
+                    markerOpts: m.markerOpts,
+                    station_id: m.station_id,
+                    station_name: m.station_name
+                };
             });
         $rootScope.$broadcast('filter-phase2-end',{
             station: filtered.length,
@@ -526,6 +537,7 @@ angular.module('npn-viz-tool.filter',[
                         $scope.results.markers = [];
                         $timeout(function(){
                             FilterService.execute().then(function(markers) {
+console.log('markers',markers);
                                 $scope.results.markers = markers;
                             });
                         },500);
