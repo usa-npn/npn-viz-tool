@@ -477,7 +477,7 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$rootScope','$http','FilterService','SettingsService',function($rootScope,$http,FilterService,SettingsService){
+.directive('npnFilterResults',['$rootScope','$http','$timeout','FilterService','SettingsService',function($rootScope,$http,$timeout,FilterService,SettingsService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
@@ -494,10 +494,14 @@ angular.module('npn-viz-tool.filter',[
             });
             function executeFilter() {
                 if(!FilterService.isFilterEmpty()) {
-                    $scope.results.markers = [];
-                    FilterService.execute().then(function(markers) {
-                        $scope.results.markers = markers;
-                    });
+                    $timeout(function(){
+                        $scope.results.markers = [];
+                        $timeout(function(){
+                            FilterService.execute().then(function(markers) {
+                                $scope.results.markers = markers;
+                            });
+                        },500);
+                    },500);
                 }
             }
             $scope.$on('tool-open',function(event,data){
