@@ -226,6 +226,9 @@ angular.module('npn-viz-tool.filter',[
     NpnFilter.prototype.hasSufficientCriteria = function() {
         return this.date && Object.keys(this.species).length > 0;
     };
+    NpnFilter.prototype.getUpdateCount = function() {
+        return this.updateCount;
+    };
     NpnFilter.prototype.getDateArg = function() {
         return this.date;
     };
@@ -246,6 +249,7 @@ angular.module('npn-viz-tool.filter',[
         return getValues(this.geo);
     };
     NpnFilter.prototype.add = function(item) {
+        this.updateCount++;
         if(item instanceof DateFilterArg) {
             this.date = item;
         } else if (item instanceof SpeciesFilterArg) {
@@ -256,6 +260,7 @@ angular.module('npn-viz-tool.filter',[
         return (!(item instanceof GeoFilterArg));
     };
     NpnFilter.prototype.remove = function(item) {
+        this.updateCount++;
         if(item instanceof DateFilterArg) {
             this.date = undefined;
             this.species = {}; // removal of date invalidates filter.
@@ -267,6 +272,7 @@ angular.module('npn-viz-tool.filter',[
         return (!(item instanceof GeoFilterArg));
     };
     NpnFilter.prototype.reset = function() {
+        this.updateCount = 0;
         this.date = undefined;
         this.species = {};
         this.geo = {};
@@ -282,6 +288,7 @@ angular.module('npn-viz-tool.filter',[
     // NOTE: this scale is limited to 20 colors
     var colorScale = d3.scale.category20(),
         filter = new NpnFilter(),
+        filterUpdateCount,
         paused = false,
         defaultIcon = {
             //path: google.maps.SymbolPath.CIRCLE,
@@ -292,7 +299,8 @@ angular.module('npn-viz-tool.filter',[
             strokeColor: '#204d74',
             strokeWeight: 1
         },
-        last;
+        last,
+        lastFiltered = [];
     uiGmapGoogleMapApi.then(function(maps) {
         defaultIcon.path = maps.SymbolPath.CIRCLE;
     });
@@ -321,6 +329,7 @@ angular.module('npn-viz-tool.filter',[
         }
     });
     function post_filter(markers) {
+        var start = Date.now();
         $rootScope.$broadcast('filter-phase2-start',{
             count: markers.length
         });
@@ -376,17 +385,21 @@ angular.module('npn-viz-tool.filter',[
             station: filtered.length,
             observation: observationCount
         });
-        return filtered;
+        console.log('phase2 time:',(Date.now()-start));
+        return (lastFiltered = filtered);
     }
     function execute() {
         var def = $q.defer(),
             filterParams = getFilterParams();
-        if(!paused && filterParams) {
+        if(!paused && filterParams && filterUpdateCount != filter.getUpdateCount()) {
+            filterUpdateCount = filter.getUpdateCount();
+            var start = Date.now();
+            console.log('execute',filterUpdateCount,filterParams);
             $rootScope.$broadcast('filter-phase1-start',{});
             $http.get('/npn_portal/observations/getAllObservationsForSpecies.json',{
                 params: filterParams
             }).success(function(d) {
-                var i,j,k,s;
+                var start_12 = Date.now(),i,j,k,s;
                 // replace 'station_list' with a map
                 d.stations = {};
                 for(i = 0; i < d.station_list.length; i++) {
@@ -420,19 +433,24 @@ angular.module('npn-viz-tool.filter',[
                     count: d.station_list.length
                 });
                 // now need to walk through the station_list and post-filter by phenophases...
+                console.log('phase1.2 time:',(Date.now()-start_12));
+                console.log('phase1 time:',(Date.now()-start));
                 console.log('results-pre',d);
                 def.resolve(post_filter(last=d.station_list));
             });
         } else {
-            // no filter params return an empty list of markers
-            def.resolve([]);
+            // either no filter or a request to re-execute a filter that hasn't changed...
+            def.resolve(lastFiltered);
         }
         return def.promise;
     }
     function broadcastFilterUpdate() {
-        $rootScope.$broadcast('filter-update',{});
+        if(!paused) {
+            $rootScope.$broadcast('filter-update',{});
+        }
     }
     function broadcastFilterReset() {
+        lastFiltered = [];
         $rootScope.$broadcast('filter-reset',{});
     }
     function updateColors() {
@@ -443,14 +461,19 @@ angular.module('npn-viz-tool.filter',[
     return {
         execute: execute,
         pause: function() {
+            console.log('PAUSE');
             paused = true;
         },
         resume: function() {
+            console.log('RESUME');
             paused = false;
             broadcastFilterUpdate();
         },
         getFilter: function() {
             return filter;
+        },
+        hasFilterChanged: function() {
+            return filterUpdateCount !== filter.getUpdateCount();
         },
         isFilterEmpty: function() {
             return !filter.hasCriteria();
@@ -498,7 +521,7 @@ angular.module('npn-viz-tool.filter',[
                 $scope.doCluster = data.value;
             });
             function executeFilter() {
-                if(!FilterService.isFilterEmpty()) {
+                if(!FilterService.isFilterEmpty() && FilterService.hasFilterChanged()) {
                     $timeout(function(){
                         $scope.results.markers = [];
                         $timeout(function(){
