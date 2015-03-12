@@ -292,6 +292,10 @@ ul.filter-tags .filter-tag .phenophase-list {
 .vis-dialog.scatter-plot .main-vis-panel a {
   color: #000;
 }
+.vis-dialog.scatter-plot .main-vis-panel svg .circle {
+  stroke: #333;
+  stroke-width: 1;
+}
 
 .axis text {
   font: 10px sans-serif;

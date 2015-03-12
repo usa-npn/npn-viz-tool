@@ -212,6 +212,7 @@ angular.module('npn-viz-tool.vis',[
           .attr('dy', '-.71em')
           .style('text-anchor', 'end')
           .text($scope.selection.axis.label);
+
         // update the chart data (TODO transitions??)
         var circles = chart.selectAll('.circle').data(data,function(d) { return d.id; });
         circles.exit().remove();
@@ -258,8 +259,10 @@ angular.module('npn-viz-tool.vis',[
         var regression = chart.selectAll('.regression')
             .data(regressionLines,function(d) { return d.id; });
         regression.exit().remove();
-        function enter_or_update(s) {
-            s.attr('class','regression')
+        regression.enter().append('line')
+            .attr('class','regression');
+
+        regression
             .attr('data-legend',function(d) { return d.legend; } )
             .attr('data-legend-color',function(d) { return d.color; })
             .attr('x1', function(d) { return x(d.p1[0]); })
@@ -268,9 +271,7 @@ angular.module('npn-viz-tool.vis',[
             .attr('y2', function(d) { return y(d.p2[1]); })
             .attr('stroke', function(d) { return d.color; })
             .attr('stroke-width', 2);
-        }
-        enter_or_update(regression);
-        enter_or_update(regression.enter().append('line'));
+
 
         chart.select('.legend').remove();
         var legend = chart.append('g')
@@ -279,10 +280,16 @@ angular.module('npn-viz-tool.vis',[
           .style('font-size','12px')
           .call(d3.legend);
 
-        // TODO superscript in the legend?
+        // IMPORTANT: This may not work perfectly on all browsers because of support for
+        // innerHtml on SVG elements (or lack thereof) so using shim
+        // https://code.google.com/p/innersvg/
         // d3.legend deals with, not onreasonably, data-legend as a simple string
         // alternatively extend d3.legend or do what it does here manually...
-        // replace 'R^2' with 'R<tspan baseline-shift = "super">2</tspan>'
+        // replace 'R^2' with 'R<tspan ...>2</tspan>'
+        // the baseline-shift doesn't appear to work on firefox however
+        chart.selectAll('.legend text').html(function(d) {
+                return d.key.replace('R^2','R<tspan style="baseline-shift: super; font-size: 8px;">2</tspan>');
+            });
     }
     $scope.visualize = function() {
         if(data) {

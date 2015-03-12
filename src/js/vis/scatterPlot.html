@@ -17,6 +17,7 @@
 
 <div class="panel panel-default main-vis-panel" >
     <div class="panel-body">
+        <center>
         <ul class="to-plot list-inline animated-show-hide" ng-if="toPlot.length">
             <li ng-repeat="tp in toPlot">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style="color: {{colorScale(tp.color)}};" class="fa fa-circle"></i>
                 <a href ng-click="removeFromPlot($index)"><i class="fa fa-times-circle-o"></i></a>
@@ -26,7 +27,8 @@
             </li>
             <li class="animated-show-hide"><button class="btn btn-default" ng-click="visualize()">Visualize</button></li>
         </ul>
-        <center><svg class="chart"></svg></center>
+        <svg class="chart"></svg>
+        </center>
     </div>
 </div>
 <pre ng-if="record">{{record | json}}</pre>

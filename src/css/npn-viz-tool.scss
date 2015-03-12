@@ -321,6 +321,12 @@ ul.filter-tags {
             a {
                 color: #000;
             }
+            svg {
+                .circle {
+                    stroke: #333;
+                    stroke-width: 1;
+                }
+            }
         }
     }
 }
