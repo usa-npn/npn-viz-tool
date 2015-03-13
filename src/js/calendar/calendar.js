@@ -176,9 +176,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             params['species_id['+i+']'] = tp.species_id;
             params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
         });
-        // TODO - add station list
-        $http.get('/npn_portal/observations/getSummarizedData.json',{params:params}).success(function(response){
-            response = response.filter(ChartService.filterSuspectSummaryData);
+        ChartService.getSummarizedData(params,function(response){
             var years = d3.range($scope.selection.start_year,$scope.selection.end_year+1),
                 sets = [],toChart = [];
             console.log('years',years);

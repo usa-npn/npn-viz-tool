@@ -5,7 +5,7 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.vis-calendar',
     'ui.bootstrap'
 ])
-.factory('ChartService',['$window',function($window){
+.factory('ChartService',['$window','$http',function($window,$http){
     // some hard coded values that will be massaged into generated
     // values at runtime.
     var CHART_W = 930,
@@ -18,6 +18,13 @@ angular.module('npn-viz-tool.vis',[
             width: WIDTH,
             height: HEIGHT
         };
+    function filterSuspectSummaryData (d){
+        var bad = (d.latitude === 0.0 || d.longitude === 0.0 || d.elevation_in_meters < 0);
+        if(bad) {
+            console.warn('suspect station data',d);
+        }
+        return !bad;
+    }
     var service = {
         ONE_DAY_MILLIS: (24*60*60*1000),
         getSizeInfo: function(marginOverride){
@@ -58,12 +65,10 @@ angular.module('npn-viz-tool.vis',[
                 b = leastSquaresCoeff[0];
             return a + (b*x);
         },
-        filterSuspectSummaryData: function(d){
-            var bad = (d.latitude === 0.0 || d.longitude === 0.0 || d.elevation_in_meters < 0);
-            if(bad) {
-                console.warn('suspect station data',d);
-            }
-            return !bad;
+        getSummarizedData: function(params,success) {
+            $http.get('/npn_portal/observations/getSummarizedData.json',{params:params}).success(function(response){
+                success(response.filter(filterSuspectSummaryData));
+            });
         }
     };
     return service;

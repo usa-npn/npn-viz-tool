@@ -213,8 +213,7 @@ angular.module('npn-viz-tool.vis-scatter',[
             params['species_id['+i+']'] = tp.species_id;
             params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
         });
-        // TODO - add station list
-        $http.get('/npn_portal/observations/getSummarizedData.json',{params:params}).success(function(response){
+        ChartService.getSummarizedData(params,function(response){
             response.forEach(function(d,i){
                 d.id = i;
                 // this is the day # that will get plotted 1 being the first day of the start_year
@@ -222,7 +221,7 @@ angular.module('npn-viz-tool.vis-scatter',[
                 d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
                 d.color = $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]);
             });
-            data = response.filter(ChartService.filterSuspectSummaryData);
+            data = response;
             console.log('scatterPlot data',data);
             draw();
         });
