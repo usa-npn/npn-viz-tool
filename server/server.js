@@ -2,10 +2,13 @@ var express = require('express'),
     fs = require('fs'),
     minimist = require('minimist'),
     CachingProxy = require('./caching_proxy'),
+    proxyMiddleware = require('express-http-proxy'),
+    url = require('url'),
     cdir = fs.realpathSync('.'),
     proxy_cache_ttl = 3600000,
     argv = require('minimist')(process.argv.slice(2)),
-    port = Number(argv.port||8000);
+    port = Number(argv.port||8000),
+    npn_host = 'www-dev.usanpn.org';
 
 // validate port
 if(isNaN(port) || port < 0 || port > 65535) {
@@ -28,7 +31,7 @@ if(argv.log) {
 }
 
 // setup the proxy cache
-var cache = new CachingProxy(cdir+'/_cache','http://www-dev.usanpn.org',{
+var cache = new CachingProxy(cdir+'/_cache','http://'+npn_host,{
                     ttl: proxy_cache_ttl,
                     noCleanOnInit: argv.dev
                 })
@@ -59,6 +62,13 @@ cache.init(function(err){ // init cache and start
     }
 
     app.get('/npn_portal/*',cache.__express);
+    app.post('/npn_portal/*', proxyMiddleware(npn_host, {
+      forwardPath: function(req, res) {
+        var path = url.parse(req.url).path;
+        console.log('forwarding POST  for' + path);
+        return path;
+      }
+    }));
     app.use(express.static('dist'));
     var server = app.listen(port,function(){
         console.log('Listening at http://%s:%s', server.address().address, server.address().port);

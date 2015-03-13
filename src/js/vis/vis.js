@@ -66,7 +66,12 @@ angular.module('npn-viz-tool.vis',[
             return a + (b*x);
         },
         getSummarizedData: function(params,success) {
-            /* TODO - local caching proxy only supports GET/HEAD
+            // if geo filtering add the explicit station_ids in question.
+            if(FilterService.getFilter().getGeoArgs().length) {
+                FilterService.getFilteredMarkers().forEach(function(marker,i){
+                    params['site_id['+i+']'] = marker.station_id;
+                });
+            }
             $http({
                 method: 'POST',
                 url: '/npn_portal/observations/getSummarizedData.json',
@@ -80,15 +85,6 @@ angular.module('npn-viz-tool.vis',[
                 },
                 data: params
             }).success(function(response){
-                success(response.filter(filterSuspectSummaryData));
-            });*/
-            // if geo filtering add the explicit station_ids in question.
-            if(FilterService.getFilter().getGeoArgs().length) {
-                FilterService.getFilteredMarkers().forEach(function(marker,i){
-                    params['site_id['+i+']'] = marker.station_id;
-                });
-            }
-            $http.get('/npn_portal/observations/getSummarizedData.json',{params:params}).success(function(response){
                 success(response.filter(filterSuspectSummaryData));
             });
         }
