@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/scatterPlot.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
+angular.module('templates-npnvis', ['js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatterPlot.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
 
 angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/dateFilterTag.html",
@@ -162,6 +162,46 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "</toolbar>");
 }]);
 
+angular.module("js/scatter/scatterPlot.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/scatter/scatterPlot.html",
+    "<vis-dialog title=\"Scatter Plot\" modal=\"modal\">\n" +
+    "<form class=\"form-inline\">\n" +
+    "    <div class=\"form-group\">\n" +
+    "        <label for=\"toPlotInput\">Select up to three Species/Phenophase pairs</label>\n" +
+    "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
+    "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
+    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
+    "            &nbsp; <span class=\"caret\"></span>\n" +
+    "          </button>\n" +
+    "          <ul class=\"dropdown-menu\" role=\"menu\">\n" +
+    "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorScale($index)}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
+    "          </ul>\n" +
+    "        </div>\n" +
+    "    </div>\n" +
+    "    <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
+    "</form>\n" +
+    "\n" +
+    "<div class=\"panel panel-default main-vis-panel\" >\n" +
+    "    <div class=\"panel-body\">\n" +
+    "        <center>\n" +
+    "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
+    "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
+    "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
+    "            </li>\n" +
+    "            <li>\n" +
+    "                <select class=\"form-control vis-axis\" ng-model=\"selection.axis\" ng-options=\"o as o.label for o in axis\"></select>\n" +
+    "            </li>\n" +
+    "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "        </ul>\n" +
+    "        <svg class=\"chart\"></svg>\n" +
+    "        </center>\n" +
+    "    </div>\n" +
+    "</div>\n" +
+    "<pre ng-if=\"record\">{{record | json}}</pre>\n" +
+    "\n" +
+    "</vis-dialog>");
+}]);
+
 angular.module("js/settings/settingsControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/settings/settingsControl.html",
     "<ul class=\"list-unstyled\">\n" +
@@ -222,46 +262,6 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "  </ul>\n" +
     "  <div class=\"toolbar-content\" ng-class=\"{open: open}\" ng-transclude></div>\n" +
     "</div>");
-}]);
-
-angular.module("js/vis/scatterPlot.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("js/vis/scatterPlot.html",
-    "<vis-dialog title=\"Scatter Plot\" modal=\"modal\">\n" +
-    "<form class=\"form-inline\">\n" +
-    "    <div class=\"form-group\">\n" +
-    "        <label for=\"toPlotInput\">Select up to three Species/Phenophase pairs</label>\n" +
-    "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
-    "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
-    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
-    "            &nbsp; <span class=\"caret\"></span>\n" +
-    "          </button>\n" +
-    "          <ul class=\"dropdown-menu\" role=\"menu\">\n" +
-    "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorScale($index)}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
-    "          </ul>\n" +
-    "        </div>\n" +
-    "    </div>\n" +
-    "    <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
-    "</form>\n" +
-    "\n" +
-    "<div class=\"panel panel-default main-vis-panel\" >\n" +
-    "    <div class=\"panel-body\">\n" +
-    "        <center>\n" +
-    "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
-    "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
-    "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
-    "            </li>\n" +
-    "            <li>\n" +
-    "                <select class=\"form-control vis-axis\" ng-model=\"selection.axis\" ng-options=\"o as o.label for o in axis\"></select>\n" +
-    "            </li>\n" +
-    "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
-    "        </ul>\n" +
-    "        <svg class=\"chart\"></svg>\n" +
-    "        </center>\n" +
-    "    </div>\n" +
-    "</div>\n" +
-    "<pre ng-if=\"record\">{{record | json}}</pre>\n" +
-    "\n" +
-    "</vis-dialog>");
 }]);
 
 angular.module("js/vis/visControl.html", []).run(["$templateCache", function($templateCache) {
