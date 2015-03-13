@@ -17,7 +17,7 @@ angular.module('npn-viz-tool.vis-calendar',[
         start_date = new Date(start_year,0),
         ONE_DAY = 24*60*60*1000,
         end_year = dateArg.arg.end_date,
-        sizing = ChartService.getSizeInfo({left: 80}),
+        sizing = ChartService.getSizeInfo({top: 30, right: 30, bottom: 30, left: 30}),
         chart,
         x = d3.time.scale().range([0,sizing.width]).domain([new Date(start_year,0,1),new Date(start_year,12,31)]).nice(0),
         d3_month_fmt = d3.time.format('%B'),
@@ -28,7 +28,7 @@ angular.module('npn-viz-tool.vis-calendar',[
         yAxis = d3.svg.axis().scale(y).orient('right').tickSize(sizing.width).tickFormat(function(d) {
             //return '';
             return d;
-        });
+        }).tickFormat(formatYTickLabels);
 
     $scope.modal = $modalInstance;
     $scope.colorScale = d3.scale.category20();
@@ -98,7 +98,8 @@ angular.module('npn-viz-tool.vis-calendar',[
 
           chart.append('g')
               .attr('class', 'y axis')
-              .call(yAxis);
+              .call(yAxis)
+              .call(moveYTickLabels);
     },500);
 
     $scope.addToPlot = function() {
@@ -113,6 +114,17 @@ angular.module('npn-viz-tool.vis-calendar',[
         data = undefined;
     };
 
+    function moveYTickLabels(g) {
+      var dy = -1*((y.rangeBand()/2)+8);
+      g.selectAll('text')
+          .attr('x', 0)
+          .attr('dy', dy);
+    }
+
+    function formatYTickLabels(i) {
+        return (data && i < data.length && data[i].LABEL) ? data[i].LABEL : '';
+    }
+
     function draw() {
         if(!data) {
             return;
@@ -125,7 +137,7 @@ angular.module('npn-viz-tool.vis-calendar',[
         y.rangeBands([sizing.height,0],0.5,0.5);
         y.domain(d3.range(0,data.length));
         yAxis.scale(y);
-        chart.selectAll('g .y.axis').call(yAxis);
+        chart.selectAll('g .y.axis').call(yAxis).call(moveYTickLabels);
 
         console.log('y.rangeBand()',y.rangeBand());
 
@@ -150,6 +162,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             .attr('stroke', function(d) { return $scope.colorScale(d.color); })
             .attr('stroke-width', y.rangeBand());
     }
+
     $scope.visualize = function() {
         if(data) {
             return draw();
@@ -185,13 +198,15 @@ angular.module('npn-viz-tool.vis-calendar',[
             }
             console.log('sets',sets);
             angular.forEach(sets,function(set,i){
+                var tp = $scope.toPlot[i];
                 angular.forEach(years,function(year){
                     var year_set = set.filter(function(d){ return year === d.first_yes_year && year === d.last_yes_year; });
                     console.log('year_set',year_set);
                     toChart.push(angular.extend({
+                        LABEL: $filter('speciesTitle')(tp)+'/'+tp.phenophase_name+' ('+year+')',
                         FIRST_DOY: d3.min(year_set,function(d) { return d.first_yes_doy; }),
                         LAST_DOY: d3.max(year_set,function(d) { return d.last_yes_doy; }),
-                    },$scope.toPlot[i]));
+                    },tp));
                 });
             });
             data = toChart.reverse();
@@ -2604,7 +2619,7 @@ angular.module('npn-viz-tool.vis',[
         title: 'Calendar',
         controller: 'CalendarVisCtrl',
         template: 'js/calendar/calendar.html',
-        description: 'This visualization illustrates phenophase activity for various species of your choosing.  Horizontal bars are graphed representing a "calendar" of phenological activity at a regional level for up to two years allowing year to year comparison of activity.'
+        description: 'This visualization illustrates phenophase activity for various species/phenophase pairs of your choosing.  Horizontal bars are graphed representing a "calendar" of phenological activity at a regional level for up to two years allowing year to year comparison of activity.'
     }];
     return {
         restrict: 'E',

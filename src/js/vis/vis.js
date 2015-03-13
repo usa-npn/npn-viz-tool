@@ -91,7 +91,7 @@ angular.module('npn-viz-tool.vis',[
         title: 'Calendar',
         controller: 'CalendarVisCtrl',
         template: 'js/calendar/calendar.html',
-        description: 'This visualization illustrates phenophase activity for various species of your choosing.  Horizontal bars are graphed representing a "calendar" of phenological activity at a regional level for up to two years allowing year to year comparison of activity.'
+        description: 'This visualization illustrates phenophase activity for various species/phenophase pairs of your choosing.  Horizontal bars are graphed representing a "calendar" of phenological activity at a regional level for up to two years allowing year to year comparison of activity.'
     }];
     return {
         restrict: 'E',
