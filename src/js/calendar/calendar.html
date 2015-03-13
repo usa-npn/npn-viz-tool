@@ -1,0 +1,45 @@
+<vis-dialog title="Calendar" modal="modal">
+<form class="form-inline">
+    <div class="form-group" ng-if="!selection.start_year">
+        <label for="yearsInput">Select a starting year</label>
+        <select name="yearsInput" class="form-control" ng-model="selection.start_year" ng-options="year for year in availableYears"></select>
+    </div>
+    <div class="form-group animated-show-hide" ng-if="selection.start_year">
+        <label for="toPlotInput">Select up to three Species/Phenophase pairs</label>
+        <select name="toPlotInput" class="form-control" ng-model="selection.toPlot" ng-options="o.phenophase_name group by (o|speciesTitle) for o in plottable"></select>
+        <div class="btn-group" dropdown is-open="selection.color_isopen">
+          <button type="button" class="btn btn-default dropdown-toggle" dropdown-toggle style="background-color: {{colorScale(selection.color)}};">
+            &nbsp; <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" role="menu">
+            <li ng-repeat="i in colors track by $index" style="background-color: {{colorScale($index)}};"><a href ng-click="selection.color=$index;">&nbsp;</a></li>
+          </ul>
+        </div>
+    </div>
+    <button class="btn btn-default" ng-click="addToPlot()" ng-disabled="!canAddToPlot()"><i class="fa fa-plus"></i></button>
+</form>
+
+<div class="panel panel-default main-vis-panel" >
+    <div class="panel-body">
+        <center>
+        <ul class="date-range list-inline animated-show-hide">
+            <li>{{selection.start_year}}</li>
+            <li>-</li>
+            <li>{{selection.end_year}}</li>
+        </ul>
+        <ul class="to-plot list-inline animated-show-hide" ng-if="toPlot.length">
+            <li ng-repeat="tp in toPlot">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style="color: {{colorScale(tp.color)}};" class="fa fa-circle"></i>
+                <a href ng-click="removeFromPlot($index)"><i class="fa fa-times-circle-o"></i></a>
+            </li>
+            <li>
+                <select class="form-control vis-axis" ng-model="selection.axis" ng-options="o as o.label for o in axis"></select>
+            </li>
+            <li class="animated-show-hide"><button class="btn btn-default" ng-click="visualize()">Visualize</button></li>
+        </ul>
+        <svg class="chart"></svg>
+        </center>
+    </div>
+</div>
+<pre ng-if="record">{{record | json}}</pre>
+
+</vis-dialog>

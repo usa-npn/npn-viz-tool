@@ -2,6 +2,7 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.filter',
     'npn-viz-tool.filters',
     'npn-viz-tool.vis-scatter',
+    'npn-viz-tool.vis-calendar',
     'ui.bootstrap'
 ])
 .factory('ChartService',['$window',function($window){
@@ -75,9 +76,14 @@ angular.module('npn-viz-tool.vis',[
 .directive('visControl',['$modal',function($modal){
     var visualizations = [{
         title: 'Scatter Plot',
-        controller: 'ScatterPlotCtrl',
-        template: 'js/scatter/scatterPlot.html',
-        description: 'This visualization uses site-level data and allows users to set different variables as the X and Y axes. The user can select a number of geographic or climatic variables on the X axis and phenometric type variables on the Y axis. The graph presents a legend for multiple species, as well as produces a regression line.'
+        controller: 'ScatterVisCtrl',
+        template: 'js/scatter/scatter.html',
+        description: 'This visualization allows you to plot various geographic or climactic variables on the X axis against Onset Day Of Year on the Y axis.  Up to three Species/Phenophase pairs may be plotted.'
+    },{
+        title: 'Calendar',
+        controller: 'CalendarVisCtrl',
+        template: 'js/calendar/calendar.html',
+        description: 'This visualization illustrates phenophase activity for various species of your choosing.  Horizontal bars are graphed representing a "calendar" of phenological activity at a regional level for up to two years allowing year to year comparison of activity.'
     }];
     return {
         restrict: 'E',

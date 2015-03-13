@@ -281,6 +281,15 @@ ul.filter-tags {
     }
 }
 
+.tool-content.visualizations {
+    li {
+        a {
+            font-size: 1.5em;
+            color: #555;
+        }
+    }
+}
+
 .tool-content.settings {
     li {
         @extend .animated-show-hide;
@@ -315,7 +324,7 @@ ul.filter-tags {
     }
 }
 .vis-dialog {
-    &.scatter-plot {
+    &.scatter-plot, &.calendar {
         .main-vis-panel {
             margin-top: 15px;
             a {

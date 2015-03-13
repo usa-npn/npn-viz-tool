@@ -29,6 +29,14 @@ angular.module('npn-viz-tool.filter',[
      * @param {Object} range {start_date: <year>, end_date: <year>}
      */
     var DateFilterArg = function(range) {
+        if(range) {
+            if(range.start_date && typeof(range.start_date) !== 'number') {
+                range.start_date = parseInt(range.start_date);
+            }
+            if(range.end_date && typeof(range.end_date) !== 'number') {
+                range.end_date = parseInt(range.end_date);
+            }
+        }
         FilterArg.apply(this,arguments);
     };
     DateFilterArg.prototype.getId = function() {

@@ -1,11 +1,30 @@
-angular.module('npn-viz-tool.vis-scatter',[
+angular.module('npn-viz-tool.vis-calendar',[
     'npn-viz-tool.vis',
     'npn-viz-tool.filter',
     'npn-viz-tool.filters',
     'ui.bootstrap'
 ])
-.controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService',
+.controller('CalendarVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService',
     function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService){
+    var data, // the data from the server....
+        dateArg = FilterService.getFilter().getDateArg(),
+        start_year = dateArg.arg.start_date,
+        start_date = new Date(start_year,0),
+        ONE_DAY = 24*60*60*1000,
+        end_year = dateArg.arg.end_date,
+        sizing = ChartService.getSizeInfo({top: 80}),
+        chart,
+        x = d3.scale.linear().range([0,sizing.width]).domain([0,100]), // bogus domain initially
+        xAxis = d3.svg.axis().scale(x).orient('bottom'),
+        y = d3.scale.linear().range([sizing.height,0]).domain([1,365]),
+        d3_date_fmt = d3.time.format('%x'),
+        local_date_fmt = function(d){
+                var time = ((d-1)*ONE_DAY)+start_date.getTime(),
+                    date = new Date(time);
+                return d3_date_fmt(date);
+            },
+        yAxis = d3.svg.axis().scale(y).orient('left');
+
     $scope.modal = $modalInstance;
     $scope.colorScale = d3.scale.category20();
     $scope.colors = new Array(20);
@@ -21,6 +40,20 @@ angular.module('npn-viz-tool.vis-scatter',[
         });
     });
     $scope.toPlot = [];
+
+    if((end_year - start_year) <= 1) {
+        $scope.selection.start_year = start_year;
+    } else {
+        $scope.availableYears = d3.range(start_year,end_year);
+        console.log('availableYears');
+    }
+    $scope.$watch('selection.start_year',function(){
+        if($scope.selection.start_year) {
+            $scope.selection.end_year = $scope.selection.start_year+1;
+        }
+    });
+
+
     function getNewToPlot() {
         return angular.extend({},$scope.selection.toPlot,{color: $scope.selection.color});
     }
@@ -45,24 +78,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         return true;
     };
 
-    var data, // the data from the server....
-        dateArg = FilterService.getFilter().getDateArg(),
-        start_year = dateArg.arg.start_date,
-        start_date = new Date(start_year,0),
-        ONE_DAY = 24*60*60*1000,
-        end_year = dateArg.arg.end_date,
-        sizing = ChartService.getSizeInfo({top: 80}),
-        chart,
-        x = d3.scale.linear().range([0,sizing.width]).domain([0,100]), // bogus domain initially
-        xAxis = d3.svg.axis().scale(x).orient('bottom'),
-        y = d3.scale.linear().range([sizing.height,0]).domain([1,365]),
-        d3_date_fmt = d3.time.format('%x'),
-        local_date_fmt = function(d){
-                var time = ((d-1)*ONE_DAY)+start_date.getTime(),
-                    date = new Date(time);
-                return d3_date_fmt(date);
-            },
-        yAxis = d3.svg.axis().scale(y).orient('left');
+
     // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
     $timeout(function(){
         chart = d3.select('.chart')
