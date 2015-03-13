@@ -1,10 +1,7 @@
-var http = require('http'),
+var express = require('express'),
     fs = require('fs'),
-    url = require('url'),
-    nodeStatic = require('node-static'),
     minimist = require('minimist'),
     CachingProxy = require('./caching_proxy'),
-    proxy_regex = /\/npn_portal\//,
     cdir = fs.realpathSync('.'),
     proxy_cache_ttl = 3600000,
     argv = require('minimist')(process.argv.slice(2)),
@@ -42,34 +39,28 @@ var cache = new CachingProxy(cdir+'/_cache','http://www-dev.usanpn.org',{
         headers['X-Last-Modified'] = fs.statSync(cache_file).mtime.getTime();
         // Include CORS headers only in dev mode.
         if(argv.dev) {
-            headers['Access-Control-Allow-Origin'] = "*";
             headers['Access-Control-Expose-Headers'] = 'X-Last-Modified';
         }
     });
 
-// use node-static to serve up local static content
-var staticFilesOpts = argv.dev ? {headers: {'Access-Control-Allow-Origin':'*'}} : {},
-    staticFiles = new nodeStatic.Server('./dist',staticFilesOpts);
-
-cache.init(bootstrap); // init cache and start
-
-function bootstrap(err) {
+cache.init(function(err){ // init cache and start
     if(err) {
         return console.log("Error not starting: ", err);
     }
     console.log('Starting @ ' + cdir + ' on port '+ port);
 
-    http.createServer(function(request,response){
-        if(["GET","HEAD"].indexOf(request.method) === -1) {
-            response.writeHead(400,{'content-type':'text/plain'});
-            return response.end('unsupported HTTP verb '+request.method);
-        }
-        var u = url.parse(request.url,true),
-            local = u.path.search(proxy_regex) != 0;
-        if(local) {
-            request.addListener('end',function(){ staticFiles.serve(request,response); }).resume();
-        } else {
-            cache.serve(u.path,request,response);
-        }
-    }).listen(port);
-}
+    var app = express();
+
+    if(argv.dev) {
+        app.use(function(req,res,next){
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            return next();
+        });
+    }
+
+    app.get('/npn_portal/*',cache.__express);
+    app.use(express.static('dist'));
+    var server = app.listen(port,function(){
+        console.log('Listening at http://%s:%s', server.address().address, server.address().port);
+    });
+});

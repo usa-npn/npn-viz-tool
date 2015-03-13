@@ -25,7 +25,7 @@ module.exports = function(dir,base_url,opts) {
     var _preResponseCb = null;
 
     // ships a simple internal server error (500)
-    function ise(response,err) {
+    function ise(res,err) {
         response.writeHead(500,{'content-type':'text/plain'});
         return response.end(typeof(err) === 'string' ? err :
             (err.message?err.message+' ':'') + JSON.stringify(err));
@@ -114,31 +114,29 @@ module.exports = function(dir,base_url,opts) {
             });
         },
         /**
+         * Express middleware.
          * Proxies a given request, may serve up from the cache if its a repeat request.
          * Request isn't currently used but may be used in the future if the code decides to be
          * more than a simple GET proxy.
-         *
-         * @param  {string} path     The path to append to this proxy cache's base url (directly).
-         * @param  {http.IncomingMessage} request  The originating HTTP request.
-         * @param  {http.ServerResponse} response The HTTP response to send the results to.
          */
-        serve: function(path,request,response) {
-            var proxy_url = _base_url+path,
+        __express: function(req,res,next) {
+            var proxy_url = _base_url+req.originalUrl,
                 sha1 = crypto.createHash('sha1').update(proxy_url).digest('hex'),
                 proxy_file = _dir+'/'+sha1;
+
             fs.stat(proxy_file,function(err,stats){
                 if(stats && stats.isFile()) {
                     console.log('cproxy cache hit: '+proxy_url+' sha1: '+sha1);
-                    return respond(request,response,sha1);
+                    return respond(req,res,sha1);
                 }
                 console.log('proxy cache miss: '+proxy_url+' sha1: '+sha1);
                 var getOpts = {
                         host: _base_url_parsed.host,
                         port: _base_url_parsed.port,
-                        path: path,
+                        path: req.originalUrl,
                     };
                 if(_preRequestCb) {
-                    _preRequestCb(request,getOpts);
+                    _preRequestCb(req,getOpts);
                 }
                 var requestStart = Date.now();
                 http.get(getOpts, function(proxy_response){
@@ -149,7 +147,7 @@ module.exports = function(dir,base_url,opts) {
                     }
                     proxy_response.headers.statusCode = proxy_response.statusCode;
                     fs.writeFile(proxy_file+'.headers',JSON.stringify(proxy_response.headers),function(err){
-                        if(err) { return ise(response,err); }
+                        if(err) { return ise(res,err); }
                         var cache_file = fs.createWriteStream(proxy_file);
                         console.log('caching response until ', new Date(Date.now()+_opts.ttl) );
                         proxy_response.pipe(cache_file);
@@ -161,12 +159,12 @@ module.exports = function(dir,base_url,opts) {
                                 fs.unlink(proxy_file,just_log);
                                 fs.unlink(proxy_file+'.headers',just_log);
                             },_opts.ttl);
-                            return respond(request,response,sha1); // respond with what was just cached
+                            return respond(req,res,sha1); // respond with what was just cached
                         });
                     });
                 }).on('error',function(err){
                     console.log("error during proxy request: ", err);
-                    ise(request,response,err);
+                    ise(res,err);
                 });
             });
         }

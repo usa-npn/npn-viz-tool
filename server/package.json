@@ -5,7 +5,7 @@
   "author": "Paul Adams <paul@djcase.com>",
   "private": true,
   "dependencies": {
-    "minimist": "*",
-    "node-static": "^0.7.6"
+    "express": "^4.12.2",
+    "minimist": "*"
   }
 }
