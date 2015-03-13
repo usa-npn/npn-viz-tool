@@ -689,6 +689,9 @@ angular.module('npn-viz-tool.filter',[
     }
     return {
         execute: execute,
+        getFilteredMarkers: function() {
+            return lastFiltered;
+        },
         pause: function() {
             console.log('PAUSE');
             paused = true;
@@ -2530,7 +2533,7 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.vis-calendar',
     'ui.bootstrap'
 ])
-.factory('ChartService',['$window','$http',function($window,$http){
+.factory('ChartService',['$window','$http','FilterService',function($window,$http,FilterService){
     // some hard coded values that will be massaged into generated
     // values at runtime.
     var CHART_W = 930,
@@ -2591,6 +2594,28 @@ angular.module('npn-viz-tool.vis',[
             return a + (b*x);
         },
         getSummarizedData: function(params,success) {
+            /* TODO - local caching proxy only supports GET/HEAD
+            $http({
+                method: 'POST',
+                url: '/npn_portal/observations/getSummarizedData.json',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                transformRequest: function(obj) {
+                    var encoded = [],key;
+                    for(key in obj) {
+                        encoded.push(encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]));
+                    }
+                    return encoded.join('&');
+                },
+                data: params
+            }).success(function(response){
+                success(response.filter(filterSuspectSummaryData));
+            });*/
+            // if geo filtering add the explicit station_ids in question.
+            if(FilterService.getFilter().getGeoArgs().length) {
+                FilterService.getFilteredMarkers().forEach(function(marker,i){
+                    params['site_id['+i+']'] = marker.station_id;
+                });
+            }
             $http.get('/npn_portal/observations/getSummarizedData.json',{params:params}).success(function(response){
                 success(response.filter(filterSuspectSummaryData));
             });

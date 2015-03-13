@@ -474,6 +474,9 @@ angular.module('npn-viz-tool.filter',[
     }
     return {
         execute: execute,
+        getFilteredMarkers: function() {
+            return lastFiltered;
+        },
         pause: function() {
             console.log('PAUSE');
             paused = true;
