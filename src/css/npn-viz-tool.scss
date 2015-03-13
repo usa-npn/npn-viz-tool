@@ -338,6 +338,18 @@ ul.filter-tags {
             }
         }
     }
+
+    &.calendar {
+        svg {
+            .y.axis path {
+                display: none;
+            }
+            .y.axis line {
+              stroke: #777;
+              stroke-dasharray: 2,2;
+            }
+        }
+    }
 }
 .axis text {
       font: 10px sans-serif;

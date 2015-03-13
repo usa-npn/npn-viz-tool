@@ -49,7 +49,6 @@ angular.module('npn-viz-tool.vis-scatter',[
         dateArg = FilterService.getFilter().getDateArg(),
         start_year = dateArg.arg.start_date,
         start_date = new Date(start_year,0),
-        ONE_DAY = 24*60*60*1000,
         end_year = dateArg.arg.end_date,
         sizing = ChartService.getSizeInfo({top: 80}),
         chart,
@@ -58,7 +57,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         y = d3.scale.linear().range([sizing.height,0]).domain([1,365]),
         d3_date_fmt = d3.time.format('%x'),
         local_date_fmt = function(d){
-                var time = ((d-1)*ONE_DAY)+start_date.getTime(),
+                var time = ((d-1)*ChartService.ONE_DAY_MILLIS)+start_date.getTime(),
                     date = new Date(time);
                 return d3_date_fmt(date);
             },
@@ -214,26 +213,16 @@ angular.module('npn-viz-tool.vis-scatter',[
             params['species_id['+i+']'] = tp.species_id;
             params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
         });
+        // TODO - add station list
         $http.get('/npn_portal/observations/getSummarizedData.json',{params:params}).success(function(response){
             response.forEach(function(d,i){
                 d.id = i;
-                d.latitude = parseFloat(d.latitude);
-                d.longitude = parseFloat(d.longitude);
-                d.elevation_in_meters = parseInt(d.elevation_in_meters);
-                d.first_yes_year = parseInt(d.first_yes_year);
-                d.first_yes_doy = parseInt(d.first_yes_doy);
                 // this is the day # that will get plotted 1 being the first day of the start_year
                 // 366 being the first day of start_year+1, etc.
                 d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
                 d.color = $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]);
             });
-            data = response.filter(function(d,i){
-                var bad = (d.latitude === 0.0 || d.longitude === 0.0 || d.elevation_in_meters < 0);
-                if(bad) {
-                    console.warn('suspect station data',d);
-                }
-                return !bad;
-            });
+            data = response.filter(ChartService.filterSuspectSummaryData);
             console.log('scatterPlot data',data);
             draw();
         });

@@ -301,6 +301,13 @@ ul.filter-tags .filter-tag .phenophase-list {
   stroke: #333;
   stroke-width: 1;
 }
+.vis-dialog.calendar svg .y.axis path {
+  display: none;
+}
+.vis-dialog.calendar svg .y.axis line {
+  stroke: #777;
+  stroke-dasharray: 2,2;
+}
 
 .axis text {
   font: 10px sans-serif;

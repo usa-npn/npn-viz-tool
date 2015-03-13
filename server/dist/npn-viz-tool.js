@@ -17,26 +17,24 @@ angular.module('npn-viz-tool.vis-calendar',[
         start_date = new Date(start_year,0),
         ONE_DAY = 24*60*60*1000,
         end_year = dateArg.arg.end_date,
-        sizing = ChartService.getSizeInfo({top: 80}),
+        sizing = ChartService.getSizeInfo({left: 80}),
         chart,
-        x = d3.scale.linear().range([0,sizing.width]).domain([0,100]), // bogus domain initially
-        xAxis = d3.svg.axis().scale(x).orient('bottom'),
-        y = d3.scale.linear().range([sizing.height,0]).domain([1,365]),
-        d3_date_fmt = d3.time.format('%x'),
-        local_date_fmt = function(d){
-                var time = ((d-1)*ONE_DAY)+start_date.getTime(),
-                    date = new Date(time);
-                return d3_date_fmt(date);
-            },
-        yAxis = d3.svg.axis().scale(y).orient('left');
+        x = d3.time.scale().range([0,sizing.width]).domain([new Date(start_year,0,1),new Date(start_year,12,31)]).nice(0),
+        d3_month_fmt = d3.time.format('%B'),
+        xAxis = d3.svg.axis().scale(x).ticks(d3.time.months).orient('bottom').tickFormat(function(d){
+            return d3_month_fmt(d);
+        }),
+        y = d3.scale.ordinal().rangeBands([sizing.height,0]).domain(d3.range(0,6)),
+        yAxis = d3.svg.axis().scale(y).orient('right').tickSize(sizing.width).tickFormat(function(d) {
+            //return '';
+            return d;
+        });
 
     $scope.modal = $modalInstance;
     $scope.colorScale = d3.scale.category20();
     $scope.colors = new Array(20);
-    $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation'}];
     $scope.selection = {
-        color: 0,
-        axis: $scope.axis[0]
+        color: 0
     };
     $scope.plottable = [];
     angular.forEach(FilterService.getFilter().getSpeciesArgs(),function(sarg) {
@@ -54,16 +52,18 @@ angular.module('npn-viz-tool.vis-calendar',[
     }
     $scope.$watch('selection.start_year',function(){
         if($scope.selection.start_year) {
-            $scope.selection.end_year = $scope.selection.start_year+1;
+            x.domain([new Date($scope.selection.start_year,0,1),new Date($scope.selection.start_year,12,13)]);
+            // one or two years depending on the base map filter
+            $scope.selection.end_year = end_year > $scope.selection.start_year ?
+                $scope.selection.start_year+1 : end_year;
         }
     });
-
 
     function getNewToPlot() {
         return angular.extend({},$scope.selection.toPlot,{color: $scope.selection.color});
     }
     $scope.canAddToPlot = function() {
-        if(!$scope.selection.toPlot || $scope.toPlot.length === 3) {
+        if(!$scope.selection.toPlot) {
             return false;
         }
         if($scope.toPlot.length === 0) {
@@ -83,7 +83,6 @@ angular.module('npn-viz-tool.vis-calendar',[
         return true;
     };
 
-
     // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
     $timeout(function(){
         chart = d3.select('.chart')
@@ -99,13 +98,7 @@ angular.module('npn-viz-tool.vis-calendar',[
 
           chart.append('g')
               .attr('class', 'y axis')
-              .call(yAxis)
-            .append('text')
-            .attr('transform', 'rotate(-90)')
-            .attr('y', 6)
-            .attr('dy', '.71em')
-            .style('text-anchor', 'end')
-            .text('Onset DOY');
+              .call(yAxis);
     },500);
 
     $scope.addToPlot = function() {
@@ -124,98 +117,38 @@ angular.module('npn-viz-tool.vis-calendar',[
         if(!data) {
             return;
         }
+
         // update the x-axis
-        var padding = 1;
-        function xData(d) { return d[$scope.selection.axis.key]; }
-        x.domain([d3.min(data,xData)-padding,d3.max(data,xData)+padding]);
-        xAxis.scale(x).tickFormat(d3.format('.2f')); // TODO per-selection tick formatting
-        var xA = chart.selectAll('g .x.axis');
-        xA.call(xAxis);
-        xA.selectAll('.axis-label').remove();
-        xA.append('text')
-          .attr('class','axis-label')
-          .attr('x',sizing.width-6)
-          .attr('dy', '-.71em')
-          .style('text-anchor', 'end')
-          .text($scope.selection.axis.label);
+        xAxis.scale(x); // x.domain was updated in a watch when the date range was set
+        chart.selectAll('g .x.axis').call(xAxis);
+        // update the y-axis
+        y.rangeBands([sizing.height,0],0.5,0.5);
+        y.domain(d3.range(0,data.length));
+        yAxis.scale(y);
+        chart.selectAll('g .y.axis').call(yAxis);
 
-        // update the chart data (TODO transitions??)
-        var circles = chart.selectAll('.circle').data(data,function(d) { return d.id; });
-        circles.exit().remove();
-        circles.enter().append('circle')
-          .attr('class', 'circle');
+        console.log('y.rangeBand()',y.rangeBand());
 
-        circles.attr('cx', function(d) { return x(d[$scope.selection.axis.key]); })
-          .attr('cy', function(d) { return y(d.first_yes_doy); })
-          .attr('r', '5')
-          .attr('fill',function(d) { return d.color; })
-          .on('click',function(d){
-            if (d3.event.defaultPrevented){
-                return;
-            }
-            $scope.$apply(function(){
-                $scope.record = d;
-            });
-          })
-          .append('title')
-          .text(function(d) { return local_date_fmt(d.day_in_range)+ ' ['+d.latitude+','+d.longitude+']'; });
+        var dayOne = x.domain()[0],
+            dayOneTime = dayOne.getTime(),
+            dy = y.rangeBand()/2;
+        console.log('dayOne',dayOne);
+        console.log('x.domain',x.domain());
+        console.log('y.domain',y.domain());
 
-        var regressionLines = [],float_fmt = d3.format('.2f');
-        angular.forEach($scope.toPlot,function(pair){
-            var color = $scope.colorScale(pair.color),
-                seriesData = data.filter(function(d) { return d.color === color; }),
-                datas = seriesData.sort(function(o1,o2){ // sorting isn't necessary but makes it easy to pick min/max x
-                    return o1[$scope.selection.axis.key] - o2[$scope.selection.axis.key];
-                }),
-                xSeries = datas.map(function(d) { return d[$scope.selection.axis.key]; }),
-                ySeries = datas.map(function(d) { return d.first_yes_doy; }),
-                leastSquaresCoeff = ChartService.leastSquares(xSeries,ySeries),
-                x1 = xSeries[0],
-                y1 = ChartService.approxY(leastSquaresCoeff,x1),
-                x2 = xSeries[xSeries.length-1],
-                y2 = ChartService.approxY(leastSquaresCoeff,x2);
-            regressionLines.push({
-                id: pair.species_id+'.'+pair.phenophase_id,
-                legend: $filter('speciesTitle')(pair)+'/'+pair.phenophase_name+' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')',
-                color: color,
-                p1: [x1,y1],
-                p2: [x2,y2]
-            });
-        });
-        var regression = chart.selectAll('.regression')
-            .data(regressionLines,function(d) { return d.id; });
-        regression.exit().remove();
-        regression.enter().append('line')
-            .attr('class','regression');
+        var inPhase = chart.selectAll('.in-phase').data(data);
+        inPhase.exit().remove();
+        inPhase.enter().append('line').attr('class','in-phase');
 
-        regression
+        inPhase
             .attr('data-legend',function(d) { return d.legend; } )
-            .attr('data-legend-color',function(d) { return d.color; })
-            .attr('x1', function(d) { return x(d.p1[0]); })
-            .attr('y1', function(d) { return y(d.p1[1]); })
-            .attr('x2', function(d) { return x(d.p2[0]); })
-            .attr('y2', function(d) { return y(d.p2[1]); })
-            .attr('stroke', function(d) { return d.color; })
-            .attr('stroke-width', 2);
-
-
-        chart.select('.legend').remove();
-        var legend = chart.append('g')
-          .attr('class','legend')
-          .attr('transform','translate(30,-45)') // relative to the chart, not the svg
-          .style('font-size','12px')
-          .call(d3.legend);
-
-        // IMPORTANT: This may not work perfectly on all browsers because of support for
-        // innerHtml on SVG elements (or lack thereof) so using shim
-        // https://code.google.com/p/innersvg/
-        // d3.legend deals with, not onreasonably, data-legend as a simple string
-        // alternatively extend d3.legend or do what it does here manually...
-        // replace 'R^2' with 'R<tspan ...>2</tspan>'
-        // the baseline-shift doesn't appear to work on firefox however
-        chart.selectAll('.legend text').html(function(d) {
-                return d.key.replace('R^2','R<tspan style="baseline-shift: super; font-size: 8px;">2</tspan>');
-            });
+            .attr('data-legend-color',function(d) { return $scope.colorScale(d.color); })
+            .attr('x1', function(d) { return x(d.FIRST_DOY ? new Date(dayOneTime+(d.FIRST_DOY*ChartService.ONE_DAY_MILLIS)) : dayOne); })
+            .attr('y1', function(d,i) { return y(i)+dy; })
+            .attr('x2', function(d) { return x(d.LAST_DOY ? new Date(dayOneTime+(d.LAST_DOY*ChartService.ONE_DAY_MILLIS)) : dayOne); })
+            .attr('y2', function(d,i) { return y(i)+dy; })
+            .attr('stroke', function(d) { return $scope.colorScale(d.color); })
+            .attr('stroke-width', y.rangeBand());
     }
     $scope.visualize = function() {
         if(data) {
@@ -224,9 +157,9 @@ angular.module('npn-viz-tool.vis-calendar',[
         console.log('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {
-                request_src: 'npn-vis-scatter-plot',
-                start_date: dateArg.getStartDate(),
-                end_date: dateArg.getEndDate()
+                request_src: 'npn-vis-cealendar',
+                start_date: $scope.selection.start_year+'-01-01',
+                end_date: $scope.selection.end_year+'-12-31'
             },
             i = 0,
             colorMap = {};
@@ -235,27 +168,34 @@ angular.module('npn-viz-tool.vis-calendar',[
             params['species_id['+i+']'] = tp.species_id;
             params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
         });
+        // TODO - add station list
         $http.get('/npn_portal/observations/getSummarizedData.json',{params:params}).success(function(response){
-            response.forEach(function(d,i){
-                d.id = i;
-                d.latitude = parseFloat(d.latitude);
-                d.longitude = parseFloat(d.longitude);
-                d.elevation_in_meters = parseInt(d.elevation_in_meters);
-                d.first_yes_year = parseInt(d.first_yes_year);
-                d.first_yes_doy = parseInt(d.first_yes_doy);
-                // this is the day # that will get plotted 1 being the first day of the start_year
-                // 366 being the first day of start_year+1, etc.
-                d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
-                d.color = $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]);
+            response = response.filter(ChartService.filterSuspectSummaryData);
+            var years = d3.range($scope.selection.start_year,$scope.selection.end_year+1),
+                sets = [],toChart = [];
+            console.log('years',years);
+            if($scope.toPlot.length === 1) {
+                sets.push(response);
+            } else {
+                angular.forEach($scope.toPlot,function(tp){
+                    sets.push(response.filter(function(d){
+                        return tp.species_id == d.species_id && tp.phenophase_id == d.phenophase_id;
+                    }));
+                });
+            }
+            console.log('sets',sets);
+            angular.forEach(sets,function(set,i){
+                angular.forEach(years,function(year){
+                    var year_set = set.filter(function(d){ return year === d.first_yes_year && year === d.last_yes_year; });
+                    console.log('year_set',year_set);
+                    toChart.push(angular.extend({
+                        FIRST_DOY: d3.min(year_set,function(d) { return d.first_yes_doy; }),
+                        LAST_DOY: d3.max(year_set,function(d) { return d.last_yes_doy; }),
+                    },$scope.toPlot[i]));
+                });
             });
-            data = response.filter(function(d,i){
-                var bad = (d.latitude === 0.0 || d.longitude === 0.0 || d.elevation_in_meters < 0);
-                if(bad) {
-                    console.warn('suspect station data',d);
-                }
-                return !bad;
-            });
-            console.log('scatterPlot data',data);
+            data = toChart.reverse();
+            console.log('calendar data',data);
             draw();
         });
     };
@@ -1615,7 +1555,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        <select name=\"yearsInput\" class=\"form-control\" ng-model=\"selection.start_year\" ng-options=\"year for year in availableYears\"></select>\n" +
     "    </div>\n" +
     "    <div class=\"form-group animated-show-hide\" ng-if=\"selection.start_year\">\n" +
-    "        <label for=\"toPlotInput\">Select up to three Species/Phenophase pairs</label>\n" +
+    "        <label for=\"toPlotInput\">Select Species/Phenophase pairs</label>\n" +
     "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
     "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
@@ -1640,9 +1580,6 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
     "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
-    "            </li>\n" +
-    "            <li>\n" +
-    "                <select class=\"form-control vis-axis\" ng-model=\"selection.axis\" ng-options=\"o as o.label for o in axis\"></select>\n" +
     "            </li>\n" +
     "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
@@ -1990,7 +1927,6 @@ angular.module('npn-viz-tool.vis-scatter',[
         dateArg = FilterService.getFilter().getDateArg(),
         start_year = dateArg.arg.start_date,
         start_date = new Date(start_year,0),
-        ONE_DAY = 24*60*60*1000,
         end_year = dateArg.arg.end_date,
         sizing = ChartService.getSizeInfo({top: 80}),
         chart,
@@ -1999,7 +1935,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         y = d3.scale.linear().range([sizing.height,0]).domain([1,365]),
         d3_date_fmt = d3.time.format('%x'),
         local_date_fmt = function(d){
-                var time = ((d-1)*ONE_DAY)+start_date.getTime(),
+                var time = ((d-1)*ChartService.ONE_DAY_MILLIS)+start_date.getTime(),
                     date = new Date(time);
                 return d3_date_fmt(date);
             },
@@ -2155,26 +2091,16 @@ angular.module('npn-viz-tool.vis-scatter',[
             params['species_id['+i+']'] = tp.species_id;
             params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
         });
+        // TODO - add station list
         $http.get('/npn_portal/observations/getSummarizedData.json',{params:params}).success(function(response){
             response.forEach(function(d,i){
                 d.id = i;
-                d.latitude = parseFloat(d.latitude);
-                d.longitude = parseFloat(d.longitude);
-                d.elevation_in_meters = parseInt(d.elevation_in_meters);
-                d.first_yes_year = parseInt(d.first_yes_year);
-                d.first_yes_doy = parseInt(d.first_yes_doy);
                 // this is the day # that will get plotted 1 being the first day of the start_year
                 // 366 being the first day of start_year+1, etc.
                 d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
                 d.color = $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]);
             });
-            data = response.filter(function(d,i){
-                var bad = (d.latitude === 0.0 || d.longitude === 0.0 || d.elevation_in_meters < 0);
-                if(bad) {
-                    console.warn('suspect station data',d);
-                }
-                return !bad;
-            });
+            data = response.filter(ChartService.filterSuspectSummaryData);
             console.log('scatterPlot data',data);
             draw();
         });
@@ -2593,8 +2519,8 @@ angular.module('npn-viz-tool.vis',[
     'ui.bootstrap'
 ])
 .factory('ChartService',['$window',function($window){
-    // TODO - currently this is hard coded info but should eventually
-    // be dynamically generated based on available screen realestate.
+    // some hard coded values that will be massaged into generated
+    // values at runtime.
     var CHART_W = 930,
         CHART_H =500,
         MARGIN = {top: 20, right: 30, bottom: 60, left: 40},
@@ -2606,6 +2532,7 @@ angular.module('npn-viz-tool.vis',[
             height: HEIGHT
         };
     var service = {
+        ONE_DAY_MILLIS: (24*60*60*1000),
         getSizeInfo: function(marginOverride){
             // make the chart 92% of the window width
             var margin = angular.extend({},MARGIN,marginOverride),
@@ -2643,6 +2570,13 @@ angular.module('npn-viz-tool.vis',[
             var a = leastSquaresCoeff[1],
                 b = leastSquaresCoeff[0];
             return a + (b*x);
+        },
+        filterSuspectSummaryData: function(d){
+            var bad = (d.latitude === 0.0 || d.longitude === 0.0 || d.elevation_in_meters < 0);
+            if(bad) {
+                console.warn('suspect station data',d);
+            }
+            return !bad;
         }
     };
     return service;

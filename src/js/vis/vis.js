@@ -6,8 +6,8 @@ angular.module('npn-viz-tool.vis',[
     'ui.bootstrap'
 ])
 .factory('ChartService',['$window',function($window){
-    // TODO - currently this is hard coded info but should eventually
-    // be dynamically generated based on available screen realestate.
+    // some hard coded values that will be massaged into generated
+    // values at runtime.
     var CHART_W = 930,
         CHART_H =500,
         MARGIN = {top: 20, right: 30, bottom: 60, left: 40},
@@ -19,6 +19,7 @@ angular.module('npn-viz-tool.vis',[
             height: HEIGHT
         };
     var service = {
+        ONE_DAY_MILLIS: (24*60*60*1000),
         getSizeInfo: function(marginOverride){
             // make the chart 92% of the window width
             var margin = angular.extend({},MARGIN,marginOverride),
@@ -56,6 +57,13 @@ angular.module('npn-viz-tool.vis',[
             var a = leastSquaresCoeff[1],
                 b = leastSquaresCoeff[0];
             return a + (b*x);
+        },
+        filterSuspectSummaryData: function(d){
+            var bad = (d.latitude === 0.0 || d.longitude === 0.0 || d.elevation_in_meters < 0);
+            if(bad) {
+                console.warn('suspect station data',d);
+            }
+            return !bad;
         }
     };
     return service;
