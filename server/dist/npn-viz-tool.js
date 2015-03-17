@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-13
+ * Version: 0.1.0 - 2015-03-16
  */
 
 angular.module('npn-viz-tool.vis-calendar',[
@@ -142,7 +142,7 @@ angular.module('npn-viz-tool.vis-calendar',[
         console.log('y.rangeBand()',y.rangeBand());
 
         var dayOne = x.domain()[0],
-            dayOneTime = dayOne.getTime(),
+            dayOneTime = dayOne.getTime()-ChartService.ONE_DAY_MILLIS, // minus 1-day because doy is index 1
             dy = y.rangeBand()/2;
         console.log('dayOne',dayOne);
         console.log('x.domain',x.domain());
