@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-16
+ * Version: 0.1.0 - 2015-03-18
  */
 
 angular.module('npn-viz-tool.vis-calendar',[
@@ -2597,7 +2597,7 @@ angular.module('npn-viz-tool.vis',[
             // if geo filtering add the explicit station_ids in question.
             if(FilterService.getFilter().getGeoArgs().length) {
                 FilterService.getFilteredMarkers().forEach(function(marker,i){
-                    params['site_id['+i+']'] = marker.station_id;
+                    params['station_id['+i+']'] = marker.station_id;
                 });
             }
             $http({
