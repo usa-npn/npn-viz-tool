@@ -58,8 +58,10 @@ body {
     min-height: 0px;
     max-height: 2000px;
 }
-
-#npn-working {
+#vis-container {
+    position: relative;
+}
+#npn-working, #vis-working {
     width: 100%;
     height: 100%;
     color: #fff;
@@ -68,9 +70,17 @@ body {
     top: 0px;
     left: 0px;
     z-index: 2000;
-    text-align: center;;
+    text-align: center;
+
+}
+#npn-working {
     i {
         margin-top: 30%;
+    }
+}
+#vis-working {
+    i {
+        margin-top: 15%;
     }
 }
 
@@ -315,9 +325,9 @@ ul.filter-tags {
 
 .vis-dialog-window {
     .modal-dialog {
-        margin: 0px;
-        width: 100%;
-        height: 100%;
+        margin: 8px;
+        width: 98%;
+        height: 98%;
         .modal-content {
             height: 100%;
         }
@@ -349,6 +359,18 @@ ul.filter-tags {
               stroke-dasharray: 2,2;
             }
         }
+    }
+}
+form.plot-criteria-form {
+    margin-left: 30px;
+}
+ul.to-plot {
+    li.criteria {
+        @include rounded(4px);
+        border: 1px solid #aaa;
+        padding: 5px;
+        margin-left: 5px;
+        margin-bottom: 5px;
     }
 }
 .axis text {

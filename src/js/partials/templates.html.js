@@ -3,13 +3,13 @@ angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/date
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
     "<vis-dialog title=\"Calendar\" modal=\"modal\">\n" +
-    "<form class=\"form-inline\">\n" +
+    "<form class=\"form-inline plot-criteria-form\">\n" +
     "    <div class=\"form-group\" ng-if=\"!selection.start_year\">\n" +
-    "        <label for=\"yearsInput\">Select a starting year</label>\n" +
+    "        <label for=\"yearsInput\">Starting Year</label>\n" +
     "        <select name=\"yearsInput\" class=\"form-control\" ng-model=\"selection.start_year\" ng-options=\"year for year in availableYears\"></select>\n" +
     "    </div>\n" +
     "    <div class=\"form-group animated-show-hide\" ng-if=\"selection.start_year\">\n" +
-    "        <label for=\"toPlotInput\">Select Species/Phenophase pairs</label>\n" +
+    "        <label for=\"toPlotInput\">Species/Phenophase Pairs</label>\n" +
     "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
     "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
@@ -32,12 +32,15 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            <li>{{selection.end_year}}</li>\n" +
     "        </ul>\n" +
     "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
-    "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
+    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
-    "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
-    "        <svg class=\"chart\"></svg>\n" +
+    "        <div id=\"vis-container\">\n" +
+    "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
+    "            <svg class=\"chart\"></svg>\n" +
+    "        </div>\n" +
     "        </center>\n" +
     "    </div>\n" +
     "</div>\n" +
@@ -211,9 +214,9 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
 angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/scatter/scatter.html",
     "<vis-dialog title=\"Scatter Plot\" modal=\"modal\">\n" +
-    "<form class=\"form-inline\">\n" +
+    "<form class=\"form-inline plot-criteria-form\">\n" +
     "    <div class=\"form-group\">\n" +
-    "        <label for=\"toPlotInput\">Select up to three Species/Phenophase pairs</label>\n" +
+    "        <label for=\"toPlotInput\">Species/Phenophase Pairs (at most three)</label>\n" +
     "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
     "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
@@ -231,15 +234,22 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "    <div class=\"panel-body\">\n" +
     "        <center>\n" +
     "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
-    "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
+    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
     "            <li>\n" +
     "                <select class=\"form-control vis-axis\" ng-model=\"selection.axis\" ng-options=\"o as o.label for o in axis\"></select>\n" +
     "            </li>\n" +
-    "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li>\n" +
+    "                <label for=\"fitLinesInput\">Fit Line{{toPlot.length > 1 ? 's' : ''}}</label>\n" +
+    "                <input type=\"checkbox\" id=\"fitLinesInput\" ng-model=\"selection.regressionLines\" />\n" +
+    "            </li>\n" +
+    "            <li><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
-    "        <svg class=\"chart\"></svg>\n" +
+    "        <div id=\"vis-container\">\n" +
+    "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
+    "            <svg class=\"chart\"></svg>\n" +
+    "        </div>\n" +
     "        </center>\n" +
     "    </div>\n" +
     "</div>\n" +

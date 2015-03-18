@@ -12,8 +12,14 @@ angular.module('npn-viz-tool.vis-scatter',[
     $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation'}];
     $scope.selection = {
         color: 0,
-        axis: $scope.axis[0]
+        axis: $scope.axis[0],
+        regressionLines: false
     };
+    $scope.$watch('selection.regressionLines',function(nv,ov) {
+        if(nv !== ov) {
+            draw();
+        }
+    });
     $scope.plottable = [];
     angular.forEach(FilterService.getFilter().getSpeciesArgs(),function(sarg) {
         angular.forEach(sarg.phenophases,function(pp){
@@ -50,7 +56,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         start_year = dateArg.arg.start_date,
         start_date = new Date(start_year,0),
         end_year = dateArg.arg.end_date,
-        sizing = ChartService.getSizeInfo({top: 80}),
+        sizing = ChartService.getSizeInfo({top: 80,left: 60}),
         chart,
         x = d3.scale.linear().range([0,sizing.width]).domain([0,100]), // bogus domain initially
         xAxis = d3.svg.axis().scale(x).orient('bottom'),
@@ -80,8 +86,8 @@ angular.module('npn-viz-tool.vis-scatter',[
               .call(yAxis)
             .append('text')
             .attr('transform', 'rotate(-90)')
-            .attr('y', 6)
-            .attr('dy', '.71em')
+            .attr('y', 0)
+            .attr('dy', '-3.5em')
             .style('text-anchor', 'end')
             .text('Onset DOY');
     },500);
@@ -102,6 +108,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         if(!data) {
             return;
         }
+        $scope.working = true;
         // update the x-axis
         var padding = 1;
         function xData(d) { return d[$scope.selection.axis.key]; }
@@ -112,8 +119,8 @@ angular.module('npn-viz-tool.vis-scatter',[
         xA.selectAll('.axis-label').remove();
         xA.append('text')
           .attr('class','axis-label')
-          .attr('x',sizing.width-6)
-          .attr('dy', '-.71em')
+          .attr('x',sizing.width)
+          .attr('dy', '3em')
           .style('text-anchor', 'end')
           .text($scope.selection.axis.label);
 
@@ -154,7 +161,8 @@ angular.module('npn-viz-tool.vis-scatter',[
                 y2 = ChartService.approxY(leastSquaresCoeff,x2);
             regressionLines.push({
                 id: pair.species_id+'.'+pair.phenophase_id,
-                legend: $filter('speciesTitle')(pair)+'/'+pair.phenophase_name+' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')',
+                legend: $filter('speciesTitle')(pair)+'/'+pair.phenophase_name+
+                        ($scope.selection.regressionLines ? ' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')' : ''),
                 color: color,
                 p1: [x1,y1],
                 p2: [x2,y2]
@@ -174,7 +182,8 @@ angular.module('npn-viz-tool.vis-scatter',[
             .attr('x2', function(d) { return x(d.p2[0]); })
             .attr('y2', function(d) { return y(d.p2[1]); })
             .attr('stroke', function(d) { return d.color; })
-            .attr('stroke-width', 2);
+            .attr('stroke-width', 2)
+            .style('display', $scope.selection.regressionLines ? 'inherit' : 'none');
 
 
         chart.select('.legend').remove();
@@ -184,21 +193,25 @@ angular.module('npn-viz-tool.vis-scatter',[
           .style('font-size','12px')
           .call(d3.legend);
 
-        // IMPORTANT: This may not work perfectly on all browsers because of support for
-        // innerHtml on SVG elements (or lack thereof) so using shim
-        // https://code.google.com/p/innersvg/
-        // d3.legend deals with, not onreasonably, data-legend as a simple string
-        // alternatively extend d3.legend or do what it does here manually...
-        // replace 'R^2' with 'R<tspan ...>2</tspan>'
-        // the baseline-shift doesn't appear to work on firefox however
-        chart.selectAll('.legend text').html(function(d) {
-                return d.key.replace('R^2','R<tspan style="baseline-shift: super; font-size: 8px;">2</tspan>');
-            });
+        if($scope.selection.regressionLines) {
+            // IMPORTANT: This may not work perfectly on all browsers because of support for
+            // innerHtml on SVG elements (or lack thereof) so using shim
+            // https://code.google.com/p/innersvg/
+            // d3.legend deals with, not onreasonably, data-legend as a simple string
+            // alternatively extend d3.legend or do what it does here manually...
+            // replace 'R^2' with 'R<tspan ...>2</tspan>'
+            // the baseline-shift doesn't appear to work on firefox however
+            chart.selectAll('.legend text').html(function(d) {
+                    return d.key.replace('R^2','R<tspan style="baseline-shift: super; font-size: 8px;">2</tspan>');
+                });
+        }
+        $scope.working = false;
     }
     $scope.visualize = function() {
         if(data) {
             return draw();
         }
+        $scope.working = true;
         console.log('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {
@@ -214,14 +227,19 @@ angular.module('npn-viz-tool.vis-scatter',[
             params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
         });
         ChartService.getSummarizedData(params,function(response){
-            response.forEach(function(d,i){
-                d.id = i;
-                // this is the day # that will get plotted 1 being the first day of the start_year
-                // 366 being the first day of start_year+1, etc.
-                d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
-                d.color = $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]);
+            data = response.filter(function(d,i) {
+                var keep = d.first_yes_year === d.last_yes_year;
+                if(!keep) {
+                    console.log('filtering out record with first/last yes in different years.',d);
+                } else {
+                    d.id = i;
+                    // this is the day # that will get plotted 1 being the first day of the start_year
+                    // 366 being the first day of start_year+1, etc.
+                    d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
+                    d.color = $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]);
+                }
+                return keep;
             });
-            data = response;
             console.log('scatterPlot data',data);
             draw();
         });

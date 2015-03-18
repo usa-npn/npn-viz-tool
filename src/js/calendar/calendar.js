@@ -124,7 +124,7 @@ angular.module('npn-viz-tool.vis-calendar',[
         if(!data) {
             return;
         }
-
+        $scope.working = true;
         // update the x-axis
         xAxis.scale(x); // x.domain was updated in a watch when the date range was set
         chart.selectAll('g .x.axis').call(xAxis);
@@ -156,12 +156,14 @@ angular.module('npn-viz-tool.vis-calendar',[
             .attr('y2', function(d,i) { return y(i)+dy; })
             .attr('stroke', function(d) { return $scope.colorScale(d.color); })
             .attr('stroke-width', y.rangeBand());
+        $scope.working = false;
     }
 
     $scope.visualize = function() {
         if(data) {
             return draw();
         }
+        $scope.working = true;
         console.log('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {

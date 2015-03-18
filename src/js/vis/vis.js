@@ -30,7 +30,7 @@ angular.module('npn-viz-tool.vis',[
         getSizeInfo: function(marginOverride){
             // make the chart 92% of the window width
             var margin = angular.extend({},MARGIN,marginOverride),
-                cw = Math.round($window.innerWidth*0.92),
+                cw = Math.round($window.innerWidth*0.90),
                 ch = Math.round(cw*0.5376), // ratio based on initial w/h of 930/500
                 w = cw  - margin.left - margin.right,
                 h = ch  - margin.top - margin.bottom,

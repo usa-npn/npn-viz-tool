@@ -129,7 +129,7 @@ angular.module('npn-viz-tool.vis-calendar',[
         if(!data) {
             return;
         }
-
+        $scope.working = true;
         // update the x-axis
         xAxis.scale(x); // x.domain was updated in a watch when the date range was set
         chart.selectAll('g .x.axis').call(xAxis);
@@ -161,12 +161,14 @@ angular.module('npn-viz-tool.vis-calendar',[
             .attr('y2', function(d,i) { return y(i)+dy; })
             .attr('stroke', function(d) { return $scope.colorScale(d.color); })
             .attr('stroke-width', y.rangeBand());
+        $scope.working = false;
     }
 
     $scope.visualize = function() {
         if(data) {
             return draw();
         }
+        $scope.working = true;
         console.log('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {
@@ -1565,13 +1567,13 @@ angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/date
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
     "<vis-dialog title=\"Calendar\" modal=\"modal\">\n" +
-    "<form class=\"form-inline\">\n" +
+    "<form class=\"form-inline plot-criteria-form\">\n" +
     "    <div class=\"form-group\" ng-if=\"!selection.start_year\">\n" +
-    "        <label for=\"yearsInput\">Select a starting year</label>\n" +
+    "        <label for=\"yearsInput\">Starting Year</label>\n" +
     "        <select name=\"yearsInput\" class=\"form-control\" ng-model=\"selection.start_year\" ng-options=\"year for year in availableYears\"></select>\n" +
     "    </div>\n" +
     "    <div class=\"form-group animated-show-hide\" ng-if=\"selection.start_year\">\n" +
-    "        <label for=\"toPlotInput\">Select Species/Phenophase pairs</label>\n" +
+    "        <label for=\"toPlotInput\">Species/Phenophase Pairs</label>\n" +
     "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
     "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
@@ -1594,12 +1596,15 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            <li>{{selection.end_year}}</li>\n" +
     "        </ul>\n" +
     "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
-    "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
+    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
-    "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
-    "        <svg class=\"chart\"></svg>\n" +
+    "        <div id=\"vis-container\">\n" +
+    "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
+    "            <svg class=\"chart\"></svg>\n" +
+    "        </div>\n" +
     "        </center>\n" +
     "    </div>\n" +
     "</div>\n" +
@@ -1773,9 +1778,9 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
 angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/scatter/scatter.html",
     "<vis-dialog title=\"Scatter Plot\" modal=\"modal\">\n" +
-    "<form class=\"form-inline\">\n" +
+    "<form class=\"form-inline plot-criteria-form\">\n" +
     "    <div class=\"form-group\">\n" +
-    "        <label for=\"toPlotInput\">Select up to three Species/Phenophase pairs</label>\n" +
+    "        <label for=\"toPlotInput\">Species/Phenophase Pairs (at most three)</label>\n" +
     "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
     "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
@@ -1793,15 +1798,22 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "    <div class=\"panel-body\">\n" +
     "        <center>\n" +
     "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
-    "            <li ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
+    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
     "            <li>\n" +
     "                <select class=\"form-control vis-axis\" ng-model=\"selection.axis\" ng-options=\"o as o.label for o in axis\"></select>\n" +
     "            </li>\n" +
-    "            <li class=\"animated-show-hide\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li>\n" +
+    "                <label for=\"fitLinesInput\">Fit Line{{toPlot.length > 1 ? 's' : ''}}</label>\n" +
+    "                <input type=\"checkbox\" id=\"fitLinesInput\" ng-model=\"selection.regressionLines\" />\n" +
+    "            </li>\n" +
+    "            <li><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
-    "        <svg class=\"chart\"></svg>\n" +
+    "        <div id=\"vis-container\">\n" +
+    "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
+    "            <svg class=\"chart\"></svg>\n" +
+    "        </div>\n" +
     "        </center>\n" +
     "    </div>\n" +
     "</div>\n" +
@@ -1906,8 +1918,14 @@ angular.module('npn-viz-tool.vis-scatter',[
     $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation'}];
     $scope.selection = {
         color: 0,
-        axis: $scope.axis[0]
+        axis: $scope.axis[0],
+        regressionLines: false
     };
+    $scope.$watch('selection.regressionLines',function(nv,ov) {
+        if(nv !== ov) {
+            draw();
+        }
+    });
     $scope.plottable = [];
     angular.forEach(FilterService.getFilter().getSpeciesArgs(),function(sarg) {
         angular.forEach(sarg.phenophases,function(pp){
@@ -1944,7 +1962,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         start_year = dateArg.arg.start_date,
         start_date = new Date(start_year,0),
         end_year = dateArg.arg.end_date,
-        sizing = ChartService.getSizeInfo({top: 80}),
+        sizing = ChartService.getSizeInfo({top: 80,left: 60}),
         chart,
         x = d3.scale.linear().range([0,sizing.width]).domain([0,100]), // bogus domain initially
         xAxis = d3.svg.axis().scale(x).orient('bottom'),
@@ -1974,8 +1992,8 @@ angular.module('npn-viz-tool.vis-scatter',[
               .call(yAxis)
             .append('text')
             .attr('transform', 'rotate(-90)')
-            .attr('y', 6)
-            .attr('dy', '.71em')
+            .attr('y', 0)
+            .attr('dy', '-3.5em')
             .style('text-anchor', 'end')
             .text('Onset DOY');
     },500);
@@ -1996,6 +2014,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         if(!data) {
             return;
         }
+        $scope.working = true;
         // update the x-axis
         var padding = 1;
         function xData(d) { return d[$scope.selection.axis.key]; }
@@ -2006,8 +2025,8 @@ angular.module('npn-viz-tool.vis-scatter',[
         xA.selectAll('.axis-label').remove();
         xA.append('text')
           .attr('class','axis-label')
-          .attr('x',sizing.width-6)
-          .attr('dy', '-.71em')
+          .attr('x',sizing.width)
+          .attr('dy', '3em')
           .style('text-anchor', 'end')
           .text($scope.selection.axis.label);
 
@@ -2048,7 +2067,8 @@ angular.module('npn-viz-tool.vis-scatter',[
                 y2 = ChartService.approxY(leastSquaresCoeff,x2);
             regressionLines.push({
                 id: pair.species_id+'.'+pair.phenophase_id,
-                legend: $filter('speciesTitle')(pair)+'/'+pair.phenophase_name+' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')',
+                legend: $filter('speciesTitle')(pair)+'/'+pair.phenophase_name+
+                        ($scope.selection.regressionLines ? ' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')' : ''),
                 color: color,
                 p1: [x1,y1],
                 p2: [x2,y2]
@@ -2068,7 +2088,8 @@ angular.module('npn-viz-tool.vis-scatter',[
             .attr('x2', function(d) { return x(d.p2[0]); })
             .attr('y2', function(d) { return y(d.p2[1]); })
             .attr('stroke', function(d) { return d.color; })
-            .attr('stroke-width', 2);
+            .attr('stroke-width', 2)
+            .style('display', $scope.selection.regressionLines ? 'inherit' : 'none');
 
 
         chart.select('.legend').remove();
@@ -2078,21 +2099,25 @@ angular.module('npn-viz-tool.vis-scatter',[
           .style('font-size','12px')
           .call(d3.legend);
 
-        // IMPORTANT: This may not work perfectly on all browsers because of support for
-        // innerHtml on SVG elements (or lack thereof) so using shim
-        // https://code.google.com/p/innersvg/
-        // d3.legend deals with, not onreasonably, data-legend as a simple string
-        // alternatively extend d3.legend or do what it does here manually...
-        // replace 'R^2' with 'R<tspan ...>2</tspan>'
-        // the baseline-shift doesn't appear to work on firefox however
-        chart.selectAll('.legend text').html(function(d) {
-                return d.key.replace('R^2','R<tspan style="baseline-shift: super; font-size: 8px;">2</tspan>');
-            });
+        if($scope.selection.regressionLines) {
+            // IMPORTANT: This may not work perfectly on all browsers because of support for
+            // innerHtml on SVG elements (or lack thereof) so using shim
+            // https://code.google.com/p/innersvg/
+            // d3.legend deals with, not onreasonably, data-legend as a simple string
+            // alternatively extend d3.legend or do what it does here manually...
+            // replace 'R^2' with 'R<tspan ...>2</tspan>'
+            // the baseline-shift doesn't appear to work on firefox however
+            chart.selectAll('.legend text').html(function(d) {
+                    return d.key.replace('R^2','R<tspan style="baseline-shift: super; font-size: 8px;">2</tspan>');
+                });
+        }
+        $scope.working = false;
     }
     $scope.visualize = function() {
         if(data) {
             return draw();
         }
+        $scope.working = true;
         console.log('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {
@@ -2108,14 +2133,19 @@ angular.module('npn-viz-tool.vis-scatter',[
             params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
         });
         ChartService.getSummarizedData(params,function(response){
-            response.forEach(function(d,i){
-                d.id = i;
-                // this is the day # that will get plotted 1 being the first day of the start_year
-                // 366 being the first day of start_year+1, etc.
-                d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
-                d.color = $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]);
+            data = response.filter(function(d,i) {
+                var keep = d.first_yes_year === d.last_yes_year;
+                if(!keep) {
+                    console.log('filtering out record with first/last yes in different years.',d);
+                } else {
+                    d.id = i;
+                    // this is the day # that will get plotted 1 being the first day of the start_year
+                    // 366 being the first day of start_year+1, etc.
+                    d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
+                    d.color = $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]);
+                }
+                return keep;
             });
-            data = response;
             console.log('scatterPlot data',data);
             draw();
         });
@@ -2558,7 +2588,7 @@ angular.module('npn-viz-tool.vis',[
         getSizeInfo: function(marginOverride){
             // make the chart 92% of the window width
             var margin = angular.extend({},MARGIN,marginOverride),
-                cw = Math.round($window.innerWidth*0.92),
+                cw = Math.round($window.innerWidth*0.90),
                 ch = Math.round(cw*0.5376), // ratio based on initial w/h of 930/500
                 w = cw  - margin.left - margin.right,
                 h = ch  - margin.top - margin.bottom,
