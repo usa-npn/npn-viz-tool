@@ -31,8 +31,8 @@ angular.module('npn-viz-tool.vis-calendar',[
         }).tickFormat(formatYTickLabels);
 
     $scope.modal = $modalInstance;
-    $scope.colorScale = d3.scale.category20();
-    $scope.colors = new Array(20);
+    $scope.colorScale = FilterService.getColorScale();
+    $scope.colors = $scope.colorScale.domain();
     $scope.selection = {
         color: 0
     };
@@ -545,7 +545,17 @@ angular.module('npn-viz-tool.filter',[
 .factory('FilterService',['$q','$http','$rootScope','$timeout','uiGmapGoogleMapApi','NpnFilter',
     function($q,$http,$rootScope,$timeout,uiGmapGoogleMapApi,NpnFilter){
     // NOTE: this scale is limited to 20 colors
-    var colorScale = d3.scale.category20(),
+    var color_domain = d3.range(0,20),
+        cat20 = d3.scale.category20().domain(color_domain),
+        cat20b = d3.scale.category20b().domain(color_domain),
+        colorScale = d3.scale.ordinal().domain(color_domain).range(color_domain.map(function(d,i){
+            return (i%2) === 0 ? cat20(i) : cat20b(i-1);
+        })),
+        choroplethScales = color_domain.map(function(i) {
+            var maxColor = colorScale(i),
+                minColor = d3.rgb(maxColor).hsl().brighter(1.25).rgb().toString();
+            return d3.scale.linear().range([minColor,maxColor]);
+        }),
         filter = new NpnFilter(),
         filterUpdateCount,
         paused = false,
@@ -599,6 +609,7 @@ angular.module('npn-viz-tool.filter',[
                 var i,sid,speciesFilter,keeps = 0,
                     n,hitMap = {};
 
+
                 if(geos.length > 0) {
                     var gid,hit = false;
                     for(i = 0; i < geos.length; i++) {
@@ -611,6 +622,8 @@ angular.module('npn-viz-tool.filter',[
                     }
                 }
 
+                station.observationCount = 0;
+
                 for(sid in station.species) {
                     speciesFilter = filter.getSpeciesArg(sid);
                     hitMap[sid] = 0;
@@ -620,10 +633,12 @@ angular.module('npn-viz-tool.filter',[
                     }
                     if((n=speciesFilter.$filter(station.species[sid]))) {
                         observationCount += n;
+                        station.observationCount += n;
                         hitMap[sid]++;
                         keeps++;
                         if(keeps === 1) {
                             // this is the first "hit" and dictates the marker color
+                            station.markerOpts.icon.fillColorIdx = speciesFilter.colorIdx;
                             station.markerOpts.icon.fillColor = speciesFilter.color;
                         }
                     }
@@ -648,9 +663,28 @@ angular.module('npn-viz-tool.filter',[
                     longitude: m.longitude,
                     markerOpts: m.markerOpts,
                     station_id: m.station_id,
-                    station_name: m.station_name
+                    station_name: m.station_name,
+                    observationCount: m.observationCount
                 };
             });
+        // sort markers into buckets based on color and then choropleth colors based on observationCount
+        filter.getSpeciesArgs().forEach(function(arg) {
+            var argMarkers = filtered.filter(function(m) {
+                    return arg.colorIdx === m.markerOpts.icon.fillColorIdx;
+                }),
+                minCount = d3.min(argMarkers,function(m) { return m.observationCount; }),
+                maxCount = d3.max(argMarkers,function(m) { return m.observationCount; });
+            if(minCount !== maxCount) {
+                console.log('there is variability in observationCounts', minCount, maxCount);
+                console.log('arg markers',arg,argMarkers);
+                var choroplethScale = choroplethScales[arg.colorIdx];
+                choroplethScale.domain([minCount,maxCount]);
+                argMarkers.forEach(function(marker){
+                    marker.markerOpts.icon.fillColor = choroplethScale(marker.observationCount);
+                    marker.$markerKey = marker.station_id+'.'+marker.markerOpts.icon.fillColor+'.'+marker.markerOpts.icon.strokeColor;
+                });
+            }
+        });
         $rootScope.$broadcast('filter-phase2-end',{
             station: filtered.length,
             observation: observationCount
@@ -725,6 +759,7 @@ angular.module('npn-viz-tool.filter',[
     }
     function updateColors() {
         filter.getSpeciesArgs().forEach(function(arg,i){
+            arg.colorIdx = i;
             arg.color = colorScale(i);
         });
     }
@@ -775,6 +810,9 @@ angular.module('npn-viz-tool.filter',[
         resetFilter: function() {
             filter.reset();
             broadcastFilterReset();
+        },
+        getColorScale: function() {
+            return colorScale;
         }
     };
 }])
@@ -1954,8 +1992,8 @@ angular.module('npn-viz-tool.vis-scatter',[
 .controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService',
     function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService){
     $scope.modal = $modalInstance;
-    $scope.colorScale = d3.scale.category20();
-    $scope.colors = new Array(20);
+    $scope.colorScale = FilterService.getColorScale();
+    $scope.colors = $scope.colorScale.domain();
     $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation (m)'}];
     $scope.selection = {
         color: 0,

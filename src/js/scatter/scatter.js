@@ -7,8 +7,8 @@ angular.module('npn-viz-tool.vis-scatter',[
 .controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService',
     function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService){
     $scope.modal = $modalInstance;
-    $scope.colorScale = d3.scale.category20();
-    $scope.colors = new Array(20);
+    $scope.colorScale = FilterService.getColorScale();
+    $scope.colors = $scope.colorScale.domain();
     $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation (m)'}];
     $scope.selection = {
         color: 0,

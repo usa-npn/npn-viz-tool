@@ -296,9 +296,6 @@ ul.filter-tags .filter-tag .phenophase-list {
   width: 98%;
   height: 98%;
 }
-.vis-dialog-window .modal-dialog .modal-content {
-  height: 100%;
-}
 
 .vis-dialog .main-vis-panel {
   overflow: auto;

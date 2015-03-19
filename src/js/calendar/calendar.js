@@ -26,8 +26,8 @@ angular.module('npn-viz-tool.vis-calendar',[
         }).tickFormat(formatYTickLabels);
 
     $scope.modal = $modalInstance;
-    $scope.colorScale = d3.scale.category20();
-    $scope.colors = new Array(20);
+    $scope.colorScale = FilterService.getColorScale();
+    $scope.colors = $scope.colorScale.domain();
     $scope.selection = {
         color: 0
     };
