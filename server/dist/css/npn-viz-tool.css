@@ -353,4 +353,9 @@ svg {
   opacity: 0.8;
 }
 
+.filter-disclaimer {
+  float: right;
+  font-size: .8em;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */

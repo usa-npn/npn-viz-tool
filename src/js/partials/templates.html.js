@@ -244,11 +244,12 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "                <label for=\"fitLinesInput\">Fit Line{{toPlot.length > 1 ? 's' : ''}}</label>\n" +
     "                <input type=\"checkbox\" id=\"fitLinesInput\" ng-model=\"selection.regressionLines\" />\n" +
     "            </li>\n" +
-    "            <li><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li ng-if=\"!data\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
     "            <svg class=\"chart\"></svg>\n" +
+    "            <div ng-if=\"filteredDisclaimer\" class=\"filter-disclaimer\">Some selected data points have been filtered out from this visualization for quality assurance purposes.</div>\n" +
     "        </div>\n" +
     "        </center>\n" +
     "    </div>\n" +

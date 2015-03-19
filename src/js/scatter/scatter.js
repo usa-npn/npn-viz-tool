@@ -9,13 +9,18 @@ angular.module('npn-viz-tool.vis-scatter',[
     $scope.modal = $modalInstance;
     $scope.colorScale = d3.scale.category20();
     $scope.colors = new Array(20);
-    $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation'}];
+    $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation (m)'}];
     $scope.selection = {
         color: 0,
         axis: $scope.axis[0],
         regressionLines: false
     };
     $scope.$watch('selection.regressionLines',function(nv,ov) {
+        if(nv !== ov) {
+            draw();
+        }
+    });
+    $scope.$watch('selection.axis',function(nv,ov) {
         if(nv !== ov) {
             draw();
         }
@@ -96,12 +101,12 @@ angular.module('npn-viz-tool.vis-scatter',[
         if($scope.selection.toPlot) {
             $scope.toPlot.push(getNewToPlot());
             $scope.selection.color++;
-            data = undefined;
+            $scope.data = data = undefined;
         }
     };
     $scope.removeFromPlot = function(idx) {
         $scope.toPlot.splice(idx,1);
-        data = undefined;
+        $scope.data = data = undefined;
     };
 
     function draw() {
@@ -148,25 +153,27 @@ angular.module('npn-viz-tool.vis-scatter',[
         var regressionLines = [],float_fmt = d3.format('.2f');
         angular.forEach($scope.toPlot,function(pair){
             var color = $scope.colorScale(pair.color),
-                seriesData = data.filter(function(d) { return d.color === color; }),
-                datas = seriesData.sort(function(o1,o2){ // sorting isn't necessary but makes it easy to pick min/max x
-                    return o1[$scope.selection.axis.key] - o2[$scope.selection.axis.key];
-                }),
-                xSeries = datas.map(function(d) { return d[$scope.selection.axis.key]; }),
-                ySeries = datas.map(function(d) { return d.first_yes_doy; }),
-                leastSquaresCoeff = ChartService.leastSquares(xSeries,ySeries),
-                x1 = xSeries[0],
-                y1 = ChartService.approxY(leastSquaresCoeff,x1),
-                x2 = xSeries[xSeries.length-1],
-                y2 = ChartService.approxY(leastSquaresCoeff,x2);
-            regressionLines.push({
-                id: pair.species_id+'.'+pair.phenophase_id,
-                legend: $filter('speciesTitle')(pair)+'/'+pair.phenophase_name+
-                        ($scope.selection.regressionLines ? ' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')' : ''),
-                color: color,
-                p1: [x1,y1],
-                p2: [x2,y2]
-            });
+                seriesData = data.filter(function(d) { return d.color === color; });
+            if(seriesData.length > 0) {
+                var datas = seriesData.sort(function(o1,o2){ // sorting isn't necessary but makes it easy to pick min/max x
+                        return o1[$scope.selection.axis.key] - o2[$scope.selection.axis.key];
+                    }),
+                    xSeries = datas.map(function(d) { return d[$scope.selection.axis.key]; }),
+                    ySeries = datas.map(function(d) { return d.first_yes_doy; }),
+                    leastSquaresCoeff = ChartService.leastSquares(xSeries,ySeries),
+                    x1 = xSeries[0],
+                    y1 = ChartService.approxY(leastSquaresCoeff,x1),
+                    x2 = xSeries[xSeries.length-1],
+                    y2 = ChartService.approxY(leastSquaresCoeff,x2);
+                regressionLines.push({
+                    id: pair.species_id+'.'+pair.phenophase_id,
+                    legend: $filter('speciesTitle')(pair)+'/'+pair.phenophase_name+
+                            ($scope.selection.regressionLines ? ' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')' : ''),
+                    color: color,
+                    p1: [x1,y1],
+                    p2: [x2,y2]
+                });
+            }
         });
         var regression = chart.selectAll('.regression')
             .data(regressionLines,function(d) { return d.id; });
@@ -227,11 +234,9 @@ angular.module('npn-viz-tool.vis-scatter',[
             params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
         });
         ChartService.getSummarizedData(params,function(response){
-            data = response.filter(function(d,i) {
-                var keep = d.first_yes_year === d.last_yes_year;
-                if(!keep) {
-                    console.log('filtering out record with first/last yes in different years.',d);
-                } else {
+            $scope.data = data = response.filter(function(d,i) {
+                var keep = d.numdays_since_prior_no >= 0;
+                if(keep) {
                     d.id = i;
                     // this is the day # that will get plotted 1 being the first day of the start_year
                     // 366 being the first day of start_year+1, etc.
@@ -240,6 +245,8 @@ angular.module('npn-viz-tool.vis-scatter',[
                 }
                 return keep;
             });
+            console.log('filtered out '+(response.length-data.length)+'/'+response.length+' records with negative num_days_prior_no.');
+            $scope.filteredDisclaimer = response.length != data.length;
             console.log('scatterPlot data',data);
             draw();
         });
