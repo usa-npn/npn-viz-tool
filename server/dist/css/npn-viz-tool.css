@@ -300,13 +300,14 @@ ul.filter-tags .filter-tag .phenophase-list {
   height: 100%;
 }
 
-.vis-dialog.scatter-plot .main-vis-panel, .vis-dialog.calendar .main-vis-panel {
+.vis-dialog .main-vis-panel {
+  overflow: auto;
   margin-top: 15px;
 }
-.vis-dialog.scatter-plot .main-vis-panel a, .vis-dialog.calendar .main-vis-panel a {
+.vis-dialog .main-vis-panel a {
   color: #000;
 }
-.vis-dialog.scatter-plot .main-vis-panel svg .circle, .vis-dialog.calendar .main-vis-panel svg .circle {
+.vis-dialog.scatter-plot svg .circle {
   stroke: #333;
   stroke-width: 1;
 }
@@ -353,9 +354,13 @@ svg {
   opacity: 0.8;
 }
 
+.disclaimer, .filter-disclaimer {
+  margin-top: 5px;
+  font-size: .75em;
+}
+
 .filter-disclaimer {
   float: right;
-  font-size: .8em;
 }
 
 /*# sourceMappingURL=npn-viz-tool.css.map */

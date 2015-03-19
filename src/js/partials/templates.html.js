@@ -35,7 +35,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
-    "            <li><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li ng-if=\"!data\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
@@ -75,7 +75,7 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "               typeahead=\"year for year in validYears | lte:selected.date.end_date | filter:$viewValue\"\n" +
     "               required placeholder=\"From\" /> - \n" +
     "        <input id=\"end_date\" type=\"number\" class=\"form-control\"\n" +
-    "                min=\"{{selected.date.start_date || 2008}}\"\n" +
+    "                min=\"{{selected.date.start_date || 1900}}\"\n" +
     "                ng-model=\"selected.date.end_date\"\n" +
     "                typeahead=\"year for year in validYears | gte:selected.date.start_date | filter:$viewValue\"\n" +
     "                required placeholder=\"To\" />\n" +
@@ -83,6 +83,10 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                ng-disabled=\"yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 10)\"\n" +
     "                ng-click=\"addDateRangeToFilter()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "        </form>\n" +
+    "        <p ng-if=\"selected.date.start_date < 2008\" class=\"disclaimer\">\n" +
+    "            You have selected a starting year prior to 2008 when the contemprary phenology data begins.  Prior to 2008 there is\n" +
+    "            a much more limited set of historical data and a limited number of species (E.g. lilac and honeysuckle).\n" +
+    "        </p>\n" +
     "    </li>\n" +
     "    <li class=\"divider\" ng-if=\"filterHasDate()\"></li>\n" +
     "    <li ng-if=\"filterHasDate()\">\n" +

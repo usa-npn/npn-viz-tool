@@ -709,10 +709,7 @@ console.log('markers',markers);
             $scope.filterHasDate = FilterService.hasDate;
             $scope.filterHasSufficientCriteria = FilterService.hasSufficientCriteria;
             var thisYear = (new Date()).getYear()+1900,
-                validYears = [];
-            for(var i = 2008; i <= thisYear; i++) {
-                validYears.push(i);
-            }
+                validYears = d3.range(1900,thisYear+1);
             $scope.thisYear = thisYear;
             $scope.validYears = validYears;
 

@@ -38,17 +38,18 @@ angular.module('npn-viz-tool.vis-calendar',[
     };
     $scope.plottable = [];
     angular.forEach(FilterService.getFilter().getSpeciesArgs(),function(sarg) {
+        $scope.plottable.push(angular.extend({},sarg.arg,{phenophase_id: -1, phenophase_name: 'All phenophases'}));
         angular.forEach(sarg.phenophases,function(pp){
             $scope.plottable.push(angular.extend({},sarg.arg,pp));
         });
     });
+    console.log('plottable',$scope.plottable);
     $scope.toPlot = [];
 
     if((end_year - start_year) <= 1) {
         $scope.selection.start_year = start_year;
     } else {
         $scope.availableYears = d3.range(start_year,end_year);
-        console.log('availableYears');
     }
     $scope.$watch('selection.start_year',function(){
         if($scope.selection.start_year) {
@@ -59,8 +60,9 @@ angular.module('npn-viz-tool.vis-calendar',[
         }
     });
 
-    function getNewToPlot() {
-        return angular.extend({},$scope.selection.toPlot,{color: $scope.selection.color});
+    function getNewToPlot(tp) {
+        var base = tp||$scope.selection.toPlot;
+        return angular.extend({},base,{color: $scope.selection.color});
     }
     $scope.canAddToPlot = function() {
         if(!$scope.selection.toPlot) {
@@ -102,20 +104,57 @@ angular.module('npn-viz-tool.vis-calendar',[
               .call(moveYTickLabels);
     },500);
 
-    $scope.addToPlot = function() {
-        if($scope.selection.toPlot) {
-            $scope.toPlot.push(getNewToPlot());
+    function advanceColor() {
+        if($scope.selection.color < 19) {
             $scope.selection.color++;
-            data = undefined;
+        } else {
+            $scope.selection.color = 0;
         }
+    }
+    function removeSpeciesFromPlot(species_id) {
+        for(;;){
+            var idx = -1,i;
+            for(i = 0; i < $scope.toPlot.length; i++) {
+                if($scope.toPlot[i].species_id === species_id) {
+                    idx = i;
+                    break;
+                }
+            }
+            if(idx === -1) {
+                break;
+            } else {
+                $scope.removeFromPlot(idx);
+            }
+        }
+    }
+    function addToPlot(toPlot) {
+        console.log('addToPlot',toPlot);
+        if(toPlot) {
+            if(toPlot.phenophase_id === -1) {
+                console.log('add all phenophases...');
+                removeSpeciesFromPlot(toPlot.species_id);
+                $scope.plottable.filter(function(p){
+                    return p.phenophase_id !== -1 && p.species_id === toPlot.species_id;
+                }).forEach(function(tp){
+                    addToPlot(tp);
+                });
+            } else {
+                $scope.toPlot.push(getNewToPlot(toPlot));
+                advanceColor();
+            }
+            $scope.data = data = undefined;
+        }
+    }
+    $scope.addToPlot = function() {
+        addToPlot($scope.selection.toPlot);
     };
     $scope.removeFromPlot = function(idx) {
         $scope.toPlot.splice(idx,1);
-        data = undefined;
+        $scope.data = data = undefined;
     };
 
     function moveYTickLabels(g) {
-      var dy = -1*((y.rangeBand()/2)+8);
+      var dy = -1*((y.rangeBand()/2)+2);
       g.selectAll('text')
           .attr('x', 0)
           .attr('dy', dy);
@@ -150,7 +189,7 @@ angular.module('npn-viz-tool.vis-calendar',[
 
         var inPhase = chart.selectAll('.in-phase').data(data);
         inPhase.exit().remove();
-        inPhase.enter().append('line').attr('class','in-phase');
+        inPhase.enter().insert('line',':first-child').attr('class','in-phase');
 
         inPhase
             .attr('data-legend',function(d) { return d.legend; } )
@@ -209,7 +248,7 @@ angular.module('npn-viz-tool.vis-calendar',[
                     },tp));
                 });
             });
-            data = toChart.reverse();
+            $scope.data = data = toChart.reverse();
             console.log('calendar data',data);
             draw();
         });
@@ -926,10 +965,7 @@ console.log('markers',markers);
             $scope.filterHasDate = FilterService.hasDate;
             $scope.filterHasSufficientCriteria = FilterService.hasSufficientCriteria;
             var thisYear = (new Date()).getYear()+1900,
-                validYears = [];
-            for(var i = 2008; i <= thisYear; i++) {
-                validYears.push(i);
-            }
+                validYears = d3.range(1900,thisYear+1);
             $scope.thisYear = thisYear;
             $scope.validYears = validYears;
 
@@ -1599,7 +1635,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
-    "            <li><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li ng-if=\"!data\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
@@ -1639,7 +1675,7 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "               typeahead=\"year for year in validYears | lte:selected.date.end_date | filter:$viewValue\"\n" +
     "               required placeholder=\"From\" /> - \n" +
     "        <input id=\"end_date\" type=\"number\" class=\"form-control\"\n" +
-    "                min=\"{{selected.date.start_date || 2008}}\"\n" +
+    "                min=\"{{selected.date.start_date || 1900}}\"\n" +
     "                ng-model=\"selected.date.end_date\"\n" +
     "                typeahead=\"year for year in validYears | gte:selected.date.start_date | filter:$viewValue\"\n" +
     "                required placeholder=\"To\" />\n" +
@@ -1647,6 +1683,10 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                ng-disabled=\"yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 10)\"\n" +
     "                ng-click=\"addDateRangeToFilter()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "        </form>\n" +
+    "        <p ng-if=\"selected.date.start_date < 2008\" class=\"disclaimer\">\n" +
+    "            You have selected a starting year prior to 2008 when the contemprary phenology data begins.  Prior to 2008 there is\n" +
+    "            a much more limited set of historical data and a limited number of species (E.g. lilac and honeysuckle).\n" +
+    "        </p>\n" +
     "    </li>\n" +
     "    <li class=\"divider\" ng-if=\"filterHasDate()\"></li>\n" +
     "    <li ng-if=\"filterHasDate()\">\n" +

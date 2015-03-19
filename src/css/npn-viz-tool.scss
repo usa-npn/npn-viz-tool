@@ -334,21 +334,21 @@ ul.filter-tags {
     }
 }
 .vis-dialog {
-    &.scatter-plot, &.calendar {
-        .main-vis-panel {
-            margin-top: 15px;
-            a {
-                color: #000;
-            }
-            svg {
-                .circle {
-                    stroke: #333;
-                    stroke-width: 1;
-                }
+    .main-vis-panel {
+        overflow: auto;
+        margin-top: 15px;
+        a {
+            color: #000;
+        }
+    }
+    &.scatter-plot {
+        svg {
+            .circle {
+                stroke: #333;
+                stroke-width: 1;
             }
         }
     }
-
     &.calendar {
         svg {
             .y.axis path {
@@ -390,7 +390,10 @@ svg {
   stroke: black;
   opacity: 0.8;
 }
+.disclaimer, .filter-disclaimer {
+    margin-top: 5px;
+    font-size: .75em;
+}
 .filter-disclaimer {
     float: right;
-    font-size: .8em;
 }

@@ -10,7 +10,7 @@
                typeahead="year for year in validYears | lte:selected.date.end_date | filter:$viewValue"
                required placeholder="From" /> - 
         <input id="end_date" type="number" class="form-control"
-                min="{{selected.date.start_date || 2008}}"
+                min="{{selected.date.start_date || 1900}}"
                 ng-model="selected.date.end_date"
                 typeahead="year for year in validYears | gte:selected.date.start_date | filter:$viewValue"
                 required placeholder="To" />
@@ -18,6 +18,10 @@
                 ng-disabled="yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 10)"
                 ng-click="addDateRangeToFilter()"><i class="fa fa-plus"></i></button>
         </form>
+        <p ng-if="selected.date.start_date < 2008" class="disclaimer">
+            You have selected a starting year prior to 2008 when the contemprary phenology data begins.  Prior to 2008 there is
+            a much more limited set of historical data and a limited number of species (E.g. lilac and honeysuckle).
+        </p>
     </li>
     <li class="divider" ng-if="filterHasDate()"></li>
     <li ng-if="filterHasDate()">
