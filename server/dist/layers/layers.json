@@ -17,6 +17,20 @@
     "img" : "layers/FWS_Ecoregions.jpg",
     "source" : "http://www.fws.gov/gis/data/national/#ECOSYSTEM REGIONS"
 },{
+    "id" : "ncar",
+    "label" : "National Climate Assessment Regions",
+    "file" : "NCA_Regions.json",
+    "source" : "http://services.arcgis.com/4OV0eRKiLAYkbH2J/ArcGIS/rest/services/NationalClimateAssessmentRegions/FeatureServer/0",
+    "img" : "layers/NCA_Regions.jpg",
+    "link" : "http://www.globalchange.gov/explore"
+},{
+    "id" : "npsr",
+    "label" : "National Park Service Regions",
+    "file" : "NPS_Regions.json",
+    "source" : "https://raw.githubusercontent.com/nationalparkservice/park-tiles/master/data-import/data/nps-regions.geojson",
+    "img" : "layers/NPS_Regions.jpg",
+    "link" : "http://www.nps.gov/hdp/regions.htm"
+},{
     "id" : "lccs",
     "label" : "LCCs",
     "file" : "FWS_LCC.json",

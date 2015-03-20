@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-19
+ * Version: 0.1.0 - 2015-03-20
  */
 
 angular.module('npn-viz-tool.vis-calendar',[
@@ -1891,7 +1891,7 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
     "            <svg class=\"chart\"></svg>\n" +
-    "            <div ng-if=\"filteredDisclaimer\" class=\"filter-disclaimer\">Some selected data points have been filtered out from this visualization for quality assurance purposes.</div>\n" +
+    "            <div ng-if=\"filteredDisclaimer\" class=\"filter-disclaimer\">For quality assurance purposes, only onset dates that are preceded by negative observations are included in the visualization.</div>\n" +
     "        </div>\n" +
     "        </center>\n" +
     "    </div>\n" +

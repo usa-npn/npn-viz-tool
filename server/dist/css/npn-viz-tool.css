@@ -253,6 +253,9 @@ ul.filter-tags .filter-tag .phenophase-list {
   padding: 5px;
 }
 
+.tool-content.layers ul {
+  margin-bottom: 50px;
+}
 .tool-content.layers li {
   margin-top: 10px;
   padding-bottom: 10px;

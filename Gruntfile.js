@@ -106,6 +106,7 @@ module.exports = function(grunt){
                     dest: '<%= dist %>/'
                 }]
             },
+            /* just keep one copy in dist, not in src
             geojson: {
                 files:[{
                     expand: true,
@@ -113,7 +114,7 @@ module.exports = function(grunt){
                     cwd: 'src/',
                     dest: '<%= dist %>/'
                 }]
-            },
+            },*/
             img: {
                 files:[{
                     expand: true,
