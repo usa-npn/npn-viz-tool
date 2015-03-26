@@ -18,7 +18,6 @@ angular.module('npn-viz-tool.vis-calendar',[
             return d;
         }).tickFormat(formatYTickLabels);
 
-
     $scope.validYears = d3.range(1900,((new Date()).getFullYear()+1));
     $scope.modal = $modalInstance;
     $scope.colorScale = FilterService.getColorScale();
@@ -46,7 +45,10 @@ angular.module('npn-viz-tool.vis-calendar',[
         }
     };
     $scope.canAddYear = function() {
-        return ($scope.toPlotYears.length < 2 && $scope.selection.year && $scope.toPlotYears.indexOf($scope.selection.year) === -1);
+        return $scope.toPlotYears.length < 2 && // no more than 2
+               $scope.selection.year && // anything to add?
+               $scope.toPlotYears.indexOf($scope.selection.year) === -1 && // already added?
+               $scope.validYears.indexOf($scope.selection.year) !== -1; // valid to add period?
     };
     $scope.removeYear = function(idx) {
         $scope.toPlotYears.splice(idx,1);
@@ -146,12 +148,36 @@ angular.module('npn-viz-tool.vis-calendar',[
         $scope.data = data = undefined;
     };
 
+    $scope.yAxisConfig = {
+        labelOffset: 2,
+        bandPadding: 0.5
+    };
     function moveYTickLabels(g) {
-      var dy = -1*((y.rangeBand()/2)+2);
+      var dy = -1*((y.rangeBand()/2)+$scope.yAxisConfig.labelOffset);
       g.selectAll('text')
           .attr('x', 0)
           .attr('dy', dy);
     }
+    function updateYAxis(){
+        y.rangeBands([sizing.height,0],$scope.yAxisConfig.bandPadding,0.5);
+        if(data && data.labels) {
+            y.domain(d3.range(0,data.labels.length));
+        }
+        yAxis.scale(y);
+        if(chart) {
+            chart.selectAll('g .y.axis').call(yAxis).call(moveYTickLabels);
+        }
+    }
+    $scope.$watch('yAxisConfig.labelOffset',draw);
+    $scope.$watch('yAxisConfig.bandPadding',draw);
+    $scope.incrBandPadding = function() {
+        var n = $scope.yAxisConfig.bandPadding+0.05;
+        $scope.yAxisConfig.bandPadding=Number(n.toFixed(2));
+    };
+    $scope.decrBandPadding = function() {
+        var n = $scope.yAxisConfig.bandPadding-0.05;
+        $scope.yAxisConfig.bandPadding=Number(n.toFixed(2));
+    };
 
     function formatYTickLabels(i) {
         return (data && data.labels && i < data.labels.length ) ? data.labels[i] : '';
@@ -192,13 +218,7 @@ angular.module('npn-viz-tool.vis-calendar',[
         xAxis.scale(x);
         chart.selectAll('g .x.axis').call(xAxis);
         // update the y-axis
-        y.rangeBands([sizing.height,0],0.5,0.5);
-        y.domain(d3.range(0,data.labels.length));
-        yAxis.scale(y);
-        chart.selectAll('g .y.axis').call(yAxis).call(moveYTickLabels);
-
-        console.log('x.rangeBand()',x.rangeBand());
-        console.log('y.rangeBand()',y.rangeBand());
+        updateYAxis();
 
         var doys = chart.selectAll('.doy').data(data.data);
         doys.exit().remove();
@@ -276,15 +296,17 @@ angular.module('npn-viz-tool.vis-calendar',[
                 var species = speciesMap[tp.species_id],
                     phenophase = species.phenophases[tp.phenophase_id];
                 angular.forEach($scope.toPlotYears,function(year){
-                    var doys = phenophase.years[year];
-                    console.log('year',y,year,species.common_name,phenophase,doys);
-                    angular.forEach(doys,function(doy){
-                        toChart.data.push({
-                            y: y,
-                            x: doy,
-                            color: tp.color // TODO - what else is needed here??
+                    if(phenophase) {
+                        var doys = phenophase.years[year];
+                        console.log('year',y,year,species.common_name,phenophase,doys);
+                        angular.forEach(doys,function(doy){
+                            toChart.data.push({
+                                y: y,
+                                x: doy,
+                                color: tp.color // TODO - what else is needed here??
+                            });
                         });
-                    });
+                    }
                     toChart.labels.splice(0,0,$filter('speciesTitle')(tp)+'/'+tp.phenophase_name+' ('+year+')');
                     console.log('y of '+y+' is for '+toChart.labels[0]);
                     y--;

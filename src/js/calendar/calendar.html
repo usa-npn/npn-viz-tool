@@ -40,8 +40,17 @@
             <svg class="chart"></svg>
         </div>
         </center>
+        <ul class="list-inline calendar-chart-controls" ng-if="data" style="float: right;">
+            <li>Label Position
+                <a href class="btn btn-default btn-xs" ng-click="yAxisConfig.labelOffset=(yAxisConfig.labelOffset-1)"><i class="fa fa-minus"></i></a>
+                <a href class="btn btn-default btn-xs" ng-click="yAxisConfig.labelOffset=(yAxisConfig.labelOffset+1)"><i class="fa fa-plus"></i></a>
+            </li>
+            <li>Band Size
+                <a href class="btn btn-default btn-xs" ng-click="incrBandPadding()" ng-disabled="yAxisConfig.bandPadding >= 0.95"><i class="fa fa-minus"></i></a>
+                <a href class="btn btn-default btn-xs" ng-click="decrBandPadding()" ng-disabled="yAxisConfig.bandPadding <= 0.05"><i class="fa fa-plus"></i></a>
+            </li>
+        </ul>
     </div>
 </div>
-<pre ng-if="record">{{record | json}}</pre>
 
 </vis-dialog>

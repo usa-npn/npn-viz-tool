@@ -318,9 +318,16 @@ ul.filter-tags .filter-tag .phenophase-list {
   stroke: #777;
   stroke-dasharray: 2,2;
 }
+.vis-dialog.calendar .calendar-chart-controls {
+  margin-right: 15px;
+  margin-top: 15px;
+}
 
 form.plot-criteria-form {
   margin-left: 30px;
+}
+form.plot-criteria-form .form-group {
+  margin-right: 15px;
 }
 
 ul.to-plot li.criteria {

@@ -44,9 +44,18 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            <svg class=\"chart\"></svg>\n" +
     "        </div>\n" +
     "        </center>\n" +
+    "        <ul class=\"list-inline calendar-chart-controls\" ng-if=\"data\" style=\"float: right;\">\n" +
+    "            <li>Label Position\n" +
+    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"yAxisConfig.labelOffset=(yAxisConfig.labelOffset-1)\"><i class=\"fa fa-minus\"></i></a>\n" +
+    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"yAxisConfig.labelOffset=(yAxisConfig.labelOffset+1)\"><i class=\"fa fa-plus\"></i></a>\n" +
+    "            </li>\n" +
+    "            <li>Band Size\n" +
+    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"incrBandPadding()\" ng-disabled=\"yAxisConfig.bandPadding >= 0.95\"><i class=\"fa fa-minus\"></i></a>\n" +
+    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"decrBandPadding()\" ng-disabled=\"yAxisConfig.bandPadding <= 0.05\"><i class=\"fa fa-plus\"></i></a>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
     "    </div>\n" +
     "</div>\n" +
-    "<pre ng-if=\"record\">{{record | json}}</pre>\n" +
     "\n" +
     "</vis-dialog>");
 }]);

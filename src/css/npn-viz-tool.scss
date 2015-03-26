@@ -362,10 +362,17 @@ ul.filter-tags {
               stroke-dasharray: 2,2;
             }
         }
+        .calendar-chart-controls {
+            margin-right: 15px;
+            margin-top: 15px;
+        }
     }
 }
 form.plot-criteria-form {
     margin-left: 30px;
+    .form-group {
+        margin-right: 15px;
+    }
 }
 ul.to-plot {
     li.criteria {
