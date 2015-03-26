@@ -25,6 +25,22 @@ angular.module('npn-viz-tool.vis',[
         }
         return !bad;
     }
+    function addGeoParams(params) {
+        // if geo filtering add the explicit station_ids in question.
+        if(FilterService.getFilter().getGeoArgs().length) {
+            FilterService.getFilteredMarkers().forEach(function(marker,i){
+                params['station_id['+i+']'] = marker.station_id;
+            });
+        }
+        return params;
+    }
+    function txformUrlEncoded(obj) {
+        var encoded = [],key;
+        for(key in obj) {
+            encoded.push(encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]));
+        }
+        return encoded.join('&');
+    }
     var service = {
         ONE_DAY_MILLIS: (24*60*60*1000),
         getSizeInfo: function(marginOverride){
@@ -66,27 +82,24 @@ angular.module('npn-viz-tool.vis',[
             return a + (b*x);
         },
         getSummarizedData: function(params,success) {
-            // if geo filtering add the explicit station_ids in question.
-            if(FilterService.getFilter().getGeoArgs().length) {
-                FilterService.getFilteredMarkers().forEach(function(marker,i){
-                    params['station_id['+i+']'] = marker.station_id;
-                });
-            }
             $http({
                 method: 'POST',
                 url: '/npn_portal/observations/getSummarizedData.json',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                transformRequest: function(obj) {
-                    var encoded = [],key;
-                    for(key in obj) {
-                        encoded.push(encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]));
-                    }
-                    return encoded.join('&');
-                },
-                data: params
+                transformRequest: txformUrlEncoded,
+                data: addGeoParams(params)
             }).success(function(response){
                 success(response.filter(filterSuspectSummaryData));
             });
+        },
+        getPositiveDates: function(params,success) {
+            $http({
+                method: 'POST',
+                url: '/npn_portal/observations/getPositiveDates.json',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                transformRequest: txformUrlEncoded,
+                data: addGeoParams(params)
+            }).success(success);
         }
     };
     return service;

@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-20
+ * Version: 0.1.0 - 2015-03-26
  */
 
 angular.module('npn-viz-tool.vis-calendar',[
@@ -14,21 +14,17 @@ angular.module('npn-viz-tool.vis-calendar',[
     var data, // the data from the server....
         dateArg = FilterService.getFilter().getDateArg(),
         start_year = dateArg.arg.start_date,
-        start_date = new Date(start_year,0),
-        ONE_DAY = 24*60*60*1000,
         end_year = dateArg.arg.end_date,
-        sizing = ChartService.getSizeInfo({top: 30, right: 30, bottom: 30, left: 30}),
+        sizing = ChartService.getSizeInfo({top: 20, right: 30, bottom: 35, left: 30}),
         chart,
-        x = d3.time.scale().range([0,sizing.width]).domain([new Date(start_year,0,1),new Date(start_year,12,31)]).nice(0),
         d3_month_fmt = d3.time.format('%B'),
-        xAxis = d3.svg.axis().scale(x).ticks(d3.time.months).orient('bottom').tickFormat(function(d){
-            return d3_month_fmt(d);
-        }),
+        x = d3.scale.ordinal().rangeBands([0,sizing.width]).domain(d3.range(1,366)),
+        xAxis = d3.svg.axis().scale(x).orient('bottom').tickValues(xTickValues()).tickFormat(formatXTickLabels),
         y = d3.scale.ordinal().rangeBands([sizing.height,0]).domain(d3.range(0,6)),
         yAxis = d3.svg.axis().scale(y).orient('right').tickSize(sizing.width).tickFormat(function(d) {
-            //return '';
             return d;
         }).tickFormat(formatYTickLabels);
+
 
     $scope.modal = $modalInstance;
     $scope.colorScale = FilterService.getColorScale();
@@ -53,7 +49,6 @@ angular.module('npn-viz-tool.vis-calendar',[
     }
     $scope.$watch('selection.start_year',function(){
         if($scope.selection.start_year) {
-            x.domain([new Date($scope.selection.start_year,0,1),new Date($scope.selection.start_year,12,13)]);
             // one or two years depending on the base map filter
             $scope.selection.end_year = end_year > $scope.selection.start_year ?
                 $scope.selection.start_year+1 : end_year;
@@ -161,7 +156,29 @@ angular.module('npn-viz-tool.vis-calendar',[
     }
 
     function formatYTickLabels(i) {
-        return (data && i < data.length && data[i].LABEL) ? data[i].LABEL : '';
+        return (data && data.labels && i < data.labels.length ) ? data.labels[i]+' ['+i+']' : '';
+    }
+
+    function xTickValues() {
+        var y = $scope.selection && $scope.selection.start_year ? $scope.selection.start_year : start_year,
+            firsts = [1],i,count = 1;
+        for(i = 1; i < 12; i++) {
+            var date = new Date(y,i);
+            // back up 1 day
+            date.setTime(date.getTime()-ChartService.ONE_DAY_MILLIS);
+            count += date.getDate();
+            firsts.push(count);
+        }
+        console.log('firsts for '+y,firsts);
+        return x.domain().filter(function(d){
+            return firsts.indexOf(d) !== -1;
+        });
+    }
+    function formatXTickLabels(i) {
+        var y = $scope.selection && $scope.selection.start_year ? $scope.selection.start_year : start_year,
+            date = new Date(y,0);
+        date.setTime(date.getTime()+(ChartService.ONE_DAY_MILLIS*i));
+        return d3_month_fmt(date);
     }
 
     function draw() {
@@ -170,36 +187,38 @@ angular.module('npn-viz-tool.vis-calendar',[
         }
         $scope.working = true;
         // update the x-axis
-        xAxis.scale(x); // x.domain was updated in a watch when the date range was set
+        // since each doy is an independent line depending on the x rangeband with, etc.
+        // at some sizes lines drawn side by side for subsequent days might have a tiny bit of
+        // whitespace between them which isn't desired since we want them to appear as a solid band
+        // SO doing two things; using a tiny but negative padding AND rounding up dx (below).
+        x.rangeBands([0,sizing.width],-0.1,0.5);
+        xAxis.scale(x) // x.domain was updated in a watch when the date range was set
+             .tickValues(xTickValues());
         chart.selectAll('g .x.axis').call(xAxis);
         // update the y-axis
         y.rangeBands([sizing.height,0],0.5,0.5);
-        y.domain(d3.range(0,data.length));
+        y.domain(d3.range(0,data.labels.length));
         yAxis.scale(y);
         chart.selectAll('g .y.axis').call(yAxis).call(moveYTickLabels);
 
+        console.log('x.rangeBand()',x.rangeBand());
         console.log('y.rangeBand()',y.rangeBand());
 
-        var dayOne = x.domain()[0],
-            dayOneTime = dayOne.getTime()-ChartService.ONE_DAY_MILLIS, // minus 1-day because doy is index 1
+        var doys = chart.selectAll('.doy').data(data.data);
+        doys.exit().remove();
+        doys.enter().insert('line',':first-child').attr('class','doy');
+
+        var dx = Math.ceil(x.rangeBand()/2),
             dy = y.rangeBand()/2;
-        console.log('dayOne',dayOne);
-        console.log('x.domain',x.domain());
-        console.log('y.domain',y.domain());
 
-        var inPhase = chart.selectAll('.in-phase').data(data);
-        inPhase.exit().remove();
-        inPhase.enter().insert('line',':first-child').attr('class','in-phase');
-
-        inPhase
-            .attr('data-legend',function(d) { return d.legend; } )
-            .attr('data-legend-color',function(d) { return $scope.colorScale(d.color); })
-            .attr('x1', function(d) { return x(d.FIRST_DOY ? new Date(dayOneTime+(d.FIRST_DOY*ChartService.ONE_DAY_MILLIS)) : dayOne); })
-            .attr('y1', function(d,i) { return y(i)+dy; })
-            .attr('x2', function(d) { return x(d.LAST_DOY ? new Date(dayOneTime+(d.LAST_DOY*ChartService.ONE_DAY_MILLIS)) : dayOne); })
-            .attr('y2', function(d,i) { return y(i)+dy; })
+        doys.attr('x1', function(d) { return x(d.x)-dx; })
+            .attr('y1', function(d,i) { return y(d.y)+dy; })
+            .attr('x2', function(d) { return x(d.x)+dx; })
+            .attr('y2', function(d,i) { return y(d.y)+dy; })
+            .attr('doy-point',function(d) { return '('+d.x+','+d.y+')'; })
             .attr('stroke', function(d) { return $scope.colorScale(d.color); })
             .attr('stroke-width', y.rangeBand());
+
         $scope.working = false;
     }
 
@@ -211,44 +230,72 @@ angular.module('npn-viz-tool.vis-calendar',[
         console.log('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {
-                request_src: 'npn-vis-cealendar',
-                start_date: $scope.selection.start_year+'-01-01',
-                end_date: $scope.selection.end_year+'-12-31'
+                request_src: 'npn-vis-calendar'
             },
-            i = 0,
-            colorMap = {};
-        angular.forEach($scope.toPlot,function(tp) {
+            colorMap = {},
+            yearsRange = d3.range($scope.selection.start_year,$scope.selection.end_year+1);
+        yearsRange.forEach(function(d,i){
+            params['year['+i+']'] = d;
+        });
+        angular.forEach($scope.toPlot,function(tp,i) {
             colorMap[tp.species_id+'.'+tp.phenophase_id] = tp.color;
             params['species_id['+i+']'] = tp.species_id;
-            params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
+            params['phenophase_id['+i+']'] = tp.phenophase_id;
         });
-        ChartService.getSummarizedData(params,function(response){
-            var years = d3.range($scope.selection.start_year,$scope.selection.end_year+1),
-                sets = [],toChart = [];
-            console.log('years',years);
-            if($scope.toPlot.length === 1) {
-                sets.push(response);
-            } else {
-                angular.forEach($scope.toPlot,function(tp){
-                    sets.push(response.filter(function(d){
-                        return tp.species_id == d.species_id && tp.phenophase_id == d.phenophase_id;
-                    }));
+        ChartService.getPositiveDates(params,function(response){
+            var speciesMap = {},toChart = {
+                labels:[],
+                data:[]
+            },
+            // starting with the largest y and decrementing down because we want to display
+            // the selected data in that order (year1/1st pair, year2/1st pair, ..., year2/last pair)
+            y = ($scope.toPlot.length*yearsRange.length)-1;
+
+            // translate arrays into maps
+            angular.forEach(response,function(species){
+                speciesMap[species.species_id] = species;
+                var ppMap = {};
+                angular.forEach(species.phenophases,function(pp){
+                    ppMap[pp.phenophase_id] = pp;
+                    // START fix "years", may be temporary
+                    if(angular.isArray(pp.years)) {
+                        var years = {},keys;
+                        angular.forEach(pp.years,function(y){
+                            keys = Object.keys(y);
+                            if(keys.length > 1) {
+                                console.warn('year array member with multiple keys?', y);
+                            } else if (keys.length === 1) {
+                                years[keys[0]] = y[keys[0]];
+                            }
+                        });
+                        pp.years = years;
+                    }
+                    // END fix
                 });
-            }
-            console.log('sets',sets);
-            angular.forEach(sets,function(set,i){
-                var tp = $scope.toPlot[i];
-                angular.forEach(years,function(year){
-                    var year_set = set.filter(function(d){ return year === d.first_yes_year && year === d.last_yes_year; });
-                    console.log('year_set',year_set);
-                    toChart.push(angular.extend({
-                        LABEL: $filter('speciesTitle')(tp)+'/'+tp.phenophase_name+' ('+year+')',
-                        FIRST_DOY: d3.min(year_set,function(d) { return d.first_yes_doy; }),
-                        LAST_DOY: d3.max(year_set,function(d) { return d.last_yes_doy; }),
-                    },tp));
+                species.phenophases = ppMap;
+            });
+
+            console.log('speciesMap',speciesMap);
+            angular.forEach($scope.toPlot,function(tp){
+                console.log('toPlot',tp);
+                var species = speciesMap[tp.species_id],
+                    phenophase = species.phenophases[tp.phenophase_id];
+                angular.forEach(yearsRange,function(year){
+                    var doys = phenophase.years[year];
+                    console.log('year',y,year,species.common_name,phenophase,doys);
+                    angular.forEach(doys,function(doy){
+                        toChart.data.push({
+                            y: y,
+                            x: doy,
+                            color: tp.color // TODO - what else is needed here??
+                        });
+                    });
+                    toChart.labels.splice(0,0,$filter('speciesTitle')(tp)+'/'+tp.phenophase_name+' ('+year+')');
+                    console.log('y of '+y+' is for '+toChart.labels[0]);
+                    y--;
                 });
             });
-            $scope.data = data = toChart.reverse();
+            $scope.data = data = toChart;
             console.log('calendar data',data);
             draw();
         });
@@ -2669,6 +2716,22 @@ angular.module('npn-viz-tool.vis',[
         }
         return !bad;
     }
+    function addGeoParams(params) {
+        // if geo filtering add the explicit station_ids in question.
+        if(FilterService.getFilter().getGeoArgs().length) {
+            FilterService.getFilteredMarkers().forEach(function(marker,i){
+                params['station_id['+i+']'] = marker.station_id;
+            });
+        }
+        return params;
+    }
+    function txformUrlEncoded(obj) {
+        var encoded = [],key;
+        for(key in obj) {
+            encoded.push(encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]));
+        }
+        return encoded.join('&');
+    }
     var service = {
         ONE_DAY_MILLIS: (24*60*60*1000),
         getSizeInfo: function(marginOverride){
@@ -2710,27 +2773,24 @@ angular.module('npn-viz-tool.vis',[
             return a + (b*x);
         },
         getSummarizedData: function(params,success) {
-            // if geo filtering add the explicit station_ids in question.
-            if(FilterService.getFilter().getGeoArgs().length) {
-                FilterService.getFilteredMarkers().forEach(function(marker,i){
-                    params['station_id['+i+']'] = marker.station_id;
-                });
-            }
             $http({
                 method: 'POST',
                 url: '/npn_portal/observations/getSummarizedData.json',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                transformRequest: function(obj) {
-                    var encoded = [],key;
-                    for(key in obj) {
-                        encoded.push(encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]));
-                    }
-                    return encoded.join('&');
-                },
-                data: params
+                transformRequest: txformUrlEncoded,
+                data: addGeoParams(params)
             }).success(function(response){
                 success(response.filter(filterSuspectSummaryData));
             });
+        },
+        getPositiveDates: function(params,success) {
+            $http({
+                method: 'POST',
+                url: '/npn_portal/observations/getPositiveDates.json',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                transformRequest: txformUrlEncoded,
+                data: addGeoParams(params)
+            }).success(success);
         }
     };
     return service;
