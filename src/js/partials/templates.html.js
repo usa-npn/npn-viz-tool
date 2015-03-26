@@ -4,11 +4,15 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
   $templateCache.put("js/calendar/calendar.html",
     "<vis-dialog title=\"Calendar\" modal=\"modal\">\n" +
     "<form class=\"form-inline plot-criteria-form\">\n" +
-    "    <div class=\"form-group\" ng-if=\"!selection.start_year\">\n" +
-    "        <label for=\"yearsInput\">Starting Year</label>\n" +
-    "        <select name=\"yearsInput\" class=\"form-control\" ng-model=\"selection.start_year\" ng-options=\"year for year in availableYears\"></select>\n" +
+    "    <div class=\"form-group\">\n" +
+    "        <label for=\"yearsOneInput\">Year (at most two)</label>\n" +
+    "        <input id=\"yearsOneInput\" type=\"number\" class=\"form-control\"\n" +
+    "               ng-model=\"selection.year\"\n" +
+    "               typeahead=\"year for year in validYears | filter:$viewValue\"\n" +
+    "               required placeholder=\"Year\" />\n" +
+    "        <button class=\"btn btn-default\" ng-click=\"addYear()\" ng-disabled=\"!canAddYear()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "    </div>\n" +
-    "    <div class=\"form-group animated-show-hide\" ng-if=\"selection.start_year\">\n" +
+    "    <div class=\"form-group animated-show-hide\">\n" +
     "        <label for=\"toPlotInput\">Species/Phenophase Pairs</label>\n" +
     "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
@@ -19,23 +23,21 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorScale($index)}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
     "          </ul>\n" +
     "        </div>\n" +
+    "        <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "    </div>\n" +
-    "    <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "</form>\n" +
     "\n" +
     "<div class=\"panel panel-default main-vis-panel\" >\n" +
     "    <div class=\"panel-body\">\n" +
     "        <center>\n" +
-    "        <ul class=\"date-range list-inline animated-show-hide\">\n" +
-    "            <li>{{selection.start_year}}</li>\n" +
-    "            <li>-</li>\n" +
-    "            <li>{{selection.end_year}}</li>\n" +
-    "        </ul>\n" +
-    "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
+    "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length || toPlotYears.length\">\n" +
+    "            <li class=\"criteria\" ng-repeat=\"y in toPlotYears\">{{y}}\n" +
+    "                <a href ng-click=\"removeYear($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
+    "            </li>\n" +
     "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
-    "            <li ng-if=\"!data\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li ng-if=\"!data && toPlotYears.length && toPlot.length\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +

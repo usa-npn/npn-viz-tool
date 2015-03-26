@@ -8,8 +8,6 @@ angular.module('npn-viz-tool.vis-calendar',[
     function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService){
     var data, // the data from the server....
         dateArg = FilterService.getFilter().getDateArg(),
-        start_year = dateArg.arg.start_date,
-        end_year = dateArg.arg.end_date,
         sizing = ChartService.getSizeInfo({top: 20, right: 30, bottom: 35, left: 30}),
         chart,
         d3_month_fmt = d3.time.format('%B'),
@@ -21,11 +19,13 @@ angular.module('npn-viz-tool.vis-calendar',[
         }).tickFormat(formatYTickLabels);
 
 
+    $scope.validYears = d3.range(1900,((new Date()).getFullYear()+1));
     $scope.modal = $modalInstance;
     $scope.colorScale = FilterService.getColorScale();
     $scope.colors = $scope.colorScale.domain();
     $scope.selection = {
-        color: 0
+        color: 0,
+        year: (new Date()).getFullYear()
     };
     $scope.plottable = [];
     angular.forEach(FilterService.getFilter().getSpeciesArgs(),function(sarg) {
@@ -35,20 +35,23 @@ angular.module('npn-viz-tool.vis-calendar',[
         });
     });
     console.log('plottable',$scope.plottable);
+    $scope.toPlotYears = [];
     $scope.toPlot = [];
 
-    if((end_year - start_year) <= 1) {
-        $scope.selection.start_year = start_year;
-    } else {
-        $scope.availableYears = d3.range(start_year,end_year);
-    }
-    $scope.$watch('selection.start_year',function(){
-        if($scope.selection.start_year) {
-            // one or two years depending on the base map filter
-            $scope.selection.end_year = end_year > $scope.selection.start_year ?
-                $scope.selection.start_year+1 : end_year;
+    $scope.addYear = function() {
+        if($scope.selection.year) {
+            $scope.toPlotYears.push($scope.selection.year);
+            $scope.toPlotYears.sort();
+            $scope.data = data = undefined;
         }
-    });
+    };
+    $scope.canAddYear = function() {
+        return ($scope.toPlotYears.length < 2 && $scope.selection.year && $scope.toPlotYears.indexOf($scope.selection.year) === -1);
+    };
+    $scope.removeYear = function(idx) {
+        $scope.toPlotYears.splice(idx,1);
+        $scope.data = data = undefined;
+    };
 
     function getNewToPlot(tp) {
         var base = tp||$scope.selection.toPlot;
@@ -151,27 +154,26 @@ angular.module('npn-viz-tool.vis-calendar',[
     }
 
     function formatYTickLabels(i) {
-        return (data && data.labels && i < data.labels.length ) ? data.labels[i]+' ['+i+']' : '';
+        return (data && data.labels && i < data.labels.length ) ? data.labels[i] : '';
     }
 
+    // the doy of the first of each month doesn't change from year to year just what
+    // day of the week days fall on so what year is used to calculate them is irrelevant
     function xTickValues() {
-        var y = $scope.selection && $scope.selection.start_year ? $scope.selection.start_year : start_year,
-            firsts = [1],i,count = 1;
+        var firsts = [1],i,count = 1;
         for(i = 1; i < 12; i++) {
-            var date = new Date(y,i);
+            var date = new Date(1900,i);
             // back up 1 day
             date.setTime(date.getTime()-ChartService.ONE_DAY_MILLIS);
             count += date.getDate();
             firsts.push(count);
         }
-        console.log('firsts for '+y,firsts);
         return x.domain().filter(function(d){
             return firsts.indexOf(d) !== -1;
         });
     }
     function formatXTickLabels(i) {
-        var y = $scope.selection && $scope.selection.start_year ? $scope.selection.start_year : start_year,
-            date = new Date(y,0);
+        var date = new Date(1900,0);
         date.setTime(date.getTime()+(ChartService.ONE_DAY_MILLIS*i));
         return d3_month_fmt(date);
     }
@@ -187,8 +189,7 @@ angular.module('npn-viz-tool.vis-calendar',[
         // whitespace between them which isn't desired since we want them to appear as a solid band
         // SO doing two things; using a tiny but negative padding AND rounding up dx (below).
         x.rangeBands([0,sizing.width],-0.1,0.5);
-        xAxis.scale(x) // x.domain was updated in a watch when the date range was set
-             .tickValues(xTickValues());
+        xAxis.scale(x);
         chart.selectAll('g .x.axis').call(xAxis);
         // update the y-axis
         y.rangeBands([sizing.height,0],0.5,0.5);
@@ -227,9 +228,8 @@ angular.module('npn-viz-tool.vis-calendar',[
             params = {
                 request_src: 'npn-vis-calendar'
             },
-            colorMap = {},
-            yearsRange = d3.range($scope.selection.start_year,$scope.selection.end_year+1);
-        yearsRange.forEach(function(d,i){
+            colorMap = {};
+        $scope.toPlotYears.forEach(function(d,i){
             params['year['+i+']'] = d;
         });
         angular.forEach($scope.toPlot,function(tp,i) {
@@ -244,7 +244,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             },
             // starting with the largest y and decrementing down because we want to display
             // the selected data in that order (year1/1st pair, year2/1st pair, ..., year2/last pair)
-            y = ($scope.toPlot.length*yearsRange.length)-1;
+            y = ($scope.toPlot.length*$scope.toPlotYears.length)-1;
 
             // translate arrays into maps
             angular.forEach(response,function(species){
@@ -275,7 +275,7 @@ angular.module('npn-viz-tool.vis-calendar',[
                 console.log('toPlot',tp);
                 var species = speciesMap[tp.species_id],
                     phenophase = species.phenophases[tp.phenophase_id];
-                angular.forEach(yearsRange,function(year){
+                angular.forEach($scope.toPlotYears,function(year){
                     var doys = phenophase.years[year];
                     console.log('year',y,year,species.common_name,phenophase,doys);
                     angular.forEach(doys,function(doy){
