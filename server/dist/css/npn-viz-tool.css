@@ -268,9 +268,17 @@ ul.filter-tags .filter-tag .phenophase-list {
   margin-top: 0px;
 }
 
+.tool-content.visualizations .empty-filter-notes {
+  color: #555;
+  font-style: italic;
+}
 .tool-content.visualizations li a {
   font-size: 1.5em;
   color: #555;
+}
+.tool-content.visualizations li a.disabled:hover {
+  text-decoration: none;
+  cursor: default;
 }
 
 .tool-content.settings li {

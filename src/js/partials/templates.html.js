@@ -338,9 +338,14 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
 
 angular.module("js/vis/visControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/vis/visControl.html",
+    "<p class=\"empty-filter-notes\" ng-if=\"isFilterEmpty()\">\n" +
+    "    Before using a visualization you must create and execute a filter.\n" +
+    "    Visualizations use the species, and sometimes, date ranges you've identified\n" +
+    "    in your filter as the basis for what you want to visualize.\n" +
+    "</p>\n" +
     "<ul class=\"list-unstyled\">\n" +
     "    <li ng-repeat=\"vis in visualizations\">\n" +
-    "        <a href ng-click=\"open(vis)\">{{vis.title}}</a>\n" +
+    "        <a href ng-click=\"open(vis)\" ng-class=\"{disabled: isFilterEmpty()}\">{{vis.title}}</a>\n" +
     "        <p>{{vis.description}}</p>\n" +
     "    </li>\n" +
     "</ul>");

@@ -295,10 +295,21 @@ ul.filter-tags {
 }
 
 .tool-content.visualizations {
+    .empty-filter-notes {
+        color: #555;
+        font-style: italic;
+    }
     li {
         a {
             font-size: 1.5em;
             color: #555;
+        }
+        a.disabled {
+
+        }
+        a.disabled:hover {
+            text-decoration: none;
+            cursor: default;
         }
     }
 }

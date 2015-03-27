@@ -817,7 +817,7 @@ console.log('markers',markers);
                 }
                 return $scope.serverResults;
             };
-            $http.get('/npn_portal/networks/getPartnerNetworks.json').success(function(partners){
+            $http.get('/npn_portal/networks/getPartnerNetworks.json?active_only=true').success(function(partners){
                 angular.forEach(partners,function(p) {
                     p.network_name = p.network_name.trim();
                 });

@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-26
+ * Version: 0.1.0 - 2015-03-27
  */
 
 angular.module('npn-viz-tool.vis-calendar',[
@@ -1142,7 +1142,7 @@ console.log('markers',markers);
                 }
                 return $scope.serverResults;
             };
-            $http.get('/npn_portal/networks/getPartnerNetworks.json').success(function(partners){
+            $http.get('/npn_portal/networks/getPartnerNetworks.json?active_only=true').success(function(partners){
                 angular.forEach(partners,function(p) {
                     p.network_name = p.network_name.trim();
                 });
@@ -2045,9 +2045,14 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
 
 angular.module("js/vis/visControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/vis/visControl.html",
+    "<p class=\"empty-filter-notes\" ng-if=\"isFilterEmpty()\">\n" +
+    "    Before using a visualization you must create and execute a filter.\n" +
+    "    Visualizations use the species, and sometimes, date ranges you've identified\n" +
+    "    in your filter as the basis for what you want to visualize.\n" +
+    "</p>\n" +
     "<ul class=\"list-unstyled\">\n" +
     "    <li ng-repeat=\"vis in visualizations\">\n" +
-    "        <a href ng-click=\"open(vis)\">{{vis.title}}</a>\n" +
+    "        <a href ng-click=\"open(vis)\" ng-class=\"{disabled: isFilterEmpty()}\">{{vis.title}}</a>\n" +
     "        <p>{{vis.description}}</p>\n" +
     "    </li>\n" +
     "</ul>");
@@ -2841,7 +2846,7 @@ angular.module('npn-viz-tool.vis',[
         }]
     };
 }])
-.directive('visControl',['$modal',function($modal){
+.directive('visControl',['$modal','FilterService',function($modal,FilterService){
     var visualizations = [{
         title: 'Scatter Plot',
         controller: 'ScatterVisCtrl',
@@ -2860,16 +2865,19 @@ angular.module('npn-viz-tool.vis',[
 
         },
         controller: function($scope) {
+            $scope.isFilterEmpty = FilterService.isFilterEmpty;
             $scope.visualizations = visualizations;
             $scope.open = function(vis) {
-                $modal.open({
-                    templateUrl: vis.template,
-                    controller: vis.controller,
-                    windowClass: 'vis-dialog-window',
-                    backdrop: 'static',
-                    keyboard: false,
-                    size: 'lg'
-                });
+                if(!FilterService.isFilterEmpty()) {
+                    $modal.open({
+                        templateUrl: vis.template,
+                        controller: vis.controller,
+                        windowClass: 'vis-dialog-window',
+                        backdrop: 'static',
+                        keyboard: false,
+                        size: 'lg'
+                    });
+                }
             };
         }
     };

@@ -117,7 +117,7 @@ angular.module('npn-viz-tool.vis',[
         }]
     };
 }])
-.directive('visControl',['$modal',function($modal){
+.directive('visControl',['$modal','FilterService',function($modal,FilterService){
     var visualizations = [{
         title: 'Scatter Plot',
         controller: 'ScatterVisCtrl',
@@ -136,16 +136,19 @@ angular.module('npn-viz-tool.vis',[
 
         },
         controller: function($scope) {
+            $scope.isFilterEmpty = FilterService.isFilterEmpty;
             $scope.visualizations = visualizations;
             $scope.open = function(vis) {
-                $modal.open({
-                    templateUrl: vis.template,
-                    controller: vis.controller,
-                    windowClass: 'vis-dialog-window',
-                    backdrop: 'static',
-                    keyboard: false,
-                    size: 'lg'
-                });
+                if(!FilterService.isFilterEmpty()) {
+                    $modal.open({
+                        templateUrl: vis.template,
+                        controller: vis.controller,
+                        windowClass: 'vis-dialog-window',
+                        backdrop: 'static',
+                        keyboard: false,
+                        size: 'lg'
+                    });
+                }
             };
         }
     };
