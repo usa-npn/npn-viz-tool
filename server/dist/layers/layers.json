@@ -27,9 +27,14 @@
     "id" : "npsr",
     "label" : "National Park Service Regions",
     "file" : "NPS_Regions.json",
-    "source" : "https://raw.githubusercontent.com/nationalparkservice/park-tiles/master/data-import/data/nps-regions.geojson",
     "img" : "layers/NPS_Regions.jpg",
     "link" : "http://www.nps.gov/hdp/regions.htm"
+},{
+    "id" : "npsim",
+    "label" : "National Park Service Inventory & Monitoring Networks",
+    "file" : "NPS_IM.json",
+    "img" : "layers/NPS_IM.jpg",
+    "link" : "http://science.nature.nps.gov/im/networks.cfm"
 },{
     "id" : "lccs",
     "label" : "LCCs",
