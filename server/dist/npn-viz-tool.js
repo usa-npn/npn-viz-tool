@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-03-27
+ * Version: 0.1.0 - 2015-03-31
  */
 
 angular.module('npn-viz-tool.vis-calendar',[
@@ -438,17 +438,14 @@ angular.module('npn-viz-tool.filter',[
     };
     SpeciesFilterArg.prototype.$filter = function(species) {
         var self = this,
-            hitCount = 0;
-        if(species.species_id != self.arg.species_id) {
-            console.warn('$filter called on wrong species', self.arg, species);
-        }
-        var filtered = species.phenophases.filter(function(pp) {
-            self.phenophasesMap[pp.phenophase_id].count++;
-            if(self.phenophasesMap[pp.phenophase_id].selected) {
-                hitCount++;
-            }
-            return self.phenophasesMap[pp.phenophase_id].selected;
-        });
+            hitCount = 0,
+            filtered = Object.keys(species).filter(function(pid){
+                self.phenophasesMap[pid].count++;
+                if(self.phenophasesMap[pid].selected) {
+                    hitCount++;
+                }
+                return self.phenophasesMap[pid].selected;
+            });
         if(filtered.length > 0) {
             self.counts.station++;
         }
@@ -772,41 +769,16 @@ angular.module('npn-viz-tool.filter',[
             $http.get('/npn_portal/observations/getAllObservationsForSpecies.json',{
                 params: filterParams
             }).success(function(d) {
-                var start_12 = Date.now(),i,j,k,s;
-                // replace 'station_list' with a map
-                d.stations = {};
-                for(i = 0; i < d.station_list.length; i++) {
-                    d.station_list[i].markerOpts = {
-                        title: d.station_list[i].station_name,
+                angular.forEach(d.station_list,function(station){
+                    station.markerOpts = {
+                        title: station.station_name,
                         icon: angular.extend({},defaultIcon)
                     };
-                    d.stations[d.station_list[i].station_id] = d.station_list[i];
-                }
-                for(i = 0; i < d.observation_list.length; i++) {
-                    for(j = 0; j < d.observation_list[i].stations.length; j++) {
-                        s = d.stations[d.observation_list[i].stations[j].station_id];
-                        if(!s) {
-                            console.warn('Unable to find station with id', d.observation_list[i].stations[j].station_id);
-                            continue;
-                        }
-                        if(!s.species) {
-                            s.species = {};
-                        }
-                        for(k = 0; k < d.observation_list[i].stations[j].species_ids.length; k++) {
-                            var sid = d.observation_list[i].stations[j].species_ids[k];
-                            if(!s.species[sid.species_id]) {
-                                s.species[sid.species_id] = sid;
-                            } else {
-                                s.species[sid.species_id].phenophases = s.species[sid.species_id].phenophases.concat(sid.phenophases);
-                            }
-                        }
-                    }
-                }
+                });
                 $rootScope.$broadcast('filter-phase1-end',{
                     count: d.station_list.length
                 });
                 // now need to walk through the station_list and post-filter by phenophases...
-                console.log('phase1.2 time:',(Date.now()-start_12));
                 console.log('phase1 time:',(Date.now()-start));
                 console.log('results-pre',d);
                 def.resolve(post_filter(last=d.station_list));
