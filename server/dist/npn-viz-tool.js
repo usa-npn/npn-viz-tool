@@ -1501,14 +1501,13 @@ angular.module('npn-viz-tool.layers',[
                 }
                 if(oldLayer && oldLayer != 'none') {
                     LayerService.unloadLayer(oldLayer.id).then(function(unloaded){
-                        var filterUpdate = false;
+                        var geoArgs = FilterService.getFilter().getGeoArgs(),
+                            filterUpdate = geoArgs.length > 0;
+                        geoArgs.forEach(function(filterArg){
+                            FilterService.removeFromFilter(filterArg);
+                        });
                         unloaded.forEach(function(feature) {
-                            var filterArg = feature.getProperty('$FILTER');
-                            if(filterArg) {
-                                filterUpdate = true;
-                                FilterService.removeFromFilter(filterArg);
-                                feature.setProperty('$FILTER',null);
-                            }
+                            feature.setProperty('$FILTER',null);
                         });
                         // TODO - maybe instead the filter should just broadcast the "end" event
                         if(filterUpdate && !FilterService.isFilterEmpty()) {
