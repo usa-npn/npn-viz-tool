@@ -1,7 +1,7 @@
 <vis-dialog title="Scatter Plot" modal="modal">
 <form class="form-inline plot-criteria-form">
     <div class="form-group">
-        <label for="toPlotInput">Species/Phenophase Pairs (at most three)</label>
+        <label for="toPlotInput">Select up to three species phenophase combinations</label>
         <select name="toPlotInput" class="form-control" ng-model="selection.toPlot" ng-options="o.phenophase_name group by (o|speciesTitle) for o in plottable"></select>
         <div class="btn-group" dropdown is-open="selection.color_isopen">
           <button type="button" class="btn btn-default dropdown-toggle" dropdown-toggle style="background-color: {{colorScale(selection.color)}};">

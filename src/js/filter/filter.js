@@ -618,7 +618,7 @@ console.log('markers',markers);
                 return lower.substring(0,1).toUpperCase()+lower.substring(1);
             }
             return item.common_name;
-        } else if (fmt === 'genus-species') {
+        } else if (fmt === 'scientific-name') {
             return item.genus+' '+item.species;
         }
         return item;
@@ -638,8 +638,10 @@ console.log('markers',markers);
                 $scope.titleFormat = data.value;
             });
             $scope.badgeFormat = SettingsService.getSettingValue('tagBadgeFormat');
+            $scope.badgeTooltip = SettingsService.getSettingValueLabel('tagBadgeFormat');
             $scope.$on('setting-update-tagBadgeFormat',function(event,data){
                 $scope.badgeFormat = data.value;
+                $scope.badgeTooltip = SettingsService.getSettingValueLabel('tagBadgeFormat');
             });
             $scope.$on('filter-phase2-start',function(event,data) {
                 $scope.arg.resetCounts(0);
@@ -650,6 +652,9 @@ console.log('markers',markers);
             $scope.removeFromFilter = FilterService.removeFromFilter;
             $scope.status = {
                 isopen: false
+            };
+            $scope.hasCount = function(v,i) {
+                return v.count > 0;
             };
             // TODO - leaky
             // keep track of selected phenophases during open/close of the list
@@ -686,8 +691,10 @@ console.log('markers',markers);
         },
         controller: function($scope){
             $scope.badgeFormat = SettingsService.getSettingValue('tagBadgeFormat');
+            $scope.badgeTooltip = SettingsService.getSettingValueLabel('tagBadgeFormat');
             $scope.$on('setting-update-tagBadgeFormat',function(event,data){
                 $scope.badgeFormat = data.value;
+                $scope.badgeTooltip = SettingsService.getSettingValueLabel('tagBadgeFormat');
             });
             $scope.removeFromFilter = FilterService.removeFromFilter;
             $scope.counts = {

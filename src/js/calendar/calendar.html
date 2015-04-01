@@ -1,7 +1,7 @@
 <vis-dialog title="Calendar" modal="modal">
 <form class="form-inline plot-criteria-form">
     <div class="form-group">
-        <label for="yearsOneInput">Year (at most two)</label>
+        <label for="yearsOneInput">Select up to two years</label>
         <input id="yearsOneInput" type="number" class="form-control"
                ng-model="selection.year"
                typeahead="year for year in validYears | filter:$viewValue"
@@ -9,7 +9,7 @@
         <button class="btn btn-default" ng-click="addYear()" ng-disabled="!canAddYear()"><i class="fa fa-plus"></i></button>
     </div>
     <div class="form-group animated-show-hide">
-        <label for="toPlotInput">Species/Phenophase Pairs</label>
+        <label for="toPlotInput">Species phenophase combinations</label>
         <select name="toPlotInput" class="form-control" ng-model="selection.toPlot" ng-options="o.phenophase_name group by (o|speciesTitle) for o in plottable"></select>
         <div class="btn-group" dropdown is-open="selection.color_isopen">
           <button type="button" class="btn btn-default dropdown-toggle" dropdown-toggle style="background-color: {{colorScale(selection.color)}};">

@@ -91,9 +91,10 @@ angular.module('npn-viz-tool.vis-scatter',[
               .call(yAxis)
             .append('text')
             .attr('transform', 'rotate(-90)')
-            .attr('y', 0)
-            .attr('dy', '-3.5em')
-            .style('text-anchor', 'end')
+            .attr('y', '0')
+            .attr('dy','-3.5em')
+            .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
+            .style('text-anchor', 'middle')
             .text('Onset DOY');
     },500);
 
@@ -124,9 +125,9 @@ angular.module('npn-viz-tool.vis-scatter',[
         xA.selectAll('.axis-label').remove();
         xA.append('text')
           .attr('class','axis-label')
-          .attr('x',sizing.width)
+          .attr('x',(sizing.width/2))
           .attr('dy', '3em')
-          .style('text-anchor', 'end')
+          .style('text-anchor', 'middle')
           .text($scope.selection.axis.label);
 
         // update the chart data (TODO transitions??)

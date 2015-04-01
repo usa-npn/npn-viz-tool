@@ -273,6 +273,17 @@ ul.filter-tags {
         .phenophase-list {
             padding: 5px;
         }
+        .popover-content {
+            color: #666;
+        }
+    }
+    .filter-tag.date {
+        button:first-of-type {
+            cursor: pointer;
+        }
+        button:first-of-type:hover {
+            background-color: #fff;
+        }
     }
 }
 

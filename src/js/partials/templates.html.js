@@ -5,7 +5,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "<vis-dialog title=\"Calendar\" modal=\"modal\">\n" +
     "<form class=\"form-inline plot-criteria-form\">\n" +
     "    <div class=\"form-group\">\n" +
-    "        <label for=\"yearsOneInput\">Year (at most two)</label>\n" +
+    "        <label for=\"yearsOneInput\">Select up to two years</label>\n" +
     "        <input id=\"yearsOneInput\" type=\"number\" class=\"form-control\"\n" +
     "               ng-model=\"selection.year\"\n" +
     "               typeahead=\"year for year in validYears | filter:$viewValue\"\n" +
@@ -13,7 +13,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        <button class=\"btn btn-default\" ng-click=\"addYear()\" ng-disabled=\"!canAddYear()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "    </div>\n" +
     "    <div class=\"form-group animated-show-hide\">\n" +
-    "        <label for=\"toPlotInput\">Species/Phenophase Pairs</label>\n" +
+    "        <label for=\"toPlotInput\">Species phenophase combinations</label>\n" +
     "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
     "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
@@ -62,9 +62,13 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
 
 angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/dateFilterTag.html",
-    "<div class=\"btn-group\">\n" +
-    "    <button class=\"btn btn-default\" disabled>\n" +
-    "        {{arg.arg.start_date}} - {{arg.arg.end_date}} <span class=\"badge\">{{counts | speciesBadge:badgeFormat}}</span>\n" +
+    "<div class=\"btn-group filter-tag date\">\n" +
+    "    <button class=\"btn btn-default\">\n" +
+    "        <span popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
+    "              popover-trigger=\"mouseenter\" popover=\"Indicates the span of time represented on the map\">{{arg.arg.start_date}} - {{arg.arg.end_date}} </span>\n" +
+    "        <span class=\"badge\"\n" +
+    "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
+    "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{counts | speciesBadge:badgeFormat}}</span>\n" +
     "    </button>\n" +
     "    <button class=\"btn btn-default\" ng-click=\"removeFromFilter(arg)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
@@ -78,7 +82,7 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "\n" +
     "<ul class=\"list-unstyled\">\n" +
     "    <li>\n" +
-    "        <label for=\"yearInputForm\">Years (at most ten)</label>\n" +
+    "        <label for=\"yearInputForm\">Select up to ten (consecutive) years</label>\n" +
     "        <form id=\"yearInputForm\" name=\"yearInputForm\">\n" +
     "        <input id=\"start_date\" type=\"number\" class=\"form-control\"\n" +
     "               max=\"{{selected.date.end_date || thisYear}}\"\n" +
@@ -92,7 +96,9 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                required placeholder=\"To\" />\n" +
     "        <button class=\"btn btn-default\"\n" +
     "                ng-disabled=\"yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 10)\"\n" +
-    "                ng-click=\"addDateRangeToFilter()\"><i class=\"fa fa-plus\"></i></button>\n" +
+    "                ng-click=\"addDateRangeToFilter()\"\n" +
+    "                popover-placement=\"right\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
+    "                popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\"><i class=\"fa fa-plus\"></i></button>\n" +
     "        </form>\n" +
     "        <p ng-if=\"selected.date.start_date < 2008\" class=\"disclaimer\">\n" +
     "            You have selected a starting year prior to 2008 when the contemprary phenology data begins.  Prior to 2008 there is\n" +
@@ -100,20 +106,6 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "        </p>\n" +
     "    </li>\n" +
     "    <li class=\"divider\" ng-if=\"filterHasDate()\"></li>\n" +
-    "    <li ng-if=\"filterHasDate()\">\n" +
-    "        <label for=\"species\">Species</label>\n" +
-    "        <input id=\"species\"\n" +
-    "               type=\"text\" class=\"form-control\"\n" +
-    "               placeholder=\"Add Species To Filter\"\n" +
-    "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:15\"\n" +
-    "               typeahead-loading=\"findingSpecies\"\n" +
-    "               ng-model=\"selected.addSpecies\"\n" +
-    "               ng-disabled=\"findSpeciesParamsEmpty\" />\n" +
-    "        <button class=\"btn btn-default\" ng-disabled=\"!selected.speciesToAdd\"\n" +
-    "                ng-click=\"addSpeciesToFilter(selected.speciesToAdd)\">\n" +
-    "            <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
-    "        </button>\n" +
-    "    </li>\n" +
     "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label>Animal Types</label>\n" +
     "        <div isteven-multi-select\n" +
@@ -150,6 +142,25 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "            orientation=\"horizontal\"\n" +
     "            helper-elements=\"all none reset filter\"></div>\n" +
     "    </li>\n" +
+    "    <li ng-if=\"filterHasDate()\">\n" +
+    "        <label for=\"species\">Species</label>\n" +
+    "        <input id=\"species\"\n" +
+    "               type=\"text\" class=\"form-control\"\n" +
+    "               placeholder=\"Add Species To Filter\"\n" +
+    "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:15\"\n" +
+    "               typeahead-loading=\"findingSpecies\"\n" +
+    "               ng-model=\"selected.addSpecies\"\n" +
+    "               ng-disabled=\"findSpeciesParamsEmpty\" />\n" +
+    "        <!--    when adding a species to the map the button is immediately disabled and the popover is left hanging\n" +
+    "                in space and can never go away...  this control will change so just removing the popover here for the\n" +
+    "                time being.\n" +
+    "                popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
+    "                popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\"-->\n" +
+    "        <button class=\"btn btn-default\" ng-disabled=\"!selected.speciesToAdd\"\n" +
+    "                ng-click=\"addSpeciesToFilter(selected.speciesToAdd)\">\n" +
+    "            <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
+    "        </button>\n" +
+    "    </li>\n" +
     "</ul>\n" +
     "");
 }]);
@@ -166,12 +177,16 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
   $templateCache.put("js/filter/speciesFilterTag.html",
     "<div class=\"btn-group filter-tag\" ng-class=\"{open: status.isopen}\">\n" +
     "    <button type=\"button\" class=\"btn btn-primary\" style=\"background-color: {{arg.color}};\" ng-disabled=\"!arg.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
-    "        {{arg.arg | speciesTitle:titleFormat}} <span class=\"badge\">{{arg.counts | speciesBadge:badgeFormat}}</span> <span class=\"caret\"></span>\n" +
+    "        {{arg.arg | speciesTitle:titleFormat}} \n" +
+    "        <span class=\"badge\"\n" +
+    "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
+    "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span> \n" +
+    "        <span class=\"caret\"></span>\n" +
     "    </button>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
     "        <li class=\"inline\">Select <a href ng-click=\"selectAll(true)\">all</a> <a href ng-click=\"selectAll(false)\">none</a></li>\n" +
     "        <li class=\"divider\"></li>\n" +
-    "        <li ng-repeat=\"phenophase in arg.phenophases\">\n" +
+    "        <li ng-repeat=\"phenophase in arg.phenophases | filter:hasCount\">\n" +
     "            <input type=\"checkbox\" ng-model=\"phenophase.selected\"> <span class=\"badge\">{{phenophase.count}}</span> {{phenophase.phenophase_name}}\n" +
     "        </li>\n" +
     "    </ul>\n" +
@@ -231,7 +246,7 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "<vis-dialog title=\"Scatter Plot\" modal=\"modal\">\n" +
     "<form class=\"form-inline plot-criteria-form\">\n" +
     "    <div class=\"form-group\">\n" +
-    "        <label for=\"toPlotInput\">Species/Phenophase Pairs (at most three)</label>\n" +
+    "        <label for=\"toPlotInput\">Select up to three species phenophase combinations</label>\n" +
     "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
     "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +

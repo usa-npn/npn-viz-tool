@@ -2,7 +2,7 @@
 
 <ul class="list-unstyled">
     <li>
-        <label for="yearInputForm">Years (at most ten)</label>
+        <label for="yearInputForm">Select up to ten (consecutive) years</label>
         <form id="yearInputForm" name="yearInputForm">
         <input id="start_date" type="number" class="form-control"
                max="{{selected.date.end_date || thisYear}}"
@@ -16,7 +16,9 @@
                 required placeholder="To" />
         <button class="btn btn-default"
                 ng-disabled="yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 10)"
-                ng-click="addDateRangeToFilter()"><i class="fa fa-plus"></i></button>
+                ng-click="addDateRangeToFilter()"
+                popover-placement="right" popover-popup-delay="500" popover-append-to-body="true"
+                popover-trigger="mouseenter" popover="Add this filter to the map"><i class="fa fa-plus"></i></button>
         </form>
         <p ng-if="selected.date.start_date < 2008" class="disclaimer">
             You have selected a starting year prior to 2008 when the contemprary phenology data begins.  Prior to 2008 there is
@@ -24,20 +26,6 @@
         </p>
     </li>
     <li class="divider" ng-if="filterHasDate()"></li>
-    <li ng-if="filterHasDate()">
-        <label for="species">Species</label>
-        <input id="species"
-               type="text" class="form-control"
-               placeholder="Add Species To Filter"
-               typeahead="sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:15"
-               typeahead-loading="findingSpecies"
-               ng-model="selected.addSpecies"
-               ng-disabled="findSpeciesParamsEmpty" />
-        <button class="btn btn-default" ng-disabled="!selected.speciesToAdd"
-                ng-click="addSpeciesToFilter(selected.speciesToAdd)">
-            <i class="fa" ng-class="{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}"></i>
-        </button>
-    </li>
     <li ng-if="filterHasDate()">
         <label>Animal Types</label>
         <div isteven-multi-select
@@ -73,5 +61,24 @@
             tick-property="selected"
             orientation="horizontal"
             helper-elements="all none reset filter"></div>
+    </li>
+    <li ng-if="filterHasDate()">
+        <label for="species">Species</label>
+        <input id="species"
+               type="text" class="form-control"
+               placeholder="Add Species To Filter"
+               typeahead="sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:15"
+               typeahead-loading="findingSpecies"
+               ng-model="selected.addSpecies"
+               ng-disabled="findSpeciesParamsEmpty" />
+        <!--    when adding a species to the map the button is immediately disabled and the popover is left hanging
+                in space and can never go away...  this control will change so just removing the popover here for the
+                time being.
+                popover-placement="right" popover-popup-delay="500"
+                popover-trigger="mouseenter" popover="Add this filter to the map" popover-append-to-body="true"-->
+        <button class="btn btn-default" ng-disabled="!selected.speciesToAdd"
+                ng-click="addSpeciesToFilter(selected.speciesToAdd)">
+            <i class="fa" ng-class="{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}"></i>
+        </button>
     </li>
 </ul>

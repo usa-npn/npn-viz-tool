@@ -252,6 +252,15 @@ ul.filter-tags .filter-tag button:first-of-type {
 ul.filter-tags .filter-tag .phenophase-list {
   padding: 5px;
 }
+ul.filter-tags .filter-tag .popover-content {
+  color: #666;
+}
+ul.filter-tags .filter-tag.date button:first-of-type {
+  cursor: pointer;
+}
+ul.filter-tags .filter-tag.date button:first-of-type:hover {
+  background-color: #fff;
+}
 
 .tool-content.layers ul {
   margin-bottom: 50px;

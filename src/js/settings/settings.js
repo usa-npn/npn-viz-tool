@@ -17,9 +17,9 @@ angular.module('npn-viz-tool.settings',[
                 q: 'cn',
                 label: 'Common Name'
             },{
-                value: 'genus-species',
-                q: 'gs',
-                label: 'Genus Species'
+                value: 'scientific-name',
+                q: 'sn',
+                label: 'Scientific Name'
             }]
         },
         tagBadgeFormat: {
@@ -45,6 +45,16 @@ angular.module('npn-viz-tool.settings',[
         getSettings: function() { return settings; },
         getSetting: function(key) { return settings[key]; },
         getSettingValue: function(key) { return settings[key].value; },
+        // @return the label of the currently selected value for a setting with options (or undefined).
+        getSettingValueLabel: function(key) {
+            var s = settings[key],
+                v = s.value,i;
+            for(i = 0; s.options && i < s.options.length; i++) {
+                if(s.options[i].value === v) {
+                    return s.options[i].label;
+                }
+            }
+        },
         getSharingUrlArgs: function() {
             var arg = '',key,s,i;
             for(key in settings) {
