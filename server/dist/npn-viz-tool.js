@@ -1038,12 +1038,11 @@ console.log('markers',markers);
         }
     };
 }])
-.directive('filterControl',['$http','$filter','FilterService','DateFilterArg','SpeciesFilterArg',function($http,$filter,FilterService,DateFilterArg,SpeciesFilterArg){
+.directive('filterControl',['$http','$filter','$timeout','FilterService','DateFilterArg','SpeciesFilterArg',function($http,$filter,$timeout,FilterService,DateFilterArg,SpeciesFilterArg){
     return {
         restrict: 'E',
         templateUrl: 'js/filter/filterControl.html',
         controller: ['$scope',function($scope) {
-
             $scope.addDateRangeToFilter = function() {
                 FilterService.addToFilter(new DateFilterArg($scope.selected.date));
             };
@@ -1055,14 +1054,18 @@ console.log('markers',markers);
             $scope.thisYear = thisYear;
             $scope.validYears = validYears;
 
-            $scope.selected = {addSpecies: undefined, date: {
-                start_date: (thisYear-1),
-                end_date: thisYear
-            }};
+            $scope.selected = {
+                date: {
+                    start_date: (thisYear-1),
+                    end_date: thisYear
+                },
+                species: []
+            };
 
-            $scope.addSpeciesToFilter = function(species) {
-                FilterService.addToFilter(new SpeciesFilterArg(species));
-                $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
+            $scope.addSpeciesToFilter = function() {
+                angular.forEach($scope.selected.species,function(species){
+                    FilterService.addToFilter(new SpeciesFilterArg(species));
+                });
             };
             $scope.speciesInput = {
                 animals: [],
@@ -1070,11 +1073,13 @@ console.log('markers',markers);
                 networks: []
             };
             $scope.findSpeciesParamsEmpty = true;
-            var findSpeciesParams;
+
+            var findSpeciesParams,
+                findSpeciesPromise,
+                allSpecies,
+                filterInvalidated = true;
 
             function invalidateResults() {
-                $scope.serverResults = undefined;
-                $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
                 var params = {},
                     idx = 0;
                 angular.forEach([].concat($scope.speciesInput.animals).concat($scope.speciesInput.plants),function(s){
@@ -1086,41 +1091,63 @@ console.log('markers',markers);
                 });
                 findSpeciesParams = params;
                 $scope.findSpeciesParamsEmpty = Object.keys(params).length === 0;
+                filterInvalidated = true;
             }
 
             $scope.$watch('speciesInput.animals',invalidateResults);
             $scope.$watch('speciesInput.plants',invalidateResults);
             $scope.$watch('speciesInput.networks',invalidateResults);
 
-            $scope.$watch('selected.addSpecies',function(){
-                $scope.selected.speciesToAdd = angular.isObject($scope.selected.addSpecies) ?
-                    $scope.selected.addSpecies : undefined;
-            });
-
             $scope.findSpecies = function() {
-                if(!$scope.serverResults) {
-                    $scope.serverResults = $http.get('/npn_portal/species/getSpeciesFilter.json',{
-                        params: findSpeciesParams
-                    }).then(function(response){
-                        var species = [];
-                        angular.forEach(response.data,function(s){
-                            s.number_observations = parseInt(s.number_observations);
-                            s.$display = s.common_name+' ('+s.number_observations+')';
-                            species.push(s);
-                        });
-                        return ($scope.serverResults = species.sort(function(a,b){
-                            if(a.number_observations < b.number_observations) {
-                                return 1;
-                            }
-                            if(a.number_observations > b.number_observations) {
-                                return -1;
-                            }
-                            return 0;
-                        }));
+                if(filterInvalidated) {
+                    filterInvalidated = false;
+                    angular.forEach($scope.selected.species,function(species){
+                        species.selected = false;
                     });
+                    $scope.selected.species = [];
+                    if($scope.findSpeciesParamsEmpty && allSpecies && allSpecies.length) {
+                        $scope.speciesList = allSpecies;
+                    } else {
+                        $scope.findingSpecies = true;
+                        $scope.serverResults = $http.get('/npn_portal/species/getSpeciesFilter.json',{
+                            params: findSpeciesParams
+                        }).then(function(response){
+                            var species = [];
+                            angular.forEach(response.data,function(s){
+                                s.number_observations = parseInt(s.number_observations);
+                                s.display = $filter('speciesTitle')(s)+' ('+s.number_observations+')';
+                                species.push(s);
+                            });
+                            var results = ($scope.speciesList = species.sort(function(a,b){
+                                if(a.number_observations < b.number_observations) {
+                                    return 1;
+                                }
+                                if(a.number_observations > b.number_observations) {
+                                    return -1;
+                                }
+                                return 0;
+                            }));
+                            if($scope.findSpeciesParamsEmpty) {
+                                allSpecies = results;
+                            }
+                            // this is a workaround to an issue where ng-class isn't getting kicked
+                            // when this flag changes...
+                            $timeout(function(){
+                                $scope.findingSpecies = false;
+                            },250);
+                            return results;
+                        });
+                    }
                 }
-                return $scope.serverResults;
             };
+            // update labels if the setting changes.
+            $scope.$on('setting-update-tagSpeciesTitle',function(event,data){
+                $timeout(function(){
+                    angular.forEach($scope.speciesList,function(s){
+                        s.display = $filter('speciesTitle')(s)+' ('+s.number_observations+')';
+                    });
+                },250);
+            });
             $http.get('/npn_portal/networks/getPartnerNetworks.json?active_only=true').success(function(partners){
                 angular.forEach(partners,function(p) {
                     p.network_name = p.network_name.trim();
@@ -1135,6 +1162,8 @@ console.log('markers',markers);
             $http.get('/npn_portal/species/getAnimalTypes.json').success(function(types){
                 $scope.animalTypes = types;
             });
+            // load up "all" species...
+            $scope.findSpecies();
         }]
     };
 }]);
@@ -1722,7 +1751,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
-    "            <li ng-if=\"!data && toPlotYears.length && toPlot.length\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li ng-if=\"!data && toPlotYears.length && toPlot.length\"><button class=\"btn btn-primary\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
@@ -1763,8 +1792,6 @@ angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", functi
 
 angular.module("js/filter/filterControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/filterControl.html",
-    "<a class=\"btn btn-default\" id=\"filter-placebo\" href ng-click=\"$parent.close()\" ng-disabled=\"!filterHasSufficientCriteria()\">Execute Filter <i class=\"fa fa-search\"></i></a>\n" +
-    "\n" +
     "<ul class=\"list-unstyled\">\n" +
     "    <li>\n" +
     "        <label for=\"yearInputForm\">Select up to ten (consecutive) years</label>\n" +
@@ -1801,7 +1828,8 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "            item-label=\"species_type\"\n" +
     "            tick-property=\"selected\"\n" +
     "            orientation=\"horizontal\"\n" +
-    "            helper-elements=\"all none reset filter\"></div>\n" +
+    "            helper-elements=\"all none reset filter\"\n" +
+    "            on-close=\"findSpecies()\"></div>\n" +
     "    </li>\n" +
     "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label>Plant Types</label>\n" +
@@ -1813,7 +1841,8 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "            item-label=\"species_type\"\n" +
     "            tick-property=\"selected\"\n" +
     "            orientation=\"horizontal\"\n" +
-    "            helper-elements=\"all none reset filter\"></div>\n" +
+    "            helper-elements=\"all none reset filter\"\n" +
+    "            on-close=\"findSpecies()\"></div>\n" +
     "    </li>\n" +
     "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label>Partners</label>\n" +
@@ -1825,26 +1854,34 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "            item-label=\"network_name\"\n" +
     "            tick-property=\"selected\"\n" +
     "            orientation=\"horizontal\"\n" +
-    "            helper-elements=\"all none reset filter\"></div>\n" +
+    "            helper-elements=\"all none reset filter\"\n" +
+    "            on-close=\"findSpecies()\"></div>\n" +
     "    </li>\n" +
     "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label for=\"species\">Species</label>\n" +
-    "        <input id=\"species\"\n" +
-    "               type=\"text\" class=\"form-control\"\n" +
-    "               placeholder=\"Add Species To Filter\"\n" +
-    "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:15\"\n" +
-    "               typeahead-loading=\"findingSpecies\"\n" +
-    "               ng-model=\"selected.addSpecies\"\n" +
-    "               ng-disabled=\"findSpeciesParamsEmpty\" />\n" +
-    "        <!--    when adding a species to the map the button is immediately disabled and the popover is left hanging\n" +
-    "                in space and can never go away...  this control will change so just removing the popover here for the\n" +
-    "                time being.\n" +
-    "                popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
-    "                popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\"-->\n" +
-    "        <button class=\"btn btn-default\" ng-disabled=\"!selected.speciesToAdd\"\n" +
-    "                ng-click=\"addSpeciesToFilter(selected.speciesToAdd)\">\n" +
-    "            <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
-    "        </button>\n" +
+    "        <div class=\"row\">\n" +
+    "            <div class=\"col-xs-9\">\n" +
+    "                <div isteven-multi-select\n" +
+    "                    max-labels=\"3\"\n" +
+    "                    input-model=\"speciesList\"\n" +
+    "                    output-model=\"selected.species\"\n" +
+    "                    button-label=\"display\"\n" +
+    "                    item-label=\"display\"\n" +
+    "                    tick-property=\"selected\"\n" +
+    "                    orientation=\"horizontal\"\n" +
+    "                    helper-elements=\"none reset filter\"></div>\n" +
+    "            </div>\n" +
+    "            <div class=\"col-xs-3\">\n" +
+    "                <button class=\"btn btn-default\" ng-disabled=\"!selected.species.length\" ng-click=\"addSpeciesToFilter()\"\n" +
+    "                        popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
+    "                        popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
+    "                    <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
+    "                </button>\n" +
+    "            </div>\n" +
+    "        </div>\n" +
+    "    </li>\n" +
+    "    <li ng-if=\"filterHasDate()\" style=\"text-align: right;\">\n" +
+    "        <a class=\"btn btn-lg btn-primary\" id=\"filter-placebo\" href ng-click=\"$parent.$parent.close()\" ng-disabled=\"!filterHasSufficientCriteria()\">Execute Filter <i class=\"fa fa-search\"></i></a>\n" +
     "    </li>\n" +
     "</ul>\n" +
     "");
@@ -1959,7 +1996,7 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "                <label for=\"fitLinesInput\">Fit Line{{toPlot.length > 1 ? 's' : ''}}</label>\n" +
     "                <input type=\"checkbox\" id=\"fitLinesInput\" ng-model=\"selection.regressionLines\" />\n" +
     "            </li>\n" +
-    "            <li ng-if=\"!data\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li ng-if=\"!data\"><button class=\"btn btn-primary\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
@@ -1996,7 +2033,6 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "                       value=\"{{option.value}}\"> <label for=\"{{option.value}}\">{{option.label}}</label>\n" +
     "            </li>\n" +
     "        </ul>\n" +
-    "\n" +
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
@@ -2008,7 +2044,16 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "                       value=\"{{option.value}}\"> <label for=\"{{option.value}}\">{{option.label}}</label>\n" +
     "            </li>\n" +
     "        </ul>\n" +
-    "\n" +
+    "    </li>\n" +
+    "    <li class=\"divider\"></li>\n" +
+    "    <li>\n" +
+    "        <Label for=\"clusterMarkersSetting\">Exclude low quality data from visualizations</label>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li ng-repeat=\"option in [true,false]\">\n" +
+    "                <input type=\"radio\" id=\"filterLqdSummary{{option}}\" ng-model=\"settings.filterLqdSummary.value\"\n" +
+    "                       ng-value=\"{{option}}\" /> <label for=\"filterLqdSummary{{option}}\">{{option | yesNo}}</label>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
     "    </li>\n" +
     "</ul>");
 }]);
@@ -2065,10 +2110,11 @@ angular.module('npn-viz-tool.vis-scatter',[
     'npn-viz-tool.vis',
     'npn-viz-tool.filter',
     'npn-viz-tool.filters',
+    'npn-viz-tool.settings',
     'ui.bootstrap'
 ])
-.controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService',
-    function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService){
+.controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService','SettingsService',
+    function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService,SettingsService){
     $scope.modal = $modalInstance;
     $scope.colorScale = FilterService.getColorScale();
     $scope.colors = $scope.colorScale.domain();
@@ -2298,8 +2344,9 @@ angular.module('npn-viz-tool.vis-scatter',[
             params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
         });
         ChartService.getSummarizedData(params,function(response){
+            var filterLqd = SettingsService.getSettingValue('filterLqdSummary');
             $scope.data = data = response.filter(function(d,i) {
-                var keep = d.numdays_since_prior_no >= 0;
+                var keep = !filterLqd||d.numdays_since_prior_no >= 0;
                 if(keep) {
                     d.id = i;
                     // this is the day # that will get plotted 1 being the first day of the start_year
@@ -2357,6 +2404,11 @@ angular.module('npn-viz-tool.settings',[
                 q: 'soc',
                 label: 'Station Count/Observation Count'
             }]
+        },
+        filterLqdSummary: {
+            name: 'filter-lqd-summary',
+            q: 'flqdf',
+            value: true
         }
     };
     return {

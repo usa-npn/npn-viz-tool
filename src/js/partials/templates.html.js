@@ -37,7 +37,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
-    "            <li ng-if=\"!data && toPlotYears.length && toPlot.length\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li ng-if=\"!data && toPlotYears.length && toPlot.length\"><button class=\"btn btn-primary\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
@@ -78,8 +78,6 @@ angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", functi
 
 angular.module("js/filter/filterControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/filterControl.html",
-    "<a class=\"btn btn-default\" id=\"filter-placebo\" href ng-click=\"$parent.close()\" ng-disabled=\"!filterHasSufficientCriteria()\">Execute Filter <i class=\"fa fa-search\"></i></a>\n" +
-    "\n" +
     "<ul class=\"list-unstyled\">\n" +
     "    <li>\n" +
     "        <label for=\"yearInputForm\">Select up to ten (consecutive) years</label>\n" +
@@ -116,7 +114,8 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "            item-label=\"species_type\"\n" +
     "            tick-property=\"selected\"\n" +
     "            orientation=\"horizontal\"\n" +
-    "            helper-elements=\"all none reset filter\"></div>\n" +
+    "            helper-elements=\"all none reset filter\"\n" +
+    "            on-close=\"findSpecies()\"></div>\n" +
     "    </li>\n" +
     "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label>Plant Types</label>\n" +
@@ -128,7 +127,8 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "            item-label=\"species_type\"\n" +
     "            tick-property=\"selected\"\n" +
     "            orientation=\"horizontal\"\n" +
-    "            helper-elements=\"all none reset filter\"></div>\n" +
+    "            helper-elements=\"all none reset filter\"\n" +
+    "            on-close=\"findSpecies()\"></div>\n" +
     "    </li>\n" +
     "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label>Partners</label>\n" +
@@ -140,26 +140,34 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "            item-label=\"network_name\"\n" +
     "            tick-property=\"selected\"\n" +
     "            orientation=\"horizontal\"\n" +
-    "            helper-elements=\"all none reset filter\"></div>\n" +
+    "            helper-elements=\"all none reset filter\"\n" +
+    "            on-close=\"findSpecies()\"></div>\n" +
     "    </li>\n" +
     "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label for=\"species\">Species</label>\n" +
-    "        <input id=\"species\"\n" +
-    "               type=\"text\" class=\"form-control\"\n" +
-    "               placeholder=\"Add Species To Filter\"\n" +
-    "               typeahead=\"sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:15\"\n" +
-    "               typeahead-loading=\"findingSpecies\"\n" +
-    "               ng-model=\"selected.addSpecies\"\n" +
-    "               ng-disabled=\"findSpeciesParamsEmpty\" />\n" +
-    "        <!--    when adding a species to the map the button is immediately disabled and the popover is left hanging\n" +
-    "                in space and can never go away...  this control will change so just removing the popover here for the\n" +
-    "                time being.\n" +
-    "                popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
-    "                popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\"-->\n" +
-    "        <button class=\"btn btn-default\" ng-disabled=\"!selected.speciesToAdd\"\n" +
-    "                ng-click=\"addSpeciesToFilter(selected.speciesToAdd)\">\n" +
-    "            <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
-    "        </button>\n" +
+    "        <div class=\"row\">\n" +
+    "            <div class=\"col-xs-9\">\n" +
+    "                <div isteven-multi-select\n" +
+    "                    max-labels=\"3\"\n" +
+    "                    input-model=\"speciesList\"\n" +
+    "                    output-model=\"selected.species\"\n" +
+    "                    button-label=\"display\"\n" +
+    "                    item-label=\"display\"\n" +
+    "                    tick-property=\"selected\"\n" +
+    "                    orientation=\"horizontal\"\n" +
+    "                    helper-elements=\"none reset filter\"></div>\n" +
+    "            </div>\n" +
+    "            <div class=\"col-xs-3\">\n" +
+    "                <button class=\"btn btn-default\" ng-disabled=\"!selected.species.length\" ng-click=\"addSpeciesToFilter()\"\n" +
+    "                        popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
+    "                        popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
+    "                    <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
+    "                </button>\n" +
+    "            </div>\n" +
+    "        </div>\n" +
+    "    </li>\n" +
+    "    <li ng-if=\"filterHasDate()\" style=\"text-align: right;\">\n" +
+    "        <a class=\"btn btn-lg btn-primary\" id=\"filter-placebo\" href ng-click=\"$parent.$parent.close()\" ng-disabled=\"!filterHasSufficientCriteria()\">Execute Filter <i class=\"fa fa-search\"></i></a>\n" +
     "    </li>\n" +
     "</ul>\n" +
     "");
@@ -274,7 +282,7 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "                <label for=\"fitLinesInput\">Fit Line{{toPlot.length > 1 ? 's' : ''}}</label>\n" +
     "                <input type=\"checkbox\" id=\"fitLinesInput\" ng-model=\"selection.regressionLines\" />\n" +
     "            </li>\n" +
-    "            <li ng-if=\"!data\"><button class=\"btn btn-default\" ng-click=\"visualize()\">Visualize</button></li>\n" +
+    "            <li ng-if=\"!data\"><button class=\"btn btn-primary\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
@@ -311,7 +319,6 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "                       value=\"{{option.value}}\"> <label for=\"{{option.value}}\">{{option.label}}</label>\n" +
     "            </li>\n" +
     "        </ul>\n" +
-    "\n" +
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
@@ -323,7 +330,16 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "                       value=\"{{option.value}}\"> <label for=\"{{option.value}}\">{{option.label}}</label>\n" +
     "            </li>\n" +
     "        </ul>\n" +
-    "\n" +
+    "    </li>\n" +
+    "    <li class=\"divider\"></li>\n" +
+    "    <li>\n" +
+    "        <Label for=\"clusterMarkersSetting\">Exclude low quality data from visualizations</label>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li ng-repeat=\"option in [true,false]\">\n" +
+    "                <input type=\"radio\" id=\"filterLqdSummary{{option}}\" ng-model=\"settings.filterLqdSummary.value\"\n" +
+    "                       ng-value=\"{{option}}\" /> <label for=\"filterLqdSummary{{option}}\">{{option | yesNo}}</label>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
     "    </li>\n" +
     "</ul>");
 }]);

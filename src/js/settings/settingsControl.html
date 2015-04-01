@@ -18,7 +18,6 @@
                        value="{{option.value}}"> <label for="{{option.value}}">{{option.label}}</label>
             </li>
         </ul>
-
     </li>
     <li class="divider"></li>
     <li>
@@ -30,6 +29,15 @@
                        value="{{option.value}}"> <label for="{{option.value}}">{{option.label}}</label>
             </li>
         </ul>
-
+    </li>
+    <li class="divider"></li>
+    <li>
+        <Label for="clusterMarkersSetting">Exclude low quality data from visualizations</label>
+        <ul class="list-unstyled">
+            <li ng-repeat="option in [true,false]">
+                <input type="radio" id="filterLqdSummary{{option}}" ng-model="settings.filterLqdSummary.value"
+                       ng-value="{{option}}" /> <label for="filterLqdSummary{{option}}">{{option | yesNo}}</label>
+            </li>
+        </ul>
     </li>
 </ul>

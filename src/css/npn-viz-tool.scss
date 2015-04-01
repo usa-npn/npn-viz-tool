@@ -171,9 +171,10 @@ $tool-content-overlap: 40px;
 
 // filter
 #filter-placebo {
+    /*
     position: absolute;
     top: 34px;
-    left: 190px;
+    left: 190px;*/
 }
 .tool-content.filter {
     label[for="species"] {
@@ -272,6 +273,9 @@ ul.filter-tags {
         }
         .phenophase-list {
             padding: 5px;
+            li {
+                font-size: .9em;
+            }
         }
         .popover-content {
             color: #666;

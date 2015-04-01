@@ -155,9 +155,10 @@ body {
 }
 
 #filter-placebo {
+  /*
   position: absolute;
   top: 34px;
-  left: 190px;
+  left: 190px;*/
 }
 
 .tool-content.filter label[for="species"] {
@@ -251,6 +252,9 @@ ul.filter-tags .filter-tag button:first-of-type {
 }
 ul.filter-tags .filter-tag .phenophase-list {
   padding: 5px;
+}
+ul.filter-tags .filter-tag .phenophase-list li {
+  font-size: .9em;
 }
 ul.filter-tags .filter-tag .popover-content {
   color: #666;

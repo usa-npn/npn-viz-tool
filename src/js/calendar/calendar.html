@@ -33,7 +33,7 @@
             <li class="criteria" ng-repeat="tp in toPlot">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style="color: {{colorScale(tp.color)}};" class="fa fa-circle"></i>
                 <a href ng-click="removeFromPlot($index)"><i class="fa fa-times-circle-o"></i></a>
             </li>
-            <li ng-if="!data && toPlotYears.length && toPlot.length"><button class="btn btn-default" ng-click="visualize()">Visualize</button></li>
+            <li ng-if="!data && toPlotYears.length && toPlot.length"><button class="btn btn-primary" ng-click="visualize()">Visualize</button></li>
         </ul>
         <div id="vis-container">
             <div id="vis-working" ng-show="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>

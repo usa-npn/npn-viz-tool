@@ -2,10 +2,11 @@ angular.module('npn-viz-tool.vis-scatter',[
     'npn-viz-tool.vis',
     'npn-viz-tool.filter',
     'npn-viz-tool.filters',
+    'npn-viz-tool.settings',
     'ui.bootstrap'
 ])
-.controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService',
-    function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService){
+.controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService','SettingsService',
+    function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService,SettingsService){
     $scope.modal = $modalInstance;
     $scope.colorScale = FilterService.getColorScale();
     $scope.colors = $scope.colorScale.domain();
@@ -235,8 +236,9 @@ angular.module('npn-viz-tool.vis-scatter',[
             params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
         });
         ChartService.getSummarizedData(params,function(response){
+            var filterLqd = SettingsService.getSettingValue('filterLqdSummary');
             $scope.data = data = response.filter(function(d,i) {
-                var keep = d.numdays_since_prior_no >= 0;
+                var keep = !filterLqd||d.numdays_since_prior_no >= 0;
                 if(keep) {
                     d.id = i;
                     // this is the day # that will get plotted 1 being the first day of the start_year

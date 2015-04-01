@@ -1,5 +1,3 @@
-<a class="btn btn-default" id="filter-placebo" href ng-click="$parent.close()" ng-disabled="!filterHasSufficientCriteria()">Execute Filter <i class="fa fa-search"></i></a>
-
 <ul class="list-unstyled">
     <li>
         <label for="yearInputForm">Select up to ten (consecutive) years</label>
@@ -36,7 +34,8 @@
             item-label="species_type"
             tick-property="selected"
             orientation="horizontal"
-            helper-elements="all none reset filter"></div>
+            helper-elements="all none reset filter"
+            on-close="findSpecies()"></div>
     </li>
     <li ng-if="filterHasDate()">
         <label>Plant Types</label>
@@ -48,7 +47,8 @@
             item-label="species_type"
             tick-property="selected"
             orientation="horizontal"
-            helper-elements="all none reset filter"></div>
+            helper-elements="all none reset filter"
+            on-close="findSpecies()"></div>
     </li>
     <li ng-if="filterHasDate()">
         <label>Partners</label>
@@ -60,25 +60,33 @@
             item-label="network_name"
             tick-property="selected"
             orientation="horizontal"
-            helper-elements="all none reset filter"></div>
+            helper-elements="all none reset filter"
+            on-close="findSpecies()"></div>
     </li>
     <li ng-if="filterHasDate()">
         <label for="species">Species</label>
-        <input id="species"
-               type="text" class="form-control"
-               placeholder="Add Species To Filter"
-               typeahead="sp as sp.$display for sp in findSpecies()  | filter:{common_name:$viewValue} | limitTo:15"
-               typeahead-loading="findingSpecies"
-               ng-model="selected.addSpecies"
-               ng-disabled="findSpeciesParamsEmpty" />
-        <!--    when adding a species to the map the button is immediately disabled and the popover is left hanging
-                in space and can never go away...  this control will change so just removing the popover here for the
-                time being.
-                popover-placement="right" popover-popup-delay="500"
-                popover-trigger="mouseenter" popover="Add this filter to the map" popover-append-to-body="true"-->
-        <button class="btn btn-default" ng-disabled="!selected.speciesToAdd"
-                ng-click="addSpeciesToFilter(selected.speciesToAdd)">
-            <i class="fa" ng-class="{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}"></i>
-        </button>
+        <div class="row">
+            <div class="col-xs-9">
+                <div isteven-multi-select
+                    max-labels="3"
+                    input-model="speciesList"
+                    output-model="selected.species"
+                    button-label="display"
+                    item-label="display"
+                    tick-property="selected"
+                    orientation="horizontal"
+                    helper-elements="none reset filter"></div>
+            </div>
+            <div class="col-xs-3">
+                <button class="btn btn-default" ng-disabled="!selected.species.length" ng-click="addSpeciesToFilter()"
+                        popover-placement="right" popover-popup-delay="500"
+                        popover-trigger="mouseenter" popover="Add this filter to the map" popover-append-to-body="true">
+                    <i class="fa" ng-class="{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}"></i>
+                </button>
+            </div>
+        </div>
+    </li>
+    <li ng-if="filterHasDate()" style="text-align: right;">
+        <a class="btn btn-lg btn-primary" id="filter-placebo" href ng-click="$parent.$parent.close()" ng-disabled="!filterHasSufficientCriteria()">Execute Filter <i class="fa fa-search"></i></a>
     </li>
 </ul>

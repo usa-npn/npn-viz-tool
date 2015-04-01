@@ -713,12 +713,11 @@ console.log('markers',markers);
         }
     };
 }])
-.directive('filterControl',['$http','$filter','FilterService','DateFilterArg','SpeciesFilterArg',function($http,$filter,FilterService,DateFilterArg,SpeciesFilterArg){
+.directive('filterControl',['$http','$filter','$timeout','FilterService','DateFilterArg','SpeciesFilterArg',function($http,$filter,$timeout,FilterService,DateFilterArg,SpeciesFilterArg){
     return {
         restrict: 'E',
         templateUrl: 'js/filter/filterControl.html',
         controller: ['$scope',function($scope) {
-
             $scope.addDateRangeToFilter = function() {
                 FilterService.addToFilter(new DateFilterArg($scope.selected.date));
             };
@@ -730,14 +729,18 @@ console.log('markers',markers);
             $scope.thisYear = thisYear;
             $scope.validYears = validYears;
 
-            $scope.selected = {addSpecies: undefined, date: {
-                start_date: (thisYear-1),
-                end_date: thisYear
-            }};
+            $scope.selected = {
+                date: {
+                    start_date: (thisYear-1),
+                    end_date: thisYear
+                },
+                species: []
+            };
 
-            $scope.addSpeciesToFilter = function(species) {
-                FilterService.addToFilter(new SpeciesFilterArg(species));
-                $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
+            $scope.addSpeciesToFilter = function() {
+                angular.forEach($scope.selected.species,function(species){
+                    FilterService.addToFilter(new SpeciesFilterArg(species));
+                });
             };
             $scope.speciesInput = {
                 animals: [],
@@ -745,11 +748,13 @@ console.log('markers',markers);
                 networks: []
             };
             $scope.findSpeciesParamsEmpty = true;
-            var findSpeciesParams;
+
+            var findSpeciesParams,
+                findSpeciesPromise,
+                allSpecies,
+                filterInvalidated = true;
 
             function invalidateResults() {
-                $scope.serverResults = undefined;
-                $scope.selected.speciesToAdd = $scope.selected.addSpecies = undefined;
                 var params = {},
                     idx = 0;
                 angular.forEach([].concat($scope.speciesInput.animals).concat($scope.speciesInput.plants),function(s){
@@ -761,41 +766,63 @@ console.log('markers',markers);
                 });
                 findSpeciesParams = params;
                 $scope.findSpeciesParamsEmpty = Object.keys(params).length === 0;
+                filterInvalidated = true;
             }
 
             $scope.$watch('speciesInput.animals',invalidateResults);
             $scope.$watch('speciesInput.plants',invalidateResults);
             $scope.$watch('speciesInput.networks',invalidateResults);
 
-            $scope.$watch('selected.addSpecies',function(){
-                $scope.selected.speciesToAdd = angular.isObject($scope.selected.addSpecies) ?
-                    $scope.selected.addSpecies : undefined;
-            });
-
             $scope.findSpecies = function() {
-                if(!$scope.serverResults) {
-                    $scope.serverResults = $http.get('/npn_portal/species/getSpeciesFilter.json',{
-                        params: findSpeciesParams
-                    }).then(function(response){
-                        var species = [];
-                        angular.forEach(response.data,function(s){
-                            s.number_observations = parseInt(s.number_observations);
-                            s.$display = s.common_name+' ('+s.number_observations+')';
-                            species.push(s);
-                        });
-                        return ($scope.serverResults = species.sort(function(a,b){
-                            if(a.number_observations < b.number_observations) {
-                                return 1;
-                            }
-                            if(a.number_observations > b.number_observations) {
-                                return -1;
-                            }
-                            return 0;
-                        }));
+                if(filterInvalidated) {
+                    filterInvalidated = false;
+                    angular.forEach($scope.selected.species,function(species){
+                        species.selected = false;
                     });
+                    $scope.selected.species = [];
+                    if($scope.findSpeciesParamsEmpty && allSpecies && allSpecies.length) {
+                        $scope.speciesList = allSpecies;
+                    } else {
+                        $scope.findingSpecies = true;
+                        $scope.serverResults = $http.get('/npn_portal/species/getSpeciesFilter.json',{
+                            params: findSpeciesParams
+                        }).then(function(response){
+                            var species = [];
+                            angular.forEach(response.data,function(s){
+                                s.number_observations = parseInt(s.number_observations);
+                                s.display = $filter('speciesTitle')(s)+' ('+s.number_observations+')';
+                                species.push(s);
+                            });
+                            var results = ($scope.speciesList = species.sort(function(a,b){
+                                if(a.number_observations < b.number_observations) {
+                                    return 1;
+                                }
+                                if(a.number_observations > b.number_observations) {
+                                    return -1;
+                                }
+                                return 0;
+                            }));
+                            if($scope.findSpeciesParamsEmpty) {
+                                allSpecies = results;
+                            }
+                            // this is a workaround to an issue where ng-class isn't getting kicked
+                            // when this flag changes...
+                            $timeout(function(){
+                                $scope.findingSpecies = false;
+                            },250);
+                            return results;
+                        });
+                    }
                 }
-                return $scope.serverResults;
             };
+            // update labels if the setting changes.
+            $scope.$on('setting-update-tagSpeciesTitle',function(event,data){
+                $timeout(function(){
+                    angular.forEach($scope.speciesList,function(s){
+                        s.display = $filter('speciesTitle')(s)+' ('+s.number_observations+')';
+                    });
+                },250);
+            });
             $http.get('/npn_portal/networks/getPartnerNetworks.json?active_only=true').success(function(partners){
                 angular.forEach(partners,function(p) {
                     p.network_name = p.network_name.trim();
@@ -810,6 +837,8 @@ console.log('markers',markers);
             $http.get('/npn_portal/species/getAnimalTypes.json').success(function(types){
                 $scope.animalTypes = types;
             });
+            // load up "all" species...
+            $scope.findSpecies();
         }]
     };
 }]);

@@ -39,6 +39,11 @@ angular.module('npn-viz-tool.settings',[
                 q: 'soc',
                 label: 'Station Count/Observation Count'
             }]
+        },
+        filterLqdSummary: {
+            name: 'filter-lqd-summary',
+            q: 'flqdf',
+            value: true
         }
     };
     return {
