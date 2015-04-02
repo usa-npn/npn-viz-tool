@@ -267,7 +267,7 @@ ul.filter-tags {
     }
 
     .filter-tag {
-        button:first-of-type {
+        a:first-of-type {
             border-top-right-radius: 0px;
             border-bottom-right-radius: 0px;
         }
@@ -282,10 +282,10 @@ ul.filter-tags {
         }
     }
     .filter-tag.date {
-        button:first-of-type {
+        a:first-of-type {
             cursor: pointer;
         }
-        button:first-of-type:hover {
+        a:first-of-type:hover {
             background-color: #fff;
         }
     }

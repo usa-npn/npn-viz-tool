@@ -63,16 +63,16 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
 angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/dateFilterTag.html",
     "<div class=\"btn-group filter-tag date\">\n" +
-    "    <button class=\"btn btn-default\">\n" +
+    "    <a class=\"btn btn-default\">\n" +
     "        <span popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
     "              popover-trigger=\"mouseenter\" popover=\"Indicates the span of time represented on the map\">{{arg.arg.start_date}} - {{arg.arg.end_date}} </span>\n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
     "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{counts | speciesBadge:badgeFormat}}</span>\n" +
-    "    </button>\n" +
-    "    <button class=\"btn btn-default\" ng-click=\"removeFromFilter(arg)\">\n" +
+    "    </a>\n" +
+    "    <a class=\"btn btn-default\" ng-click=\"removeFromFilter(arg)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
-    "    </button>\n" +
+    "    </a>\n" +
     "</div>");
 }]);
 
@@ -184,13 +184,13 @@ angular.module("js/filter/filterTags.html", []).run(["$templateCache", function(
 angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/speciesFilterTag.html",
     "<div class=\"btn-group filter-tag\" ng-class=\"{open: status.isopen}\">\n" +
-    "    <button type=\"button\" class=\"btn btn-primary\" style=\"background-color: {{arg.color}};\" ng-disabled=\"!arg.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
+    "    <a class=\"btn btn-primary\" style=\"background-color: {{arg.color}};\" ng-disabled=\"!arg.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
     "        {{arg.arg | speciesTitle:titleFormat}} \n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
     "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span> \n" +
     "        <span class=\"caret\"></span>\n" +
-    "    </button>\n" +
+    "    </a>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
     "        <li class=\"inline\">Select <a href ng-click=\"selectAll(true)\">all</a> <a href ng-click=\"selectAll(false)\">none</a></li>\n" +
     "        <li class=\"divider\"></li>\n" +
@@ -198,9 +198,9 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
     "            <input type=\"checkbox\" ng-model=\"phenophase.selected\"> <span class=\"badge\">{{phenophase.count}}</span> {{phenophase.phenophase_name}}\n" +
     "        </li>\n" +
     "    </ul>\n" +
-    "    <button class=\"btn btn-primary\" style=\"background-color: {{arg.color}};\" ng-click=\"removeFromFilter(arg)\">\n" +
+    "    <a class=\"btn btn-primary\" style=\"background-color: {{arg.color}};\" ng-click=\"removeFromFilter(arg)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
-    "    </button>\n" +
+    "    </a>\n" +
     "</div>");
 }]);
 

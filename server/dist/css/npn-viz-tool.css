@@ -246,7 +246,7 @@ ul.filter-tags {
 ul.filter-tags li {
   margin-top: 5px;
 }
-ul.filter-tags .filter-tag button:first-of-type {
+ul.filter-tags .filter-tag a:first-of-type {
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;
 }
@@ -259,10 +259,10 @@ ul.filter-tags .filter-tag .phenophase-list li {
 ul.filter-tags .filter-tag .popover-content {
   color: #666;
 }
-ul.filter-tags .filter-tag.date button:first-of-type {
+ul.filter-tags .filter-tag.date a:first-of-type {
   cursor: pointer;
 }
-ul.filter-tags .filter-tag.date button:first-of-type:hover {
+ul.filter-tags .filter-tag.date a:first-of-type:hover {
   background-color: #fff;
 }
 

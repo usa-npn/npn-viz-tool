@@ -1,11 +1,11 @@
 <div class="btn-group filter-tag" ng-class="{open: status.isopen}">
-    <button type="button" class="btn btn-primary" style="background-color: {{arg.color}};" ng-disabled="!arg.phenophases" ng-click="status.isopen = !status.isopen">
+    <a class="btn btn-primary" style="background-color: {{arg.color}};" ng-disabled="!arg.phenophases" ng-click="status.isopen = !status.isopen">
         {{arg.arg | speciesTitle:titleFormat}} 
         <span class="badge"
               popover-placement="bottom" popover-popup-delay="500" popover-append-to-body="true"
               popover-trigger="mouseenter" popover="{{badgeTooltip}}">{{arg.counts | speciesBadge:badgeFormat}}</span> 
         <span class="caret"></span>
-    </button>
+    </a>
     <ul class="dropdown-menu phenophase-list" role="menu">
         <li class="inline">Select <a href ng-click="selectAll(true)">all</a> <a href ng-click="selectAll(false)">none</a></li>
         <li class="divider"></li>
@@ -13,7 +13,7 @@
             <input type="checkbox" ng-model="phenophase.selected"> <span class="badge">{{phenophase.count}}</span> {{phenophase.phenophase_name}}
         </li>
     </ul>
-    <button class="btn btn-primary" style="background-color: {{arg.color}};" ng-click="removeFromFilter(arg)">
+    <a class="btn btn-primary" style="background-color: {{arg.color}};" ng-click="removeFromFilter(arg)">
         <i class="fa fa-times-circle-o"></i>
-    </button>
+    </a>
 </div>
