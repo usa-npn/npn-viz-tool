@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -132,16 +132,28 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "    </li>\n" +
     "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label>Partners</label>\n" +
-    "        <div isteven-multi-select\n" +
-    "            max-labels=\"3\"\n" +
-    "            input-model=\"partners\"\n" +
-    "            output-model=\"speciesInput.networks\"\n" +
-    "            button-label=\"network_name\"\n" +
-    "            item-label=\"network_name\"\n" +
-    "            tick-property=\"selected\"\n" +
-    "            orientation=\"horizontal\"\n" +
-    "            helper-elements=\"all none reset filter\"\n" +
-    "            on-close=\"findSpecies()\"></div>\n" +
+    "        <div class=\"row\">\n" +
+    "            <div class=\"col-xs-9\">\n" +
+    "                <div isteven-multi-select\n" +
+    "                    max-labels=\"3\"\n" +
+    "                    input-model=\"partners\"\n" +
+    "                    output-model=\"speciesInput.networks\"\n" +
+    "                    button-label=\"network_name\"\n" +
+    "                    item-label=\"network_name\"\n" +
+    "                    tick-property=\"selected\"\n" +
+    "                    orientation=\"horizontal\"\n" +
+    "                    helper-elements=\"all none reset filter\"\n" +
+    "                    on-close=\"findSpecies()\"></div>\n" +
+    "            </div>\n" +
+    "            <div class=\"col-xs-3\">\n" +
+    "                <button class=\"btn btn-default\" ng-disabled=\"!speciesInput.networks.length\" ng-click=\"addNetworksToFilter()\"\n" +
+    "                        popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
+    "                        popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
+    "                    <i class=\"fa fa-plus\"></i>\n" +
+    "                </button>\n" +
+    "            </div>\n" +
+    "        </div>\n" +
+    "\n" +
     "    </li>\n" +
     "    <li ng-if=\"filterHasDate()\">\n" +
     "        <label for=\"species\">Species</label>\n" +
@@ -177,8 +189,25 @@ angular.module("js/filter/filterTags.html", []).run(["$templateCache", function(
   $templateCache.put("js/filter/filterTags.html",
     "<ul class=\"list-inline filter-tags\">\n" +
     "    <li ng-repeat=\"s in getFilter().getSpeciesArgs()\"><species-filter-tag arg=\"s\"></species-filter-tag></li>\n" +
+    "    <li ng-repeat=\"n in getFilter().getNetworkArgs()\"><network-filter-tag arg=\"n\"></network-filter-tag></li>\n" +
     "    <li ng-if=\"(date = getFilter().getDateArg())\"><date-filter-tag arg=\"date\"></date-filter-tag></li>\n" +
     "</ul>");
+}]);
+
+angular.module("js/filter/networkFilterTag.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/networkFilterTag.html",
+    "<div class=\"btn-group filter-tag date\">\n" +
+    "    <a class=\"btn btn-default\">\n" +
+    "        <span popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
+    "              popover-trigger=\"mouseenter\" popover=\"Indicates the span of time represented on the map\">{{arg.arg.network_name}} </span>\n" +
+    "        <span class=\"badge\"\n" +
+    "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
+    "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span>\n" +
+    "    </a>\n" +
+    "    <a class=\"btn btn-default\" ng-click=\"removeFromFilter(arg)\">\n" +
+    "        <i class=\"fa fa-times-circle-o\"></i>\n" +
+    "    </a>\n" +
+    "</div>");
 }]);
 
 angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", function($templateCache) {

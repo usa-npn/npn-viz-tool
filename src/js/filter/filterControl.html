@@ -52,16 +52,28 @@
     </li>
     <li ng-if="filterHasDate()">
         <label>Partners</label>
-        <div isteven-multi-select
-            max-labels="3"
-            input-model="partners"
-            output-model="speciesInput.networks"
-            button-label="network_name"
-            item-label="network_name"
-            tick-property="selected"
-            orientation="horizontal"
-            helper-elements="all none reset filter"
-            on-close="findSpecies()"></div>
+        <div class="row">
+            <div class="col-xs-9">
+                <div isteven-multi-select
+                    max-labels="3"
+                    input-model="partners"
+                    output-model="speciesInput.networks"
+                    button-label="network_name"
+                    item-label="network_name"
+                    tick-property="selected"
+                    orientation="horizontal"
+                    helper-elements="all none reset filter"
+                    on-close="findSpecies()"></div>
+            </div>
+            <div class="col-xs-3">
+                <button class="btn btn-default" ng-disabled="!speciesInput.networks.length" ng-click="addNetworksToFilter()"
+                        popover-placement="right" popover-popup-delay="500"
+                        popover-trigger="mouseenter" popover="Add this filter to the map" popover-append-to-body="true">
+                    <i class="fa fa-plus"></i>
+                </button>
+            </div>
+        </div>
+
     </li>
     <li ng-if="filterHasDate()">
         <label for="species">Species</label>

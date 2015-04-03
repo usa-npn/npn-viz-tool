@@ -60,6 +60,70 @@ angular.module('npn-viz-tool.filter',[
     };
     return DateFilterArg;
 }])
+.factory('NetworkFilterArg',['$http','$rootScope','FilterArg','SpeciesFilterArg',function($http,$rootScope,FilterArg,SpeciesFilterArg){
+    /**
+     * Constructs a NetworkFilterArg.  TODO over-ride $filter??
+     *
+     * @param {Object} A network record as returned by getPartnerNetworks.json.
+     */
+    var NetworkFilterArg = function(network) {
+        FilterArg.apply(this,arguments);
+        this.counts = {
+            station: '?',
+            observation: '?'
+        };
+        this.stations = [];
+        var self = this;
+        $rootScope.$broadcast('network-filter-ready',{filter:self});
+    };
+    NetworkFilterArg.prototype.getId = function() {
+        return parseInt(this.arg.network_id);
+    };
+    NetworkFilterArg.prototype.toString = function() {
+        return this.arg.network_id;
+    };
+    NetworkFilterArg.prototype.resetCounts = function(c) {
+        this.counts.station = this.counts.observation = c;
+        this.stations = [];
+    };
+    NetworkFilterArg.prototype.updateCounts = function(station,species) {
+        var id = this.getId(),pid;
+        //console.log('updateCounts',id,this.arg,station,species);
+        if(station.networks.indexOf(id) !== -1) {
+            // station is IN this network
+            if(this.stations.indexOf(station.station_id) === -1) {
+                // first time we've seen this station.
+                this.stations.push(station.station_id);
+                this.counts.station++;
+            }
+            // TODO, how to know which phenophases to add to counts??
+            for(pid in species) {
+                if(species[pid].$match) { // matched some species/phenophase filter
+                    this.counts.observation += SpeciesFilterArg.countObservationsForPhenophase(species[pid]);
+                }
+            }
+        }
+    };
+    NetworkFilterArg.fromString = function(s) {
+        // TODO can I just fetch a SINGLE network??  the network_id parameter of
+        // getPartnerNetworks.json doesn't appear to work.
+        return $http.get('/npn_portal/networks/getPartnerNetworks.json',{
+            params: {
+                active_only: true,
+                // network_id: s
+            }
+        }).then(function(response){
+            var nets = response.data;
+            for(var i = 0; nets && i  < nets.length; i++) {
+                if(s === nets[i].network_id) {
+                    return new NetworkFilterArg(nets[i]);
+                }
+            }
+            console.warn('NO NETWORK FOUND WITH ID '+s);
+        });
+    };
+    return NetworkFilterArg;
+}])
 .factory('SpeciesFilterArg',['$http','$rootScope','FilterArg',function($http,$rootScope,FilterArg){
     /**
      * Constructs a SpeciesFilterArg.  This type of arg spans both side of the wire.  It's id is used as input
@@ -102,6 +166,19 @@ angular.module('npn-viz-tool.filter',[
                 $rootScope.$broadcast('species-filter-ready',{filter:self});
             });
     };
+    SpeciesFilterArg.countObservationsForPhenophase = function(phenophase) {
+        var n = 0;
+        if(phenophase.y) {
+            n += phenophase.y;
+        }
+        if(phenophase.n) {
+            n += phenophase.n;
+        }
+        if(phenophase.q) {
+            n += phenophase.q;
+        }
+        return n;
+    };
     SpeciesFilterArg.prototype.getId = function() {
         return parseInt(this.arg.species_id);
     };
@@ -115,11 +192,15 @@ angular.module('npn-viz-tool.filter',[
         var self = this,
             hitCount = 0,
             filtered = Object.keys(species).filter(function(pid){
-                self.phenophasesMap[pid].count++;
-                if(self.phenophasesMap[pid].selected) {
-                    hitCount++;
+                var oCount = SpeciesFilterArg.countObservationsForPhenophase(species[pid]);
+                self.phenophasesMap[pid].count += oCount;
+                // LEAKY this $match is something that the NetworkFilterArg uses to decide which
+                // observations to include in its counts
+                species[pid].$match = self.phenophasesMap[pid].selected;
+                if(species[pid].$match) {
+                    hitCount += oCount;
                 }
-                return self.phenophasesMap[pid].selected;
+                return species[pid].$match;
             });
         if(filtered.length > 0) {
             self.counts.station++;
@@ -199,7 +280,7 @@ angular.module('npn-viz-tool.filter',[
     };
     return GeoFilterArg;
 }])
-.factory('NpnFilter',['DateFilterArg','SpeciesFilterArg','GeoFilterArg',function(DateFilterArg,SpeciesFilterArg,GeoFilterArg){
+.factory('NpnFilter',['DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg',function(DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg){
     function getValues(map) {
         var vals = [],key;
         for(key in map) {
@@ -221,10 +302,10 @@ angular.module('npn-viz-tool.filter',[
         if(this.date) {
             return true;
         }
-        return Object.keys(this.species).length > 0;
+        return Object.keys(this.species).length > 0 || Object.keys(this.networks).length > 0;
     };
     NpnFilter.prototype.hasSufficientCriteria = function() {
-        return this.date && Object.keys(this.species).length > 0;
+        return this.date && (Object.keys(this.species).length > 0 || Object.keys(this.networks).length > 0);
     };
     NpnFilter.prototype.getUpdateCount = function() {
         return this.updateCount;
@@ -237,6 +318,12 @@ angular.module('npn-viz-tool.filter',[
     };
     NpnFilter.prototype.getSpeciesArgs = function() {
         return getValues(this.species);
+    };
+    NpnFilter.prototype.getNetworkArg = function(id) {
+        return this.networks[id];
+    };
+    NpnFilter.prototype.getNetworkArgs = function() {
+        return getValues(this.networks);
     };
     NpnFilter.prototype.getCriteria = function() {
         var criteria = getValues(this.species);
@@ -254,6 +341,8 @@ angular.module('npn-viz-tool.filter',[
             this.date = item;
         } else if (item instanceof SpeciesFilterArg) {
             this.species[item.getId()] = item;
+        } else if (item instanceof NetworkFilterArg) {
+            this.networks[item.getId()] = item;
         } else if (item instanceof GeoFilterArg) {
             this.geo[item.getId()] = item;
         }
@@ -266,6 +355,8 @@ angular.module('npn-viz-tool.filter',[
             this.species = {}; // removal of date invalidates filter.
         } else if(item instanceof SpeciesFilterArg) {
             delete this.species[item.getId()];
+        } else if(item instanceof NetworkFilterArg){
+            delete this.networks[item.getId()];
         } else if(item instanceof GeoFilterArg) {
             delete this.geo[item.getId()];
         }
@@ -276,6 +367,7 @@ angular.module('npn-viz-tool.filter',[
         this.date = undefined;
         this.species = {};
         this.geo = {};
+        this.networks = {};
     };
     return NpnFilter;
 }])
@@ -283,8 +375,8 @@ angular.module('npn-viz-tool.filter',[
  * TODO - need to nail down the event model and probably even formalize it via a service because it's all
  * pretty loosey goosey at the moment.  Bad enough duplicating strings around...
  */
-.factory('FilterService',['$q','$http','$rootScope','$timeout','uiGmapGoogleMapApi','NpnFilter',
-    function($q,$http,$rootScope,$timeout,uiGmapGoogleMapApi,NpnFilter){
+.factory('FilterService',['$q','$http','$rootScope','$timeout','uiGmapGoogleMapApi','NpnFilter','SpeciesFilterArg',
+    function($q,$http,$rootScope,$timeout,uiGmapGoogleMapApi,NpnFilter,SpeciesFilterArg){
     // NOTE: this scale is limited to 20 colors
     var color_domain = d3.range(0,20),
         cat20 = d3.scale.category20().domain(color_domain),
@@ -325,6 +417,9 @@ angular.module('npn-viz-tool.filter',[
             filter.getSpeciesArgs().forEach(function(arg,i){
                 params['species_id['+(i)+']'] = arg.getId();
             });
+            filter.getNetworkArgs().forEach(function(arg,i){
+                params['network_id['+(i)+']'] = arg.getId();
+            });
             return params;
         }
     }
@@ -345,10 +440,19 @@ angular.module('npn-viz-tool.filter',[
         });
         var observationCount = 0,
             geos = filter.getGeoArgs(),
+            hasSpeciesArgs = filter.getSpeciesArgs().length > 0,
+            networkArgs = filter.getNetworkArgs(),
+            updateNetworkCounts = function(station,species) {
+                if(networkArgs.length) {
+                    angular.forEach(networkArgs,function(networkArg){
+                        networkArg.updateCounts(station,species);
+                    });
+                }
+            },
             filtered =  markers.filter(function(station){
                 station.markerOpts.icon.fillColor = defaultIcon.fillColor;
                 var i,sid,speciesFilter,keeps = 0,
-                    n,hitMap = {};
+                    n,hitMap = {},pid;
 
 
                 if(geos.length > 0) {
@@ -368,11 +472,11 @@ angular.module('npn-viz-tool.filter',[
                 for(sid in station.species) {
                     speciesFilter = filter.getSpeciesArg(sid);
                     hitMap[sid] = 0;
-                    if(!speciesFilter) {
+                    if(!speciesFilter && hasSpeciesArgs) {
                         console.warn('species found in results but not in filter',station.species[sid]);
                         continue;
                     }
-                    if((n=speciesFilter.$filter(station.species[sid]))) {
+                    if(speciesFilter && (n=speciesFilter.$filter(station.species[sid]))) {
                         observationCount += n;
                         station.observationCount += n;
                         hitMap[sid]++;
@@ -382,7 +486,18 @@ angular.module('npn-viz-tool.filter',[
                             station.markerOpts.icon.fillColorIdx = speciesFilter.colorIdx;
                             station.markerOpts.icon.fillColor = speciesFilter.color;
                         }
+                        updateNetworkCounts(station,station.species[sid]);
+                    } else if(!speciesFilter) {
+                        // if we're here it means we have network filters but not species filters
+                        // just update observation counts and hold onto all markers
+                        for(pid in station.species[sid]) {
+                            station.species[sid][pid].$match = true; // potentially LEAKY but attribute shared by Species/NetworkFilterArg
+                            observationCount += SpeciesFilterArg.countObservationsForPhenophase(station.species[sid][pid]);
+                        }
+                        keeps++;
+                        updateNetworkCounts(station,station.species[sid]);
                     }
+
                 }
                 // look through the hitMap and see if there were multiple hits for multiple species
                 hitMap['n'] = 0;
@@ -548,7 +663,7 @@ angular.module('npn-viz-tool.filter',[
                 $scope.doCluster = data.value;
             });
             function executeFilter() {
-                if(!FilterService.isFilterEmpty() && FilterService.hasFilterChanged()) {
+                if(FilterService.hasFilterChanged() && FilterService.hasSufficientCriteria()) {
                     $timeout(function(){
                         $scope.results.markers = [];
                         $timeout(function(){
@@ -713,7 +828,33 @@ console.log('markers',markers);
         }
     };
 }])
-.directive('filterControl',['$http','$filter','$timeout','FilterService','DateFilterArg','SpeciesFilterArg',function($http,$filter,$timeout,FilterService,DateFilterArg,SpeciesFilterArg){
+.directive('networkFilterTag',['FilterService','SettingsService',function(FilterService,SettingsService){
+    return {
+        restrict: 'E',
+        require: '^filterTags',
+        templateUrl: 'js/filter/networkFilterTag.html',
+        scope: {
+            arg: '='
+        },
+        controller: function($scope){
+            $scope.badgeFormat = SettingsService.getSettingValue('tagBadgeFormat');
+            $scope.badgeTooltip = SettingsService.getSettingValueLabel('tagBadgeFormat');
+            $scope.$on('setting-update-tagBadgeFormat',function(event,data){
+                $scope.badgeFormat = data.value;
+                $scope.badgeTooltip = SettingsService.getSettingValueLabel('tagBadgeFormat');
+            });
+            $scope.removeFromFilter = FilterService.removeFromFilter;
+            $scope.$on('filter-phase1-start',function(event,data) {
+                $scope.arg.resetCounts('?');
+            });
+            $scope.$on('filter-phase2-start',function(event,data) {
+                $scope.arg.resetCounts(0);
+            });
+        }
+    };
+}])
+.directive('filterControl',['$http','$filter','$timeout','FilterService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg',
+    function($http,$filter,$timeout,FilterService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg){
     return {
         restrict: 'E',
         templateUrl: 'js/filter/filterControl.html',
@@ -737,6 +878,11 @@ console.log('markers',markers);
                 species: []
             };
 
+            $scope.addNetworksToFilter = function() {
+                angular.forEach($scope.speciesInput.networks,function(network){
+                    FilterService.addToFilter(new NetworkFilterArg(network));
+                });
+            };
             $scope.addSpeciesToFilter = function() {
                 angular.forEach($scope.selected.species,function(species){
                     FilterService.addToFilter(new SpeciesFilterArg(species));

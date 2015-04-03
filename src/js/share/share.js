@@ -9,8 +9,8 @@ angular.module('npn-viz-tool.share',[
  * because upon instantiation it examines the current URL query args and uses its contents to
  * populate the filter, etc.
  */
-.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','GeoFilterArg','$location','SettingsService',
-    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,GeoFilterArg,$location,SettingsService){
+.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','$location','SettingsService',
+    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,$location,SettingsService){
     return {
         restrict: 'E',
         template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
@@ -21,14 +21,17 @@ angular.module('npn-viz-tool.share',[
                 var qargs = $location.search(),
                     speciesFilterCount = 0,
                     speciesFilterReadyCount = 0,
+                    networksFilterCount = 0,
+                    networksFilterReadyCount = 0,
                     layersReady = false,
-                    layerListener,speciesListener;
+                    layerListener,speciesListener,networksListener;
                 function checkReady() {
-                    if(layersReady && speciesFilterReadyCount === speciesFilterCount) {
+                    if(layersReady && speciesFilterReadyCount === speciesFilterCount && networksFilterCount === networksFilterReadyCount) {
                         console.log('ready..');
                         // unsubscribe
                         layerListener();
                         speciesListener();
+                        networksListener();
                         FilterService.resume();
                     }
                 }
@@ -42,16 +45,31 @@ angular.module('npn-viz-tool.share',[
                     speciesFilterReadyCount++;
                     checkReady();
                 });
+                networksListener = $scope.$on('network-filter-ready',function(event,data){
+                    console.log('network filter ready...',data);
+                    networksFilterReadyCount++;
+                    checkReady();
+                });
                 function addSpeciesToFilter(s){
                     SpeciesFilterArg.fromString(s).then(FilterService.addToFilter);
                 }
+                function addNetworkToFilter(s) {
+                    NetworkFilterArg.fromString(s).then(FilterService.addToFilter);
+                }
                 console.log('qargs',qargs);
-                if(qargs['d'] && qargs['s']) {
+                if(qargs['d'] && (qargs['s'] || qargs['n'])) {
                     // we have sufficient criteria to alter the filter...
                     FilterService.addToFilter(DateFilterArg.fromString(qargs['d']));
-                    var speciesList = qargs['s'].split(';');
-                    speciesFilterCount = speciesList.length;
-                    speciesList.forEach(addSpeciesToFilter);
+                    if(qargs['s']) {
+                        var speciesList = qargs['s'].split(';');
+                        speciesFilterCount = speciesList.length;
+                        speciesList.forEach(addSpeciesToFilter);
+                    }
+                    if(qargs['n']) {
+                        var networksList = qargs['n'].split(';');
+                        networksFilterCount = networksList.length;
+                        networksList.forEach(addNetworkToFilter);
+                    }
                 } else {
                     FilterService.resume();
                 }
@@ -73,6 +91,13 @@ angular.module('npn-viz-tool.share',[
                         params['s'] = s.toString();
                     } else {
                         params['s'] += ';'+s.toString();
+                    }
+                });
+                filter.getNetworkArgs().forEach(function(n){
+                    if(!params['n']) {
+                        params['n'] = n.toString();
+                    } else {
+                        params['n'] += ';'+n.toString();
                     }
                 });
                 filter.getGeoArgs().forEach(function(g){
