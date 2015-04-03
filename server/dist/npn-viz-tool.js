@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-04-02
+ * Version: 0.1.0 - 2015-04-03
  */
 
 angular.module('npn-viz-tool.vis-calendar',[
@@ -289,6 +289,19 @@ angular.module('npn-viz-tool.vis-calendar',[
                             }
                         });
                         pp.years = years;
+                    } else {
+                        var toInt = function(d){ return parseInt(d); };
+                        for(var year in pp.years) {
+                            var ints = pp.years[year].map(toInt);
+                            console.log('before.after',pp.years[year],ints);
+                            pp.years[year] = ints;
+                        }
+                        var ykeys = Object.keys(pp.years);
+                        for(var i = 0; i < ykeys.length; i++) {
+                            var ys = pp.years[ykeys[i]];
+                            delete pp.years[ykeys[i]];
+                            pp.years[ykeys[i].trim()] = ys;
+                        }
                     }
                     // END fix
                 });
