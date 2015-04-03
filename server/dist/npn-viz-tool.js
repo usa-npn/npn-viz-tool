@@ -277,33 +277,6 @@ angular.module('npn-viz-tool.vis-calendar',[
                 var ppMap = {};
                 angular.forEach(species.phenophases,function(pp){
                     ppMap[pp.phenophase_id] = pp;
-                    // START fix "years", may be temporary
-                    if(angular.isArray(pp.years)) {
-                        var years = {},keys;
-                        angular.forEach(pp.years,function(y){
-                            keys = Object.keys(y);
-                            if(keys.length > 1) {
-                                console.warn('year array member with multiple keys?', y);
-                            } else if (keys.length === 1) {
-                                years[keys[0]] = y[keys[0]];
-                            }
-                        });
-                        pp.years = years;
-                    } else {
-                        var toInt = function(d){ return parseInt(d); };
-                        for(var year in pp.years) {
-                            var ints = pp.years[year].map(toInt);
-                            console.log('before.after',pp.years[year],ints);
-                            pp.years[year] = ints;
-                        }
-                        var ykeys = Object.keys(pp.years);
-                        for(var i = 0; i < ykeys.length; i++) {
-                            var ys = pp.years[ykeys[i]];
-                            delete pp.years[ykeys[i]];
-                            pp.years[ykeys[i].trim()] = ys;
-                        }
-                    }
-                    // END fix
                 });
                 species.phenophases = ppMap;
             });
