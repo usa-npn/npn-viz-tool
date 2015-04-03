@@ -663,7 +663,9 @@ angular.module('npn-viz-tool.filter',[
         this.updateCount++;
         if(item instanceof DateFilterArg) {
             this.date = undefined;
-            this.species = {}; // removal of date invalidates filter.
+            // removal of date invalidates filter.
+            this.species = {};
+            this.networks = {};
         } else if(item instanceof SpeciesFilterArg) {
             delete this.species[item.getId()];
         } else if(item instanceof NetworkFilterArg){
@@ -842,8 +844,8 @@ angular.module('npn-viz-tool.filter',[
                 minCount = d3.min(argMarkers,function(m) { return m.observationCount; }),
                 maxCount = d3.max(argMarkers,function(m) { return m.observationCount; });
             if(minCount !== maxCount) {
-                console.log('there is variability in observationCounts', minCount, maxCount);
-                console.log('arg markers',arg,argMarkers);
+                //console.log('there is variability in observationCounts', minCount, maxCount);
+                //console.log('arg markers',arg,argMarkers);
                 var choroplethScale = choroplethScales[arg.colorIdx];
                 choroplethScale.domain([minCount,maxCount]);
                 argMarkers.forEach(function(marker){
@@ -958,10 +960,10 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$rootScope','$http','$timeout','FilterService','SettingsService',function($rootScope,$http,$timeout,FilterService,SettingsService){
+.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','FilterService','SettingsService',function($rootScope,$http,$timeout,$filter,FilterService,SettingsService){
     return {
         restrict: 'E',
-        template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
+        template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions"></ui-gmap-markers>',
         scope: {
         },
         controller: function($scope) {
@@ -970,6 +972,35 @@ angular.module('npn-viz-tool.filter',[
                 markers: []
             };
             $scope.doCluster = SettingsService.getSettingValue('clusterMarkers');
+            var styles = [0,1,2,4,8,16,32,64,128,256].map(function(i){
+                return {
+                    n: (i*1000),
+                    url: 'cluster/m'+i+'.png',
+                    width: 52,
+                    height: 52,
+                    textColor: '#fff'
+                    //textColor: i > 8 ? '#fff' : '#000'
+                };
+            }),
+            badgeFormatter = $filter('speciesBadge');
+            $scope.clusterOptions = {
+                styles: styles,
+                maxZoom: 12,
+                calculator: function(markers,styleCount) {
+                    var oCount = 0,
+                        fmt = SettingsService.getSettingValue('tagBadgeFormat'),r = {index:1};
+                    markers.values().forEach(function(marker) {
+                        oCount += marker.model.observationCount;
+                    });
+                    r.text = badgeFormatter({station: markers.length,observation: oCount},SettingsService.getSettingValue('tagBadgeFormat'));
+                    for(var i = 0; i <styles.length;i++) {
+                        if(oCount >= styles[i].n) {
+                            r.index = (i+1);
+                        }
+                    }
+                    return r;
+                }
+            };
             $scope.$on('setting-update-clusterMarkers',function(event,data){
                 $scope.doCluster = data.value;
             });
@@ -979,7 +1010,7 @@ angular.module('npn-viz-tool.filter',[
                         $scope.results.markers = [];
                         $timeout(function(){
                             FilterService.execute().then(function(markers) {
-console.log('markers',markers);
+                                //console.log('markers',markers);
                                 $scope.results.markers = markers;
                             });
                         },500);
