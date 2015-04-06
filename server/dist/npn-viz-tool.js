@@ -1095,14 +1095,22 @@ angular.module('npn-viz-tool.filter',[
             $scope.$on('setting-update-clusterMarkers',function(event,data){
                 $scope.doCluster = data.value;
             });
+            function updateMarkers(markers) {
+                var totalOcount = markers.reduce(function(n,c) { return n+c.observationCount; },0),
+                    n = (totalOcount > 512 ? Math.round(totalOcount/2) : 512),i;
+                for(i = styles.length-1; i >= 0; i--) {
+                    styles[i].n = n;
+                    n = Math.round(n/2);
+                }
+                $scope.results.markers = markers;
+            }
             function executeFilter() {
                 if(FilterService.hasFilterChanged() && FilterService.hasSufficientCriteria()) {
                     $timeout(function(){
                         $scope.results.markers = [];
                         $timeout(function(){
                             FilterService.execute().then(function(markers) {
-                                //$log.debug('markers',markers);
-                                $scope.results.markers = markers;
+                                updateMarkers(markers);
                             });
                         },500);
                     },500);
@@ -1126,8 +1134,7 @@ angular.module('npn-viz-tool.filter',[
                 $scope.results.markers = [];
             });
             $scope.$on('filter-marker-updates',function(event,data){
-                $log.debug('update data',data);
-                $scope.results.markers = data.markers;
+                updateMarkers(data.markers);
             });
         }
     };
