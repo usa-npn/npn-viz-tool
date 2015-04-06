@@ -5,10 +5,11 @@ angular.module('npn-viz-tool',[
 'ui.bootstrap',
 'ngAnimate'
 ])
-.config(function(uiGmapGoogleMapApiProvider) {
+.config(['uiGmapGoogleMapApiProvider','$logProvider',function(uiGmapGoogleMapApiProvider,$logProvider) {
     uiGmapGoogleMapApiProvider.configure({
         //    key: 'your api key',
         v: '3.17',
         libraries: ['geometry','drawing']
     });
-});
+    $logProvider.debugEnabled(window.location.hash && window.location.hash.match(/^#\/debug/));
+}]);

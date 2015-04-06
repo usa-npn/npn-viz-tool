@@ -21,7 +21,6 @@ angular.module('npn-viz-tool.map',[
                 map;
             $scope.stationView = false;
             uiGmapGoogleMapApi.then(function(maps) {
-                console.log('maps',maps);
                 api = maps;
                 $scope.map = {
                     center: dfltCenter,

@@ -2,19 +2,19 @@ angular.module('npn-viz-tool.layers',[
 'npn-viz-tool.filter',
 'ngResource'
 ])
-.factory('LayerService',['$rootScope','$http','$q','uiGmapIsReady',function($rootScope,$http,$q,uiGmapIsReady){
+.factory('LayerService',['$rootScope','$http','$q','$log','uiGmapIsReady',function($rootScope,$http,$q,$log,uiGmapIsReady){
     var layers = null,
         map = null,
         readyPromise = uiGmapIsReady.promise(1).then(function(instances){
             map = instances[0].map;
-            console.log('LayerService - map is ready');
+            $log.debug('LayerService - map is ready');
             return $http.get('layers/layers.json').success(function(data) {
                 layers = {};
                 data.forEach(function(layer,idx){
                     layer.index = idx;
                     layers[layer.id] = layer;
                 });
-                console.log('LayerService - layer list is loaded', layers);
+                $log.debug('LayerService - layer list is loaded', layers);
             });
         }),
         baseStyle = {
@@ -62,7 +62,7 @@ angular.module('npn-viz-tool.layers',[
             $rootScope.$broadcast('layer-load-start',{});
             $http.get('layers/'+layer.file).success(function(data){
                 if(data.type === 'GeometryCollection') {
-                    console.log('Translating GeometryCollection to FeatureCollection');
+                    $log.debug('Translating GeometryCollection to FeatureCollection');
                     // translate to FeatureCollection
                     data.features = [];
                     angular.forEach(data.geometries,function(geo,idx){
@@ -179,7 +179,7 @@ angular.module('npn-viz-tool.layers',[
             readyPromise.then(function(){
                 var layer = layers[id];
                 if(!layer) {
-                    console.log('no such layer with id',id);
+                    $log.debug('no such layer with id',id);
                     return def.reject(id);
                 }
                 loadLayerData(layer).then(function(l){
@@ -199,7 +199,7 @@ angular.module('npn-viz-tool.layers',[
             readyPromise.then(function(){
                 var layer = layers[id];
                 if(!layer) {
-                    console.log('no such layer with id',id);
+                    $log.debug('no such layer with id',id);
                     return def.reject(id);
                 }
                 var unloaded = unloadLayer(layer);
@@ -209,7 +209,7 @@ angular.module('npn-viz-tool.layers',[
         }
     };
 }])
-.directive('layerControl',['$rootScope','$q','$location','LayerService','FilterService','GeoFilterArg',function($rootScope,$q,$location,LayerService,FilterService,GeoFilterArg){
+.directive('layerControl',['$rootScope','$q','$location','$log','LayerService','FilterService','GeoFilterArg',function($rootScope,$q,$location,$log,LayerService,FilterService,GeoFilterArg){
     return {
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
@@ -229,11 +229,11 @@ angular.module('npn-viz-tool.layers',[
                 function broadcastLayersReady() {
                     $rootScope.$broadcast('layers-ready',{});
                 }
-                console.log('av.layers',layers);
+                $log.debug('av.layers',layers);
                 $scope.layers = layers;
                 var qargs = $location.search();
                 if(qargs['g']) {
-                    console.log('init layers from query arg',qargs['g']);
+                    $log.debug('init layers from query arg',qargs['g']);
                     // only one layer at a time is supported so the "first" id is sufficient.
                     var featureList = qargs['g'].split(';'),
                         featureIds = featureList.map(function(f) {

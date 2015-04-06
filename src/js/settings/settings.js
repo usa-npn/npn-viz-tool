@@ -103,7 +103,7 @@ angular.module('npn-viz-tool.settings',[
         }
     };
 }])
-.directive('settingsControl',['$rootScope','$location','SettingsService',function($rootScope,$location,SettingsService){
+.directive('settingsControl',['$rootScope','$location','$log','SettingsService',function($rootScope,$location,$log,SettingsService){
     return {
         restrict: 'E',
         templateUrl: 'js/settings/settingsControl.html',
@@ -111,7 +111,7 @@ angular.module('npn-viz-tool.settings',[
             SettingsService.populateFromSharingUrlArgs($location.search()['ss']);
             $scope.settings = SettingsService.getSettings();
             function broadcastSettingChange(key) {
-                console.log('broadcastSettingChange',$scope.settings[key]);
+                $log.debug('broadcastSettingChange',$scope.settings[key]);
                 $rootScope.$broadcast('setting-update-'+key,$scope.settings[key]);
             }
             function setupBroadcast(key) {

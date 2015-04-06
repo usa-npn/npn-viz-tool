@@ -4,8 +4,8 @@ angular.module('npn-viz-tool.vis-calendar',[
     'npn-viz-tool.filters',
     'ui.bootstrap'
 ])
-.controller('CalendarVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService',
-    function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService){
+.controller('CalendarVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','$log','FilterService','ChartService',
+    function($scope,$modalInstance,$http,$timeout,$filter,$log,FilterService,ChartService){
     var data, // the data from the server....
         dateArg = FilterService.getFilter().getDateArg(),
         sizing = ChartService.getSizeInfo({top: 20, right: 30, bottom: 35, left: 30}),
@@ -33,7 +33,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             $scope.plottable.push(angular.extend({},sarg.arg,pp));
         });
     });
-    console.log('plottable',$scope.plottable);
+    $log.debug('plottable',$scope.plottable);
     $scope.toPlotYears = [];
     $scope.toPlot = [];
 
@@ -123,10 +123,10 @@ angular.module('npn-viz-tool.vis-calendar',[
         }
     }
     function addToPlot(toPlot) {
-        console.log('addToPlot',toPlot);
+        $log.debug('addToPlot',toPlot);
         if(toPlot) {
             if(toPlot.phenophase_id === -1) {
-                console.log('add all phenophases...');
+                $log.debug('add all phenophases...');
                 removeSpeciesFromPlot(toPlot.species_id);
                 $scope.plottable.filter(function(p){
                     return p.phenophase_id !== -1 && p.species_id === toPlot.species_id;
@@ -243,7 +243,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             return draw();
         }
         $scope.working = true;
-        console.log('visualize',$scope.selection.axis,$scope.toPlot);
+        $log.debug('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {
                 request_src: 'npn-vis-calendar'
@@ -276,15 +276,15 @@ angular.module('npn-viz-tool.vis-calendar',[
                 species.phenophases = ppMap;
             });
 
-            console.log('speciesMap',speciesMap);
+            $log.debug('speciesMap',speciesMap);
             angular.forEach($scope.toPlot,function(tp){
-                console.log('toPlot',tp);
+                $log.debug('toPlot',tp);
                 var species = speciesMap[tp.species_id],
                     phenophase = species.phenophases[tp.phenophase_id];
                 angular.forEach($scope.toPlotYears,function(year){
                     if(phenophase) {
                         var doys = phenophase.years[year];
-                        console.log('year',y,year,species.common_name,phenophase,doys);
+                        $log.debug('year',y,year,species.common_name,phenophase,doys);
                         angular.forEach(doys,function(doy){
                             toChart.data.push({
                                 y: y,
@@ -294,12 +294,12 @@ angular.module('npn-viz-tool.vis-calendar',[
                         });
                     }
                     toChart.labels.splice(0,0,$filter('speciesTitle')(tp)+'/'+tp.phenophase_name+' ('+year+')');
-                    console.log('y of '+y+' is for '+toChart.labels[0]);
+                    $log.debug('y of '+y+' is for '+toChart.labels[0]);
                     y--;
                 });
             });
             $scope.data = data = toChart;
-            console.log('calendar data',data);
+            $log.debug('calendar data',data);
             draw();
         });
     };

@@ -2,7 +2,7 @@ angular.module('npn-viz-tool.stations',[
     'npn-viz-tool.settings',
     'npn-viz-tool.layers'
 ])
-.directive('npnStations',['$http','LayerService','SettingsService',function($http,LayerService,SettingsService){
+.directive('npnStations',['$http','$log','LayerService','SettingsService',function($http,$log,LayerService,SettingsService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="regions.markers" idKey="\'name\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" isLabel="true"></ui-gmap-markers><ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
@@ -79,7 +79,7 @@ angular.module('npn-viz-tool.stations',[
                                 $scope.regions.markers.push(regionMarker);
                             });
                         } else if (!loaded) {
-                            console.warn('no station count for '+name);
+                            $log.warn('no station count for '+name);
                         }
                         return style;
                     }).then(function(results){
@@ -120,16 +120,6 @@ angular.module('npn-viz-tool.stations',[
                                     });
                             }
                         }));
-                        /* can't explain why can't read c.visited here since
-                         * the other two log statements show the attribute as being there
-                         * but when iterating it's not there, even in a loop...
-                        var unvisited = counts.filter(function(c){
-                            return !c.visited;
-                        });
-                        console.log('counts',counts);
-                        console.log('countMap',countMap);
-                        console.log('unvisited',unvisited);
-                        */
                     });
                 });
             });

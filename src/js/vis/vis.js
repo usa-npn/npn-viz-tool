@@ -5,7 +5,7 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.vis-calendar',
     'ui.bootstrap'
 ])
-.factory('ChartService',['$window','$http','FilterService',function($window,$http,FilterService){
+.factory('ChartService',['$window','$http','$log','FilterService',function($window,$http,$log,FilterService){
     // some hard coded values that will be massaged into generated
     // values at runtime.
     var CHART_W = 930,
@@ -21,7 +21,7 @@ angular.module('npn-viz-tool.vis',[
     function filterSuspectSummaryData (d){
         var bad = (d.latitude === 0.0 || d.longitude === 0.0 || d.elevation_in_meters < 0);
         if(bad) {
-            console.warn('suspect station data',d);
+            $log.warn('suspect station data',d);
         }
         return !bad;
     }
@@ -51,7 +51,7 @@ angular.module('npn-viz-tool.vis',[
                 w = cw  - margin.left - margin.right,
                 h = ch  - margin.top - margin.bottom,
                 sizing = {width: w, height : h, margin: margin};
-            console.log('sizing',sizing);
+            $log.debug('sizing',sizing);
             return sizing;
         },
         leastSquares: function(xSeries,ySeries) {

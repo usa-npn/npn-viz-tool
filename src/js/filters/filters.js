@@ -41,17 +41,6 @@ angular.module('npn-viz-tool.filters',[
         return input;
     };
 })
-.filter('faFileIcon',function(){
-    var map = {
-        pdf: 'fa-file-pdf-o'
-    };
-    return function(input) {
-        if(input && !map[input]) {
-            console.debug('no explicit file type icon for '+input);
-        }
-        return map[input]||'fa-file-o';
-    };
-})
 .filter('ellipses',function(){
     return function(input) {
         var maxLen = arguments.length == 2 ? arguments[1] : 55;

@@ -9,8 +9,8 @@ angular.module('npn-viz-tool.share',[
  * because upon instantiation it examines the current URL query args and uses its contents to
  * populate the filter, etc.
  */
-.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','$location','SettingsService',
-    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,$location,SettingsService){
+.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','$location','$log','SettingsService',
+    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,$location,$log,SettingsService){
     return {
         restrict: 'E',
         template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
@@ -27,7 +27,7 @@ angular.module('npn-viz-tool.share',[
                     layerListener,speciesListener,networksListener;
                 function checkReady() {
                     if(layersReady && speciesFilterReadyCount === speciesFilterCount && networksFilterCount === networksFilterReadyCount) {
-                        console.log('ready..');
+                        $log.debug('ready..');
                         // unsubscribe
                         layerListener();
                         speciesListener();
@@ -36,17 +36,17 @@ angular.module('npn-viz-tool.share',[
                     }
                 }
                 layerListener = $scope.$on('layers-ready',function(event,data){
-                    console.log('layers ready...');
+                    $log.debug('layers ready...');
                     layersReady = true;
                     checkReady();
                 });
                 speciesListener = $scope.$on('species-filter-ready',function(event,data){
-                    console.log('species filter ready...',data);
+                    $log.debug('species filter ready...',data);
                     speciesFilterReadyCount++;
                     checkReady();
                 });
                 networksListener = $scope.$on('network-filter-ready',function(event,data){
-                    console.log('network filter ready...',data);
+                    $log.debug('network filter ready...',data);
                     networksFilterReadyCount++;
                     checkReady();
                 });
@@ -56,7 +56,7 @@ angular.module('npn-viz-tool.share',[
                 function addNetworkToFilter(s) {
                     NetworkFilterArg.fromString(s).then(FilterService.addToFilter);
                 }
-                console.log('qargs',qargs);
+                $log.debug('qargs',qargs);
                 if(qargs['d'] && (qargs['s'] || qargs['n'])) {
                     // we have sufficient criteria to alter the filter...
                     FilterService.addToFilter(DateFilterArg.fromString(qargs['d']));
@@ -115,7 +115,7 @@ angular.module('npn-viz-tool.share',[
                     absUrl += (i > 0 ? '&' : '') + key + '=' + encodeURIComponent(params[key]);
                 });
                 absUrl+='&'+SettingsService.getSharingUrlArgs();
-                console.log('absUrl',absUrl);
+                $log.debug('absUrl',absUrl);
                 $scope.url = absUrl;
             };
         }

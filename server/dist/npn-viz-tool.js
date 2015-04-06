@@ -9,8 +9,8 @@ angular.module('npn-viz-tool.vis-calendar',[
     'npn-viz-tool.filters',
     'ui.bootstrap'
 ])
-.controller('CalendarVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService',
-    function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService){
+.controller('CalendarVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','$log','FilterService','ChartService',
+    function($scope,$modalInstance,$http,$timeout,$filter,$log,FilterService,ChartService){
     var data, // the data from the server....
         dateArg = FilterService.getFilter().getDateArg(),
         sizing = ChartService.getSizeInfo({top: 20, right: 30, bottom: 35, left: 30}),
@@ -38,7 +38,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             $scope.plottable.push(angular.extend({},sarg.arg,pp));
         });
     });
-    console.log('plottable',$scope.plottable);
+    $log.debug('plottable',$scope.plottable);
     $scope.toPlotYears = [];
     $scope.toPlot = [];
 
@@ -128,10 +128,10 @@ angular.module('npn-viz-tool.vis-calendar',[
         }
     }
     function addToPlot(toPlot) {
-        console.log('addToPlot',toPlot);
+        $log.debug('addToPlot',toPlot);
         if(toPlot) {
             if(toPlot.phenophase_id === -1) {
-                console.log('add all phenophases...');
+                $log.debug('add all phenophases...');
                 removeSpeciesFromPlot(toPlot.species_id);
                 $scope.plottable.filter(function(p){
                     return p.phenophase_id !== -1 && p.species_id === toPlot.species_id;
@@ -248,7 +248,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             return draw();
         }
         $scope.working = true;
-        console.log('visualize',$scope.selection.axis,$scope.toPlot);
+        $log.debug('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {
                 request_src: 'npn-vis-calendar'
@@ -281,15 +281,15 @@ angular.module('npn-viz-tool.vis-calendar',[
                 species.phenophases = ppMap;
             });
 
-            console.log('speciesMap',speciesMap);
+            $log.debug('speciesMap',speciesMap);
             angular.forEach($scope.toPlot,function(tp){
-                console.log('toPlot',tp);
+                $log.debug('toPlot',tp);
                 var species = speciesMap[tp.species_id],
                     phenophase = species.phenophases[tp.phenophase_id];
                 angular.forEach($scope.toPlotYears,function(year){
                     if(phenophase) {
                         var doys = phenophase.years[year];
-                        console.log('year',y,year,species.common_name,phenophase,doys);
+                        $log.debug('year',y,year,species.common_name,phenophase,doys);
                         angular.forEach(doys,function(doy){
                             toChart.data.push({
                                 y: y,
@@ -299,12 +299,12 @@ angular.module('npn-viz-tool.vis-calendar',[
                         });
                     }
                     toChart.labels.splice(0,0,$filter('speciesTitle')(tp)+'/'+tp.phenophase_name+' ('+year+')');
-                    console.log('y of '+y+' is for '+toChart.labels[0]);
+                    $log.debug('y of '+y+' is for '+toChart.labels[0]);
                     y--;
                 });
             });
             $scope.data = data = toChart;
-            console.log('calendar data',data);
+            $log.debug('calendar data',data);
             draw();
         });
     };
@@ -371,7 +371,7 @@ angular.module('npn-viz-tool.filter',[
     };
     return DateFilterArg;
 }])
-.factory('NetworkFilterArg',['$http','$rootScope','FilterArg','SpeciesFilterArg',function($http,$rootScope,FilterArg,SpeciesFilterArg){
+.factory('NetworkFilterArg',['$http','$rootScope','$log','FilterArg','SpeciesFilterArg',function($http,$rootScope,$log,FilterArg,SpeciesFilterArg){
     /**
      * Constructs a NetworkFilterArg.  TODO over-ride $filter??
      *
@@ -399,7 +399,6 @@ angular.module('npn-viz-tool.filter',[
     };
     NetworkFilterArg.prototype.updateCounts = function(station,species) {
         var id = this.getId(),pid;
-        //console.log('updateCounts',id,this.arg,station,species);
         if(station.networks.indexOf(id) !== -1) {
             // station is IN this network
             if(this.stations.indexOf(station.station_id) === -1) {
@@ -430,7 +429,7 @@ angular.module('npn-viz-tool.filter',[
                     return new NetworkFilterArg(nets[i]);
                 }
             }
-            console.warn('NO NETWORK FOUND WITH ID '+s);
+            $log.warn('NO NETWORK FOUND WITH ID '+s);
         });
     };
     return NetworkFilterArg;
@@ -691,8 +690,8 @@ angular.module('npn-viz-tool.filter',[
  * TODO - need to nail down the event model and probably even formalize it via a service because it's all
  * pretty loosey goosey at the moment.  Bad enough duplicating strings around...
  */
-.factory('FilterService',['$q','$http','$rootScope','$timeout','uiGmapGoogleMapApi','NpnFilter','SpeciesFilterArg',
-    function($q,$http,$rootScope,$timeout,uiGmapGoogleMapApi,NpnFilter,SpeciesFilterArg){
+.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','uiGmapGoogleMapApi','NpnFilter','SpeciesFilterArg',
+    function($q,$http,$rootScope,$timeout,$log,uiGmapGoogleMapApi,NpnFilter,SpeciesFilterArg){
     // NOTE: this scale is limited to 20 colors
     var color_domain = d3.range(0,20),
         cat20 = d3.scale.category20().domain(color_domain),
@@ -762,7 +761,7 @@ angular.module('npn-viz-tool.filter',[
                 bKeys = Object.keys(b),
                 i;
             if(aKeys.length !== (bKeys.length+1)) {
-                console.warn('Issue with usage of _mapdiff, unexpected key lengths',a,b);
+                $log.warn('Issue with usage of _mapdiff, unexpected key lengths',a,b);
             }
             if(aKeys.length === 1) {
                 return a[aKeys[0]];
@@ -772,7 +771,7 @@ angular.module('npn-viz-tool.filter',[
                     return a[aKeys[i]];
                 }
             }
-            console.warn('Issue with usage of _mapdiff, unfound diff',a,b);
+            $log.warn('Issue with usage of _mapdiff, unfound diff',a,b);
         }
         function _filtermap() {
             var map = {};
@@ -839,8 +838,8 @@ angular.module('npn-viz-tool.filter',[
             geoResults.misses = geoResults.misses.concat(filtered.hits);
         }
         geoResults.previousFilterMap = newMap;
-        console.log('geo time:'+(Date.now()-start));
-        //console.log('geoResults',geoResults);
+        $log.debug('geo time:'+(Date.now()-start));
+        //$log.debug('geoResults',geoResults);
         return geoResults.hits;
     }
     function post_filter(markers,refilter) {
@@ -870,7 +869,7 @@ angular.module('npn-viz-tool.filter',[
                     speciesFilter = filter.getSpeciesArg(sid);
                     hitMap[sid] = 0;
                     if(!speciesFilter && hasSpeciesArgs) {
-                        console.warn('species found in results but not in filter',station.species[sid]);
+                        $log.warn('species found in results but not in filter',station.species[sid]);
                         continue;
                     }
                     if(speciesFilter && (n=speciesFilter.$filter(station.species[sid]))) {
@@ -928,8 +927,8 @@ angular.module('npn-viz-tool.filter',[
                 minCount = d3.min(argMarkers,function(m) { return m.observationCount; }),
                 maxCount = d3.max(argMarkers,function(m) { return m.observationCount; });
             if(minCount !== maxCount) {
-                //console.log('there is variability in observationCounts', minCount, maxCount);
-                //console.log('arg markers',arg,argMarkers);
+                //$log.debug('there is variability in observationCounts', minCount, maxCount);
+                //$log.debug('arg markers',arg,argMarkers);
                 var choroplethScale = choroplethScales[arg.colorIdx];
                 choroplethScale.domain([minCount,maxCount]);
                 argMarkers.forEach(function(marker){
@@ -942,7 +941,7 @@ angular.module('npn-viz-tool.filter',[
             station: filtered.length,
             observation: observationCount
         });
-        console.log('phase2 time:',(Date.now()-start));
+        $log.debug('phase2 time:',(Date.now()-start));
         return (lastFiltered = filtered);
     }
     function execute() {
@@ -951,7 +950,7 @@ angular.module('npn-viz-tool.filter',[
         if(!paused && filterParams && filterUpdateCount != filter.getUpdateCount()) {
             filterUpdateCount = filter.getUpdateCount();
             var start = Date.now();
-            console.log('execute',filterUpdateCount,filterParams);
+            $log.debug('execute',filterUpdateCount,filterParams);
             $rootScope.$broadcast('filter-phase1-start',{});
             $http.get('/npn_portal/observations/getAllObservationsForSpecies.json',{
                 params: filterParams
@@ -966,8 +965,8 @@ angular.module('npn-viz-tool.filter',[
                     count: d.station_list.length
                 });
                 // now need to walk through the station_list and post-filter by phenophases...
-                console.log('phase1 time:',(Date.now()-start));
-                console.log('results-pre',d);
+                $log.debug('phase1 time:',(Date.now()-start));
+                //$log.debug('results-pre',d);
                 def.resolve(post_filter(last=d.station_list));
             });
         } else {
@@ -997,11 +996,11 @@ angular.module('npn-viz-tool.filter',[
             return lastFiltered;
         },
         pause: function() {
-            console.log('PAUSE');
+            $log.debug('PAUSE');
             paused = true;
         },
         resume: function() {
-            console.log('RESUME');
+            $log.debug('RESUME');
             paused = false;
             broadcastFilterUpdate();
         },
@@ -1044,7 +1043,8 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','FilterService','SettingsService',function($rootScope,$http,$timeout,$filter,FilterService,SettingsService){
+.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService',
+    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl"></ui-gmap-markers>',
@@ -1100,7 +1100,7 @@ angular.module('npn-viz-tool.filter',[
                         $scope.results.markers = [];
                         $timeout(function(){
                             FilterService.execute().then(function(markers) {
-                                //console.log('markers',markers);
+                                //$log.debug('markers',markers);
                                 $scope.results.markers = markers;
                             });
                         },500);
@@ -1125,7 +1125,7 @@ angular.module('npn-viz-tool.filter',[
                 $scope.results.markers = [];
             });
             $scope.$on('filter-marker-updates',function(event,data){
-                console.log('update data',data);
+                $log.debug('update data',data);
                 $scope.results.markers = data.markers;
             });
         }
@@ -1463,17 +1463,6 @@ angular.module('npn-viz-tool.filters',[
         return input;
     };
 })
-.filter('faFileIcon',function(){
-    var map = {
-        pdf: 'fa-file-pdf-o'
-    };
-    return function(input) {
-        if(input && !map[input]) {
-            console.debug('no explicit file type icon for '+input);
-        }
-        return map[input]||'fa-file-o';
-    };
-})
 .filter('ellipses',function(){
     return function(input) {
         var maxLen = arguments.length == 2 ? arguments[1] : 55;
@@ -1487,19 +1476,19 @@ angular.module('npn-viz-tool.layers',[
 'npn-viz-tool.filter',
 'ngResource'
 ])
-.factory('LayerService',['$rootScope','$http','$q','uiGmapIsReady',function($rootScope,$http,$q,uiGmapIsReady){
+.factory('LayerService',['$rootScope','$http','$q','$log','uiGmapIsReady',function($rootScope,$http,$q,$log,uiGmapIsReady){
     var layers = null,
         map = null,
         readyPromise = uiGmapIsReady.promise(1).then(function(instances){
             map = instances[0].map;
-            console.log('LayerService - map is ready');
+            $log.debug('LayerService - map is ready');
             return $http.get('layers/layers.json').success(function(data) {
                 layers = {};
                 data.forEach(function(layer,idx){
                     layer.index = idx;
                     layers[layer.id] = layer;
                 });
-                console.log('LayerService - layer list is loaded', layers);
+                $log.debug('LayerService - layer list is loaded', layers);
             });
         }),
         baseStyle = {
@@ -1547,7 +1536,7 @@ angular.module('npn-viz-tool.layers',[
             $rootScope.$broadcast('layer-load-start',{});
             $http.get('layers/'+layer.file).success(function(data){
                 if(data.type === 'GeometryCollection') {
-                    console.log('Translating GeometryCollection to FeatureCollection');
+                    $log.debug('Translating GeometryCollection to FeatureCollection');
                     // translate to FeatureCollection
                     data.features = [];
                     angular.forEach(data.geometries,function(geo,idx){
@@ -1664,7 +1653,7 @@ angular.module('npn-viz-tool.layers',[
             readyPromise.then(function(){
                 var layer = layers[id];
                 if(!layer) {
-                    console.log('no such layer with id',id);
+                    $log.debug('no such layer with id',id);
                     return def.reject(id);
                 }
                 loadLayerData(layer).then(function(l){
@@ -1684,7 +1673,7 @@ angular.module('npn-viz-tool.layers',[
             readyPromise.then(function(){
                 var layer = layers[id];
                 if(!layer) {
-                    console.log('no such layer with id',id);
+                    $log.debug('no such layer with id',id);
                     return def.reject(id);
                 }
                 var unloaded = unloadLayer(layer);
@@ -1694,7 +1683,7 @@ angular.module('npn-viz-tool.layers',[
         }
     };
 }])
-.directive('layerControl',['$rootScope','$q','$location','LayerService','FilterService','GeoFilterArg',function($rootScope,$q,$location,LayerService,FilterService,GeoFilterArg){
+.directive('layerControl',['$rootScope','$q','$location','$log','LayerService','FilterService','GeoFilterArg',function($rootScope,$q,$location,$log,LayerService,FilterService,GeoFilterArg){
     return {
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
@@ -1714,11 +1703,11 @@ angular.module('npn-viz-tool.layers',[
                 function broadcastLayersReady() {
                     $rootScope.$broadcast('layers-ready',{});
                 }
-                console.log('av.layers',layers);
+                $log.debug('av.layers',layers);
                 $scope.layers = layers;
                 var qargs = $location.search();
                 if(qargs['g']) {
-                    console.log('init layers from query arg',qargs['g']);
+                    $log.debug('init layers from query arg',qargs['g']);
                     // only one layer at a time is supported so the "first" id is sufficient.
                     var featureList = qargs['g'].split(';'),
                         featureIds = featureList.map(function(f) {
@@ -1866,13 +1855,14 @@ angular.module('npn-viz-tool',[
 'ui.bootstrap',
 'ngAnimate'
 ])
-.config(function(uiGmapGoogleMapApiProvider) {
+.config(['uiGmapGoogleMapApiProvider','$logProvider',function(uiGmapGoogleMapApiProvider,$logProvider) {
     uiGmapGoogleMapApiProvider.configure({
         //    key: 'your api key',
         v: '3.17',
         libraries: ['geometry','drawing']
     });
-});
+    $logProvider.debugEnabled(window.location.hash && window.location.hash.match(/^#\/debug/));
+}]);
 
 angular.module('npn-viz-tool.map',[
     'npn-viz-tool.layers',
@@ -1897,7 +1887,6 @@ angular.module('npn-viz-tool.map',[
                 map;
             $scope.stationView = false;
             uiGmapGoogleMapApi.then(function(maps) {
-                console.log('maps',maps);
                 api = maps;
                 $scope.map = {
                     center: dfltCenter,
@@ -2425,8 +2414,8 @@ angular.module('npn-viz-tool.vis-scatter',[
     'npn-viz-tool.settings',
     'ui.bootstrap'
 ])
-.controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService','SettingsService',
-    function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService,SettingsService){
+.controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','$log','FilterService','ChartService','SettingsService',
+    function($scope,$modalInstance,$http,$timeout,$filter,$log,FilterService,ChartService,SettingsService){
     $scope.modal = $modalInstance;
     $scope.colorScale = FilterService.getColorScale();
     $scope.colors = $scope.colorScale.domain();
@@ -2641,7 +2630,7 @@ angular.module('npn-viz-tool.vis-scatter',[
             return draw();
         }
         $scope.working = true;
-        console.log('visualize',$scope.selection.axis,$scope.toPlot);
+        $log.debug('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {
                 request_src: 'npn-vis-scatter-plot',
@@ -2668,9 +2657,9 @@ angular.module('npn-viz-tool.vis-scatter',[
                 }
                 return keep;
             });
-            console.log('filtered out '+(response.length-data.length)+'/'+response.length+' records with negative num_days_prior_no.');
+            $log.debug('filtered out '+(response.length-data.length)+'/'+response.length+' records with negative num_days_prior_no.');
             $scope.filteredDisclaimer = response.length != data.length;
-            console.log('scatterPlot data',data);
+            $log.debug('scatterPlot data',data);
             draw();
         });
     };
@@ -2780,7 +2769,7 @@ angular.module('npn-viz-tool.settings',[
         }
     };
 }])
-.directive('settingsControl',['$rootScope','$location','SettingsService',function($rootScope,$location,SettingsService){
+.directive('settingsControl',['$rootScope','$location','$log','SettingsService',function($rootScope,$location,$log,SettingsService){
     return {
         restrict: 'E',
         templateUrl: 'js/settings/settingsControl.html',
@@ -2788,7 +2777,7 @@ angular.module('npn-viz-tool.settings',[
             SettingsService.populateFromSharingUrlArgs($location.search()['ss']);
             $scope.settings = SettingsService.getSettings();
             function broadcastSettingChange(key) {
-                console.log('broadcastSettingChange',$scope.settings[key]);
+                $log.debug('broadcastSettingChange',$scope.settings[key]);
                 $rootScope.$broadcast('setting-update-'+key,$scope.settings[key]);
             }
             function setupBroadcast(key) {
@@ -2813,8 +2802,8 @@ angular.module('npn-viz-tool.share',[
  * because upon instantiation it examines the current URL query args and uses its contents to
  * populate the filter, etc.
  */
-.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','$location','SettingsService',
-    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,$location,SettingsService){
+.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','$location','$log','SettingsService',
+    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,$location,$log,SettingsService){
     return {
         restrict: 'E',
         template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
@@ -2831,7 +2820,7 @@ angular.module('npn-viz-tool.share',[
                     layerListener,speciesListener,networksListener;
                 function checkReady() {
                     if(layersReady && speciesFilterReadyCount === speciesFilterCount && networksFilterCount === networksFilterReadyCount) {
-                        console.log('ready..');
+                        $log.debug('ready..');
                         // unsubscribe
                         layerListener();
                         speciesListener();
@@ -2840,17 +2829,17 @@ angular.module('npn-viz-tool.share',[
                     }
                 }
                 layerListener = $scope.$on('layers-ready',function(event,data){
-                    console.log('layers ready...');
+                    $log.debug('layers ready...');
                     layersReady = true;
                     checkReady();
                 });
                 speciesListener = $scope.$on('species-filter-ready',function(event,data){
-                    console.log('species filter ready...',data);
+                    $log.debug('species filter ready...',data);
                     speciesFilterReadyCount++;
                     checkReady();
                 });
                 networksListener = $scope.$on('network-filter-ready',function(event,data){
-                    console.log('network filter ready...',data);
+                    $log.debug('network filter ready...',data);
                     networksFilterReadyCount++;
                     checkReady();
                 });
@@ -2860,7 +2849,7 @@ angular.module('npn-viz-tool.share',[
                 function addNetworkToFilter(s) {
                     NetworkFilterArg.fromString(s).then(FilterService.addToFilter);
                 }
-                console.log('qargs',qargs);
+                $log.debug('qargs',qargs);
                 if(qargs['d'] && (qargs['s'] || qargs['n'])) {
                     // we have sufficient criteria to alter the filter...
                     FilterService.addToFilter(DateFilterArg.fromString(qargs['d']));
@@ -2919,7 +2908,7 @@ angular.module('npn-viz-tool.share',[
                     absUrl += (i > 0 ? '&' : '') + key + '=' + encodeURIComponent(params[key]);
                 });
                 absUrl+='&'+SettingsService.getSharingUrlArgs();
-                console.log('absUrl',absUrl);
+                $log.debug('absUrl',absUrl);
                 $scope.url = absUrl;
             };
         }
@@ -2929,7 +2918,7 @@ angular.module('npn-viz-tool.stations',[
     'npn-viz-tool.settings',
     'npn-viz-tool.layers'
 ])
-.directive('npnStations',['$http','LayerService','SettingsService',function($http,LayerService,SettingsService){
+.directive('npnStations',['$http','$log','LayerService','SettingsService',function($http,$log,LayerService,SettingsService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="regions.markers" idKey="\'name\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" isLabel="true"></ui-gmap-markers><ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
@@ -3006,7 +2995,7 @@ angular.module('npn-viz-tool.stations',[
                                 $scope.regions.markers.push(regionMarker);
                             });
                         } else if (!loaded) {
-                            console.warn('no station count for '+name);
+                            $log.warn('no station count for '+name);
                         }
                         return style;
                     }).then(function(results){
@@ -3047,16 +3036,6 @@ angular.module('npn-viz-tool.stations',[
                                     });
                             }
                         }));
-                        /* can't explain why can't read c.visited here since
-                         * the other two log statements show the attribute as being there
-                         * but when iterating it's not there, even in a loop...
-                        var unvisited = counts.filter(function(c){
-                            return !c.visited;
-                        });
-                        console.log('counts',counts);
-                        console.log('countMap',countMap);
-                        console.log('unvisited',unvisited);
-                        */
                     });
                 });
             });
@@ -3127,7 +3106,7 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.vis-calendar',
     'ui.bootstrap'
 ])
-.factory('ChartService',['$window','$http','FilterService',function($window,$http,FilterService){
+.factory('ChartService',['$window','$http','$log','FilterService',function($window,$http,$log,FilterService){
     // some hard coded values that will be massaged into generated
     // values at runtime.
     var CHART_W = 930,
@@ -3143,7 +3122,7 @@ angular.module('npn-viz-tool.vis',[
     function filterSuspectSummaryData (d){
         var bad = (d.latitude === 0.0 || d.longitude === 0.0 || d.elevation_in_meters < 0);
         if(bad) {
-            console.warn('suspect station data',d);
+            $log.warn('suspect station data',d);
         }
         return !bad;
     }
@@ -3173,7 +3152,7 @@ angular.module('npn-viz-tool.vis',[
                 w = cw  - margin.left - margin.right,
                 h = ch  - margin.top - margin.bottom,
                 sizing = {width: w, height : h, margin: margin};
-            console.log('sizing',sizing);
+            $log.debug('sizing',sizing);
             return sizing;
         },
         leastSquares: function(xSeries,ySeries) {

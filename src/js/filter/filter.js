@@ -60,7 +60,7 @@ angular.module('npn-viz-tool.filter',[
     };
     return DateFilterArg;
 }])
-.factory('NetworkFilterArg',['$http','$rootScope','FilterArg','SpeciesFilterArg',function($http,$rootScope,FilterArg,SpeciesFilterArg){
+.factory('NetworkFilterArg',['$http','$rootScope','$log','FilterArg','SpeciesFilterArg',function($http,$rootScope,$log,FilterArg,SpeciesFilterArg){
     /**
      * Constructs a NetworkFilterArg.  TODO over-ride $filter??
      *
@@ -88,7 +88,6 @@ angular.module('npn-viz-tool.filter',[
     };
     NetworkFilterArg.prototype.updateCounts = function(station,species) {
         var id = this.getId(),pid;
-        //console.log('updateCounts',id,this.arg,station,species);
         if(station.networks.indexOf(id) !== -1) {
             // station is IN this network
             if(this.stations.indexOf(station.station_id) === -1) {
@@ -119,7 +118,7 @@ angular.module('npn-viz-tool.filter',[
                     return new NetworkFilterArg(nets[i]);
                 }
             }
-            console.warn('NO NETWORK FOUND WITH ID '+s);
+            $log.warn('NO NETWORK FOUND WITH ID '+s);
         });
     };
     return NetworkFilterArg;
@@ -380,8 +379,8 @@ angular.module('npn-viz-tool.filter',[
  * TODO - need to nail down the event model and probably even formalize it via a service because it's all
  * pretty loosey goosey at the moment.  Bad enough duplicating strings around...
  */
-.factory('FilterService',['$q','$http','$rootScope','$timeout','uiGmapGoogleMapApi','NpnFilter','SpeciesFilterArg',
-    function($q,$http,$rootScope,$timeout,uiGmapGoogleMapApi,NpnFilter,SpeciesFilterArg){
+.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','uiGmapGoogleMapApi','NpnFilter','SpeciesFilterArg',
+    function($q,$http,$rootScope,$timeout,$log,uiGmapGoogleMapApi,NpnFilter,SpeciesFilterArg){
     // NOTE: this scale is limited to 20 colors
     var color_domain = d3.range(0,20),
         cat20 = d3.scale.category20().domain(color_domain),
@@ -451,7 +450,7 @@ angular.module('npn-viz-tool.filter',[
                 bKeys = Object.keys(b),
                 i;
             if(aKeys.length !== (bKeys.length+1)) {
-                console.warn('Issue with usage of _mapdiff, unexpected key lengths',a,b);
+                $log.warn('Issue with usage of _mapdiff, unexpected key lengths',a,b);
             }
             if(aKeys.length === 1) {
                 return a[aKeys[0]];
@@ -461,7 +460,7 @@ angular.module('npn-viz-tool.filter',[
                     return a[aKeys[i]];
                 }
             }
-            console.warn('Issue with usage of _mapdiff, unfound diff',a,b);
+            $log.warn('Issue with usage of _mapdiff, unfound diff',a,b);
         }
         function _filtermap() {
             var map = {};
@@ -528,8 +527,8 @@ angular.module('npn-viz-tool.filter',[
             geoResults.misses = geoResults.misses.concat(filtered.hits);
         }
         geoResults.previousFilterMap = newMap;
-        console.log('geo time:'+(Date.now()-start));
-        //console.log('geoResults',geoResults);
+        $log.debug('geo time:'+(Date.now()-start));
+        //$log.debug('geoResults',geoResults);
         return geoResults.hits;
     }
     function post_filter(markers,refilter) {
@@ -559,7 +558,7 @@ angular.module('npn-viz-tool.filter',[
                     speciesFilter = filter.getSpeciesArg(sid);
                     hitMap[sid] = 0;
                     if(!speciesFilter && hasSpeciesArgs) {
-                        console.warn('species found in results but not in filter',station.species[sid]);
+                        $log.warn('species found in results but not in filter',station.species[sid]);
                         continue;
                     }
                     if(speciesFilter && (n=speciesFilter.$filter(station.species[sid]))) {
@@ -617,8 +616,8 @@ angular.module('npn-viz-tool.filter',[
                 minCount = d3.min(argMarkers,function(m) { return m.observationCount; }),
                 maxCount = d3.max(argMarkers,function(m) { return m.observationCount; });
             if(minCount !== maxCount) {
-                //console.log('there is variability in observationCounts', minCount, maxCount);
-                //console.log('arg markers',arg,argMarkers);
+                //$log.debug('there is variability in observationCounts', minCount, maxCount);
+                //$log.debug('arg markers',arg,argMarkers);
                 var choroplethScale = choroplethScales[arg.colorIdx];
                 choroplethScale.domain([minCount,maxCount]);
                 argMarkers.forEach(function(marker){
@@ -631,7 +630,7 @@ angular.module('npn-viz-tool.filter',[
             station: filtered.length,
             observation: observationCount
         });
-        console.log('phase2 time:',(Date.now()-start));
+        $log.debug('phase2 time:',(Date.now()-start));
         return (lastFiltered = filtered);
     }
     function execute() {
@@ -640,7 +639,7 @@ angular.module('npn-viz-tool.filter',[
         if(!paused && filterParams && filterUpdateCount != filter.getUpdateCount()) {
             filterUpdateCount = filter.getUpdateCount();
             var start = Date.now();
-            console.log('execute',filterUpdateCount,filterParams);
+            $log.debug('execute',filterUpdateCount,filterParams);
             $rootScope.$broadcast('filter-phase1-start',{});
             $http.get('/npn_portal/observations/getAllObservationsForSpecies.json',{
                 params: filterParams
@@ -655,8 +654,8 @@ angular.module('npn-viz-tool.filter',[
                     count: d.station_list.length
                 });
                 // now need to walk through the station_list and post-filter by phenophases...
-                console.log('phase1 time:',(Date.now()-start));
-                console.log('results-pre',d);
+                $log.debug('phase1 time:',(Date.now()-start));
+                //$log.debug('results-pre',d);
                 def.resolve(post_filter(last=d.station_list));
             });
         } else {
@@ -686,11 +685,11 @@ angular.module('npn-viz-tool.filter',[
             return lastFiltered;
         },
         pause: function() {
-            console.log('PAUSE');
+            $log.debug('PAUSE');
             paused = true;
         },
         resume: function() {
-            console.log('RESUME');
+            $log.debug('RESUME');
             paused = false;
             broadcastFilterUpdate();
         },
@@ -733,7 +732,8 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','FilterService','SettingsService',function($rootScope,$http,$timeout,$filter,FilterService,SettingsService){
+.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService',
+    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl"></ui-gmap-markers>',
@@ -789,7 +789,7 @@ angular.module('npn-viz-tool.filter',[
                         $scope.results.markers = [];
                         $timeout(function(){
                             FilterService.execute().then(function(markers) {
-                                //console.log('markers',markers);
+                                //$log.debug('markers',markers);
                                 $scope.results.markers = markers;
                             });
                         },500);
@@ -814,7 +814,7 @@ angular.module('npn-viz-tool.filter',[
                 $scope.results.markers = [];
             });
             $scope.$on('filter-marker-updates',function(event,data){
-                console.log('update data',data);
+                $log.debug('update data',data);
                 $scope.results.markers = data.markers;
             });
         }

@@ -5,8 +5,8 @@ angular.module('npn-viz-tool.vis-scatter',[
     'npn-viz-tool.settings',
     'ui.bootstrap'
 ])
-.controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','FilterService','ChartService','SettingsService',
-    function($scope,$modalInstance,$http,$timeout,$filter,FilterService,ChartService,SettingsService){
+.controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','$log','FilterService','ChartService','SettingsService',
+    function($scope,$modalInstance,$http,$timeout,$filter,$log,FilterService,ChartService,SettingsService){
     $scope.modal = $modalInstance;
     $scope.colorScale = FilterService.getColorScale();
     $scope.colors = $scope.colorScale.domain();
@@ -221,7 +221,7 @@ angular.module('npn-viz-tool.vis-scatter',[
             return draw();
         }
         $scope.working = true;
-        console.log('visualize',$scope.selection.axis,$scope.toPlot);
+        $log.debug('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {
                 request_src: 'npn-vis-scatter-plot',
@@ -248,9 +248,9 @@ angular.module('npn-viz-tool.vis-scatter',[
                 }
                 return keep;
             });
-            console.log('filtered out '+(response.length-data.length)+'/'+response.length+' records with negative num_days_prior_no.');
+            $log.debug('filtered out '+(response.length-data.length)+'/'+response.length+' records with negative num_days_prior_no.');
             $scope.filteredDisclaimer = response.length != data.length;
-            console.log('scatterPlot data',data);
+            $log.debug('scatterPlot data',data);
             draw();
         });
     };

@@ -14,12 +14,6 @@ describe('filters.js', function () {
         }));
     });
 
-    it('/ faFileIcon',inject(function($filter){
-        expect($filter('faFileIcon')('pdf')).toBe('fa-file-pdf-o');
-        expect($filter('faFileIcon')('txt')).toBe('fa-file-o');
-        expect($filter('faFileIcon')(null)).toBe('fa-file-o');
-    }));
-
     describe('/ ellipses',function(){
         it('/ basic',inject(function($filter){
             function randomString(length) {
