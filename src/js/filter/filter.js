@@ -577,12 +577,13 @@ angular.module('npn-viz-tool.filter',[
                         // just update observation counts and hold onto all markers
                         for(pid in station.species[sid]) {
                             station.species[sid][pid].$match = true; // potentially LEAKY but attribute shared by Species/NetworkFilterArg
-                            observationCount += SpeciesFilterArg.countObservationsForPhenophase(station.species[sid][pid]);
+                            n = SpeciesFilterArg.countObservationsForPhenophase(station.species[sid][pid]);
+                            station.observationCount += n;
+                            observationCount += n;
                         }
                         keeps++;
                         updateNetworkCounts(station,station.species[sid]);
                     }
-
                 }
                 // look through the hitMap and see if there were multiple hits for multiple species
                 hitMap['n'] = 0;
