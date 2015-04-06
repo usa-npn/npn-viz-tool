@@ -583,6 +583,9 @@ angular.module('npn-viz-tool.filter',[
     GeoFilterArg.prototype.getSourceId = function() {
         return this.sourceId;
     };
+    GeoFilterArg.prototype.getUid = function(){
+        return this.getSourceId()+'-'+this.getId();
+    };
     GeoFilterArg.prototype.$filter = function(marker) {
         return geoContains(new google.maps.LatLng(parseFloat(marker.latitude), parseFloat(marker.longitude)),this.arg.getGeometry());
     };
@@ -740,13 +743,107 @@ angular.module('npn-viz-tool.filter',[
         if(!paused) {
             $timeout(function(){
                 if(last) {
-                    var markers = post_filter(last);
+                    var markers = post_filter(last,true);
                     $rootScope.$broadcast('filter-marker-updates',{markers: markers});
                 }
             },500);
         }
     });
-    function post_filter(markers) {
+
+    var geoResults = {
+            previousFilterCount: 0,
+            previousFilterMap: {},
+            hits: [],
+            misses: []
+        };
+    function geo_filter(markers,refilter) {
+        function _mapdiff(a,b) { // a should have one more key than b, what is that key's value?
+            var aKeys = Object.keys(a),
+                bKeys = Object.keys(b),
+                i;
+            if(aKeys.length !== (bKeys.length+1)) {
+                console.warn('Issue with usage of _mapdiff, unexpected key lengths',a,b);
+            }
+            if(aKeys.length === 1) {
+                return a[aKeys[0]];
+            }
+            for(i = 0; i < aKeys.length; i++) {
+                if(!b[aKeys[i]]) {
+                    return a[aKeys[i]];
+                }
+            }
+            console.warn('Issue with usage of _mapdiff, unfound diff',a,b);
+        }
+        function _filtermap() {
+            var map = {};
+            angular.forEach(filter.getGeoArgs(),function(arg){
+                map[arg.getUid()] = arg;
+            });
+            return map;
+        }
+        function _runfilter(toFilter,filterFunc) {
+            var results = {
+                hits: [],
+                misses: []
+            };
+            angular.forEach(toFilter,function(m){
+                if(filterFunc(m)) {
+                    results.hits.push(m);
+                } else {
+                    results.misses.push(m);
+                }
+            });
+            return results;
+        }
+        var start = Date.now(),
+            filters = filter.getGeoArgs(),
+            geoCount = filters.length,
+            geoAdd = geoCount > geoResults.previousFilterCount,
+            newMap = _filtermap(),
+            filtered;
+        geoResults.previousFilterCount = geoCount;
+        if(geoCount === 0) {
+            geoResults.misses = [];
+            geoResults.hits = [].concat(markers);
+        } else if(!refilter || Object.keys(newMap).length === 1) {
+            // this is a new filter execution need to apply the filter to all markers
+            // this use case may perform poorly in some cases like
+            // FireFox >2 geo filters and a lot of markers
+            // includes special case of first added geo filter
+            filtered = _runfilter(markers,function(m){
+                var hit = false,i;
+                for(i = 0; i < filters.length; i++){
+                    if((hit=filters[i].$filter(m))) {
+                        break;
+                    }
+                }
+                return hit;
+            });
+            geoResults.hits = filtered.hits;
+            geoResults.misses = filtered.misses;
+        } else if (geoAdd) {
+            var addedFilter = _mapdiff(newMap,geoResults.previousFilterMap);
+            // applying new filter against what was missed last time around
+            filtered = _runfilter(geoResults.misses,function(m){
+                return addedFilter.$filter(m);
+            });
+            geoResults.hits = geoResults.hits.concat(filtered.hits);
+            geoResults.misses = filtered.misses;
+        } else {
+            var removedFilter = _mapdiff(geoResults.previousFilterMap,newMap);
+            // test filter being removed against previous hits to see which should be removed
+            filtered = _runfilter(geoResults.hits,function(m){
+                return removedFilter.$filter(m);
+            });
+            geoResults.hits = filtered.misses;
+            geoResults.misses = geoResults.misses.concat(filtered.hits);
+        }
+        geoResults.previousFilterMap = newMap;
+        console.log('geo time:'+(Date.now()-start));
+        //console.log('geoResults',geoResults);
+        return geoResults.hits;
+    }
+    function post_filter(markers,refilter) {
         var start = Date.now();
         $rootScope.$broadcast('filter-phase2-start',{
             count: markers.length
@@ -762,23 +859,10 @@ angular.module('npn-viz-tool.filter',[
                     });
                 }
             },
-            filtered =  markers.filter(function(station){
+            filtered =  geo_filter(markers,refilter).filter(function(station){
                 station.markerOpts.icon.fillColor = defaultIcon.fillColor;
                 var i,sid,speciesFilter,keeps = 0,
                     n,hitMap = {},pid;
-
-
-                if(geos.length > 0) {
-                    var gid,hit = false;
-                    for(i = 0; i < geos.length; i++) {
-                        if((hit=geos[i].$filter(station))) {
-                            break;
-                        }
-                    }
-                    if(!hit) {
-                        return false;
-                    }
-                }
 
                 station.observationCount = 0;
 
