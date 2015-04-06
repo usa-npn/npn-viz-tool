@@ -963,7 +963,7 @@ angular.module('npn-viz-tool.filter',[
 .directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','FilterService','SettingsService',function($rootScope,$http,$timeout,$filter,FilterService,SettingsService){
     return {
         restrict: 'E',
-        template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions"></ui-gmap-markers>',
+        template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl"></ui-gmap-markers>',
         scope: {
         },
         controller: function($scope) {
@@ -971,6 +971,7 @@ angular.module('npn-viz-tool.filter',[
             $scope.results = {
                 markers: []
             };
+            $scope.mapControl = {};
             $scope.doCluster = SettingsService.getSettingValue('clusterMarkers');
             var styles = [0,1,2,4,8,16,32,64,128,256].map(function(i){
                 return {
@@ -1001,6 +1002,11 @@ angular.module('npn-viz-tool.filter',[
                     return r;
                 }
             };
+            $scope.$on('setting-update-tagBadgeFormat',function(event,data){
+                if($scope.mapControl && $scope.mapControl.managerDraw) {
+                    $scope.mapControl.managerDraw();
+                }
+            });
             $scope.$on('setting-update-clusterMarkers',function(event,data){
                 $scope.doCluster = data.value;
             });
