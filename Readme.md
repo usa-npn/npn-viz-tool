@@ -1,6 +1,6 @@
-# RegsDotGovProxy
+# NPN Visualization Tool
 
-This repository contains a [Node.Js](http://nodejs.org/) caching proxy server to the [regulation.gov](http://regulation.gov) [document API](http://api.data.gov/docs/regulations/).  In addition to being a proxy server it serves up static content consisting of an [AngularJS](https://angularjs.org/) library of services and directives (at this point relatively simple).
+This repository contains a [Node.Js](http://nodejs.org/) caching proxy server to the [USA National Phenology Network](https://usanpn.org/) [NPN Portal Web Services (dev)](http://www-dev.usanpn.org/npn_portal).  In addition to being a proxy server it serves up static content consisting of an [AngularJS](https://angularjs.org/) application implementing the NPN Visualization Tool.
 
 ## Development Environment
 
@@ -65,43 +65,4 @@ Once the server is running you can modify the code found in the `src` directory 
   - `server.js` - The base Node.JS server logic that sets up the proxy and serves static content from the `dist` directory.
   - `package.json` - The node dependencies of `server.js` and `caching_proxy.js`
   - `server_control.sh` - A shell script useful for controlling a background instance of the proxy server.  This script is orchestrated via `/etc/init.d/regsdotgov-proxy` on squaw.
-- `src` - Contains the source code for the AngularJS library (compiled to `server/dist/regs-gov-directives*.js`.
-  - `comments` - Contains the `comment` and `comments` directives, supporting templates and unit tests.
-  - `css` - Contains the base SASS which gets compiled to `server/dist/css/regs-gov/directives.css`
-  - `docket` - Contains an unused `docket` directive.  Which is functional but nothing fancy and has no tests.
-  - `filters` - Contains comonn AngularJS filter implementations and corresponding tests.
-  - `partials` - Can be ignored at development time.  The development process pre-compiles AngularJS templates and seeds them into the browser cache so that they don't need to be loaded individually.
-  - `services` - Contains the AngularJS services re-used by other modules.
-  - `main.js` - An AngularJS modules that imports all sub-modules.
-
-## Squaw
-
-The contents of the `server` directory are deployed to squaw at `/var/www/regsdotgov.proxy`.  This is where the proxy server runs (again on port 8000) in production.
-
-**IMPORTANT:** Whenever you push changes they are automatically deployed out into production so please be sure you haven't broken anything.  You should be fairly certain if a `grunt` build runs to completion without complaints.
-
-The `server_control.sh` script is orchestrated by `/etc/init.d/regsdotgov-proxy` script so that the Node.Js proxy can be managed like any other Unix service and will be restarted if the system is restarted.
-
-The server only needs to be restarted if changes are made directly to `server/server.js` or `server/caching_proxy.js`
-
-### Production Server Management
-
-Start (will not start if already running)
-
-~~~~
-sudo service regsdotgov-proxy start
-~~~~
-
-Stop
-
-~~~~
-sudo service regsdotgov-proxy stop
-~~~~
-
-Restart
-
-~~~~
-sudo service regsdotgov-proxy restart
-~~~~
-
-The actual node instance will be run as the user `bigchief` from the `/var/www/regsdotgov.proxy` directory.
+- `src` - Contains the source code for the AngularJS application.
