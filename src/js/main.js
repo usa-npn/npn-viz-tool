@@ -9,6 +9,6 @@ angular.module('npn-viz-tool',[
     uiGmapGoogleMapApiProvider.configure({
         //    key: 'your api key',
         v: '3.17',
-        libraries: 'geometry'
+        libraries: ['geometry','drawing']
     });
 });

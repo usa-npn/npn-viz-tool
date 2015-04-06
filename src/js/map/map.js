@@ -17,10 +17,12 @@ angular.module('npn-viz-tool.map',[
         controller: ['$scope',function($scope) {
             var dfltCenter = { latitude: 38.8402805, longitude: -97.61142369999999 },
                 dfltZoom = 4,
+                api,
                 map;
             $scope.stationView = false;
             uiGmapGoogleMapApi.then(function(maps) {
                 console.log('maps',maps);
+                api = maps;
                 $scope.map = {
                     center: dfltCenter,
                     zoom: dfltZoom,
@@ -37,9 +39,37 @@ angular.module('npn-viz-tool.map',[
             });
             uiGmapIsReady.promise(1).then(function(instances){
                 map = instances[0].map;
-                var qargs = $location.search();
                 // this is a little leaky, the map knows which args the "share" control cares about...
-                $scope.stationView = !qargs['d'] && !qargs['s'];
+                // date is the minimum requirement for filtering.
+                var qargs = $location.search(),
+                    qArgFilter = qargs['d'] && (qargs['s'] || qargs['n']);
+                $scope.stationView = !qArgFilter;
+
+                // constrain map movement to N America
+                var allowedBounds = new api.LatLngBounds(
+                         new google.maps.LatLng(0.0,-174.0),// SW - out in the pacific SWof HI
+                         new google.maps.LatLng(75.0,-43.0) // NE - somewhere in greenland
+                    ),
+                    lastValidCenter = map.getCenter();
+                if(qargs['allowedBounds']) {
+                    var allowedBoundsRectangle = new api.Rectangle();
+                    allowedBoundsRectangle.setOptions({
+                      strokeColor: '#FFF',
+                      strokeOpacity: 0.8,
+                      strokeWeight: 2,
+                      fillColor: '#FFF',
+                      fillOpacity: 0.35,
+                      map: map,
+                      bounds: allowedBounds
+                    });
+                }
+                api.event.addListener(map,'center_changed',function(){
+                    if(allowedBounds.contains(map.getCenter())) {
+                        lastValidCenter = map.getCenter();
+                        return;
+                    }
+                    map.panTo(lastValidCenter);
+                });
             });
             function stationViewOff() {
                 $scope.stationView = false;
