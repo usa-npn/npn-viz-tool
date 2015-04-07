@@ -191,8 +191,10 @@ angular.module('npn-viz-tool.vis-scatter',[
             .attr('x2', function(d) { return x(d.p2[0]); })
             .attr('y2', function(d) { return y(d.p2[1]); })
             .attr('stroke', function(d) { return d.color; })
-            .attr('stroke-width', 2)
-            .style('display', $scope.selection.regressionLines ? 'inherit' : 'none');
+            .attr('stroke-width', $scope.selection.regressionLines ? 2 : 0);
+            // FF doesn't like the use of display, so using stroke-width to hide
+            // regression lines.
+            //.style('display', $scope.selection.regressionLines ? 'inherit' : 'none');
 
 
         chart.select('.legend').remove();
