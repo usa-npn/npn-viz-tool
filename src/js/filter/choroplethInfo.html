@@ -1,0 +1,11 @@
+<div id="choroplethHelp" ng-show="show">
+    <ul class="list-unstyled">
+        <li ng-repeat="scale in data">
+            <label>{{scale.title}}</label>
+            <ul class="list-inline color-scale">
+                <li ng-repeat="color in scale.colors" style="background-color: {{color}};" class="{{scale.color === color ? 'selected' :''}}">
+                </li>
+            </ul>
+        </li>
+    </li>
+</div>

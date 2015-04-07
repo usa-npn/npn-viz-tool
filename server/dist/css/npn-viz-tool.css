@@ -391,4 +391,41 @@ svg {
   float: right;
 }
 
+.station-details {
+  min-width: 250px;
+  max-width: 500px;
+}
+
+#choroplethHelp {
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  border-radius: 4px;
+  position: absolute;
+  bottom: 20px;
+  right: 5px;
+  z-index: 2000;
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid #666;
+}
+#choroplethHelp label {
+  color: #fff;
+  font-weight: normal;
+}
+#choroplethHelp ul.color-scale li {
+  width: 15px;
+  height: 15px;
+}
+#choroplethHelp ul.color-scale li.selected {
+  border: 1px solid #fff;
+}
+
+.choropleth-swatch {
+  width: 15px;
+  height: 15px;
+  display: inline-block;
+  margin-right: 4px;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */

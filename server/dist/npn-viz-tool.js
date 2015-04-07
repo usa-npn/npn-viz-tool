@@ -691,18 +691,19 @@ angular.module('npn-viz-tool.filter',[
  * TODO - need to nail down the event model and probably even formalize it via a service because it's all
  * pretty loosey goosey at the moment.  Bad enough duplicating strings around...
  */
-.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','uiGmapGoogleMapApi','NpnFilter','SpeciesFilterArg',
-    function($q,$http,$rootScope,$timeout,$log,uiGmapGoogleMapApi,NpnFilter,SpeciesFilterArg){
+.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','$filter','uiGmapGoogleMapApi','NpnFilter','SpeciesFilterArg','SettingsService',
+    function($q,$http,$rootScope,$timeout,$log,$filter,uiGmapGoogleMapApi,NpnFilter,SpeciesFilterArg,SettingsService){
     // NOTE: this scale is limited to 20 colors
     var color_domain = d3.range(0,20),
         cat20 = d3.scale.category20().domain(color_domain),
         cat20b = d3.scale.category20b().domain(color_domain),
         colorScale = d3.scale.ordinal().domain(color_domain).range(color_domain.map(function(d,i){
-            return (i%2) === 0 ? cat20(i) : cat20b(i-1);
+            var color = (i%2) === 0 ? cat20(i) : cat20b(i-1);
+            return d3.rgb(color).darker(1.0).toString();
         })),
         choroplethScales = color_domain.map(function(i) {
             var maxColor = colorScale(i),
-                minColor = d3.rgb(maxColor).hsl().brighter(1.25).rgb().toString();
+                minColor = d3.rgb(maxColor).brighter(4.0).toString();
             return d3.scale.linear().range([minColor,maxColor]);
         }),
         filter = new NpnFilter(),
@@ -712,13 +713,21 @@ angular.module('npn-viz-tool.filter',[
             //path: google.maps.SymbolPath.CIRCLE,
             //'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
             fillColor: '#00ff00',
-            fillOpacity: 0.95,
+            fillOpacity: 1.0,
             scale: 8,
             strokeColor: '#204d74',
             strokeWeight: 1
         },
         last,
         lastFiltered = [];
+    // now that the boundaries of the choropleth scales have been built
+    // reset the color scale to use the median color rather than the darkest
+    choroplethScales.forEach(function(s){
+        s.domain([color_domain[0],color_domain[color_domain.length-1]]);
+    });
+    colorScale = d3.scale.ordinal().domain(color_domain).range(color_domain.map(function(d){
+        return choroplethScales[d](9);
+    }));
     uiGmapGoogleMapApi.then(function(maps) {
         defaultIcon.path = maps.SymbolPath.CIRCLE;
     });
@@ -852,6 +861,8 @@ angular.module('npn-viz-tool.filter',[
             geos = filter.getGeoArgs(),
             hasSpeciesArgs = filter.getSpeciesArgs().length > 0,
             networkArgs = filter.getNetworkArgs(),
+            speciesTitle = $filter('speciesTitle'),
+            speciesTitleFormat = SettingsService.getSettingValue('tagSpeciesTitle'),
             updateNetworkCounts = function(station,species) {
                 if(networkArgs.length) {
                     angular.forEach(networkArgs,function(networkArg){
@@ -865,6 +876,7 @@ angular.module('npn-viz-tool.filter',[
                     n,hitMap = {},pid;
 
                 station.observationCount = 0;
+                station.speciesInfo = undefined;
 
                 for(sid in station.species) {
                     speciesFilter = filter.getSpeciesArg(sid);
@@ -884,6 +896,14 @@ angular.module('npn-viz-tool.filter',[
                             station.markerOpts.icon.fillColor = speciesFilter.color;
                         }
                         updateNetworkCounts(station,station.species[sid]);
+                        if(!station.speciesInfo){
+                            station.speciesInfo = {
+                                titles: {},
+                                counts: {}
+                            };
+                        }
+                        station.speciesInfo.titles[sid] = speciesTitle(speciesFilter.arg,speciesTitleFormat);
+                        station.speciesInfo.counts[sid] = n;
                     } else if(!speciesFilter) {
                         // if we're here it means we have network filters but not species filters
                         // just update observation counts and hold onto all markers
@@ -904,7 +924,15 @@ angular.module('npn-viz-tool.filter',[
                         hitMap['n']++;
                     }
                 }
+                station.markerOpts.title = station.station_name + ' ('+station.observationCount+')';
+                if(station.speciesInfo) {
+                    station.markerOpts.title += ' ['+
+                        Object.keys(station.speciesInfo.titles).map(function(sid){
+                            return station.speciesInfo.titles[sid];
+                        }).join(',')+']';
+                }
                 station.markerOpts.icon.strokeColor = (hitMap['n'] > 1) ? '#00ff00' : defaultIcon.strokeColor;
+                station.markerOpts.zIndex = station.observationCount;
                 // set key on the marker that uniquely identifies it based on its id and colors
                 station.$markerKey = station.station_id+'.'+station.markerOpts.icon.fillColor+'.'+station.markerOpts.icon.strokeColor;
                 return keeps > 0;
@@ -918,27 +946,41 @@ angular.module('npn-viz-tool.filter',[
                     markerOpts: m.markerOpts,
                     station_id: m.station_id,
                     station_name: m.station_name,
-                    observationCount: m.observationCount
+                    observationCount: m.observationCount,
+                    speciesInfo: m.speciesInfo
                 };
             });
-        // sort markers into buckets based on color and then choropleth colors based on observationCount
-        filter.getSpeciesArgs().forEach(function(arg) {
-            var argMarkers = filtered.filter(function(m) {
-                    return arg.colorIdx === m.markerOpts.icon.fillColorIdx;
-                }),
-                minCount = d3.min(argMarkers,function(m) { return m.observationCount; }),
-                maxCount = d3.max(argMarkers,function(m) { return m.observationCount; });
-            if(minCount !== maxCount) {
-                //$log.debug('there is variability in observationCounts', minCount, maxCount);
+        if(hasSpeciesArgs) {
+            // for all markers pick the species with the highest observation density as its color
+            filtered.forEach(function(m){
+                var sids = Object.keys(m.speciesInfo.counts),
+                    maxSid = sids.length === 1 ?
+                        sids[0] :
+                        sids.reduce(function(p,c){
+                            //console.log('p='+p+',c='+c,m.speciesInfo.counts);
+                            return (m.speciesInfo.counts[c] > m.speciesInfo.counts[p]) ? c : p;
+                        },sids[0]),
+                    arg = filter.getSpeciesArg(maxSid);
+                m.markerOpts.icon.fillColorIdx = arg.colorIdx;
+            });
+            // sort markers into buckets based on color and then choropleth colors based on observationCount
+            filter.getSpeciesArgs().forEach(function(arg) {
+                var argMarkers = filtered.filter(function(m) {
+                        return arg.colorIdx === m.markerOpts.icon.fillColorIdx;
+                    }),
+                    sid = arg.arg.species_id,
+                    minCount = d3.min(argMarkers,function(m) { return m.speciesInfo.counts[sid]; }),
+                    maxCount = d3.max(argMarkers,function(m) { return m.speciesInfo.counts[sid]; });
+                $log.debug('observationCount variability for '+arg.toString()+ ' ('+arg.arg.common_name+') ['+ minCount + '-' + maxCount + ']');
                 //$log.debug('arg markers',arg,argMarkers);
                 var choroplethScale = choroplethScales[arg.colorIdx];
                 choroplethScale.domain([minCount,maxCount]);
                 argMarkers.forEach(function(marker){
-                    marker.markerOpts.icon.fillColor = choroplethScale(marker.observationCount);
+                    marker.markerOpts.icon.fillColor = choroplethScale(marker.speciesInfo.counts[sid]);
                     marker.$markerKey = marker.station_id+'.'+marker.markerOpts.icon.fillColor+'.'+marker.markerOpts.icon.strokeColor;
                 });
-            }
-        });
+            });
+        }
         $rootScope.$broadcast('filter-phase2-end',{
             station: filtered.length,
             observation: observationCount
@@ -1042,6 +1084,15 @@ angular.module('npn-viz-tool.filter',[
         },
         getColorScale: function() {
             return colorScale;
+        },
+        getChoroplethScale: function(sid) {
+            var arg = filter.getSpeciesArg(sid);
+            if(arg) {
+                return choroplethScales[arg.colorIdx];
+            }
+        },
+        getChoroplethScales: function() {
+            return choroplethScales;
         }
     };
 }])
@@ -1137,7 +1188,65 @@ angular.module('npn-viz-tool.filter',[
             $scope.$on('filter-marker-updates',function(event,data){
                 updateMarkers(data.markers);
             });
-            $scope.markerEvents = StationService.getMarkerEvents();
+            var markerEvents = StationService.getMarkerEvents();
+            $scope.markerEvents = {
+                'click' : markerEvents.click,
+                'mouseover' : function(m){
+                    $rootScope.$broadcast('marker-mouseover',{ marker: m });
+                },
+                'mouseout' : function(m){
+                    $rootScope.$broadcast('marker-mouseout',{ marker: m });
+                }
+            };
+        }
+    };
+}])
+.directive('choroplethInfo',['$log','$timeout','FilterService',function($log,$timeout,FilterService){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/filter/choroplethInfo.html',
+        controller: function($scope) {
+            var mouseIn = false;
+            $scope.show = false;
+            $scope.$on('marker-mouseover',function(event,data){
+                $log.debug('mouseover',data);
+                mouseIn = true;
+                $timeout(function(){
+                    if($scope.show = mouseIn) {
+                        var sids = Object.keys(data.marker.model.speciesInfo.counts),
+                            scales = FilterService.getChoroplethScales();
+                        $scope.data = sids.map(function(sid){
+                            var arg = FilterService.getFilter().getSpeciesArg(sid),
+                                val = {
+                                    sid: sid,
+                                    count: data.marker.model.speciesInfo.counts[sid],
+                                    title: data.marker.model.speciesInfo.titles[sid],
+                                    arg: arg,
+                                    scale: scales[arg.colorIdx],
+                                    colors: []
+                                },
+                                range = Math.ceil(val.scale.domain()[1]/20),i,n;
+                            for(i = 0;i < 20; i++) {
+                                n = (range*i)+1;
+                                val.colors[i] = val.scale(n);
+                                if(val.count >= n) {
+                                   val.color = val.colors[i]; // this isn't exact
+                                }
+                            }
+                            return val;
+                        });
+                        $log.debug($scope.data);
+                    }
+                },500);
+
+            });
+            $scope.$on('marker-mouseout',function(event,data){
+                $log.debug('mouseout',data);
+                mouseIn = false;
+                if($scope.show) {
+                    $scope.show = false;
+                }
+            });
         }
     };
 }])
@@ -1994,7 +2103,7 @@ angular.module('npn-viz-tool.map',[
         }
     };
 }]);
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -2054,6 +2163,21 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "</div>\n" +
     "\n" +
     "</vis-dialog>");
+}]);
+
+angular.module("js/filter/choroplethInfo.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/choroplethInfo.html",
+    "<div id=\"choroplethHelp\" ng-show=\"show\">\n" +
+    "    <ul class=\"list-unstyled\">\n" +
+    "        <li ng-repeat=\"scale in data\">\n" +
+    "            <label>{{scale.title}}</label>\n" +
+    "            <ul class=\"list-inline color-scale\">\n" +
+    "                <li ng-repeat=\"color in scale.colors\" style=\"background-color: {{color}};\" class=\"{{scale.color === color ? 'selected' :''}}\">\n" +
+    "                </li>\n" +
+    "            </ul>\n" +
+    "        </li>\n" +
+    "    </li>\n" +
+    "</div>");
 }]);
 
 angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
@@ -2257,6 +2381,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "\n" +
     "<share-control></share-control>\n" +
     "<filter-tags></filter-tags>\n" +
+    "<choropleth-info></choropleth-info>\n" +
     "\n" +
     "<toolbar>\n" +
     "    <tool id=\"filter\" icon=\"fa-search\" title=\"Filter\">\n" +
@@ -2925,10 +3050,11 @@ angular.module('npn-viz-tool.share',[
     };
 }]);
 angular.module('npn-viz-tool.stations',[
+    'npn-viz-tool.filter',
     'npn-viz-tool.settings',
     'npn-viz-tool.layers'
 ])
-.factory('StationService',['$http','$log',function($http,$log){
+.factory('StationService',['$http','$log','FilterService',function($http,$log,FilterService){
     var markerEvents = {
         'click':function(m){
             //m.info = new google.maps.InfoWindow();
@@ -2938,7 +3064,7 @@ angular.module('npn-viz-tool.stations',[
             $http.get('/npn_portal/stations/getStationDetails.json',{params:{ids: m.model.station_id}}).success(function(info){
                 function litem(label,value) {
                     return value && value !== '' ?
-                     '<dt>'+label+'</dt><dd>'+value+'</dd>' : '';
+                     '<li><label>'+label+':</label> '+value+'</li>' : '';
                 }
                 if(info && info.length === 1) {
                     var i = info[0],
@@ -2946,20 +3072,30 @@ angular.module('npn-viz-tool.stations',[
                         html = '<div class="station-details">';
                     $log.debug(i);
                     //html += '<h5>'+i.site_name+'</h5>';
-                    html += '<dl class="dl-horizontal">';
+                    html += '<ul class="list-unstyled">';
                     html += litem('Site Name',i.site_name);
                     html += litem('Group',i.group_name);
                     if(m.model.observationCount) {
-                        html += litem('Number of Observations',m.model.observationCount);
+                        html += litem('Observations',m.model.observationCount);
                     } else {
-                        html += litem('Number of Individuals',i.num_individuals);
-                        html += litem('Number of Observations',i.num_records);
+                        html += litem('Individuals',i.num_individuals);
+                        html += litem('Observations',i.num_records);
                     }
 
-                    html += '</dl>';
+                    html += '</ul>';
+                    if(m.model.speciesInfo) {
+                        html += '<label>Species Observed</label>';
+                        html += '<ul class="list-unstyled">';
+                        Object.keys(m.model.speciesInfo.titles).forEach(function(key){
+                            var scale = FilterService.getChoroplethScale(key),
+                                count = m.model.speciesInfo.counts[key];
+                            html += '<li><div class="choropleth-swatch" style="background-color: '+scale(count)+';"></div>'+m.model.speciesInfo.titles[key]+' ('+count+')</li>';
+                        });
+                        html += '</ul>';
+                    }
                     html += '</div>';
                     info_window = new google.maps.InfoWindow({
-                        maxWidth: 320,
+                        maxWidth: 500,
                         content: html
                     });
                     info_window.open(m.map,m);

@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -58,6 +58,21 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "</div>\n" +
     "\n" +
     "</vis-dialog>");
+}]);
+
+angular.module("js/filter/choroplethInfo.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/filter/choroplethInfo.html",
+    "<div id=\"choroplethHelp\" ng-show=\"show\">\n" +
+    "    <ul class=\"list-unstyled\">\n" +
+    "        <li ng-repeat=\"scale in data\">\n" +
+    "            <label>{{scale.title}}</label>\n" +
+    "            <ul class=\"list-inline color-scale\">\n" +
+    "                <li ng-repeat=\"color in scale.colors\" style=\"background-color: {{color}};\" class=\"{{scale.color === color ? 'selected' :''}}\">\n" +
+    "                </li>\n" +
+    "            </ul>\n" +
+    "        </li>\n" +
+    "    </li>\n" +
+    "</div>");
 }]);
 
 angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", function($templateCache) {
@@ -261,6 +276,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "\n" +
     "<share-control></share-control>\n" +
     "<filter-tags></filter-tags>\n" +
+    "<choropleth-info></choropleth-info>\n" +
     "\n" +
     "<toolbar>\n" +
     "    <tool id=\"filter\" icon=\"fa-search\" title=\"Filter\">\n" +

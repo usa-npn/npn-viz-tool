@@ -1,8 +1,9 @@
 angular.module('npn-viz-tool.stations',[
+    'npn-viz-tool.filter',
     'npn-viz-tool.settings',
     'npn-viz-tool.layers'
 ])
-.factory('StationService',['$http','$log',function($http,$log){
+.factory('StationService',['$http','$log','FilterService',function($http,$log,FilterService){
     var markerEvents = {
         'click':function(m){
             //m.info = new google.maps.InfoWindow();
@@ -12,7 +13,7 @@ angular.module('npn-viz-tool.stations',[
             $http.get('/npn_portal/stations/getStationDetails.json',{params:{ids: m.model.station_id}}).success(function(info){
                 function litem(label,value) {
                     return value && value !== '' ?
-                     '<dt>'+label+'</dt><dd>'+value+'</dd>' : '';
+                     '<li><label>'+label+':</label> '+value+'</li>' : '';
                 }
                 if(info && info.length === 1) {
                     var i = info[0],
@@ -20,20 +21,30 @@ angular.module('npn-viz-tool.stations',[
                         html = '<div class="station-details">';
                     $log.debug(i);
                     //html += '<h5>'+i.site_name+'</h5>';
-                    html += '<dl class="dl-horizontal">';
+                    html += '<ul class="list-unstyled">';
                     html += litem('Site Name',i.site_name);
                     html += litem('Group',i.group_name);
                     if(m.model.observationCount) {
-                        html += litem('Number of Observations',m.model.observationCount);
+                        html += litem('Observations',m.model.observationCount);
                     } else {
-                        html += litem('Number of Individuals',i.num_individuals);
-                        html += litem('Number of Observations',i.num_records);
+                        html += litem('Individuals',i.num_individuals);
+                        html += litem('Observations',i.num_records);
                     }
 
-                    html += '</dl>';
+                    html += '</ul>';
+                    if(m.model.speciesInfo) {
+                        html += '<label>Species Observed</label>';
+                        html += '<ul class="list-unstyled">';
+                        Object.keys(m.model.speciesInfo.titles).forEach(function(key){
+                            var scale = FilterService.getChoroplethScale(key),
+                                count = m.model.speciesInfo.counts[key];
+                            html += '<li><div class="choropleth-swatch" style="background-color: '+scale(count)+';"></div>'+m.model.speciesInfo.titles[key]+' ('+count+')</li>';
+                        });
+                        html += '</ul>';
+                    }
                     html += '</div>';
                     info_window = new google.maps.InfoWindow({
-                        maxWidth: 320,
+                        maxWidth: 500,
                         content: html
                     });
                     info_window.open(m.map,m);
