@@ -1,5 +1,6 @@
 angular.module('npn-viz-tool.filter',[
     'npn-viz-tool.settings',
+    'npn-viz-tool.stations',
     'isteven-multi-select'
 ])
 /**
@@ -733,11 +734,11 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService',
-    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService){
+.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService','StationService',
+    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService,StationService){
     return {
         restrict: 'E',
-        template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl"></ui-gmap-markers>',
+        template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl" events="markerEvents"></ui-gmap-markers>',
         scope: {
         },
         controller: function($scope) {
@@ -825,6 +826,7 @@ angular.module('npn-viz-tool.filter',[
             $scope.$on('filter-marker-updates',function(event,data){
                 updateMarkers(data.markers);
             });
+            $scope.markerEvents = StationService.getMarkerEvents();
         }
     };
 }])

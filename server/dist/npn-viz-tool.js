@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-04-06
+ * Version: 0.1.0 - 2015-04-07
  */
 
 angular.module('npn-viz-tool.vis-calendar',[
@@ -311,6 +311,7 @@ angular.module('npn-viz-tool.vis-calendar',[
 }]);
 angular.module('npn-viz-tool.filter',[
     'npn-viz-tool.settings',
+    'npn-viz-tool.stations',
     'isteven-multi-select'
 ])
 /**
@@ -1044,11 +1045,11 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService',
-    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService){
+.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService','StationService',
+    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService,StationService){
     return {
         restrict: 'E',
-        template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl"></ui-gmap-markers>',
+        template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl" events="markerEvents"></ui-gmap-markers>',
         scope: {
         },
         controller: function($scope) {
@@ -1136,6 +1137,7 @@ angular.module('npn-viz-tool.filter',[
             $scope.$on('filter-marker-updates',function(event,data){
                 updateMarkers(data.markers);
             });
+            $scope.markerEvents = StationService.getMarkerEvents();
         }
     };
 }])
@@ -2926,10 +2928,54 @@ angular.module('npn-viz-tool.stations',[
     'npn-viz-tool.settings',
     'npn-viz-tool.layers'
 ])
-.directive('npnStations',['$http','$log','LayerService','SettingsService',function($http,$log,LayerService,SettingsService){
+.factory('StationService',['$http','$log',function($http,$log){
+    var markerEvents = {
+        'click':function(m){
+            //m.info = new google.maps.InfoWindow();
+            //m.info.setContent('<div class="station-details"><i class="fa fa-circle-o-notch fa-spin"></i></div>');
+            //m.info.open(m.map,m);
+            $log.debug('Fetching info for station '+m.model.station_id);
+            $http.get('/npn_portal/stations/getStationDetails.json',{params:{ids: m.model.station_id}}).success(function(info){
+                function litem(label,value) {
+                    return value && value !== '' ?
+                     '<dt>'+label+'</dt><dd>'+value+'</dd>' : '';
+                }
+                if(info && info.length === 1) {
+                    var i = info[0],
+                        info_window,
+                        html = '<div class="station-details">';
+                    $log.debug(i);
+                    //html += '<h5>'+i.site_name+'</h5>';
+                    html += '<dl class="dl-horizontal">';
+                    html += litem('Site Name',i.site_name);
+                    html += litem('Group',i.group_name);
+                    if(m.model.observationCount) {
+                        html += litem('Number of Observations',m.model.observationCount);
+                    } else {
+                        html += litem('Number of Individuals',i.num_individuals);
+                        html += litem('Number of Observations',i.num_records);
+                    }
+
+                    html += '</dl>';
+                    html += '</div>';
+                    info_window = new google.maps.InfoWindow({
+                        maxWidth: 320,
+                        content: html
+                    });
+                    info_window.open(m.map,m);
+                }
+            });
+        }
+    },
+    service = {
+        getMarkerEvents: function() { return markerEvents; }
+    };
+    return service;
+}])
+.directive('npnStations',['$http','$log','LayerService','SettingsService','StationService',function($http,$log,LayerService,SettingsService,StationService){
     return {
         restrict: 'E',
-        template: '<ui-gmap-markers models="regions.markers" idKey="\'name\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" isLabel="true"></ui-gmap-markers><ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster"></ui-gmap-markers>',
+        template: '<ui-gmap-markers models="regions.markers" idKey="\'name\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" isLabel="true"></ui-gmap-markers><ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" events="markerEvents"></ui-gmap-markers>',
         scope: {
         },
         controller: ['$scope',function($scope) {
@@ -2944,6 +2990,7 @@ angular.module('npn-viz-tool.stations',[
                 states: [],
                 markers: []
             };
+            $scope.markerEvents = StationService.getMarkerEvents();
             var eventListeners = [];
             $http.get('/npn_portal/stations/getStationCountByState.json').success(function(counts){
                 var countMap = counts.reduce(function(map,c){
