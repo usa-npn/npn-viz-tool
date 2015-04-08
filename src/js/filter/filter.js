@@ -898,41 +898,43 @@ angular.module('npn-viz-tool.filter',[
             $scope.show = false;
             $scope.$on('marker-mouseover',function(event,data){
                 $log.debug('mouseover',data);
-                mouseIn = true;
-                $timeout(function(){
-                    if($scope.show = mouseIn) {
-                        var sids = Object.keys(data.marker.model.speciesInfo.counts),
-                            scales = FilterService.getChoroplethScales();
-                        $scope.data = sids.map(function(sid){
-                            var arg = FilterService.getFilter().getSpeciesArg(sid),
-                                val = {
-                                    sid: sid,
-                                    count: data.marker.model.speciesInfo.counts[sid],
-                                    title: data.marker.model.speciesInfo.titles[sid],
-                                    arg: arg,
-                                    scale: scales[arg.colorIdx],
-                                    colors: []
-                                },
-                                range = Math.ceil(val.scale.domain()[1]/20),i,n;
-                            for(i = 0;i < 20; i++) {
-                                n = (range*i)+1;
-                                val.colors[i] = val.scale(n);
-                                if(val.count >= n) {
-                                   val.color = val.colors[i]; // this isn't exact
+                if(data.marker.model.speciesInfo) {
+                    mouseIn = true;
+                    $timeout(function(){
+                        if($scope.show = mouseIn) {
+                            var sids = Object.keys(data.marker.model.speciesInfo.counts),
+                                scales = FilterService.getChoroplethScales();
+                            $scope.data = sids.map(function(sid){
+                                var arg = FilterService.getFilter().getSpeciesArg(sid),
+                                    val = {
+                                        sid: sid,
+                                        count: data.marker.model.speciesInfo.counts[sid],
+                                        title: data.marker.model.speciesInfo.titles[sid],
+                                        arg: arg,
+                                        scale: scales[arg.colorIdx],
+                                        colors: []
+                                    },
+                                    range = Math.ceil(val.scale.domain()[1]/20),i,n;
+                                for(i = 0;i < 20; i++) {
+                                    n = (range*i)+1;
+                                    val.colors[i] = val.scale(n);
+                                    if(val.count >= n) {
+                                       val.color = val.colors[i]; // this isn't exact
+                                    }
                                 }
-                            }
-                            return val;
-                        });
-                        $log.debug($scope.data);
-                    }
-                },500);
-
+                                return val;
+                            });
+                            $log.debug($scope.data);
+                        }
+                    },500);
+                }
             });
             $scope.$on('marker-mouseout',function(event,data){
                 $log.debug('mouseout',data);
                 mouseIn = false;
                 if($scope.show) {
                     $scope.show = false;
+                    $scope.data = undefined;
                 }
             });
         }
