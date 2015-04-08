@@ -272,6 +272,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\">\n" +
     "    <npn-stations ng-if=\"stationView\"></npn-stations>\n" +
     "    <npn-filter-results></npn-filter-results>\n" +
+    "    <bounds-manager></bounds-manager>\n" +
     "</ui-gmap-google-map>\n" +
     "\n" +
     "<share-control></share-control>\n" +

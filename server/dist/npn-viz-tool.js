@@ -3,6 +3,67 @@
  * Version: 0.1.0 - 2015-04-08
  */
 
+angular.module('npn-viz-tool.bounds',[
+    'npn-viz-tool.filter',
+    'uiGmapgoogle-maps'
+])
+.directive('boundsManager',['$rootScope','$log','uiGmapGoogleMapApi','FilterService','BoundsFilterArg',
+    function($rootScope,$log,uiGmapGoogleMapApi,FilterService,BoundsFilterArg){
+    return {
+        restrict: 'E',
+        template: '<ui-gmap-drawing-manager options="options" control="control"></ui-gmap-drawing-manager>',
+        controller: ['$scope',function($scope) {
+            function refilter() {
+                if(FilterService.getFilter().hasSufficientCriteria()) {
+                    $rootScope.$broadcast('filter-rerun-phase2',{});
+                }
+            }
+            function setupFilter(rectangle) {
+                var arg = new BoundsFilterArg(rectangle);
+                FilterService.addToFilter(arg);
+                refilter();
+                return rectangle;
+            }
+            uiGmapGoogleMapApi.then(function(maps) {
+                var mapsApi = maps,
+                    dcOptions = {
+                        drawingModes: [mapsApi.drawing.OverlayType.RECTANGLE],
+                        position: mapsApi.ControlPosition.BOTTOM_LEFT,
+                        drawingControl: false
+                    };
+                $log.debug('api',maps);
+                $scope.options = {
+                    drawingControlOptions: dcOptions,
+                    rectangleOptions: BoundsFilterArg.RECTANGLE_OPTIONS
+                };
+                $scope.control = {};
+                $scope.$on('bounds-filter-ready',function(event,data){
+                    mapsApi.event.addListener(data.filter.arg,'click',function(){
+                        FilterService.removeFromFilter(data.filter);
+                        refilter();
+                    });
+                });
+                $scope.$watch('control.getDrawingManager',function(){
+                    if($scope.control.getDrawingManager){
+                        var drawingManager = $scope.control.getDrawingManager();
+                        mapsApi.event.addListener(drawingManager,'rectanglecomplete',function(rectangle){
+                            setupFilter(rectangle);
+                        });
+                        $scope.$on('filter-reset',function(event,data){
+                            dcOptions.drawingControl = false;
+                            drawingManager.setOptions(dcOptions);
+                        });
+                        $scope.$on('filter-update',function(event,data){
+                            dcOptions.drawingControl = FilterService.hasSufficientCriteria();
+                            drawingManager.setOptions(dcOptions);
+                        });
+                    }
+                });
+
+            });
+        }]
+    };
+}]);
 angular.module('npn-viz-tool.vis-calendar',[
     'npn-viz-tool.vis',
     'npn-viz-tool.filter',
@@ -332,6 +393,8 @@ angular.module('npn-viz-tool.filter',[
     FilterArg.prototype.$filter = function(input) {
         return true;
     };
+    FilterArg.prototype.$removed = function() {
+    };
     return FilterArg;
 }])
 .factory('DateFilterArg',['FilterArg',function(FilterArg){
@@ -595,7 +658,59 @@ angular.module('npn-viz-tool.filter',[
     };
     return GeoFilterArg;
 }])
-.factory('NpnFilter',['DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg',function(DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg){
+.factory('BoundsFilterArg',['$rootScope','FilterArg',function($rootScope,FilterArg){
+    /**
+     * Constructs a BoundsFilterArg.  This is just a post-processing type of filter argument which tests
+     * to see if markers (stations) are within a bounding box.
+     *
+     * @param {Object} rectangle A Google Maps Rectangle object.
+     */
+    var BoundsFilterArg = function(rectangle){
+        FilterArg.apply(this,arguments);
+        var self = this;
+        $rootScope.$broadcast('bounds-filter-ready',{filter:self});
+    };
+    BoundsFilterArg.RECTANGLE_OPTIONS = {
+        strokeColor: '#fff',
+        strokeWeight: 1,
+        fillColor: '#000080',
+        fillOpacity: 0.5,
+        visible: true
+    };
+    BoundsFilterArg.prototype.getId = function() {
+        return this.arg.getBounds().getCenter().toString();
+    };
+    BoundsFilterArg.prototype.getUid = function() {
+        return this.getId();
+    };
+    BoundsFilterArg.prototype.$filter = function(marker) {
+        return this.arg.getBounds().contains(new google.maps.LatLng(parseFloat(marker.latitude), parseFloat(marker.longitude)));
+    };
+    BoundsFilterArg.prototype.$removed = function() {
+        this.arg.setMap(null);
+    };
+    BoundsFilterArg.prototype.toString = function() {
+        var bounds = this.arg.getBounds(),
+            sw = bounds.getSouthWest(),
+            ne = bounds.getNorthEast();
+        return sw.lat()+','+sw.lng()+':'+ne.lat()+','+ne.lng();
+    };
+    BoundsFilterArg.fromString = function(s,map) {
+        var parts = s.split(':'),
+            sw_parts = parts[0].split(','),
+            sw = new google.maps.LatLng(parseFloat(sw_parts[0]),parseFloat(sw_parts[1])),
+            ne_parts = parts[1].split(','),
+            ne = new google.maps.LatLng(parseFloat(ne_parts[0]),parseFloat(ne_parts[1])),
+            bounds = new google.maps.LatLngBounds(sw,ne),
+            rect = new google.maps.Rectangle(BoundsFilterArg.RECTANGLE_OPTIONS);
+        rect.setBounds(bounds);
+        rect.setMap(map);
+        return new BoundsFilterArg(rect);
+    };
+    return BoundsFilterArg;
+}])
+.factory('NpnFilter',['DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg',
+    function(DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg){
     function getValues(map) {
         var vals = [],key;
         for(key in map) {
@@ -650,6 +765,12 @@ angular.module('npn-viz-tool.filter',[
     NpnFilter.prototype.getGeoArgs = function() {
         return getValues(this.geo);
     };
+    NpnFilter.prototype.getBoundsArgs = function() {
+        return getValues(this.bounds);
+    };
+    NpnFilter.prototype.getGeographicArgs = function() {
+        return this.getGeoArgs().concat(this.getBoundsArgs());
+    };
     NpnFilter.prototype.add = function(item) {
         this.updateCount++;
         if(item instanceof DateFilterArg) {
@@ -660,6 +781,8 @@ angular.module('npn-viz-tool.filter',[
             this.networks[item.getId()] = item;
         } else if (item instanceof GeoFilterArg) {
             this.geo[item.getId()] = item;
+        } else if (item instanceof BoundsFilterArg) {
+            this.bounds[item.getId()] = item;
         }
         return (!(item instanceof GeoFilterArg));
     };
@@ -670,21 +793,38 @@ angular.module('npn-viz-tool.filter',[
             // removal of date invalidates filter.
             this.species = {};
             this.networks = {};
+            this.bounds = {};
         } else if(item instanceof SpeciesFilterArg) {
             delete this.species[item.getId()];
         } else if(item instanceof NetworkFilterArg){
             delete this.networks[item.getId()];
         } else if(item instanceof GeoFilterArg) {
             delete this.geo[item.getId()];
+        } else if(item instanceof BoundsFilterArg) {
+            delete this.bounds[item.getId()];
         }
-        return (!(item instanceof GeoFilterArg));
+        if(item.$removed) {
+            item.$removed();
+        }
+        return (!(item instanceof GeoFilterArg) && !(item instanceof BoundsFilterArg));
     };
+    function _reset(argMap) {
+        if(argMap) {
+            Object.keys(argMap).forEach(function(key){
+                if(argMap[key].$removed) {
+                    argMap[key].$removed();
+                }
+            });
+        }
+        return {};
+    }
     NpnFilter.prototype.reset = function() {
         this.updateCount = 0;
         this.date = undefined;
-        this.species = {};
-        this.geo = {};
-        this.networks = {};
+        this.species = _reset(this.species);
+        this.geo = _reset(this.geo);
+        this.networks = _reset(this.networks);
+        this.bounds = _reset(this.bounds);
     };
     return NpnFilter;
 }])
@@ -786,7 +926,7 @@ angular.module('npn-viz-tool.filter',[
         }
         function _filtermap() {
             var map = {};
-            angular.forEach(filter.getGeoArgs(),function(arg){
+            angular.forEach(filter.getGeographicArgs(),function(arg){
                 map[arg.getUid()] = arg;
             });
             return map;
@@ -806,7 +946,7 @@ angular.module('npn-viz-tool.filter',[
             return results;
         }
         var start = Date.now(),
-            filters = filter.getGeoArgs(),
+            filters = filter.getGeographicArgs(),
             geoCount = filters.length,
             geoAdd = geoCount > geoResults.previousFilterCount,
             newMap = _filtermap(),
@@ -859,7 +999,6 @@ angular.module('npn-viz-tool.filter',[
             count: markers.length
         });
         var observationCount = 0,
-            geos = filter.getGeoArgs(),
             hasSpeciesArgs = filter.getSpeciesArgs().length > 0,
             networkArgs = filter.getNetworkArgs(),
             speciesTitle = $filter('speciesTitle'),
@@ -1878,7 +2017,7 @@ angular.module('npn-viz-tool.layers',[
                 feature.setProperty('$FILTER',filterArg);
                 LayerService.restyleLayers().then(function(){
                     // TODO - maybe instead the filter should just broadcast the "end" event
-                    if(!FilterService.isFilterEmpty()) {
+                    if(FilterService.getFilter().hasSufficientCriteria()) {
                         $rootScope.$broadcast('filter-rerun-phase2',{});
                     }
                 });
@@ -1989,6 +2128,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.stations',
     'npn-viz-tool.toolbar',
     'npn-viz-tool.filter',
+    'npn-viz-tool.bounds',
     'npn-viz-tool.settings',
     'npn-viz-tool.vis',
     'npn-viz-tool.share',
@@ -2378,6 +2518,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\">\n" +
     "    <npn-stations ng-if=\"stationView\"></npn-stations>\n" +
     "    <npn-filter-results></npn-filter-results>\n" +
+    "    <bounds-manager></bounds-manager>\n" +
     "</ui-gmap-google-map>\n" +
     "\n" +
     "<share-control></share-control>\n" +
@@ -2940,16 +3081,17 @@ angular.module('npn-viz-tool.share',[
  * because upon instantiation it examines the current URL query args and uses its contents to
  * populate the filter, etc.
  */
-.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','$location','$log','SettingsService',
-    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,$location,$log,SettingsService){
+.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','$location','$log','SettingsService',
+    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,$location,$log,SettingsService){
     return {
         restrict: 'E',
         template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
         scope: {},
         controller: function($scope){
             FilterService.pause();
-            uiGmapIsReady.promise(1).then(function(){
-                var qargs = $location.search(),
+            uiGmapIsReady.promise(1).then(function(instances){
+                var map = instances[0],
+                    qargs = $location.search(),
                     speciesFilterCount = 0,
                     speciesFilterReadyCount = 0,
                     networksFilterCount = 0,
@@ -2991,6 +3133,11 @@ angular.module('npn-viz-tool.share',[
                 if(qargs['d'] && (qargs['s'] || qargs['n'])) {
                     // we have sufficient criteria to alter the filter...
                     FilterService.addToFilter(DateFilterArg.fromString(qargs['d']));
+                    if(qargs['b']) {
+                        qargs['b'].split(';').forEach(function(bounds_s){
+                            FilterService.addToFilter(BoundsFilterArg.fromString(bounds_s,map.map));
+                        });
+                    }
                     if(qargs['s']) {
                         var speciesList = qargs['s'].split(';');
                         speciesFilterCount = speciesList.length;
@@ -3036,6 +3183,13 @@ angular.module('npn-viz-tool.share',[
                         params['g'] = g.toString();
                     } else {
                         params['g'] += ';'+g.toString();
+                    }
+                });
+                filter.getBoundsArgs().forEach(function(b){
+                    if(!params['b']) {
+                        params['b'] = b.toString();
+                    } else {
+                        params['b'] += ';'+b.toString();
                     }
                 });
                 if(q != -1) {

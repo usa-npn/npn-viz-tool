@@ -284,7 +284,7 @@ angular.module('npn-viz-tool.layers',[
                 feature.setProperty('$FILTER',filterArg);
                 LayerService.restyleLayers().then(function(){
                     // TODO - maybe instead the filter should just broadcast the "end" event
-                    if(!FilterService.isFilterEmpty()) {
+                    if(FilterService.getFilter().hasSufficientCriteria()) {
                         $rootScope.$broadcast('filter-rerun-phase2',{});
                     }
                 });

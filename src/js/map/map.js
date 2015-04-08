@@ -3,6 +3,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.stations',
     'npn-viz-tool.toolbar',
     'npn-viz-tool.filter',
+    'npn-viz-tool.bounds',
     'npn-viz-tool.settings',
     'npn-viz-tool.vis',
     'npn-viz-tool.share',

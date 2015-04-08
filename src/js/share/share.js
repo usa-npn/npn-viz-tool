@@ -9,16 +9,17 @@ angular.module('npn-viz-tool.share',[
  * because upon instantiation it examines the current URL query args and uses its contents to
  * populate the filter, etc.
  */
-.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','$location','$log','SettingsService',
-    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,$location,$log,SettingsService){
+.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','$location','$log','SettingsService',
+    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,$location,$log,SettingsService){
     return {
         restrict: 'E',
         template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
         scope: {},
         controller: function($scope){
             FilterService.pause();
-            uiGmapIsReady.promise(1).then(function(){
-                var qargs = $location.search(),
+            uiGmapIsReady.promise(1).then(function(instances){
+                var map = instances[0],
+                    qargs = $location.search(),
                     speciesFilterCount = 0,
                     speciesFilterReadyCount = 0,
                     networksFilterCount = 0,
@@ -60,6 +61,11 @@ angular.module('npn-viz-tool.share',[
                 if(qargs['d'] && (qargs['s'] || qargs['n'])) {
                     // we have sufficient criteria to alter the filter...
                     FilterService.addToFilter(DateFilterArg.fromString(qargs['d']));
+                    if(qargs['b']) {
+                        qargs['b'].split(';').forEach(function(bounds_s){
+                            FilterService.addToFilter(BoundsFilterArg.fromString(bounds_s,map.map));
+                        });
+                    }
                     if(qargs['s']) {
                         var speciesList = qargs['s'].split(';');
                         speciesFilterCount = speciesList.length;
@@ -105,6 +111,13 @@ angular.module('npn-viz-tool.share',[
                         params['g'] = g.toString();
                     } else {
                         params['g'] += ';'+g.toString();
+                    }
+                });
+                filter.getBoundsArgs().forEach(function(b){
+                    if(!params['b']) {
+                        params['b'] = b.toString();
+                    } else {
+                        params['b'] += ';'+b.toString();
                     }
                 });
                 if(q != -1) {
