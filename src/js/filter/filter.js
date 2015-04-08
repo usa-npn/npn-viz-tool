@@ -1,6 +1,7 @@
 angular.module('npn-viz-tool.filter',[
     'npn-viz-tool.settings',
     'npn-viz-tool.stations',
+    'angular-md5',
     'isteven-multi-select'
 ])
 /**
@@ -380,8 +381,8 @@ angular.module('npn-viz-tool.filter',[
  * TODO - need to nail down the event model and probably even formalize it via a service because it's all
  * pretty loosey goosey at the moment.  Bad enough duplicating strings around...
  */
-.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','$filter','uiGmapGoogleMapApi','NpnFilter','SpeciesFilterArg','SettingsService',
-    function($q,$http,$rootScope,$timeout,$log,$filter,uiGmapGoogleMapApi,NpnFilter,SpeciesFilterArg,SettingsService){
+.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','$filter','uiGmapGoogleMapApi','md5','NpnFilter','SpeciesFilterArg','SettingsService',
+    function($q,$http,$rootScope,$timeout,$log,$filter,uiGmapGoogleMapApi,md5,NpnFilter,SpeciesFilterArg,SettingsService){
     // NOTE: this scale is limited to 20 colors
     var color_domain = d3.range(0,20),
         cat20 = d3.scale.category20().domain(color_domain),
@@ -579,11 +580,6 @@ angular.module('npn-viz-tool.filter',[
                         station.observationCount += n;
                         hitMap[sid]++;
                         keeps++;
-                        if(keeps === 1) {
-                            // this is the first "hit" and dictates the marker color
-                            station.markerOpts.icon.fillColorIdx = speciesFilter.colorIdx;
-                            station.markerOpts.icon.fillColor = speciesFilter.color;
-                        }
                         updateNetworkCounts(station,station.species[sid]);
                         if(!station.speciesInfo){
                             station.speciesInfo = {
@@ -622,14 +618,11 @@ angular.module('npn-viz-tool.filter',[
                 }
                 station.markerOpts.icon.strokeColor = (hitMap['n'] > 1) ? '#00ff00' : defaultIcon.strokeColor;
                 station.markerOpts.zIndex = station.observationCount;
-                // set key on the marker that uniquely identifies it based on its id and colors
-                station.$markerKey = station.station_id+'.'+station.markerOpts.icon.fillColor+'.'+station.markerOpts.icon.strokeColor;
                 return keeps > 0;
             }).map(function(m){
                 // simplify the contents of the filtered marker results o/w there's a ton of data that
                 // angular copies on a watch which slows things WAY down for some browsers in particular (FireFox ahem)
                 return {
-                    $markerKey: m.$markerKey,
                     latitude: m.latitude,
                     longitude: m.longitude,
                     markerOpts: m.markerOpts,
@@ -661,15 +654,21 @@ angular.module('npn-viz-tool.filter',[
                     minCount = d3.min(argMarkers,function(m) { return m.speciesInfo.counts[sid]; }),
                     maxCount = d3.max(argMarkers,function(m) { return m.speciesInfo.counts[sid]; });
                 $log.debug('observationCount variability for '+arg.toString()+ ' ('+arg.arg.common_name+') ['+ minCount + '-' + maxCount + ']');
-                //$log.debug('arg markers',arg,argMarkers);
                 var choroplethScale = choroplethScales[arg.colorIdx];
                 choroplethScale.domain([minCount,maxCount]);
                 argMarkers.forEach(function(marker){
                     marker.markerOpts.icon.fillColor = choroplethScale(marker.speciesInfo.counts[sid]);
-                    marker.$markerKey = marker.station_id+'.'+marker.markerOpts.icon.fillColor+'.'+marker.markerOpts.icon.strokeColor;
                 });
             });
         }
+        // build $markerKey based on marker contents -last- so the key encompasses all marker content.
+        filtered.forEach(function(m){
+            // use a hash for the markerKey so that only when things have changed is the marker
+            // updated by the map for performance.  turns out that using things like colors was insufficient
+            // in cases where the counts changed but choropleth colors amazingly stayed the same (relative counts)
+            // would result in bad behavior.
+            m.$markerKey = md5.createHash(JSON.stringify(m));
+        });
         $rootScope.$broadcast('filter-phase2-end',{
             station: filtered.length,
             observation: observationCount
