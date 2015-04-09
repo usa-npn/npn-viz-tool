@@ -45,6 +45,10 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        </div>\n" +
     "        </center>\n" +
     "        <ul class=\"list-inline calendar-chart-controls\" ng-if=\"data\" style=\"float: right;\">\n" +
+    "            <li>Label Size\n" +
+    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"incrFontSize()\" ng-disabled=\"yAxisConfig.fontSize <= 0.5\"><i class=\"fa fa-minus\"></i></a>\n" +
+    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"decrFontSize()\"><i class=\"fa fa-plus\"></i></a>\n" +
+    "            </li>\n" +
     "            <li>Label Position\n" +
     "                <a href class=\"btn btn-default btn-xs\" ng-click=\"yAxisConfig.labelOffset=(yAxisConfig.labelOffset-1)\"><i class=\"fa fa-minus\"></i></a>\n" +
     "                <a href class=\"btn btn-default btn-xs\" ng-click=\"yAxisConfig.labelOffset=(yAxisConfig.labelOffset+1)\"><i class=\"fa fa-plus\"></i></a>\n" +

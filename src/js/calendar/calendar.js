@@ -149,14 +149,16 @@ angular.module('npn-viz-tool.vis-calendar',[
     };
 
     $scope.yAxisConfig = {
-        labelOffset: 2,
-        bandPadding: 0.5
+        labelOffset: 4,
+        bandPadding: 0.5,
+        fontSize: 0.9
     };
     function moveYTickLabels(g) {
       var dy = -1*((y.rangeBand()/2)+$scope.yAxisConfig.labelOffset);
       g.selectAll('text')
           .attr('x', 0)
-          .attr('dy', dy);
+          .attr('dy', dy)
+          .attr('style', 'text-anchor: start; font-size: '+$scope.yAxisConfig.fontSize+'em;');
     }
     function updateYAxis(){
         y.rangeBands([sizing.height,0],$scope.yAxisConfig.bandPadding,0.5);
@@ -170,13 +172,22 @@ angular.module('npn-viz-tool.vis-calendar',[
     }
     $scope.$watch('yAxisConfig.labelOffset',draw);
     $scope.$watch('yAxisConfig.bandPadding',draw);
+    $scope.$watch('yAxisConfig.fontSize',draw);
+    function addFloatFixed(v,add,precision) {
+        var n = v+add;
+        return Number(n.toFixed(precision));
+    }
     $scope.incrBandPadding = function() {
-        var n = $scope.yAxisConfig.bandPadding+0.05;
-        $scope.yAxisConfig.bandPadding=Number(n.toFixed(2));
+        $scope.yAxisConfig.bandPadding = addFloatFixed($scope.yAxisConfig.bandPadding,0.05,2);
     };
     $scope.decrBandPadding = function() {
-        var n = $scope.yAxisConfig.bandPadding-0.05;
-        $scope.yAxisConfig.bandPadding=Number(n.toFixed(2));
+        $scope.yAxisConfig.bandPadding = addFloatFixed($scope.yAxisConfig.bandPadding,-0.05,2);
+    };
+    $scope.incrFontSize = function() {
+        $scope.yAxisConfig.fontSize = addFloatFixed($scope.yAxisConfig.fontSize,-0.05,2);
+    };
+    $scope.decrFontSize = function() {
+        $scope.yAxisConfig.fontSize = addFloatFixed($scope.yAxisConfig.fontSize,0.05,2);
     };
 
     function formatYTickLabels(i) {
