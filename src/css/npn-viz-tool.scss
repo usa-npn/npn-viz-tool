@@ -448,9 +448,12 @@ svg {
     padding: 15px 30px 0px 15px;
     background-color: rgba(0,0,0,.3);
     border: 1px solid #666;
-    h4 {
+    h4,h5 {
         margin-top: 0px;
         color: #fff;
+    }
+    h4 {
+        margin-bottom: 2px;
     }
     label {
         color: #fff;

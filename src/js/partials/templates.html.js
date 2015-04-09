@@ -67,7 +67,8 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
 angular.module("js/filter/choroplethInfo.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/choroplethInfo.html",
     "<div id=\"choroplethHelp\" ng-show=\"show\">\n" +
-    "    <h4>Observation Densit{{data.length == 1 ? 'y' : 'ies'}}</h4>\n" +
+    "    <h4>{{station_name}}</h4>\n" +
+    "    <h5>Observation Densit{{data.length == 1 ? 'y' : 'ies'}}</h5>\n" +
     "    <ul class=\"list-unstyled\">\n" +
     "        <li ng-repeat=\"scale in data\">\n" +
     "            <label>{{scale.title}} ({{scale.count}})</label>\n" +

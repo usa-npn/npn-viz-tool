@@ -755,6 +755,16 @@ angular.module('npn-viz-tool.filter',[
                     marker.markerOpts.icon.fillColor = choroplethScale(marker.speciesInfo.counts[sid]);
                 });
             });
+        } else {
+            // network only filter, choropleth markers based on overall observation counts
+            var minCount = d3.min(filtered,function(d) { return d.observationCount; }),
+                maxCount = d3.max(filtered,function(d) { return d.observationCount; });
+            $log.debug('observationCount variability for network only results ['+ minCount + '-' + maxCount + ']');
+            choroplethScales[0].domain([minCount,maxCount]);
+            filtered.forEach(function(marker){
+                marker.markerOpts.icon.fillColorIdx = 0;
+                marker.markerOpts.icon.fillColor = choroplethScales[0](marker.observationCount);
+            });
         }
         // build $markerKey based on marker contents -last- so the key encompasses all marker content.
         filtered.forEach(function(m){
@@ -991,35 +1001,51 @@ angular.module('npn-viz-tool.filter',[
         controller: function($scope) {
             var mouseIn = false;
             $scope.show = false;
+            function selectColor(val) {
+                var range = Math.ceil(val.domain[1]/20),i,n;
+                for(i = 0;i < 20; i++) {
+                    n = (range*i)+1;
+                    val.colors[i] = val.scale(n);
+                    if(val.count >= n) {
+                       val.color = val.colors[i]; // this isn't exact but pick the "closest" color
+                    }
+                }
+                return val;
+            }
             $scope.$on('marker-mouseover',function(event,data){
                 $log.debug('mouseover',data);
-                if(data.marker.model.speciesInfo) {
+                if(data.marker.model.speciesInfo || data.marker.model.observationCount) {
                     mouseIn = true;
                     $timeout(function(){
                         if($scope.show = mouseIn) {
-                            var sids = Object.keys(data.marker.model.speciesInfo.counts),
-                                scales = FilterService.getChoroplethScales();
-                            $scope.data = sids.map(function(sid){
-                                var arg = FilterService.getFilter().getSpeciesArg(sid),
-                                    val = {
-                                        sid: sid,
-                                        count: data.marker.model.speciesInfo.counts[sid],
-                                        title: data.marker.model.speciesInfo.titles[sid],
-                                        arg: arg,
-                                        scale: scales[arg.colorIdx],
-                                        domain: scales[arg.colorIdx].domain(),
-                                        colors: []
-                                    },
-                                    range = Math.ceil(val.domain[1]/20),i,n;
-                                for(i = 0;i < 20; i++) {
-                                    n = (range*i)+1;
-                                    val.colors[i] = val.scale(n);
-                                    if(val.count >= n) {
-                                       val.color = val.colors[i]; // this isn't exact but pick the "closest" color
-                                    }
-                                }
-                                return val;
-                            });
+                            $scope.station_name = data.marker.model.station_name;
+                            var scales = FilterService.getChoroplethScales();
+                            if(data.marker.model.speciesInfo) {
+                                var sids = Object.keys(data.marker.model.speciesInfo.counts);
+
+                                $scope.data = sids.map(function(sid){
+                                    var arg = FilterService.getFilter().getSpeciesArg(sid),
+                                        val = {
+                                            sid: sid,
+                                            count: data.marker.model.speciesInfo.counts[sid],
+                                            title: data.marker.model.speciesInfo.titles[sid],
+                                            arg: arg,
+                                            scale: scales[arg.colorIdx],
+                                            domain: scales[arg.colorIdx].domain(),
+                                            colors: []
+                                        };
+                                    return selectColor(val);
+                                });
+                            } else if (data.marker.model.observationCount) {
+                                var v = {
+                                    count: data.marker.model.observationCount,
+                                    title: 'All Observations',
+                                    scale: scales[0],
+                                    domain: scales[0].domain(),
+                                    colors: []
+                                };
+                                $scope.data = [selectColor(v)];
+                            }
                             $log.debug($scope.data);
                         }
                     },500);
