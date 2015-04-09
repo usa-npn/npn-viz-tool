@@ -29,6 +29,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "\n" +
     "<div class=\"panel panel-default main-vis-panel\" >\n" +
     "    <div class=\"panel-body\">\n" +
+    "        <center ng-if=\"error_message\"><p class=\"text-danger\">{{error_message}}</p></center>\n" +
     "        <center>\n" +
     "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length || toPlotYears.length\">\n" +
     "            <li class=\"criteria\" ng-repeat=\"y in toPlotYears\">{{y}}\n" +
@@ -284,6 +285,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "</ui-gmap-google-map>\n" +
     "\n" +
     "<share-control></share-control>\n" +
+    "<export-control></export-control>\n" +
     "<filter-tags></filter-tags>\n" +
     "<choropleth-info></choropleth-info>\n" +
     "\n" +

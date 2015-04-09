@@ -227,7 +227,7 @@ $control-margin: 5px;
     width: $control-height;
 }
 // put the share-control in its original place...
-#reset-control,#share-control {
+#reset-control,#share-control,#export-control {
     @extend .little-npn-control;
     position: absolute;
     right: 5px;
@@ -237,8 +237,11 @@ $control-margin: 5px;
 #share-control {
     top: $controls-top;
 }
-#reset-control {
+#export-control {
     top: $controls-top + $control-height + $control-margin;
+}
+#reset-control {
+    top: $controls-top + (2*$control-height) + (2*$control-margin);
 }
 #share-content {
     position: absolute;

@@ -268,7 +268,14 @@ angular.module('npn-viz-tool.vis-calendar',[
             params['species_id['+i+']'] = tp.species_id;
             params['phenophase_id['+i+']'] = tp.phenophase_id;
         });
+        $scope.error_message = undefined;
         ChartService.getPositiveDates(params,function(response){
+            if(response.error_message) {
+                $log.warn('Received error',response);
+                $scope.error_message = response.error_message;
+                $scope.working = false;
+                return;
+            }
             var speciesMap = {},toChart = {
                 labels:[],
                 data:[]

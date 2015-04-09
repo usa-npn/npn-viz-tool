@@ -27,7 +27,7 @@ angular.module('npn-viz-tool.vis',[
     }
     function addGeoParams(params) {
         // if geo filtering add the explicit station_ids in question.
-        if(FilterService.getFilter().getGeoArgs().length) {
+        if(FilterService.getFilter().getGeographicArgs().length) {
             FilterService.getFilteredMarkers().forEach(function(marker,i){
                 params['station_id['+i+']'] = marker.station_id;
             });

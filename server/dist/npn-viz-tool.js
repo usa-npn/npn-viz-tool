@@ -335,7 +335,14 @@ angular.module('npn-viz-tool.vis-calendar',[
             params['species_id['+i+']'] = tp.species_id;
             params['phenophase_id['+i+']'] = tp.phenophase_id;
         });
+        $scope.error_message = undefined;
         ChartService.getPositiveDates(params,function(response){
+            if(response.error_message) {
+                $log.warn('Received error',response);
+                $scope.error_message = response.error_message;
+                $scope.working = false;
+                return;
+            }
             var speciesMap = {},toChart = {
                 labels:[],
                 data:[]
@@ -404,6 +411,50 @@ angular.module('npn-viz-tool.cluster',[
     };
     return service;
 }]);
+angular.module('npn-viz-tool.export',[
+    'npn-viz-tool.filter'
+])
+.directive('exportControl',['$log','$http','$window','FilterService',function($log,$http,$window,FilterService){
+    return {
+        restrict: 'E',
+        template: '<a title="Export" href id="export-control" class="btn btn-default btn-xs" ng-disabled="!getFilteredMarkers().length" ng-click="exportData()"><i class="fa fa-download"></i></a>',
+        controller: ['$scope',function($scope){
+            $scope.getFilteredMarkers = FilterService.getFilteredMarkers;
+            $scope.exportData = function() {
+                var filter = FilterService.getFilter();
+                var params = {
+                    date: filter.getDateArg().toExportParam()
+                };
+                if(filter.getSpeciesArgs().length) {
+                    params.species = [];
+                    filter.getSpeciesArgs().forEach(function(s){
+                        params.species.push(s.toExportParam());
+                    });
+                }
+                if(filter.getNetworkArgs().length) {
+                    params.networks = [];
+                    filter.getNetworkArgs().forEach(function(n){
+                        params.networks.push(n.toExportParam());
+                    });
+                }
+                if(filter.getGeographicArgs().length) {
+                    params.stations = [];
+                    FilterService.getFilteredMarkers().forEach(function(marker,i){
+                        params.stations.push(marker.station_id);
+                    });
+                }
+                $log.debug('export.params',params);
+                $http({
+                    method: 'POST',
+                    url: '/ddt/observations/setSearchParams',
+                    data: params
+                }).success(function(){
+                    $window.open('/ddt/observations');
+                });
+            };
+        }]
+    };
+}]);
 angular.module('npn-viz-tool.filter',[
     'npn-viz-tool.settings',
     'npn-viz-tool.stations',
@@ -459,6 +510,12 @@ angular.module('npn-viz-tool.filter',[
     DateFilterArg.prototype.getEndDate = function() {
         return this.arg.end_date+'-12-31';
     };
+    DateFilterArg.prototype.toExportParam = function() {
+        return {
+            start: this.arg.start_date,
+            end: this.arg.end_date
+        };
+    };
     DateFilterArg.prototype.toString = function() {
         return this.arg.start_date+'-'+this.arg.end_date;
     };
@@ -489,6 +546,9 @@ angular.module('npn-viz-tool.filter',[
     };
     NetworkFilterArg.prototype.getId = function() {
         return parseInt(this.arg.network_id);
+    };
+    NetworkFilterArg.prototype.toExportParam = function() {
+        return this.getId();
     };
     NetworkFilterArg.prototype.toString = function() {
         return this.arg.network_id;
@@ -617,6 +677,18 @@ angular.module('npn-viz-tool.filter',[
         }
         self.counts.observation += hitCount;
         return hitCount;
+    };
+    SpeciesFilterArg.prototype.toExportParam = function() {
+        var r = {
+            species_id: this.getId()
+        },
+        selected = this.phenophases.filter(function(pp){
+                return pp.selected;
+        });
+        if(selected.length !== this.phenophases.length) {
+            r.phenophases = selected.map(function(pp){ return parseInt(pp.phenophase_id); });
+        }
+        return r;
     };
     SpeciesFilterArg.prototype.toString = function() {
         var s = this.arg.species_id+':',
@@ -805,7 +877,7 @@ angular.module('npn-viz-tool.filter',[
         return getValues(this.bounds);
     };
     NpnFilter.prototype.getGeographicArgs = function() {
-        return this.getGeoArgs().concat(this.getBoundsArgs());
+        return this.getBoundsArgs().concat(this.getGeoArgs());
     };
     NpnFilter.prototype.add = function(item) {
         this.updateCount++;
@@ -988,6 +1060,13 @@ angular.module('npn-viz-tool.filter',[
             geoAdd = geoCount > geoResults.previousFilterCount,
             newMap = _filtermap(),
             filtered;
+        if(geoCount > 0 && geoResults.previousFilterCount === geoCount) {
+            if(angular.equals(Object.keys(newMap),Object.keys(geoResults.previousFilterMap))) {
+                $log.debug('refilter but no change in geographic filters');
+                return geoResults.hits;
+            }
+            $log.warn('refilter but no change in geo filter count');
+        }
         geoResults.previousFilterCount = geoCount;
         if(geoCount === 0) {
             geoResults.misses = [];
@@ -1126,9 +1205,7 @@ angular.module('npn-viz-tool.filter',[
             var spRanges = {};
             filtered.forEach(function(m){
                 var sids = Object.keys(m.speciesInfo.counts),
-                    maxSid = sids.length === 1 ?
-                        sids[0] :
-                        sids.reduce(function(p,c){
+                    maxSid = sids.reduce(function(p,c){
                             if(!spRanges[c]) {
                                 spRanges[c] = {
                                     min: m.speciesInfo.counts[c],
@@ -1149,6 +1226,9 @@ angular.module('npn-viz-tool.filter',[
             });
             // sort markers into buckets based on color and then choropleth colors based on observationCount
             filter.getSpeciesArgs().forEach(function(arg) {
+                if(!spRanges[arg.arg.species_id]) {
+                    return; // no markers of this type?
+                }
                 var argMarkers = filtered.filter(function(m) {
                         return arg.colorIdx === m.markerOpts.icon.fillColorIdx;
                     }),
@@ -1397,15 +1477,21 @@ angular.module('npn-viz-tool.filter',[
         controller: function($scope) {
             var mouseIn = false;
             $scope.show = false;
-            function selectColor(val) {
-                var range = Math.ceil(val.domain[1]/20),i,n;
+            function buildColors(val) {
+                // TODO BUG here when max of the domain gets too small..
+                var range = Math.ceil(val.domain[1]/20),i,n,colors = [];
                 for(i = 0;i < 20; i++) {
                     n = (range*i)+1;
-                    val.colors[i] = val.scale(n);
+                    colors[i] = val.scale(n);
                     if(val.count >= n) {
-                       val.color = val.colors[i]; // this isn't exact but pick the "closest" color
+                       val.color = colors[i]; // this isn't exact but pick the "closest" color
                     }
                 }
+                colors.forEach(function(c){
+                    if(val.colors.indexOf(c) === -1) {
+                        val.colors.push(c);
+                    }
+                });
                 return val;
             }
             $scope.$on('marker-mouseover',function(event,data){
@@ -1430,7 +1516,7 @@ angular.module('npn-viz-tool.filter',[
                                             domain: scales[arg.colorIdx].domain(),
                                             colors: []
                                         };
-                                    return selectColor(val);
+                                    return buildColors(val);
                                 });
                             } else if (data.marker.model.observationCount) {
                                 var v = {
@@ -1440,7 +1526,7 @@ angular.module('npn-viz-tool.filter',[
                                     domain: scales[0].domain(),
                                     colors: []
                                 };
-                                $scope.data = [selectColor(v)];
+                                $scope.data = [buildColors(v)];
                             }
                             $log.debug($scope.data);
                         }
@@ -2206,6 +2292,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.settings',
     'npn-viz-tool.vis',
     'npn-viz-tool.share',
+    'npn-viz-tool.export',
     'uiGmapgoogle-maps'
 ])
 .directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
@@ -2349,6 +2436,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "\n" +
     "<div class=\"panel panel-default main-vis-panel\" >\n" +
     "    <div class=\"panel-body\">\n" +
+    "        <center ng-if=\"error_message\"><p class=\"text-danger\">{{error_message}}</p></center>\n" +
     "        <center>\n" +
     "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length || toPlotYears.length\">\n" +
     "            <li class=\"criteria\" ng-repeat=\"y in toPlotYears\">{{y}}\n" +
@@ -2604,6 +2692,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "</ui-gmap-google-map>\n" +
     "\n" +
     "<share-control></share-control>\n" +
+    "<export-control></export-control>\n" +
     "<filter-tags></filter-tags>\n" +
     "<choropleth-info></choropleth-info>\n" +
     "\n" +
@@ -3588,7 +3677,7 @@ angular.module('npn-viz-tool.vis',[
     }
     function addGeoParams(params) {
         // if geo filtering add the explicit station_ids in question.
-        if(FilterService.getFilter().getGeoArgs().length) {
+        if(FilterService.getFilter().getGeographicArgs().length) {
             FilterService.getFilteredMarkers().forEach(function(marker,i){
                 params['station_id['+i+']'] = marker.station_id;
             });

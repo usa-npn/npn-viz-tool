@@ -69,6 +69,12 @@ cache.init(function(err){ // init cache and start
         return path;
       }
     }));
+    app.post('/ddt/observations/setSearchParams',function(req,res,next){
+        res.status(200).end();
+    });
+    app.get('/ddt/observations',function(req,res,next){
+        res.send('Mock Data Download...');
+    });
     app.use(express.static('dist'));
     var server = app.listen(port,function(){
         console.log('Listening at http://%s:%s', server.address().address, server.address().port);

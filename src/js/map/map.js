@@ -7,6 +7,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.settings',
     'npn-viz-tool.vis',
     'npn-viz-tool.share',
+    'npn-viz-tool.export',
     'uiGmapgoogle-maps'
 ])
 .directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
