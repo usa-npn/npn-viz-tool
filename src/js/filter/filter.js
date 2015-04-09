@@ -343,8 +343,9 @@ angular.module('npn-viz-tool.filter',[
     BoundsFilterArg.prototype.toString = function() {
         var bounds = this.arg.getBounds(),
             sw = bounds.getSouthWest(),
-            ne = bounds.getNorthEast();
-        return sw.lat()+','+sw.lng()+':'+ne.lat()+','+ne.lng();
+            ne = bounds.getNorthEast(),
+            digits = 4;
+        return sw.lat().toFixed(digits)+','+sw.lng().toFixed(digits)+':'+ne.lat().toFixed(digits)+','+ne.lng().toFixed(digits);
     };
     BoundsFilterArg.fromString = function(s,map) {
         var parts = s.split(':'),
