@@ -1,9 +1,12 @@
 <div id="choroplethHelp" ng-show="show">
+    <h4>Observation Densit{{data.length == 1 ? 'y' : 'ies'}}</h4>
     <ul class="list-unstyled">
         <li ng-repeat="scale in data">
-            <label>{{scale.title}}</label>
+            <label>{{scale.title}} ({{scale.count}})</label>
             <ul class="list-inline color-scale">
                 <li ng-repeat="color in scale.colors" style="background-color: {{color}};" class="{{scale.color === color ? 'selected' :''}}">
+                    <div ng-if="$first">{{scale.domain[0]}}</div>
+                    <div ng-if="$last">{{scale.domain[1]}}</div>
                 </li>
             </ul>
         </li>

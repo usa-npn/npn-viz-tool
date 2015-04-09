@@ -22,7 +22,8 @@ angular.module('npn-viz-tool.layers',[
             strokeOpacity: null,
             strokeWeight: 1,
             fillColor: '#c0c5b8',
-            fillOpacity: null
+            fillOpacity: null,
+            zIndex: 0
         };
     function calculateCenter(feature) {
         if(!feature.properties.CENTER) {

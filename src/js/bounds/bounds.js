@@ -13,12 +13,6 @@ angular.module('npn-viz-tool.bounds',[
                     $rootScope.$broadcast('filter-rerun-phase2',{});
                 }
             }
-            function setupFilter(rectangle) {
-                var arg = new BoundsFilterArg(rectangle);
-                FilterService.addToFilter(arg);
-                refilter();
-                return rectangle;
-            }
             uiGmapGoogleMapApi.then(function(maps) {
                 var mapsApi = maps,
                     dcOptions = {
@@ -33,6 +27,12 @@ angular.module('npn-viz-tool.bounds',[
                 };
                 $scope.control = {};
                 $scope.$on('bounds-filter-ready',function(event,data){
+                    mapsApi.event.addListener(data.filter.arg,'mouseover',function(){
+                        data.filter.arg.setOptions(angular.extend({},BoundsFilterArg.RECTANGLE_OPTIONS,{strokeWeight: 2}));
+                    });
+                    mapsApi.event.addListener(data.filter.arg,'mouseout',function(){
+                        data.filter.arg.setOptions(BoundsFilterArg.RECTANGLE_OPTIONS);
+                    });
                     mapsApi.event.addListener(data.filter.arg,'click',function(){
                         FilterService.removeFromFilter(data.filter);
                         refilter();
@@ -42,7 +42,8 @@ angular.module('npn-viz-tool.bounds',[
                     if($scope.control.getDrawingManager){
                         var drawingManager = $scope.control.getDrawingManager();
                         mapsApi.event.addListener(drawingManager,'rectanglecomplete',function(rectangle){
-                            setupFilter(rectangle);
+                            FilterService.addToFilter(new BoundsFilterArg(rectangle));
+                            refilter();
                         });
                         $scope.$on('filter-reset',function(event,data){
                             dcOptions.drawingControl = false;

@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-04-08
+ * Version: 0.1.0 - 2015-04-09
  */
 
 angular.module('npn-viz-tool.bounds',[
@@ -18,12 +18,6 @@ angular.module('npn-viz-tool.bounds',[
                     $rootScope.$broadcast('filter-rerun-phase2',{});
                 }
             }
-            function setupFilter(rectangle) {
-                var arg = new BoundsFilterArg(rectangle);
-                FilterService.addToFilter(arg);
-                refilter();
-                return rectangle;
-            }
             uiGmapGoogleMapApi.then(function(maps) {
                 var mapsApi = maps,
                     dcOptions = {
@@ -38,6 +32,12 @@ angular.module('npn-viz-tool.bounds',[
                 };
                 $scope.control = {};
                 $scope.$on('bounds-filter-ready',function(event,data){
+                    mapsApi.event.addListener(data.filter.arg,'mouseover',function(){
+                        data.filter.arg.setOptions(angular.extend({},BoundsFilterArg.RECTANGLE_OPTIONS,{strokeWeight: 2}));
+                    });
+                    mapsApi.event.addListener(data.filter.arg,'mouseout',function(){
+                        data.filter.arg.setOptions(BoundsFilterArg.RECTANGLE_OPTIONS);
+                    });
                     mapsApi.event.addListener(data.filter.arg,'click',function(){
                         FilterService.removeFromFilter(data.filter);
                         refilter();
@@ -47,7 +47,8 @@ angular.module('npn-viz-tool.bounds',[
                     if($scope.control.getDrawingManager){
                         var drawingManager = $scope.control.getDrawingManager();
                         mapsApi.event.addListener(drawingManager,'rectanglecomplete',function(rectangle){
-                            setupFilter(rectangle);
+                            FilterService.addToFilter(new BoundsFilterArg(rectangle));
+                            refilter();
                         });
                         $scope.$on('filter-reset',function(event,data){
                             dcOptions.drawingControl = false;
@@ -675,7 +676,8 @@ angular.module('npn-viz-tool.filter',[
         strokeWeight: 1,
         fillColor: '#000080',
         fillOpacity: 0.5,
-        visible: true
+        visible: true,
+        zIndex: 1
     };
     BoundsFilterArg.prototype.getId = function() {
         return this.arg.getBounds().getCenter().toString();
@@ -867,7 +869,7 @@ angular.module('npn-viz-tool.filter',[
         s.domain([color_domain[0],color_domain[color_domain.length-1]]);
     });
     colorScale = d3.scale.ordinal().domain(color_domain).range(color_domain.map(function(d){
-        return choroplethScales[d](9);
+        return choroplethScales[d](11);
     }));
     uiGmapGoogleMapApi.then(function(maps) {
         defaultIcon.path = maps.SymbolPath.CIRCLE;
@@ -1067,7 +1069,7 @@ angular.module('npn-viz-tool.filter',[
                         }).join(',')+']';
                 }
                 station.markerOpts.icon.strokeColor = (hitMap['n'] > 1) ? '#00ff00' : defaultIcon.strokeColor;
-                station.markerOpts.zIndex = station.observationCount;
+                station.markerOpts.zIndex = station.observationCount + 2; // layers are on 0 and bounds 1 so make sure a marker's zIndex is at least 3
                 return keeps > 0;
             }).map(function(m){
                 // simplify the contents of the filtered marker results o/w there's a ton of data that
@@ -1084,12 +1086,27 @@ angular.module('npn-viz-tool.filter',[
             });
         if(hasSpeciesArgs) {
             // for all markers pick the species with the highest observation density as its color
+            // on this pass build spRanges which will contain the min/max count for every species
+            // for use the next pass.
+            var spRanges = {};
             filtered.forEach(function(m){
                 var sids = Object.keys(m.speciesInfo.counts),
                     maxSid = sids.length === 1 ?
                         sids[0] :
                         sids.reduce(function(p,c){
-                            //console.log('p='+p+',c='+c,m.speciesInfo.counts);
+                            if(!spRanges[c]) {
+                                spRanges[c] = {
+                                    min: m.speciesInfo.counts[c],
+                                    max: m.speciesInfo.counts[c]
+                                };
+                            } else {
+                                if(m.speciesInfo.counts[c] < spRanges[c].min) {
+                                    spRanges[c].min = m.speciesInfo.counts[c];
+                                }
+                                if(m.speciesInfo.counts[c] > spRanges[c].max) {
+                                    spRanges[c].max = m.speciesInfo.counts[c];
+                                }
+                            }
                             return (m.speciesInfo.counts[c] > m.speciesInfo.counts[p]) ? c : p;
                         },sids[0]),
                     arg = filter.getSpeciesArg(maxSid);
@@ -1101,8 +1118,8 @@ angular.module('npn-viz-tool.filter',[
                         return arg.colorIdx === m.markerOpts.icon.fillColorIdx;
                     }),
                     sid = arg.arg.species_id,
-                    minCount = d3.min(argMarkers,function(m) { return m.speciesInfo.counts[sid]; }),
-                    maxCount = d3.max(argMarkers,function(m) { return m.speciesInfo.counts[sid]; });
+                    minCount = spRanges[sid].min,
+                    maxCount = spRanges[sid].max;
                 $log.debug('observationCount variability for '+arg.toString()+ ' ('+arg.arg.common_name+') ['+ minCount + '-' + maxCount + ']');
                 var choroplethScale = choroplethScales[arg.colorIdx];
                 choroplethScale.domain([minCount,maxCount]);
@@ -1362,14 +1379,15 @@ angular.module('npn-viz-tool.filter',[
                                         title: data.marker.model.speciesInfo.titles[sid],
                                         arg: arg,
                                         scale: scales[arg.colorIdx],
+                                        domain: scales[arg.colorIdx].domain(),
                                         colors: []
                                     },
-                                    range = Math.ceil(val.scale.domain()[1]/20),i,n;
+                                    range = Math.ceil(val.domain[1]/20),i,n;
                                 for(i = 0;i < 20; i++) {
                                     n = (range*i)+1;
                                     val.colors[i] = val.scale(n);
                                     if(val.count >= n) {
-                                       val.color = val.colors[i]; // this isn't exact
+                                       val.color = val.colors[i]; // this isn't exact but pick the "closest" color
                                     }
                                 }
                                 return val;
@@ -1755,7 +1773,8 @@ angular.module('npn-viz-tool.layers',[
             strokeOpacity: null,
             strokeWeight: 1,
             fillColor: '#c0c5b8',
-            fillOpacity: null
+            fillOpacity: null,
+            zIndex: 0
         };
     function calculateCenter(feature) {
         if(!feature.properties.CENTER) {
@@ -2309,11 +2328,14 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
 angular.module("js/filter/choroplethInfo.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/choroplethInfo.html",
     "<div id=\"choroplethHelp\" ng-show=\"show\">\n" +
+    "    <h4>Observation Densit{{data.length == 1 ? 'y' : 'ies'}}</h4>\n" +
     "    <ul class=\"list-unstyled\">\n" +
     "        <li ng-repeat=\"scale in data\">\n" +
-    "            <label>{{scale.title}}</label>\n" +
+    "            <label>{{scale.title}} ({{scale.count}})</label>\n" +
     "            <ul class=\"list-inline color-scale\">\n" +
     "                <li ng-repeat=\"color in scale.colors\" style=\"background-color: {{color}};\" class=\"{{scale.color === color ? 'selected' :''}}\">\n" +
+    "                    <div ng-if=\"$first\">{{scale.domain[0]}}</div>\n" +
+    "                    <div ng-if=\"$last\">{{scale.domain[1]}}</div>\n" +
     "                </li>\n" +
     "            </ul>\n" +
     "        </li>\n" +

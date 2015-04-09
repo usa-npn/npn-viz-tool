@@ -63,11 +63,14 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
 angular.module("js/filter/choroplethInfo.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/choroplethInfo.html",
     "<div id=\"choroplethHelp\" ng-show=\"show\">\n" +
+    "    <h4>Observation Densit{{data.length == 1 ? 'y' : 'ies'}}</h4>\n" +
     "    <ul class=\"list-unstyled\">\n" +
     "        <li ng-repeat=\"scale in data\">\n" +
-    "            <label>{{scale.title}}</label>\n" +
+    "            <label>{{scale.title}} ({{scale.count}})</label>\n" +
     "            <ul class=\"list-inline color-scale\">\n" +
     "                <li ng-repeat=\"color in scale.colors\" style=\"background-color: {{color}};\" class=\"{{scale.color === color ? 'selected' :''}}\">\n" +
+    "                    <div ng-if=\"$first\">{{scale.domain[0]}}</div>\n" +
+    "                    <div ng-if=\"$last\">{{scale.domain[1]}}</div>\n" +
     "                </li>\n" +
     "            </ul>\n" +
     "        </li>\n" +
