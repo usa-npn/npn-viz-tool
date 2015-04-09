@@ -1402,8 +1402,13 @@ angular.module('npn-viz-tool.filter',[
                 $log.debug('mouseout',data);
                 mouseIn = false;
                 if($scope.show) {
-                    $scope.show = false;
-                    $scope.data = undefined;
+                    $timeout(function(){
+                        if(!mouseIn){
+                            $scope.show = false;
+                            $scope.data = undefined;
+                        }
+                    },500);
+
                 }
             });
         }
