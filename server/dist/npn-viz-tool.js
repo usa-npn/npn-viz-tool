@@ -837,12 +837,13 @@ angular.module('npn-viz-tool.filter',[
 .factory('FilterService',['$q','$http','$rootScope','$timeout','$log','$filter','uiGmapGoogleMapApi','md5','NpnFilter','SpeciesFilterArg','SettingsService',
     function($q,$http,$rootScope,$timeout,$log,$filter,uiGmapGoogleMapApi,md5,NpnFilter,SpeciesFilterArg,SettingsService){
     // NOTE: this scale is limited to 20 colors
-    var color_domain = d3.range(0,20),
-        cat20 = d3.scale.category20().domain(color_domain),
-        cat20b = d3.scale.category20b().domain(color_domain),
-        colorScale = d3.scale.ordinal().domain(color_domain).range(color_domain.map(function(d,i){
-            var color = (i%2) === 0 ? cat20(i) : cat20b(i-1);
-            return d3.rgb(color).darker(1.0).toString();
+    var colors = [
+          '#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#7b4173','#bcbd22', '#637939', '#843c39',
+          '#e377c2', '#5254a3', '#e7ba52', '#222299', '#636363', '#f03b20', '#c51b8a', '#1b9e77', '#ef8a62', '#91cf60'
+        ],
+        color_domain = d3.range(0,colors.length),
+        colorScale = d3.scale.ordinal().domain(color_domain).range(color_domain.map(function(i){
+          return d3.rgb(colors[i]).darker(1.0).toString();
         })),
         choroplethScales = color_domain.map(function(i) {
             var maxColor = colorScale(i),
@@ -866,7 +867,7 @@ angular.module('npn-viz-tool.filter',[
     // now that the boundaries of the choropleth scales have been built
     // reset the color scale to use the median color rather than the darkest
     choroplethScales.forEach(function(s){
-        s.domain([color_domain[0],color_domain[color_domain.length-1]]);
+        s.domain([0,20]);
     });
     colorScale = d3.scale.ordinal().domain(color_domain).range(color_domain.map(function(d){
         return choroplethScales[d](11);
