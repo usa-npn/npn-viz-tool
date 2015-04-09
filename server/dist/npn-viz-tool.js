@@ -382,9 +382,32 @@ angular.module('npn-viz-tool.vis-calendar',[
         });
     };
 }]);
+angular.module('npn-viz-tool.cluster',[
+])
+.factory('ClusterService',[function(){
+    var service = {
+        getDefaultClusterOptions: function() {
+            var styles = [0,1,2,4,8,16,32,64,128,256].map(function(i){
+                return {
+                    n: (i*1000),
+                    url: 'cluster/m'+i+'.png',
+                    width: 52,
+                    height: 52,
+                    textColor: '#fff'
+                };
+            });
+            return {
+                styles: styles,
+                maxZoom: 12
+            };
+        }
+    };
+    return service;
+}]);
 angular.module('npn-viz-tool.filter',[
     'npn-viz-tool.settings',
     'npn-viz-tool.stations',
+    'npn-viz-tool.cluster',
     'angular-md5',
     'isteven-multi-select'
 ])
@@ -1273,8 +1296,8 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService','StationService',
-    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService,StationService){
+.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService','StationService','ClusterService',
+    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService,StationService,ClusterService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl" events="markerEvents"></ui-gmap-markers>',
@@ -1287,20 +1310,9 @@ angular.module('npn-viz-tool.filter',[
             };
             $scope.mapControl = {};
             $scope.doCluster = SettingsService.getSettingValue('clusterMarkers');
-            var styles = [0,1,2,4,8,16,32,64,128,256].map(function(i){
-                return {
-                    n: (i*1000),
-                    url: 'cluster/m'+i+'.png',
-                    width: 52,
-                    height: 52,
-                    textColor: '#fff'
-                    //textColor: i > 8 ? '#fff' : '#000'
-                };
-            }),
-            badgeFormatter = $filter('speciesBadge');
-            $scope.clusterOptions = {
-                styles: styles,
-                maxZoom: 12,
+            var clusterOptions = ClusterService.getDefaultClusterOptions(),
+                badgeFormatter = $filter('speciesBadge');
+            $scope.clusterOptions = angular.extend(clusterOptions,{
                 calculator: function(markers,styleCount) {
                     var oCount = 0,
                         fmt = SettingsService.getSettingValue('tagBadgeFormat'),r = {index:1};
@@ -1308,14 +1320,14 @@ angular.module('npn-viz-tool.filter',[
                         oCount += marker.model.observationCount;
                     });
                     r.text = badgeFormatter({station: markers.length,observation: oCount},SettingsService.getSettingValue('tagBadgeFormat'));
-                    for(var i = 0; i <styles.length;i++) {
-                        if(oCount >= styles[i].n) {
+                    for(var i = 0; i <clusterOptions.styles.length;i++) {
+                        if(oCount >= clusterOptions.styles[i].n) {
                             r.index = (i+1);
                         }
                     }
                     return r;
                 }
-            };
+            });
             $scope.$on('setting-update-tagBadgeFormat',function(event,data){
                 if($scope.mapControl && $scope.mapControl.managerDraw) {
                     $scope.mapControl.managerDraw();
@@ -1327,8 +1339,8 @@ angular.module('npn-viz-tool.filter',[
             function updateMarkers(markers) {
                 var totalOcount = markers.reduce(function(n,c) { return n+c.observationCount; },0),
                     n = (totalOcount > 512 ? Math.round(totalOcount/2) : 512),i;
-                for(i = styles.length-1; i >= 0; i--) {
-                    styles[i].n = n;
+                for(i = clusterOptions.styles.length-1; i >= 0; i--) {
+                    clusterOptions.styles[i].n = n;
                     n = Math.round(n/2);
                 }
                 $scope.results.markers = markers;
@@ -3278,6 +3290,7 @@ angular.module('npn-viz-tool.share',[
 }]);
 angular.module('npn-viz-tool.stations',[
     'npn-viz-tool.filter',
+    'npn-viz-tool.cluster',
     'npn-viz-tool.settings',
     'npn-viz-tool.layers'
 ])
@@ -3335,16 +3348,31 @@ angular.module('npn-viz-tool.stations',[
     };
     return service;
 }])
-.directive('npnStations',['$http','$log','LayerService','SettingsService','StationService',function($http,$log,LayerService,SettingsService,StationService){
+.directive('npnStations',['$http','$log','LayerService','SettingsService','StationService','ClusterService',function($http,$log,LayerService,SettingsService,StationService,ClusterService){
     return {
         restrict: 'E',
-        template: '<ui-gmap-markers models="regions.markers" idKey="\'name\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" isLabel="true"></ui-gmap-markers><ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" events="markerEvents"></ui-gmap-markers>',
+        template: '<ui-gmap-markers models="regions.markers" idKey="\'name\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" isLabel="true"></ui-gmap-markers><ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" events="markerEvents" clusterOptions="clusterOptions"></ui-gmap-markers>',
         scope: {
         },
         controller: ['$scope',function($scope) {
             $scope.doCluster = SettingsService.getSettingValue('clusterMarkers');
             $scope.$on('setting-update-clusterMarkers',function(event,data){
                 $scope.doCluster = data.value;
+            });
+            var clusterOptions = ClusterService.getDefaultClusterOptions();
+            $scope.clusterOptions = angular.extend(clusterOptions,{
+                calculator: function(markers,styleCount) {
+                    var r = {
+                        text: markers.length,
+                        index:1
+                    };
+                    for(var i = 0; i <clusterOptions.styles.length;i++) {
+                        if(markers.length >= clusterOptions.styles[i].n) {
+                            r.index = (i+1);
+                        }
+                    }
+                    return r;
+                }
             });
             $scope.regions = {
                 markers: []
@@ -3435,17 +3463,31 @@ angular.module('npn-viz-tool.stations',[
                                     .success(function(data){
                                         data.forEach(function(d){
                                             d.markerOpts = {
-                                                title: d.station_name
+                                                title: d.station_name,
+                                                icon: {
+                                                    path: google.maps.SymbolPath.CIRCLE,
+                                                    fillColor: '#e6550d',
+                                                    fillOpacity: 1.0,
+                                                    scale: 8,
+                                                    strokeColor: '#204d74',
+                                                    strokeWeight: 1
+                                                }
                                             };
                                         });
-                                        $scope.stations.markers = $scope.stations.markers.concat(data);
+                                        var newMarkers = $scope.stations.markers.concat(data),
+                                            n = (newMarkers.length > 512 ? Math.round(newMarkers.length/2) : 512),i;
+                                        for(i = clusterOptions.styles.length-1; i >= 0; i--) {
+                                            clusterOptions.styles[i].n = n;
+                                            n = Math.round(n/2);
+                                        }
+                                        $scope.stations.markers = newMarkers;
                                         // simply drop the feature as opposed to re-styling it
                                         map.data.remove(event.feature);
                                         // remove the station count marker
                                         // UGH splice isn't triggering the marker to get removed so re-build the
                                         // marker array...
                                         var region_markers = [];
-                                        for(var i = 0; i < $scope.regions.markers.length; i++) {
+                                        for(i = 0; i < $scope.regions.markers.length; i++) {
                                             if($scope.regions.markers[i].name !== state) {
                                                 region_markers.push($scope.regions.markers[i]);
                                             }
