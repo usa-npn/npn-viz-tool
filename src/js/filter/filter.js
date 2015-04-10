@@ -227,7 +227,8 @@ angular.module('npn-viz-tool.filter',[
     };
     SpeciesFilterArg.prototype.toExportParam = function() {
         var r = {
-            species_id: this.getId()
+            species_id: this.getId(),
+            common_name: this.arg.common_name
         },
         selected = this.phenophases.filter(function(pp){
                 return pp.selected;

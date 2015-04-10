@@ -22,7 +22,7 @@ angular.module('npn-viz-tool.bounds',[
                 var mapsApi = maps,
                     dcOptions = {
                         drawingModes: [mapsApi.drawing.OverlayType.RECTANGLE],
-                        position: mapsApi.ControlPosition.BOTTOM_LEFT,
+                        position: mapsApi.ControlPosition.TOP_RIGHT,
                         drawingControl: false
                     };
                 $log.debug('api',maps);
@@ -38,7 +38,7 @@ angular.module('npn-viz-tool.bounds',[
                     mapsApi.event.addListener(data.filter.arg,'mouseout',function(){
                         data.filter.arg.setOptions(BoundsFilterArg.RECTANGLE_OPTIONS);
                     });
-                    mapsApi.event.addListener(data.filter.arg,'click',function(){
+                    mapsApi.event.addListener(data.filter.arg,'rightclick',function(){
                         FilterService.removeFromFilter(data.filter);
                         refilter();
                     });
@@ -47,6 +47,7 @@ angular.module('npn-viz-tool.bounds',[
                     if($scope.control.getDrawingManager){
                         var drawingManager = $scope.control.getDrawingManager();
                         mapsApi.event.addListener(drawingManager,'rectanglecomplete',function(rectangle){
+                            drawingManager.setDrawingMode(null);
                             FilterService.addToFilter(new BoundsFilterArg(rectangle));
                             refilter();
                         });
@@ -763,7 +764,8 @@ angular.module('npn-viz-tool.filter',[
     };
     SpeciesFilterArg.prototype.toExportParam = function() {
         var r = {
-            species_id: this.getId()
+            species_id: this.getId(),
+            common_name: this.arg.common_name
         },
         selected = this.phenophases.filter(function(pp){
                 return pp.selected;
@@ -2368,10 +2370,16 @@ angular.module('npn-viz-tool.layers',[
                 }
             });
 
+            function restyleAndRefilter() {
+                LayerService.restyleLayers().then(function(){
+                    if(FilterService.getFilter().hasSufficientCriteria()) {
+                        $rootScope.$broadcast('filter-rerun-phase2',{});
+                    }
+                });
+            }
+
             function clickFeature(feature,map) {
-                // TODO "NAME" may or may not be suitable, probably should use id...
-                var name = feature.getProperty('NAME'),
-                    filterArg = feature.getProperty('$FILTER');
+                var filterArg = feature.getProperty('$FILTER');
                 lastFeature = feature;
                 if(!filterArg) {
                     filterArg = new GeoFilterArg(feature,$scope.layerOnMap.layer.id);
@@ -2379,17 +2387,19 @@ angular.module('npn-viz-tool.layers',[
                     // TODO - different layers will probably have different styles, duplicating hard coded color...
                     // over-ride so the change shows up immediately and will be applied on the restyle (o/w there's a pause)
                     map.data.overrideStyle(feature, {fillColor: '#800000'});
-                } else {
-                    FilterService.removeFromFilter(filterArg);
-                    filterArg = null;
+                    feature.setProperty('$FILTER',filterArg);
+                    restyleAndRefilter();
                 }
-                feature.setProperty('$FILTER',filterArg);
-                LayerService.restyleLayers().then(function(){
-                    // TODO - maybe instead the filter should just broadcast the "end" event
-                    if(FilterService.getFilter().hasSufficientCriteria()) {
-                        $rootScope.$broadcast('filter-rerun-phase2',{});
-                    }
-                });
+            }
+
+            function rightClickFeature(feature,map) {
+                var filterArg = feature.getProperty('$FILTER');
+                lastFeature = feature;
+                if(filterArg) {
+                    FilterService.removeFromFilter(filterArg);
+                    feature.setProperty('$FILTER',null);
+                    restyleAndRefilter();
+                }
             }
 
 
@@ -2459,7 +2469,11 @@ angular.module('npn-viz-tool.layers',[
                             $scope.$apply(function(){
                                 clickFeature(event.feature,map);
                             });
-
+                        }));
+                        eventListeners.push(map.data.addListener('rightclick',function(event){
+                            $scope.$apply(function(){
+                                rightClickFeature(event.feature,map);
+                            });
                         }));
                     }
                     def.resolve(results);

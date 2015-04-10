@@ -260,7 +260,7 @@ $control-margin: 5px;
 
 ul.filter-tags {
     position: absolute;
-    right: 105px;// + $gmaps-maptype-right;
+    right: 135px;// + $gmaps-maptype-right;
     top: 0px;
     z-index: 450;
     margin-left: 100px;
@@ -486,4 +486,9 @@ svg {
     height: 15px;
     display: inline-block;
     margin-right: 4px;
+}
+
+// hides the "hand" icon in the drawing control panel.
+div[title="Stop drawing"] {
+    display: none !important;
 }

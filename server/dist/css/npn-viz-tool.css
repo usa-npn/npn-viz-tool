@@ -242,7 +242,7 @@ $gmaps-maptype-right: 30px;
 
 ul.filter-tags {
   position: absolute;
-  right: 105px;
+  right: 135px;
   top: 0px;
   z-index: 450;
   margin-left: 100px;
@@ -448,6 +448,10 @@ svg {
   height: 15px;
   display: inline-block;
   margin-right: 4px;
+}
+
+div[title="Stop drawing"] {
+  display: none !important;
 }
 
 /*# sourceMappingURL=npn-viz-tool.css.map */

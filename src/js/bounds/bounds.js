@@ -17,7 +17,7 @@ angular.module('npn-viz-tool.bounds',[
                 var mapsApi = maps,
                     dcOptions = {
                         drawingModes: [mapsApi.drawing.OverlayType.RECTANGLE],
-                        position: mapsApi.ControlPosition.BOTTOM_LEFT,
+                        position: mapsApi.ControlPosition.TOP_RIGHT,
                         drawingControl: false
                     };
                 $log.debug('api',maps);
@@ -33,7 +33,7 @@ angular.module('npn-viz-tool.bounds',[
                     mapsApi.event.addListener(data.filter.arg,'mouseout',function(){
                         data.filter.arg.setOptions(BoundsFilterArg.RECTANGLE_OPTIONS);
                     });
-                    mapsApi.event.addListener(data.filter.arg,'click',function(){
+                    mapsApi.event.addListener(data.filter.arg,'rightclick',function(){
                         FilterService.removeFromFilter(data.filter);
                         refilter();
                     });
@@ -42,6 +42,7 @@ angular.module('npn-viz-tool.bounds',[
                     if($scope.control.getDrawingManager){
                         var drawingManager = $scope.control.getDrawingManager();
                         mapsApi.event.addListener(drawingManager,'rectanglecomplete',function(rectangle){
+                            drawingManager.setDrawingMode(null);
                             FilterService.addToFilter(new BoundsFilterArg(rectangle));
                             refilter();
                         });
