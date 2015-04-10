@@ -272,9 +272,19 @@ angular.module('npn-viz-tool.filter',[
         var polyType = geo.getType(),
             poly,arr,i;
         if(polyType == 'Polygon') {
+            // this seems wrong but some GeoJson data has more than one index in geo.getArray() for Polygon
+            // as if it were a 'MultiPolygon'...
+            arr = geo.getArray();
+            for(i = 0; i < arr.length; i++) {
+                poly = new google.maps.Polygon({paths: arr[i].getArray()});
+                if (google.maps.geometry.poly.containsLocation(point,poly) || google.maps.geometry.poly.isLocationOnEdge(point,poly)) {
+                    return true;
+                }
+            }
+            /*
             poly = new google.maps.Polygon({paths: geo.getArray()[0].getArray()});
             return google.maps.geometry.poly.containsLocation(point,poly) ||
-                   google.maps.geometry.poly.isLocationOnEdge(point,poly);
+                   google.maps.geometry.poly.isLocationOnEdge(point,poly);*/
         } else if (polyType === 'MultiPolygon' || polyType == 'GeometryCollection') {
             arr = geo.getArray();
             for(i = 0; i < arr.length; i++) {

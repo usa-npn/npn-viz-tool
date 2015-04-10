@@ -75,6 +75,15 @@ angular.module('npn-viz-tool.layers',[
                     });
                     data.type = 'FeatureCollection';
                     delete data.geometries;
+                } else {
+                    data.features.forEach(function(f,i){
+                        if(!f.properties) {
+                            f.properties = {};
+                        }
+                        if(!f.properties.NAME) {
+                            f.properties.NAME = ''+i;
+                        }
+                    });
                 }
                 // calculate centers
                 data.features.forEach(calculateCenter);
