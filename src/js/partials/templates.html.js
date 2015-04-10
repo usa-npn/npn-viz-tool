@@ -166,11 +166,11 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                    item-label=\"network_name\"\n" +
     "                    tick-property=\"selected\"\n" +
     "                    orientation=\"horizontal\"\n" +
-    "                    helper-elements=\"all none reset filter\"\n" +
+    "                    helper-elements=\"none reset filter\"\n" +
     "                    on-close=\"findSpecies()\"></div>\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-3\">\n" +
-    "                <button class=\"btn btn-default\" ng-disabled=\"!speciesInput.networks.length\" ng-click=\"addNetworksToFilter()\"\n" +
+    "                <button class=\"btn btn-default\" ng-disabled=\"!speciesInput.networks.length || networksMaxedOut()\" ng-click=\"addNetworksToFilter()\"\n" +
     "                        popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
     "                        popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
     "                    <i class=\"fa fa-plus\"></i>\n" +
@@ -194,7 +194,7 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                    helper-elements=\"none reset filter\"></div>\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-3\">\n" +
-    "                <button class=\"btn btn-default\" ng-disabled=\"!selected.species.length\" ng-click=\"addSpeciesToFilter()\"\n" +
+    "                <button class=\"btn btn-default\" ng-disabled=\"!selected.species.length || speciesMaxedOut()\" ng-click=\"addSpeciesToFilter()\"\n" +
     "                        popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
     "                        popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
     "                    <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +

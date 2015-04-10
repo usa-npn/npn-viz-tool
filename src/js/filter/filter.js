@@ -488,8 +488,9 @@ angular.module('npn-viz-tool.filter',[
     function($q,$http,$rootScope,$timeout,$log,$filter,uiGmapGoogleMapApi,md5,NpnFilter,SpeciesFilterArg,SettingsService){
     // NOTE: this scale is limited to 20 colors
     var colors = [
-          '#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#7b4173','#bcbd22', '#637939', '#843c39',
-          '#e377c2', '#5254a3', '#e7ba52', '#222299', '#636363', '#f03b20', '#c51b8a', '#1b9e77', '#ef8a62', '#91cf60'
+          '#1f77b4','#ff7f0e','#2ca02c','#d62728','#222299', '#c51b8a',  '#8c564b', '#637939', '#843c39',
+          '#5254a3','#636363',
+          '#bcbd22', '#7b4173','#e7ba52', '#222299',  '#f03b20', '#1b9e77','#e377c2',  '#ef8a62', '#91cf60', '#9467bd'
         ],
         color_domain = d3.range(0,colors.length),
         colorScale = d3.scale.ordinal().domain(color_domain).range(color_domain.map(function(i){
@@ -516,12 +517,13 @@ angular.module('npn-viz-tool.filter',[
         lastFiltered = [];
     // now that the boundaries of the choropleth scales have been built
     // reset the color scale to use the median color rather than the darkest
+    /*
     choroplethScales.forEach(function(s){
         s.domain([0,20]);
     });
     colorScale = d3.scale.ordinal().domain(color_domain).range(color_domain.map(function(d){
         return choroplethScales[d](11);
-    }));
+    }));*/
     uiGmapGoogleMapApi.then(function(maps) {
         defaultIcon.path = maps.SymbolPath.CIRCLE;
     });
@@ -1259,6 +1261,7 @@ angular.module('npn-viz-tool.filter',[
 
             $scope.filterHasDate = FilterService.hasDate;
             $scope.filterHasSufficientCriteria = FilterService.hasSufficientCriteria;
+
             var thisYear = (new Date()).getYear()+1900,
                 validYears = d3.range(1900,thisYear+1);
             $scope.thisYear = thisYear;
@@ -1272,14 +1275,24 @@ angular.module('npn-viz-tool.filter',[
                 species: []
             };
 
+            $scope.networksMaxedOut = function() {
+                return FilterService.getFilter().getNetworkArgs().length >= 10;
+            };
+            $scope.speciesMaxedOut = function() {
+                return FilterService.getFilter().getSpeciesArgs().length >= 20;
+            };
             $scope.addNetworksToFilter = function() {
                 angular.forEach($scope.speciesInput.networks,function(network){
-                    FilterService.addToFilter(new NetworkFilterArg(network));
+                    if(!$scope.networksMaxedOut()) {
+                        FilterService.addToFilter(new NetworkFilterArg(network));
+                    }
                 });
             };
             $scope.addSpeciesToFilter = function() {
                 angular.forEach($scope.selected.species,function(species){
-                    FilterService.addToFilter(new SpeciesFilterArg(species));
+                    if(!$scope.speciesMaxedOut()) {
+                        FilterService.addToFilter(new SpeciesFilterArg(species));
+                    }
                 });
             };
             $scope.speciesInput = {

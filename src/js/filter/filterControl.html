@@ -62,11 +62,11 @@
                     item-label="network_name"
                     tick-property="selected"
                     orientation="horizontal"
-                    helper-elements="all none reset filter"
+                    helper-elements="none reset filter"
                     on-close="findSpecies()"></div>
             </div>
             <div class="col-xs-3">
-                <button class="btn btn-default" ng-disabled="!speciesInput.networks.length" ng-click="addNetworksToFilter()"
+                <button class="btn btn-default" ng-disabled="!speciesInput.networks.length || networksMaxedOut()" ng-click="addNetworksToFilter()"
                         popover-placement="right" popover-popup-delay="500"
                         popover-trigger="mouseenter" popover="Add this filter to the map" popover-append-to-body="true">
                     <i class="fa fa-plus"></i>
@@ -90,7 +90,7 @@
                     helper-elements="none reset filter"></div>
             </div>
             <div class="col-xs-3">
-                <button class="btn btn-default" ng-disabled="!selected.species.length" ng-click="addSpeciesToFilter()"
+                <button class="btn btn-default" ng-disabled="!selected.species.length || speciesMaxedOut()" ng-click="addSpeciesToFilter()"
                         popover-placement="right" popover-popup-delay="500"
                         popover-trigger="mouseenter" popover="Add this filter to the map" popover-append-to-body="true">
                     <i class="fa" ng-class="{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}"></i>
