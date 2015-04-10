@@ -261,7 +261,11 @@ angular.module('npn-viz-tool.vis-calendar',[
             .attr('y2', function(d,i) { return y(d.y)+dy; })
             .attr('doy-point',function(d) { return '('+d.x+','+d.y+')'; })
             .attr('stroke', function(d) { return $scope.colorRange[d.color]; })
-            .attr('stroke-width', y.rangeBand());
+            .attr('stroke-width', y.rangeBand())
+            .append('title')
+            .text(function(d) {
+                return d.x; // x is the doy
+            });
 
         $scope.working = false;
     }
