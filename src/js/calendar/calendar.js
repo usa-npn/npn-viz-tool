@@ -20,47 +20,71 @@ angular.module('npn-viz-tool.vis-calendar',[
 
     $scope.validYears = d3.range(1900,((new Date()).getFullYear()+1));
     $scope.modal = $modalInstance;
-    $scope.colorScale = FilterService.getColorScale();
-    $scope.colors = $scope.colorScale.domain();
+
+    var colorScale = FilterService.getColorScale();
+    $scope.colors = colorScale.domain();
+    $scope.colorRange = colorScale.range();
+
     $scope.selection = {
         color: 0,
         year: (new Date()).getFullYear()
     };
-    $scope.plottable = [];
-    angular.forEach(FilterService.getFilter().getSpeciesArgs(),function(sarg) {
-        $scope.plottable.push(angular.extend({},sarg.arg,{phenophase_id: -1, phenophase_name: 'All phenophases'}));
-        angular.forEach(sarg.phenophases,function(pp){
-            $scope.plottable.push(angular.extend({},sarg.arg,pp));
-        });
-    });
-    $log.debug('plottable',$scope.plottable);
+
     $scope.toPlotYears = [];
     $scope.toPlot = [];
-
-    $scope.addYear = function() {
-        if($scope.selection.year) {
-            $scope.toPlotYears.push($scope.selection.year);
-            $scope.toPlotYears.sort();
+    FilterService.getFilter().getSpeciesList().then(function(list){
+        $log.debug('speciesList',list);
+        $scope.speciesList = list;
+        if(list.length) {
+            $scope.selection.species = list[0];
+        }
+    });
+    $scope.$watch('selection.species',function(){
+        $scope.phenophaseList = [];
+        if($scope.selection.species) {
+            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
+                $log.debug('phenophaseList',list);
+                if(list.length) {
+                    list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
+                }
+                $scope.phenophaseList = list;
+                if(list.length) {
+                    $scope.selection.phenophase = list[0];
+                }
+            });
+        }
+    });
+    function advanceColor() {
+        if($scope.selection.color < $scope.colors.length) {
+            $scope.selection.color++;
+        } else {
+            $scope.selection.color = 0;
+        }
+    }
+    function addToPlot(toPlot) {
+        $log.debug('addToPlot',toPlot);
+        if(toPlot) {
+            if(toPlot.phenophase_id === -1) {
+                $log.debug('add all phenophases...');
+                removeSpeciesFromPlot(toPlot.species_id);
+                $scope.phenophaseList.filter(function(p){
+                    return p.phenophase_id !== -1;
+                }).forEach(function(pp) {
+                    addToPlot(angular.extend($scope.selection.species,pp));
+                });
+            } else {
+                $scope.toPlot.push(getNewToPlot(toPlot));
+                advanceColor();
+            }
             $scope.data = data = undefined;
         }
-    };
-    $scope.canAddYear = function() {
-        return $scope.toPlotYears.length < 2 && // no more than 2
-               $scope.selection.year && // anything to add?
-               $scope.toPlotYears.indexOf($scope.selection.year) === -1 && // already added?
-               $scope.validYears.indexOf($scope.selection.year) !== -1; // valid to add period?
-    };
-    $scope.removeYear = function(idx) {
-        $scope.toPlotYears.splice(idx,1);
-        $scope.data = data = undefined;
-    };
-
+    }
     function getNewToPlot(tp) {
-        var base = tp||$scope.selection.toPlot;
+        var base = tp||angular.extend({},$scope.selection.species,$scope.selection.phenophase);
         return angular.extend({},base,{color: $scope.selection.color});
     }
     $scope.canAddToPlot = function() {
-        if(!$scope.selection.toPlot) {
+        if(!$scope.selection.species || !$scope.selection.phenophase) {
             return false;
         }
         if($scope.toPlot.length === 0) {
@@ -78,6 +102,47 @@ angular.module('npn-viz-tool.vis-calendar',[
             }
         }
         return true;
+    };
+    $scope.addToPlot = function() {
+        addToPlot(getNewToPlot());
+    };
+    $scope.removeFromPlot = function(idx) {
+        $scope.toPlot.splice(idx,1);
+        $scope.data = data = undefined;
+    };
+    function removeSpeciesFromPlot(species_id) {
+        for(;;){
+            var idx = -1,i;
+            for(i = 0; i < $scope.toPlot.length; i++) {
+                if($scope.toPlot[i].species_id === species_id) {
+                    idx = i;
+                    break;
+                }
+            }
+            if(idx === -1) {
+                break;
+            } else {
+                $scope.removeFromPlot(idx);
+            }
+        }
+    }
+
+    $scope.addYear = function() {
+        if($scope.selection.year) {
+            $scope.toPlotYears.push($scope.selection.year);
+            $scope.toPlotYears.sort();
+            $scope.data = data = undefined;
+        }
+    };
+    $scope.canAddYear = function() {
+        return $scope.toPlotYears.length < 2 && // no more than 2
+               $scope.selection.year && // anything to add?
+               $scope.toPlotYears.indexOf($scope.selection.year) === -1 && // already added?
+               $scope.validYears.indexOf($scope.selection.year) !== -1; // valid to add period?
+    };
+    $scope.removeYear = function(idx) {
+        $scope.toPlotYears.splice(idx,1);
+        $scope.data = data = undefined;
     };
 
     // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
@@ -99,54 +164,6 @@ angular.module('npn-viz-tool.vis-calendar',[
               .call(moveYTickLabels);
     },500);
 
-    function advanceColor() {
-        if($scope.selection.color < 19) {
-            $scope.selection.color++;
-        } else {
-            $scope.selection.color = 0;
-        }
-    }
-    function removeSpeciesFromPlot(species_id) {
-        for(;;){
-            var idx = -1,i;
-            for(i = 0; i < $scope.toPlot.length; i++) {
-                if($scope.toPlot[i].species_id === species_id) {
-                    idx = i;
-                    break;
-                }
-            }
-            if(idx === -1) {
-                break;
-            } else {
-                $scope.removeFromPlot(idx);
-            }
-        }
-    }
-    function addToPlot(toPlot) {
-        $log.debug('addToPlot',toPlot);
-        if(toPlot) {
-            if(toPlot.phenophase_id === -1) {
-                $log.debug('add all phenophases...');
-                removeSpeciesFromPlot(toPlot.species_id);
-                $scope.plottable.filter(function(p){
-                    return p.phenophase_id !== -1 && p.species_id === toPlot.species_id;
-                }).forEach(function(tp){
-                    addToPlot(tp);
-                });
-            } else {
-                $scope.toPlot.push(getNewToPlot(toPlot));
-                advanceColor();
-            }
-            $scope.data = data = undefined;
-        }
-    }
-    $scope.addToPlot = function() {
-        addToPlot($scope.selection.toPlot);
-    };
-    $scope.removeFromPlot = function(idx) {
-        $scope.toPlot.splice(idx,1);
-        $scope.data = data = undefined;
-    };
 
     $scope.yAxisConfig = {
         labelOffset: 4,
@@ -243,7 +260,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             .attr('x2', function(d) { return x(d.x)+dx; })
             .attr('y2', function(d,i) { return y(d.y)+dy; })
             .attr('doy-point',function(d) { return '('+d.x+','+d.y+')'; })
-            .attr('stroke', function(d) { return $scope.colorScale(d.color); })
+            .attr('stroke', function(d) { return $scope.colorRange[d.color]; })
             .attr('stroke-width', y.rangeBand());
 
         $scope.working = false;

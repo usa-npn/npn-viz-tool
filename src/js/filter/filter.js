@@ -2,6 +2,7 @@ angular.module('npn-viz-tool.filter',[
     'npn-viz-tool.settings',
     'npn-viz-tool.stations',
     'npn-viz-tool.cluster',
+    'npn-viz-tool.vis-cache',
     'angular-md5',
     'isteven-multi-select'
 ])
@@ -195,6 +196,9 @@ angular.module('npn-viz-tool.filter',[
     SpeciesFilterArg.prototype.getId = function() {
         return parseInt(this.arg.species_id);
     };
+    SpeciesFilterArg.prototype.getPhenophaseList = function() {
+        return angular.copy(this.phenophases);
+    };
     SpeciesFilterArg.prototype.resetCounts = function(c) {
         this.counts.station = this.counts.observation = c;
         angular.forEach(this.phenophases,function(pp){
@@ -361,8 +365,8 @@ angular.module('npn-viz-tool.filter',[
     };
     return BoundsFilterArg;
 }])
-.factory('NpnFilter',['DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg',
-    function(DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg){
+.factory('NpnFilter',[ '$q','$http','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','CacheService',
+    function($q,$http,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,CacheService){
     function getValues(map) {
         var vals = [],key;
         for(key in map) {
@@ -477,6 +481,99 @@ angular.module('npn-viz-tool.filter',[
         this.geo = _reset(this.geo);
         this.networks = _reset(this.networks);
         this.bounds = _reset(this.bounds);
+    };
+
+    /**
+     * Fetches a list of species objects that correspond to this filter.  If the filter
+     * has species args in it already then the contents of those args constitute the result.
+     * If the filter has a list of networks then the list of species are those applicable to those
+     * networks.
+     * @return {Promise} A promise that will be resolved with the list.
+     */
+    NpnFilter.prototype.getSpeciesList = function() {
+        var list = [],
+            speciesArgs = this.getSpeciesArgs(),
+            networkArgs = this.getNetworkArgs(),
+            def = $q.defer();
+        if(speciesArgs.length) {
+            speciesArgs.forEach(function(arg) {
+                list.push(arg.arg);
+            });
+            def.resolve(list);
+        } else if (networkArgs.length) {
+            var params = {},
+                idx = 0;
+            networkArgs.forEach(function(n){
+                params['network_id['+(idx++)+']'] = n.getId();
+            });
+            var cacheKey = CacheService.keyFromObject(params);
+            list = CacheService.get(cacheKey);
+            if(list && list.length) {
+                def.resolve(list);
+            } else {
+                $http.get('/npn_portal/species/getSpeciesFilter.json',{params: params})
+                     .success(function(species){
+                        CacheService.put(cacheKey,species);
+                        def.resolve(species);
+                     });
+                 }
+        } else {
+            def.resolve(list);
+        }
+        return def.promise;
+    };
+    /**
+     * Fetches a list of phenophase objects that correspond to this filter.  If the filter has
+     * species args in it then the sid must match one of the filter's species otherwise it's assumed
+     * that there are network args in the filter and the phenophases are chased.
+     *
+     * @param  {Number} sid The species id
+     * @return {Promise}    A promise that will be resolved with the list.
+     */
+    NpnFilter.prototype.getPhenophasesForSpecies = function(sid) {
+        var speciesArgs = this.getSpeciesArgs(),
+            def = $q.defer(),i;
+        if(typeof(sid) === 'string') {
+            sid = parseInt(sid);
+        }
+        if(speciesArgs.length) {
+            var found = false;
+            for(i = 0; i < speciesArgs.length; i++) {
+                if(speciesArgs[i].getId() === sid) {
+                    def.resolve(speciesArgs[i].getPhenophaseList());
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) {
+                def.resolve([]);
+            }
+        } else {
+            var params = { return_all: true, species_id: sid },
+                cacheKey = CacheService.keyFromObject(params),
+                list = CacheService.get(cacheKey);
+            if(list && list.length) {
+                def.resolve(list);
+            } else {
+                // not part of the filter go get it
+                // this is a bit of cut/paste from SpeciesFilterArg could maybe be consolidated?
+                $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
+                    params: params
+                }).success(function(phases) {
+                    var seen = {},
+                        filtered = phases[0].phenophases.filter(function(pp){ // the call returns redundant data so filter it out.
+                        if(seen[pp.phenophase_id]) {
+                            return false;
+                        }
+                        seen[pp.phenophase_id] = pp;
+                        return true;
+                    });
+                    CacheService.put(cacheKey,filtered);
+                    def.resolve(filtered);
+                });
+            }
+        }
+        return def.promise;
     };
     return NpnFilter;
 }])

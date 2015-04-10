@@ -9,14 +9,15 @@
         <button class="btn btn-default" ng-click="addYear()" ng-disabled="!canAddYear()"><i class="fa fa-plus"></i></button>
     </div>
     <div class="form-group animated-show-hide">
-        <label for="toPlotInput">Species phenophase combinations</label>
-        <select name="toPlotInput" class="form-control" ng-model="selection.toPlot" ng-options="o.phenophase_name group by (o|speciesTitle) for o in plottable"></select>
+        <label for="speciesInput">Species phenophase combinations</label>
+        <select name="speciesInput" class="form-control" ng-model="selection.species" ng-options="(o|speciesTitle) for o in speciesList"></select>
+        <select name="phenophaseInput" class="form-control" ng-model="selection.phenophase" ng-options="o.phenophase_name for o in phenophaseList"></select>
         <div class="btn-group" dropdown is-open="selection.color_isopen">
-          <button type="button" class="btn btn-default dropdown-toggle" dropdown-toggle style="background-color: {{colorScale(selection.color)}};">
+          <button type="button" class="btn btn-default dropdown-toggle" dropdown-toggle style="background-color: {{colorRange[selection.color]}};">
             &nbsp; <span class="caret"></span>
           </button>
           <ul class="dropdown-menu" role="menu">
-            <li ng-repeat="i in colors track by $index" style="background-color: {{colorScale($index)}};"><a href ng-click="selection.color=$index;">&nbsp;</a></li>
+            <li ng-repeat="i in colors track by $index" style="background-color: {{colorRange[$index]}};"><a href ng-click="selection.color=$index;">&nbsp;</a></li>
           </ul>
         </div>
         <button class="btn btn-default" ng-click="addToPlot()" ng-disabled="!canAddToPlot()"><i class="fa fa-plus"></i></button>
@@ -31,7 +32,7 @@
             <li class="criteria" ng-repeat="y in toPlotYears">{{y}}
                 <a href ng-click="removeYear($index)"><i class="fa fa-times-circle-o"></i></a>
             </li>
-            <li class="criteria" ng-repeat="tp in toPlot">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style="color: {{colorScale(tp.color)}};" class="fa fa-circle"></i>
+            <li class="criteria" ng-repeat="tp in toPlot">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style="color: {{colorRange[tp.color]}};" class="fa fa-circle"></i>
                 <a href ng-click="removeFromPlot($index)"><i class="fa fa-times-circle-o"></i></a>
             </li>
             <li ng-if="!data && toPlotYears.length && toPlot.length"><button class="btn btn-primary" ng-click="visualize()">Visualize</button></li>

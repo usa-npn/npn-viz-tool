@@ -13,14 +13,15 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        <button class=\"btn btn-default\" ng-click=\"addYear()\" ng-disabled=\"!canAddYear()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "    </div>\n" +
     "    <div class=\"form-group animated-show-hide\">\n" +
-    "        <label for=\"toPlotInput\">Species phenophase combinations</label>\n" +
-    "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
+    "        <label for=\"speciesInput\">Species phenophase combinations</label>\n" +
+    "        <select name=\"speciesInput\" class=\"form-control\" ng-model=\"selection.species\" ng-options=\"(o|speciesTitle) for o in speciesList\"></select>\n" +
+    "        <select name=\"phenophaseInput\" class=\"form-control\" ng-model=\"selection.phenophase\" ng-options=\"o.phenophase_name for o in phenophaseList\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
-    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
+    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorRange[selection.color]}};\">\n" +
     "            &nbsp; <span class=\"caret\"></span>\n" +
     "          </button>\n" +
     "          <ul class=\"dropdown-menu\" role=\"menu\">\n" +
-    "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorScale($index)}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
+    "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorRange[$index]}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
     "          </ul>\n" +
     "        </div>\n" +
     "        <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
@@ -35,7 +36,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            <li class=\"criteria\" ng-repeat=\"y in toPlotYears\">{{y}}\n" +
     "                <a href ng-click=\"removeYear($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
-    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
+    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorRange[tp.color]}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
     "            <li ng-if=\"!data && toPlotYears.length && toPlot.length\"><button class=\"btn btn-primary\" ng-click=\"visualize()\">Visualize</button></li>\n" +
@@ -310,14 +311,15 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "<vis-dialog title=\"Scatter Plot\" modal=\"modal\">\n" +
     "<form class=\"form-inline plot-criteria-form\">\n" +
     "    <div class=\"form-group\">\n" +
-    "        <label for=\"toPlotInput\">Select up to three species phenophase combinations</label>\n" +
-    "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
+    "        <label for=\"speciesInput\">Select up to three species phenophase combinations</label>\n" +
+    "        <select name=\"speciesInput\" class=\"form-control\" ng-model=\"selection.species\" ng-options=\"(o|speciesTitle) for o in speciesList\"></select>\n" +
+    "        <select name=\"phenophaseInput\" class=\"form-control\" ng-model=\"selection.phenophase\" ng-options=\"o.phenophase_name for o in phenophaseList\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
-    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
+    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorRange[selection.color]}};\">\n" +
     "            &nbsp; <span class=\"caret\"></span>\n" +
     "          </button>\n" +
     "          <ul class=\"dropdown-menu\" role=\"menu\">\n" +
-    "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorScale($index)}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
+    "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorRange[$index]}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
     "          </ul>\n" +
     "        </div>\n" +
     "    </div>\n" +
@@ -328,7 +330,7 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "    <div class=\"panel-body\">\n" +
     "        <center>\n" +
     "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
-    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
+    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorRange[tp.color]}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
     "            <li>\n" +
@@ -348,7 +350,7 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "        </center>\n" +
     "    </div>\n" +
     "</div>\n" +
-    "<pre ng-if=\"record\">{{record | json}}</pre>\n" +
+    "<!--pre ng-if=\"record\">{{record | json}}</pre-->\n" +
     "\n" +
     "</vis-dialog>");
 }]);

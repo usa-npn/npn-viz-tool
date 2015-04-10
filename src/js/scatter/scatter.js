@@ -8,8 +8,10 @@ angular.module('npn-viz-tool.vis-scatter',[
 .controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','$log','FilterService','ChartService','SettingsService',
     function($scope,$modalInstance,$http,$timeout,$filter,$log,FilterService,ChartService,SettingsService){
     $scope.modal = $modalInstance;
-    $scope.colorScale = FilterService.getColorScale();
-    $scope.colors = $scope.colorScale.domain();
+    var colorScale = FilterService.getColorScale();
+    $scope.colors = colorScale.domain();
+    $scope.colorRange = colorScale.range();
+
     $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation (m)'}];
     $scope.selection = {
         color: 0,
@@ -26,18 +28,39 @@ angular.module('npn-viz-tool.vis-scatter',[
             draw();
         }
     });
-    $scope.plottable = [];
-    angular.forEach(FilterService.getFilter().getSpeciesArgs(),function(sarg) {
-        angular.forEach(sarg.phenophases,function(pp){
-            $scope.plottable.push(angular.extend({},sarg.arg,pp));
-        });
-    });
+
     $scope.toPlot = [];
+    FilterService.getFilter().getSpeciesList().then(function(list){
+        $log.debug('speciesList',list);
+        $scope.speciesList = list;
+        if(list.length) {
+            $scope.selection.species = list[0];
+        }
+    });
+    $scope.$watch('selection.species',function(){
+        $scope.phenophaseList = [];
+        if($scope.selection.species) {
+            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
+                $log.debug('phenophaseList',list);
+                $scope.phenophaseList = list;
+                if(list.length) {
+                    $scope.selection.phenophase = list[0];
+                }
+            });
+        }
+    });
+    function advanceColor() {
+        if($scope.selection.color < $scope.colors.length) {
+            $scope.selection.color++;
+        } else {
+            $scope.selection.color = 0;
+        }
+    }
     function getNewToPlot() {
-        return angular.extend({},$scope.selection.toPlot,{color: $scope.selection.color});
+        return angular.extend({},$scope.selection.species,$scope.selection.phenophase,{color: $scope.selection.color});
     }
     $scope.canAddToPlot = function() {
-        if(!$scope.selection.toPlot || $scope.toPlot.length === 3) {
+        if($scope.toPlot.length === 3 || !$scope.selection.species || !$scope.selection.phenophase) {
             return false;
         }
         if($scope.toPlot.length === 0) {
@@ -55,6 +78,17 @@ angular.module('npn-viz-tool.vis-scatter',[
             }
         }
         return true;
+    };
+    $scope.addToPlot = function() {
+        if($scope.canAddToPlot()) {
+            $scope.toPlot.push(getNewToPlot());
+            advanceColor();
+            $scope.data = data = undefined;
+        }
+    };
+    $scope.removeFromPlot = function(idx) {
+        $scope.toPlot.splice(idx,1);
+        $scope.data = data = undefined;
     };
 
     var data, // the data from the server....
@@ -99,18 +133,6 @@ angular.module('npn-viz-tool.vis-scatter',[
             .text('Onset DOY');
     },500);
 
-    $scope.addToPlot = function() {
-        if($scope.selection.toPlot) {
-            $scope.toPlot.push(getNewToPlot());
-            $scope.selection.color++;
-            $scope.data = data = undefined;
-        }
-    };
-    $scope.removeFromPlot = function(idx) {
-        $scope.toPlot.splice(idx,1);
-        $scope.data = data = undefined;
-    };
-
     function draw() {
         if(!data) {
             return;
@@ -154,7 +176,7 @@ angular.module('npn-viz-tool.vis-scatter',[
 
         var regressionLines = [],float_fmt = d3.format('.2f');
         angular.forEach($scope.toPlot,function(pair){
-            var color = $scope.colorScale(pair.color),
+            var color = $scope.colorRange[pair.color],
                 seriesData = data.filter(function(d) { return d.color === color; });
             if(seriesData.length > 0) {
                 var datas = seriesData.sort(function(o1,o2){ // sorting isn't necessary but makes it easy to pick min/max x
@@ -242,11 +264,19 @@ angular.module('npn-viz-tool.vis-scatter',[
             $scope.data = data = response.filter(function(d,i) {
                 var keep = !filterLqd||d.numdays_since_prior_no >= 0;
                 if(keep) {
-                    d.id = i;
-                    // this is the day # that will get plotted 1 being the first day of the start_year
-                    // 366 being the first day of start_year+1, etc.
-                    d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
-                    d.color = $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]);
+                    d.color = $scope.colorRange[colorMap[d.species_id+'.'+d.phenophase_id]];
+                    if(d.color) {
+                        d.id = i;
+                        // this is the day # that will get plotted 1 being the first day of the start_year
+                        // 366 being the first day of start_year+1, etc.
+                        d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
+                    } else {
+                        // this can happen if a phenophase id spans two species but is only plotted for one
+                        // e.g. boxelder/breaking leaf buds, boxelder/unfolding leaves, red maple/breaking leaf buds
+                        // the service will return data for 'red maple/unfolding leaves' but the user hasn't requested
+                        // that be plotted so we need to discard this data.
+                        keep = false;
+                    }
                 }
                 return keep;
             });

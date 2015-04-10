@@ -1,14 +1,15 @@
 <vis-dialog title="Scatter Plot" modal="modal">
 <form class="form-inline plot-criteria-form">
     <div class="form-group">
-        <label for="toPlotInput">Select up to three species phenophase combinations</label>
-        <select name="toPlotInput" class="form-control" ng-model="selection.toPlot" ng-options="o.phenophase_name group by (o|speciesTitle) for o in plottable"></select>
+        <label for="speciesInput">Select up to three species phenophase combinations</label>
+        <select name="speciesInput" class="form-control" ng-model="selection.species" ng-options="(o|speciesTitle) for o in speciesList"></select>
+        <select name="phenophaseInput" class="form-control" ng-model="selection.phenophase" ng-options="o.phenophase_name for o in phenophaseList"></select>
         <div class="btn-group" dropdown is-open="selection.color_isopen">
-          <button type="button" class="btn btn-default dropdown-toggle" dropdown-toggle style="background-color: {{colorScale(selection.color)}};">
+          <button type="button" class="btn btn-default dropdown-toggle" dropdown-toggle style="background-color: {{colorRange[selection.color]}};">
             &nbsp; <span class="caret"></span>
           </button>
           <ul class="dropdown-menu" role="menu">
-            <li ng-repeat="i in colors track by $index" style="background-color: {{colorScale($index)}};"><a href ng-click="selection.color=$index;">&nbsp;</a></li>
+            <li ng-repeat="i in colors track by $index" style="background-color: {{colorRange[$index]}};"><a href ng-click="selection.color=$index;">&nbsp;</a></li>
           </ul>
         </div>
     </div>
@@ -19,7 +20,7 @@
     <div class="panel-body">
         <center>
         <ul class="to-plot list-inline animated-show-hide" ng-if="toPlot.length">
-            <li class="criteria" ng-repeat="tp in toPlot">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style="color: {{colorScale(tp.color)}};" class="fa fa-circle"></i>
+            <li class="criteria" ng-repeat="tp in toPlot">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style="color: {{colorRange[tp.color]}};" class="fa fa-circle"></i>
                 <a href ng-click="removeFromPlot($index)"><i class="fa fa-times-circle-o"></i></a>
             </li>
             <li>
@@ -39,6 +40,6 @@
         </center>
     </div>
 </div>
-<pre ng-if="record">{{record | json}}</pre>
+<!--pre ng-if="record">{{record | json}}</pre-->
 
 </vis-dialog>

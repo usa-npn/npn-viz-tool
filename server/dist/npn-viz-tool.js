@@ -65,6 +65,68 @@ angular.module('npn-viz-tool.bounds',[
         }]
     };
 }]);
+angular.module('npn-viz-tool.vis-cache',[
+    'angular-md5'
+])
+/**
+ * CacheService
+ * Supports a generic place where code can put data that shouldn't be fetched from the
+ * server repeatedly, default time to live on data is 5 minutes.
+ **/
+.factory('CacheService',['$log','$timeout','md5',function($log,$timeout,md5){
+    var cache = [];
+    var service = {
+      keyFromObject : function(obj) {
+        return md5.createHash(JSON.stringify(obj));
+      },
+      dump : function() {
+        $log.debug('cache',cache);
+      },
+      put : function(key,obj) {
+        if ( key == null ) {
+          return;
+        }
+        if ( obj == null ) {
+          $log.debug( 'removing cached object \''+key+'\'', cache[key]);
+          // probably should slice to shrink cache array but...
+          cache[key] = null;
+          return;
+        }
+        var ttl = (arguments.length > 2) ?
+          arguments[2] :
+          (5*60000); // default ttl is 5 minutes
+        var expiry = (ttl < 0) ?
+          -1 : // never expires
+          (new Date()).getTime()+ttl;
+        $log.debug('caching (expiry:'+expiry+') \''+key+'\'',obj);
+        cache[key] = {
+          data: obj,
+          expiry : expiry
+        };
+        if(ttl > 0) {
+            $timeout(function(){
+                $log.debug('expiring cached object \''+key+'\'', cache[key]);
+                cache[key] = null;
+            },ttl);
+        }
+      },
+      get : function(key) {
+        var obj = cache[key];
+        if ( obj == null ) {
+          return arguments.length > 1 ? arguments[1] : null;
+        }
+        if ( obj.expiry < 0 || obj.expiry > (new Date()).getTime() ) {
+            $log.debug('cache entry \''+key+'\' is valid returning.');
+          return obj.data;
+        }
+        $log.debug('cache entry \''+key+'\' has expired.');
+        // probably should slice to shrink cache array but...
+        delete cache[key];
+        return arguments.length > 1 ? arguments[1] : null;
+      }
+    };
+    return service;
+}]);
 angular.module('npn-viz-tool.vis-calendar',[
     'npn-viz-tool.vis',
     'npn-viz-tool.filter',
@@ -87,47 +149,71 @@ angular.module('npn-viz-tool.vis-calendar',[
 
     $scope.validYears = d3.range(1900,((new Date()).getFullYear()+1));
     $scope.modal = $modalInstance;
-    $scope.colorScale = FilterService.getColorScale();
-    $scope.colors = $scope.colorScale.domain();
+
+    var colorScale = FilterService.getColorScale();
+    $scope.colors = colorScale.domain();
+    $scope.colorRange = colorScale.range();
+
     $scope.selection = {
         color: 0,
         year: (new Date()).getFullYear()
     };
-    $scope.plottable = [];
-    angular.forEach(FilterService.getFilter().getSpeciesArgs(),function(sarg) {
-        $scope.plottable.push(angular.extend({},sarg.arg,{phenophase_id: -1, phenophase_name: 'All phenophases'}));
-        angular.forEach(sarg.phenophases,function(pp){
-            $scope.plottable.push(angular.extend({},sarg.arg,pp));
-        });
-    });
-    $log.debug('plottable',$scope.plottable);
+
     $scope.toPlotYears = [];
     $scope.toPlot = [];
-
-    $scope.addYear = function() {
-        if($scope.selection.year) {
-            $scope.toPlotYears.push($scope.selection.year);
-            $scope.toPlotYears.sort();
+    FilterService.getFilter().getSpeciesList().then(function(list){
+        $log.debug('speciesList',list);
+        $scope.speciesList = list;
+        if(list.length) {
+            $scope.selection.species = list[0];
+        }
+    });
+    $scope.$watch('selection.species',function(){
+        $scope.phenophaseList = [];
+        if($scope.selection.species) {
+            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
+                $log.debug('phenophaseList',list);
+                if(list.length) {
+                    list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
+                }
+                $scope.phenophaseList = list;
+                if(list.length) {
+                    $scope.selection.phenophase = list[0];
+                }
+            });
+        }
+    });
+    function advanceColor() {
+        if($scope.selection.color < $scope.colors.length) {
+            $scope.selection.color++;
+        } else {
+            $scope.selection.color = 0;
+        }
+    }
+    function addToPlot(toPlot) {
+        $log.debug('addToPlot',toPlot);
+        if(toPlot) {
+            if(toPlot.phenophase_id === -1) {
+                $log.debug('add all phenophases...');
+                removeSpeciesFromPlot(toPlot.species_id);
+                $scope.phenophaseList.filter(function(p){
+                    return p.phenophase_id !== -1;
+                }).forEach(function(pp) {
+                    addToPlot(angular.extend($scope.selection.species,pp));
+                });
+            } else {
+                $scope.toPlot.push(getNewToPlot(toPlot));
+                advanceColor();
+            }
             $scope.data = data = undefined;
         }
-    };
-    $scope.canAddYear = function() {
-        return $scope.toPlotYears.length < 2 && // no more than 2
-               $scope.selection.year && // anything to add?
-               $scope.toPlotYears.indexOf($scope.selection.year) === -1 && // already added?
-               $scope.validYears.indexOf($scope.selection.year) !== -1; // valid to add period?
-    };
-    $scope.removeYear = function(idx) {
-        $scope.toPlotYears.splice(idx,1);
-        $scope.data = data = undefined;
-    };
-
+    }
     function getNewToPlot(tp) {
-        var base = tp||$scope.selection.toPlot;
+        var base = tp||angular.extend({},$scope.selection.species,$scope.selection.phenophase);
         return angular.extend({},base,{color: $scope.selection.color});
     }
     $scope.canAddToPlot = function() {
-        if(!$scope.selection.toPlot) {
+        if(!$scope.selection.species || !$scope.selection.phenophase) {
             return false;
         }
         if($scope.toPlot.length === 0) {
@@ -145,6 +231,47 @@ angular.module('npn-viz-tool.vis-calendar',[
             }
         }
         return true;
+    };
+    $scope.addToPlot = function() {
+        addToPlot(getNewToPlot());
+    };
+    $scope.removeFromPlot = function(idx) {
+        $scope.toPlot.splice(idx,1);
+        $scope.data = data = undefined;
+    };
+    function removeSpeciesFromPlot(species_id) {
+        for(;;){
+            var idx = -1,i;
+            for(i = 0; i < $scope.toPlot.length; i++) {
+                if($scope.toPlot[i].species_id === species_id) {
+                    idx = i;
+                    break;
+                }
+            }
+            if(idx === -1) {
+                break;
+            } else {
+                $scope.removeFromPlot(idx);
+            }
+        }
+    }
+
+    $scope.addYear = function() {
+        if($scope.selection.year) {
+            $scope.toPlotYears.push($scope.selection.year);
+            $scope.toPlotYears.sort();
+            $scope.data = data = undefined;
+        }
+    };
+    $scope.canAddYear = function() {
+        return $scope.toPlotYears.length < 2 && // no more than 2
+               $scope.selection.year && // anything to add?
+               $scope.toPlotYears.indexOf($scope.selection.year) === -1 && // already added?
+               $scope.validYears.indexOf($scope.selection.year) !== -1; // valid to add period?
+    };
+    $scope.removeYear = function(idx) {
+        $scope.toPlotYears.splice(idx,1);
+        $scope.data = data = undefined;
     };
 
     // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
@@ -166,54 +293,6 @@ angular.module('npn-viz-tool.vis-calendar',[
               .call(moveYTickLabels);
     },500);
 
-    function advanceColor() {
-        if($scope.selection.color < 19) {
-            $scope.selection.color++;
-        } else {
-            $scope.selection.color = 0;
-        }
-    }
-    function removeSpeciesFromPlot(species_id) {
-        for(;;){
-            var idx = -1,i;
-            for(i = 0; i < $scope.toPlot.length; i++) {
-                if($scope.toPlot[i].species_id === species_id) {
-                    idx = i;
-                    break;
-                }
-            }
-            if(idx === -1) {
-                break;
-            } else {
-                $scope.removeFromPlot(idx);
-            }
-        }
-    }
-    function addToPlot(toPlot) {
-        $log.debug('addToPlot',toPlot);
-        if(toPlot) {
-            if(toPlot.phenophase_id === -1) {
-                $log.debug('add all phenophases...');
-                removeSpeciesFromPlot(toPlot.species_id);
-                $scope.plottable.filter(function(p){
-                    return p.phenophase_id !== -1 && p.species_id === toPlot.species_id;
-                }).forEach(function(tp){
-                    addToPlot(tp);
-                });
-            } else {
-                $scope.toPlot.push(getNewToPlot(toPlot));
-                advanceColor();
-            }
-            $scope.data = data = undefined;
-        }
-    }
-    $scope.addToPlot = function() {
-        addToPlot($scope.selection.toPlot);
-    };
-    $scope.removeFromPlot = function(idx) {
-        $scope.toPlot.splice(idx,1);
-        $scope.data = data = undefined;
-    };
 
     $scope.yAxisConfig = {
         labelOffset: 4,
@@ -310,7 +389,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             .attr('x2', function(d) { return x(d.x)+dx; })
             .attr('y2', function(d,i) { return y(d.y)+dy; })
             .attr('doy-point',function(d) { return '('+d.x+','+d.y+')'; })
-            .attr('stroke', function(d) { return $scope.colorScale(d.color); })
+            .attr('stroke', function(d) { return $scope.colorRange[d.color]; })
             .attr('stroke-width', y.rangeBand());
 
         $scope.working = false;
@@ -459,6 +538,7 @@ angular.module('npn-viz-tool.filter',[
     'npn-viz-tool.settings',
     'npn-viz-tool.stations',
     'npn-viz-tool.cluster',
+    'npn-viz-tool.vis-cache',
     'angular-md5',
     'isteven-multi-select'
 ])
@@ -652,6 +732,9 @@ angular.module('npn-viz-tool.filter',[
     SpeciesFilterArg.prototype.getId = function() {
         return parseInt(this.arg.species_id);
     };
+    SpeciesFilterArg.prototype.getPhenophaseList = function() {
+        return angular.copy(this.phenophases);
+    };
     SpeciesFilterArg.prototype.resetCounts = function(c) {
         this.counts.station = this.counts.observation = c;
         angular.forEach(this.phenophases,function(pp){
@@ -818,8 +901,8 @@ angular.module('npn-viz-tool.filter',[
     };
     return BoundsFilterArg;
 }])
-.factory('NpnFilter',['DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg',
-    function(DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg){
+.factory('NpnFilter',[ '$q','$http','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','CacheService',
+    function($q,$http,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,CacheService){
     function getValues(map) {
         var vals = [],key;
         for(key in map) {
@@ -934,6 +1017,99 @@ angular.module('npn-viz-tool.filter',[
         this.geo = _reset(this.geo);
         this.networks = _reset(this.networks);
         this.bounds = _reset(this.bounds);
+    };
+
+    /**
+     * Fetches a list of species objects that correspond to this filter.  If the filter
+     * has species args in it already then the contents of those args constitute the result.
+     * If the filter has a list of networks then the list of species are those applicable to those
+     * networks.
+     * @return {Promise} A promise that will be resolved with the list.
+     */
+    NpnFilter.prototype.getSpeciesList = function() {
+        var list = [],
+            speciesArgs = this.getSpeciesArgs(),
+            networkArgs = this.getNetworkArgs(),
+            def = $q.defer();
+        if(speciesArgs.length) {
+            speciesArgs.forEach(function(arg) {
+                list.push(arg.arg);
+            });
+            def.resolve(list);
+        } else if (networkArgs.length) {
+            var params = {},
+                idx = 0;
+            networkArgs.forEach(function(n){
+                params['network_id['+(idx++)+']'] = n.getId();
+            });
+            var cacheKey = CacheService.keyFromObject(params);
+            list = CacheService.get(cacheKey);
+            if(list && list.length) {
+                def.resolve(list);
+            } else {
+                $http.get('/npn_portal/species/getSpeciesFilter.json',{params: params})
+                     .success(function(species){
+                        CacheService.put(cacheKey,species);
+                        def.resolve(species);
+                     });
+                 }
+        } else {
+            def.resolve(list);
+        }
+        return def.promise;
+    };
+    /**
+     * Fetches a list of phenophase objects that correspond to this filter.  If the filter has
+     * species args in it then the sid must match one of the filter's species otherwise it's assumed
+     * that there are network args in the filter and the phenophases are chased.
+     *
+     * @param  {Number} sid The species id
+     * @return {Promise}    A promise that will be resolved with the list.
+     */
+    NpnFilter.prototype.getPhenophasesForSpecies = function(sid) {
+        var speciesArgs = this.getSpeciesArgs(),
+            def = $q.defer(),i;
+        if(typeof(sid) === 'string') {
+            sid = parseInt(sid);
+        }
+        if(speciesArgs.length) {
+            var found = false;
+            for(i = 0; i < speciesArgs.length; i++) {
+                if(speciesArgs[i].getId() === sid) {
+                    def.resolve(speciesArgs[i].getPhenophaseList());
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) {
+                def.resolve([]);
+            }
+        } else {
+            var params = { return_all: true, species_id: sid },
+                cacheKey = CacheService.keyFromObject(params),
+                list = CacheService.get(cacheKey);
+            if(list && list.length) {
+                def.resolve(list);
+            } else {
+                // not part of the filter go get it
+                // this is a bit of cut/paste from SpeciesFilterArg could maybe be consolidated?
+                $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
+                    params: params
+                }).success(function(phases) {
+                    var seen = {},
+                        filtered = phases[0].phenophases.filter(function(pp){ // the call returns redundant data so filter it out.
+                        if(seen[pp.phenophase_id]) {
+                            return false;
+                        }
+                        seen[pp.phenophase_id] = pp;
+                        return true;
+                    });
+                    CacheService.put(cacheKey,filtered);
+                    def.resolve(filtered);
+                });
+            }
+        }
+        return def.promise;
     };
     return NpnFilter;
 }])
@@ -2434,14 +2610,15 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        <button class=\"btn btn-default\" ng-click=\"addYear()\" ng-disabled=\"!canAddYear()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "    </div>\n" +
     "    <div class=\"form-group animated-show-hide\">\n" +
-    "        <label for=\"toPlotInput\">Species phenophase combinations</label>\n" +
-    "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
+    "        <label for=\"speciesInput\">Species phenophase combinations</label>\n" +
+    "        <select name=\"speciesInput\" class=\"form-control\" ng-model=\"selection.species\" ng-options=\"(o|speciesTitle) for o in speciesList\"></select>\n" +
+    "        <select name=\"phenophaseInput\" class=\"form-control\" ng-model=\"selection.phenophase\" ng-options=\"o.phenophase_name for o in phenophaseList\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
-    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
+    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorRange[selection.color]}};\">\n" +
     "            &nbsp; <span class=\"caret\"></span>\n" +
     "          </button>\n" +
     "          <ul class=\"dropdown-menu\" role=\"menu\">\n" +
-    "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorScale($index)}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
+    "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorRange[$index]}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
     "          </ul>\n" +
     "        </div>\n" +
     "        <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
@@ -2456,7 +2633,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            <li class=\"criteria\" ng-repeat=\"y in toPlotYears\">{{y}}\n" +
     "                <a href ng-click=\"removeYear($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
-    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
+    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorRange[tp.color]}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
     "            <li ng-if=\"!data && toPlotYears.length && toPlot.length\"><button class=\"btn btn-primary\" ng-click=\"visualize()\">Visualize</button></li>\n" +
@@ -2731,14 +2908,15 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "<vis-dialog title=\"Scatter Plot\" modal=\"modal\">\n" +
     "<form class=\"form-inline plot-criteria-form\">\n" +
     "    <div class=\"form-group\">\n" +
-    "        <label for=\"toPlotInput\">Select up to three species phenophase combinations</label>\n" +
-    "        <select name=\"toPlotInput\" class=\"form-control\" ng-model=\"selection.toPlot\" ng-options=\"o.phenophase_name group by (o|speciesTitle) for o in plottable\"></select>\n" +
+    "        <label for=\"speciesInput\">Select up to three species phenophase combinations</label>\n" +
+    "        <select name=\"speciesInput\" class=\"form-control\" ng-model=\"selection.species\" ng-options=\"(o|speciesTitle) for o in speciesList\"></select>\n" +
+    "        <select name=\"phenophaseInput\" class=\"form-control\" ng-model=\"selection.phenophase\" ng-options=\"o.phenophase_name for o in phenophaseList\"></select>\n" +
     "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
-    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorScale(selection.color)}};\">\n" +
+    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorRange[selection.color]}};\">\n" +
     "            &nbsp; <span class=\"caret\"></span>\n" +
     "          </button>\n" +
     "          <ul class=\"dropdown-menu\" role=\"menu\">\n" +
-    "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorScale($index)}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
+    "            <li ng-repeat=\"i in colors track by $index\" style=\"background-color: {{colorRange[$index]}};\"><a href ng-click=\"selection.color=$index;\">&nbsp;</a></li>\n" +
     "          </ul>\n" +
     "        </div>\n" +
     "    </div>\n" +
@@ -2749,7 +2927,7 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "    <div class=\"panel-body\">\n" +
     "        <center>\n" +
     "        <ul class=\"to-plot list-inline animated-show-hide\" ng-if=\"toPlot.length\">\n" +
-    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorScale(tp.color)}};\" class=\"fa fa-circle\"></i>\n" +
+    "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorRange[tp.color]}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
     "            <li>\n" +
@@ -2769,7 +2947,7 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "        </center>\n" +
     "    </div>\n" +
     "</div>\n" +
-    "<pre ng-if=\"record\">{{record | json}}</pre>\n" +
+    "<!--pre ng-if=\"record\">{{record | json}}</pre-->\n" +
     "\n" +
     "</vis-dialog>");
 }]);
@@ -2879,8 +3057,10 @@ angular.module('npn-viz-tool.vis-scatter',[
 .controller('ScatterVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','$log','FilterService','ChartService','SettingsService',
     function($scope,$modalInstance,$http,$timeout,$filter,$log,FilterService,ChartService,SettingsService){
     $scope.modal = $modalInstance;
-    $scope.colorScale = FilterService.getColorScale();
-    $scope.colors = $scope.colorScale.domain();
+    var colorScale = FilterService.getColorScale();
+    $scope.colors = colorScale.domain();
+    $scope.colorRange = colorScale.range();
+
     $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation (m)'}];
     $scope.selection = {
         color: 0,
@@ -2897,18 +3077,39 @@ angular.module('npn-viz-tool.vis-scatter',[
             draw();
         }
     });
-    $scope.plottable = [];
-    angular.forEach(FilterService.getFilter().getSpeciesArgs(),function(sarg) {
-        angular.forEach(sarg.phenophases,function(pp){
-            $scope.plottable.push(angular.extend({},sarg.arg,pp));
-        });
-    });
+
     $scope.toPlot = [];
+    FilterService.getFilter().getSpeciesList().then(function(list){
+        $log.debug('speciesList',list);
+        $scope.speciesList = list;
+        if(list.length) {
+            $scope.selection.species = list[0];
+        }
+    });
+    $scope.$watch('selection.species',function(){
+        $scope.phenophaseList = [];
+        if($scope.selection.species) {
+            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
+                $log.debug('phenophaseList',list);
+                $scope.phenophaseList = list;
+                if(list.length) {
+                    $scope.selection.phenophase = list[0];
+                }
+            });
+        }
+    });
+    function advanceColor() {
+        if($scope.selection.color < $scope.colors.length) {
+            $scope.selection.color++;
+        } else {
+            $scope.selection.color = 0;
+        }
+    }
     function getNewToPlot() {
-        return angular.extend({},$scope.selection.toPlot,{color: $scope.selection.color});
+        return angular.extend({},$scope.selection.species,$scope.selection.phenophase,{color: $scope.selection.color});
     }
     $scope.canAddToPlot = function() {
-        if(!$scope.selection.toPlot || $scope.toPlot.length === 3) {
+        if($scope.toPlot.length === 3 || !$scope.selection.species || !$scope.selection.phenophase) {
             return false;
         }
         if($scope.toPlot.length === 0) {
@@ -2926,6 +3127,17 @@ angular.module('npn-viz-tool.vis-scatter',[
             }
         }
         return true;
+    };
+    $scope.addToPlot = function() {
+        if($scope.canAddToPlot()) {
+            $scope.toPlot.push(getNewToPlot());
+            advanceColor();
+            $scope.data = data = undefined;
+        }
+    };
+    $scope.removeFromPlot = function(idx) {
+        $scope.toPlot.splice(idx,1);
+        $scope.data = data = undefined;
     };
 
     var data, // the data from the server....
@@ -2970,18 +3182,6 @@ angular.module('npn-viz-tool.vis-scatter',[
             .text('Onset DOY');
     },500);
 
-    $scope.addToPlot = function() {
-        if($scope.selection.toPlot) {
-            $scope.toPlot.push(getNewToPlot());
-            $scope.selection.color++;
-            $scope.data = data = undefined;
-        }
-    };
-    $scope.removeFromPlot = function(idx) {
-        $scope.toPlot.splice(idx,1);
-        $scope.data = data = undefined;
-    };
-
     function draw() {
         if(!data) {
             return;
@@ -3025,7 +3225,7 @@ angular.module('npn-viz-tool.vis-scatter',[
 
         var regressionLines = [],float_fmt = d3.format('.2f');
         angular.forEach($scope.toPlot,function(pair){
-            var color = $scope.colorScale(pair.color),
+            var color = $scope.colorRange[pair.color],
                 seriesData = data.filter(function(d) { return d.color === color; });
             if(seriesData.length > 0) {
                 var datas = seriesData.sort(function(o1,o2){ // sorting isn't necessary but makes it easy to pick min/max x
@@ -3113,11 +3313,19 @@ angular.module('npn-viz-tool.vis-scatter',[
             $scope.data = data = response.filter(function(d,i) {
                 var keep = !filterLqd||d.numdays_since_prior_no >= 0;
                 if(keep) {
-                    d.id = i;
-                    // this is the day # that will get plotted 1 being the first day of the start_year
-                    // 366 being the first day of start_year+1, etc.
-                    d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
-                    d.color = $scope.colorScale(colorMap[d.species_id+'.'+d.phenophase_id]);
+                    d.color = $scope.colorRange[colorMap[d.species_id+'.'+d.phenophase_id]];
+                    if(d.color) {
+                        d.id = i;
+                        // this is the day # that will get plotted 1 being the first day of the start_year
+                        // 366 being the first day of start_year+1, etc.
+                        d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
+                    } else {
+                        // this can happen if a phenophase id spans two species but is only plotted for one
+                        // e.g. boxelder/breaking leaf buds, boxelder/unfolding leaves, red maple/breaking leaf buds
+                        // the service will return data for 'red maple/unfolding leaves' but the user hasn't requested
+                        // that be plotted so we need to discard this data.
+                        keep = false;
+                    }
                 }
                 return keep;
             });
