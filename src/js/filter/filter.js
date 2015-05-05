@@ -48,8 +48,14 @@ angular.module('npn-viz-tool.filter',[
     DateFilterArg.prototype.getId = function() {
         return 'date';
     };
+    DateFilterArg.prototype.getStartYear = function() {
+        return this.arg.start_date;
+    };
     DateFilterArg.prototype.getStartDate = function() {
         return this.arg.start_date+'-01-01';
+    };
+    DateFilterArg.prototype.getEndYear = function() {
+        return this.arg.end_date;
     };
     DateFilterArg.prototype.getEndDate = function() {
         return this.arg.end_date+'-12-31';

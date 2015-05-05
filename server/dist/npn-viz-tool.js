@@ -591,8 +591,14 @@ angular.module('npn-viz-tool.filter',[
     DateFilterArg.prototype.getId = function() {
         return 'date';
     };
+    DateFilterArg.prototype.getStartYear = function() {
+        return this.arg.start_date;
+    };
     DateFilterArg.prototype.getStartDate = function() {
         return this.arg.start_date+'-01-01';
+    };
+    DateFilterArg.prototype.getEndYear = function() {
+        return this.arg.end_date;
     };
     DateFilterArg.prototype.getEndDate = function() {
         return this.arg.end_date+'-12-31';
@@ -3205,6 +3211,16 @@ angular.module('npn-viz-tool.vis-scatter',[
           .append('g')
             .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')');
 
+        var dateArg = FilterService.getFilter().getDateArg();
+          chart.append('g')
+               .attr('class','chart-title')
+               .append('text')
+               .attr('y', '0')
+               .attr('dy','-3em')
+               .attr('x', (sizing.width/2))
+               .style('text-anchor','middle')
+               .style('font-size','1.2em')
+               .text(dateArg.getStartYear()+' - '+dateArg.getEndYear());
           chart.append('g')
               .attr('class', 'x axis')
               .attr('transform', 'translate(0,' + sizing.height + ')')

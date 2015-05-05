@@ -116,6 +116,16 @@ angular.module('npn-viz-tool.vis-scatter',[
           .append('g')
             .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')');
 
+        var dateArg = FilterService.getFilter().getDateArg();
+          chart.append('g')
+               .attr('class','chart-title')
+               .append('text')
+               .attr('y', '0')
+               .attr('dy','-3em')
+               .attr('x', (sizing.width/2))
+               .style('text-anchor','middle')
+               .style('font-size','1.2em')
+               .text(dateArg.getStartYear()+' - '+dateArg.getEndYear());
           chart.append('g')
               .attr('class', 'x axis')
               .attr('transform', 'translate(0,' + sizing.height + ')')
