@@ -167,6 +167,11 @@ $tool-content-overlap: 40px;
 
 .tool-content {
     padding: 0px 10px 10px 10px;
+
+    .empty-filter-notes {
+        color: #555;
+        font-style: italic;
+    }
 }
 
 // filter
@@ -330,10 +335,6 @@ ul.filter-tags {
 }
 
 .tool-content.visualizations {
-    .empty-filter-notes {
-        color: #555;
-        font-style: italic;
-    }
     li {
         a {
             font-size: 1.5em;

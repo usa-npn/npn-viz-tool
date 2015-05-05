@@ -153,6 +153,10 @@ body {
 .tool-content {
   padding: 0px 10px 10px 10px;
 }
+.tool-content .empty-filter-notes {
+  color: #555;
+  font-style: italic;
+}
 
 #filter-placebo {
   /*
@@ -298,10 +302,6 @@ ul.filter-tags .filter-tag.date a:first-of-type:hover {
   padding-bottom: 0px;
 }
 
-.tool-content.visualizations .empty-filter-notes {
-  color: #555;
-  font-style: italic;
-}
 .tool-content.visualizations li a {
   font-size: 1.5em;
   color: #555;
