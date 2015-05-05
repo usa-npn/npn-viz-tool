@@ -3119,7 +3119,11 @@ angular.module('npn-viz-tool.vis-scatter',[
     $scope.colors = colorScale.domain();
     $scope.colorRange = colorScale.range();
 
-    $scope.axis = [{key: 'latitude', label: 'Latitude'},{key: 'longitude', label: 'Longitude'},{key:'elevation_in_meters',label:'Elevation (m)'}];
+    $scope.axis = [
+        {key: 'latitude', label: 'Latitude'},
+        {key: 'longitude', label: 'Longitude'},
+        {key:'elevation_in_meters',label:'Elevation (m)'},
+        {key:'first_yes_year', label: 'Year'}];
     $scope.selection = {
         color: 0,
         axis: $scope.axis[0],
