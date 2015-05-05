@@ -261,14 +261,16 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
 angular.module("js/layers/layerControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/layers/layerControl.html",
     "<ul class=\"list-unstyled\">\n" +
-    "    <li><input type=\"radio\" id=\"layer-none\" ng-model=\"layerOnMap.layer\" value=\"none\"/> <label for=\"layer-none\">None</label></li>\n" +
+    "    <li><label ng-class=\"{'selected-layer': layerOnMap.layer === 'none'}\"><a href ng-click=\"layerOnMap.layer='none'\">None</a></label>\n" +
+    "        <!--input type=\"radio\" id=\"layer-none\" ng-model=\"layerOnMap.layer\" value=\"none\"/> <label for=\"layer-none\">None</label-->\n" +
+    "    </li>\n" +
     "    <li ng-repeat=\"layer in layers\">\n" +
-    "        <input type=\"radio\" id=\"layer-{{layer.id}}\" ng-model=\"layerOnMap.layer\" ng-value=\"layer\"/> <label for=\"layer-{{layer.id}}\">{{layer.label}}</label>\n" +
-    "        <span ng-if=\"layer.source\">(<a href=\"{{layer.source}}\" target=\"_blank\">Source</a>)</span>\n" +
-    "        <span ng-if=\"layer.img\">\n" +
-    "            <a ng-if=\"layer.link\" href=\"{{layer.link}}\" target=\"_blank\"><img ng-src=\"{{layer.img}}\" /></a>\n" +
-    "            <img ng-if=\"!layer.link\" ng-src=\"{{layer.img}}\" />\n" +
-    "        </span>\n" +
+    "        <label  ng-class=\"{'selected-layer': layerOnMap.layer === layer}\">{{layer.label}}</label>\n" +
+    "        <a href ng-click=\"layerOnMap.layer=layer\"><img ng-src=\"{{layer.img}}\" /></a>\n" +
+    "        <ul class=\"list-inline layer-links\">\n" +
+    "            <li ng-if=\"layer.link\"><a href=\"{{layer.link}}\" target=\"_blank\">More Info</a></li>\n" +
+    "            <li ng-if=\"layer.source\"><a href=\"{{layer.source}}\" target=\"_blank\">Source</a></li>\n" +
+    "        </ul>\n" +
     "    </li>\n" +
     "</ul>");
 }]);

@@ -266,6 +266,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         $log.debug('visualize',$scope.selection.axis,$scope.toPlot);
         var dateArg = FilterService.getFilter().getDateArg(),
             params = {
+                climate_data: 1,
                 request_src: 'npn-vis-scatter-plot',
                 start_date: dateArg.getStartDate(),
                 end_date: dateArg.getEndDate()

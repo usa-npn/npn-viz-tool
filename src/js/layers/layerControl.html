@@ -1,11 +1,13 @@
 <ul class="list-unstyled">
-    <li><input type="radio" id="layer-none" ng-model="layerOnMap.layer" value="none"/> <label for="layer-none">None</label></li>
+    <li><label ng-class="{'selected-layer': layerOnMap.layer === 'none'}"><a href ng-click="layerOnMap.layer='none'">None</a></label>
+        <!--input type="radio" id="layer-none" ng-model="layerOnMap.layer" value="none"/> <label for="layer-none">None</label-->
+    </li>
     <li ng-repeat="layer in layers">
-        <input type="radio" id="layer-{{layer.id}}" ng-model="layerOnMap.layer" ng-value="layer"/> <label for="layer-{{layer.id}}">{{layer.label}}</label>
-        <span ng-if="layer.source">(<a href="{{layer.source}}" target="_blank">Source</a>)</span>
-        <span ng-if="layer.img">
-            <a ng-if="layer.link" href="{{layer.link}}" target="_blank"><img ng-src="{{layer.img}}" /></a>
-            <img ng-if="!layer.link" ng-src="{{layer.img}}" />
-        </span>
+        <label  ng-class="{'selected-layer': layerOnMap.layer === layer}">{{layer.label}}</label>
+        <a href ng-click="layerOnMap.layer=layer"><img ng-src="{{layer.img}}" /></a>
+        <ul class="list-inline layer-links">
+            <li ng-if="layer.link"><a href="{{layer.link}}" target="_blank">More Info</a></li>
+            <li ng-if="layer.source"><a href="{{layer.source}}" target="_blank">Source</a></li>
+        </ul>
     </li>
 </ul>

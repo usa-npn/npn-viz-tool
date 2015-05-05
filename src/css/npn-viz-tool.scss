@@ -306,9 +306,24 @@ ul.filter-tags {
         img {
             width: ($tb-content-width * .75);
         }
+        label {
+
+        }
+        label.selected-layer {
+            text-decoration: underline;
+        }
     }
     li:first-of-type {
         margin-top: 0px;
+    }
+    ul.layer-links {
+        font-color: #aaa;
+        font-size: .9em;
+        margin-bottom: 0px;
+        li {
+            border-bottom: none;
+            padding-bottom: 0px;
+        }
     }
 }
 
