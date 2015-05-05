@@ -18,7 +18,7 @@ angular.module('npn-viz-tool.layers',[
             });
         }),
         baseStyle = {
-            strokeColor: '#ffffff',
+            strokeColor: '#666',
             strokeOpacity: null,
             strokeWeight: 1,
             fillColor: '#c0c5b8',
@@ -344,7 +344,7 @@ angular.module('npn-viz-tool.layers',[
                 LayerService.loadLayer(layer.id,function(feature) {
                     var style = {
                             strokeOpacity: 1,
-                            strokeColor: '#ffffff',
+                            strokeColor: '#666',
                             strokeWeight: 1,
                             fillOpacity: 0
                         };
