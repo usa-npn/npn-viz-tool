@@ -2512,7 +2512,7 @@ angular.module('npn-viz-tool',[
 .config(['uiGmapGoogleMapApiProvider','$logProvider',function(uiGmapGoogleMapApiProvider,$logProvider) {
     uiGmapGoogleMapApiProvider.configure({
         key: 'AIzaSyAsTM8XaktfkwpjEeDMXkNrojaiB2W5WyE',
-        v: '3.17',
+        v: '3.20',
         libraries: ['geometry','drawing']
     });
     $logProvider.debugEnabled(window.location.hash && window.location.hash.match(/^#\/debug/));
@@ -2553,6 +2553,11 @@ angular.module('npn-viz-tool.map',[
                         zoomControl: true,
                         zoomControlOptions: {
                             style: maps.ZoomControlStyle.SMALL,
+                            position: maps.ControlPosition.RIGHT_TOP
+                        },
+                        mapTypeControl: true,
+                        mapTypeControlOptions: {
+                            style: maps.MapTypeControlStyle.DROPDOWN_MENU,
                             position: maps.ControlPosition.RIGHT_TOP
                         }
                     }
@@ -3673,8 +3678,13 @@ angular.module('npn-viz-tool.stations',[
     'npn-viz-tool.layers'
 ])
 .factory('StationService',['$http','$log','FilterService',function($http,$log,FilterService){
-    var markerEvents = {
+    var infoWindow,
+        markerEvents = {
         'click':function(m){
+            if(infoWindow) {
+                infoWindow.close();
+                infoWindow = undefined;
+            }
             //m.info = new google.maps.InfoWindow();
             //m.info.setContent('<div class="station-details"><i class="fa fa-circle-o-notch fa-spin"></i></div>');
             //m.info.open(m.map,m);
@@ -3686,7 +3696,6 @@ angular.module('npn-viz-tool.stations',[
                 }
                 if(info && info.length === 1) {
                     var i = info[0],
-                        info_window,
                         html = '<div class="station-details">';
                     $log.debug(i);
                     //html += '<h5>'+i.site_name+'</h5>';
@@ -3712,11 +3721,11 @@ angular.module('npn-viz-tool.stations',[
                         html += '</ul>';
                     }
                     html += '</div>';
-                    info_window = new google.maps.InfoWindow({
+                    infoWindow = new google.maps.InfoWindow({
                         maxWidth: 500,
                         content: html
                     });
-                    info_window.open(m.map,m);
+                    infoWindow.open(m.map,m);
                 }
             });
         }
@@ -3799,7 +3808,7 @@ angular.module('npn-viz-tool.stations',[
                                         strokeWeight: 1
                                     },
                                     markerOpts: {
-                                        title: name,
+                                        title: name + ' ('+count.number_stations+' Sites)',
                                         labelClass: 'station-count',
                                         labelContent: ''+count.number_stations
                                         }},center);

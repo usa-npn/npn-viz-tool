@@ -219,12 +219,14 @@ $gmaps-maptype-right: 30px;
     right: $gmaps-maptype-right !important;
 }
 */
-$controls-top: 80px;
-$control-height: 22px;
-$control-margin: 5px;
+$controls-top: 120px;
+$control-height: 28px;
+$control-margin: 10px;
+$control-font-size: 1.15em;
 .little-npn-control {
     height: $control-height;
     width: $control-height;
+    font-size: $control-font-size;
 }
 // put the share-control in its original place...
 #reset-control,#share-control,#export-control {
@@ -260,7 +262,7 @@ $control-margin: 5px;
 
 ul.filter-tags {
     position: absolute;
-    right: 135px;// + $gmaps-maptype-right;
+    right: 95px;// + $gmaps-maptype-right;
     top: 0px;
     z-index: 450;
     margin-left: 100px;

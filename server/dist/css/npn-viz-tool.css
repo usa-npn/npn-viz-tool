@@ -199,8 +199,9 @@ $gmaps-maptype-right: 30px;
 }
 */
 .little-npn-control, #reset-control, #share-control, #export-control {
-  height: 22px;
-  width: 22px;
+  height: 28px;
+  width: 28px;
+  font-size: 1.15em;
 }
 
 #reset-control, #share-control, #export-control {
@@ -211,15 +212,15 @@ $gmaps-maptype-right: 30px;
 }
 
 #share-control {
-  top: 80px;
+  top: 120px;
 }
 
 #export-control {
-  top: 107px;
+  top: 158px;
 }
 
 #reset-control {
-  top: 134px;
+  top: 196px;
 }
 
 #share-content {
@@ -242,7 +243,7 @@ $gmaps-maptype-right: 30px;
 
 ul.filter-tags {
   position: absolute;
-  right: 135px;
+  right: 95px;
   top: 0px;
   z-index: 450;
   margin-left: 100px;

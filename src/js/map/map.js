@@ -34,6 +34,11 @@ angular.module('npn-viz-tool.map',[
                         zoomControlOptions: {
                             style: maps.ZoomControlStyle.SMALL,
                             position: maps.ControlPosition.RIGHT_TOP
+                        },
+                        mapTypeControl: true,
+                        mapTypeControlOptions: {
+                            style: maps.MapTypeControlStyle.DROPDOWN_MENU,
+                            position: maps.ControlPosition.RIGHT_TOP
                         }
                     }
                 };
