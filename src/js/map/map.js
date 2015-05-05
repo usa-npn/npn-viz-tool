@@ -85,7 +85,9 @@ angular.module('npn-viz-tool.map',[
                     map.panTo(new google.maps.LatLng(dfltCenter.latitude,dfltCenter.longitude));
                     map.setZoom(4);
                 }
-                $scope.stationView = true;
+                $timeout(function(){
+                    $scope.stationView = true;
+                },500);
             }
             $scope.$on('tool-open',function(event,data){
                 if(data.tool.id === 'layers') {

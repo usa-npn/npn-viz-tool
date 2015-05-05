@@ -2608,7 +2608,9 @@ angular.module('npn-viz-tool.map',[
                     map.panTo(new google.maps.LatLng(dfltCenter.latitude,dfltCenter.longitude));
                     map.setZoom(4);
                 }
-                $scope.stationView = true;
+                $timeout(function(){
+                    $scope.stationView = true;
+                },500);
             }
             $scope.$on('tool-open',function(event,data){
                 if(data.tool.id === 'layers') {
@@ -3766,7 +3768,8 @@ angular.module('npn-viz-tool.stations',[
     };
     return service;
 }])
-.directive('npnStations',['$http','$log','LayerService','SettingsService','StationService','ClusterService',function($http,$log,LayerService,SettingsService,StationService,ClusterService){
+.directive('npnStations',['$http','$log','$timeout','LayerService','SettingsService','StationService','ClusterService',
+    function($http,$log,$timeout,LayerService,SettingsService,StationService,ClusterService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="regions.markers" idKey="\'name\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" isLabel="true"></ui-gmap-markers><ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" events="markerEvents" clusterOptions="clusterOptions"></ui-gmap-markers>',
@@ -3873,45 +3876,47 @@ angular.module('npn-viz-tool.stations',[
                         eventListeners.push(map.data.addListener('click',function(event){
                             var state = event.feature.getProperty('NAME');
                             if($scope.stations.states.indexOf(state) === -1) {
+                                // remove the station count marker, splice doesn't work here.
+                                $scope.regions.markers = $scope.regions.markers.filter(function(m){
+                                    return m.name !== state;
+                                });
                                 $scope.stations.states.push(state);
-                                map.panTo(event.latLng);
-                                map.setZoom(6);
-                                $http.get('/npn_portal/stations/getAllStations.json',
-                                            {params:{state_code:state}})
-                                    .success(function(data){
-                                        data.forEach(function(d){
-                                            d.markerOpts = {
-                                                title: d.station_name,
-                                                icon: {
-                                                    path: google.maps.SymbolPath.CIRCLE,
-                                                    fillColor: '#e6550d',
-                                                    fillOpacity: 1.0,
-                                                    scale: 8,
-                                                    strokeColor: '#204d74',
-                                                    strokeWeight: 1
+                                $timeout(function(){
+                                    // simply drop the feature as opposed to re-styling it
+                                    map.data.remove(event.feature);
+                                    map.panTo(event.latLng);
+                                    var waitTime = 0;
+                                    if(map.getZoom() != 6) {
+                                        map.setZoom(6);
+                                        waitTime = 500; // give more time for map tiles to load
+                                    }
+                                    $timeout(function(){
+                                        $http.get('/npn_portal/stations/getAllStations.json',
+                                                    {params:{state_code:state}})
+                                            .success(function(data){
+                                                data.forEach(function(d){
+                                                    d.markerOpts = {
+                                                        title: d.station_name,
+                                                        icon: {
+                                                            path: google.maps.SymbolPath.CIRCLE,
+                                                            fillColor: '#e6550d',
+                                                            fillOpacity: 1.0,
+                                                            scale: 8,
+                                                            strokeColor: '#204d74',
+                                                            strokeWeight: 1
+                                                        }
+                                                    };
+                                                });
+                                                var newMarkers = $scope.stations.markers.concat(data),
+                                                    n = (newMarkers.length > 512 ? Math.round(newMarkers.length/2) : 512),i;
+                                                for(i = clusterOptions.styles.length-1; i >= 0; i--) {
+                                                    clusterOptions.styles[i].n = n;
+                                                    n = Math.round(n/2);
                                                 }
-                                            };
-                                        });
-                                        var newMarkers = $scope.stations.markers.concat(data),
-                                            n = (newMarkers.length > 512 ? Math.round(newMarkers.length/2) : 512),i;
-                                        for(i = clusterOptions.styles.length-1; i >= 0; i--) {
-                                            clusterOptions.styles[i].n = n;
-                                            n = Math.round(n/2);
-                                        }
-                                        $scope.stations.markers = newMarkers;
-                                        // simply drop the feature as opposed to re-styling it
-                                        map.data.remove(event.feature);
-                                        // remove the station count marker
-                                        // UGH splice isn't triggering the marker to get removed so re-build the
-                                        // marker array...
-                                        var region_markers = [];
-                                        for(i = 0; i < $scope.regions.markers.length; i++) {
-                                            if($scope.regions.markers[i].name !== state) {
-                                                region_markers.push($scope.regions.markers[i]);
-                                            }
-                                        }
-                                        $scope.regions.markers = region_markers;
-                                    });
+                                                $scope.stations.markers = newMarkers;
+                                            });
+                                    },waitTime);
+                                },500);
                             }
                         }));
                     });
