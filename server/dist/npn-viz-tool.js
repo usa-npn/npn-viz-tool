@@ -2511,7 +2511,7 @@ angular.module('npn-viz-tool',[
 ])
 .config(['uiGmapGoogleMapApiProvider','$logProvider',function(uiGmapGoogleMapApiProvider,$logProvider) {
     uiGmapGoogleMapApiProvider.configure({
-        //    key: 'your api key',
+        key: 'AIzaSyAsTM8XaktfkwpjEeDMXkNrojaiB2W5WyE',
         v: '3.17',
         libraries: ['geometry','drawing']
     });
