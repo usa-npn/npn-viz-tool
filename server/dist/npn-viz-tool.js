@@ -535,7 +535,7 @@ angular.module('npn-viz-tool.export',[
                     url: '/ddt/observations/setSearchParams',
                     data: params
                 }).success(function(){
-                    $window.open('/ddt/observations');
+                    $window.open('/results/visualization/data');
                 });
             };
         }]

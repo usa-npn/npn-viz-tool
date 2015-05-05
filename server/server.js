@@ -72,7 +72,7 @@ cache.init(function(err){ // init cache and start
     app.post('/ddt/observations/setSearchParams',function(req,res,next){
         res.status(200).end();
     });
-    app.get('/ddt/observations',function(req,res,next){
+    app.get('/results/visualization/data',function(req,res,next){
         res.send('Mock Data Download...');
     });
     app.use(express.static('dist'));
