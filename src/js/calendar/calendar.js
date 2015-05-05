@@ -8,7 +8,7 @@ angular.module('npn-viz-tool.vis-calendar',[
     function($scope,$modalInstance,$http,$timeout,$filter,$log,FilterService,ChartService){
     var data, // the data from the server....
         dateArg = FilterService.getFilter().getDateArg(),
-        sizing = ChartService.getSizeInfo({top: 20, right: 30, bottom: 35, left: 30}),
+        sizing = ChartService.getSizeInfo({top: 20, right: 35, bottom: 35, left: 35}),
         chart,
         d3_month_fmt = d3.time.format('%B'),
         x = d3.scale.ordinal().rangeBands([0,sizing.width]).domain(d3.range(1,366)),
@@ -162,13 +162,15 @@ angular.module('npn-viz-tool.vis-calendar',[
               .attr('class', 'y axis')
               .call(yAxis)
               .call(moveYTickLabels);
+          chart.selectAll('g .x.axis text')
+            .attr('style','font-size: .95em');
     },500);
 
 
     $scope.yAxisConfig = {
         labelOffset: 4,
         bandPadding: 0.5,
-        fontSize: 0.9
+        fontSize: 0.95
     };
     function moveYTickLabels(g) {
       var dy = -1*((y.rangeBand()/2)+$scope.yAxisConfig.labelOffset);
