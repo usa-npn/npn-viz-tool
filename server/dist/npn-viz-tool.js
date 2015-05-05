@@ -3216,10 +3216,17 @@ angular.module('npn-viz-tool.vis-scatter',[
             .append('text')
             .attr('transform', 'rotate(-90)')
             .attr('y', '0')
-            .attr('dy','-3.5em')
+            .attr('dy','-3em')
             .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
             .style('text-anchor', 'middle')
             .text('Onset DOY');
+
+        chart.selectAll('g .x.axis text')
+            .style('font-size', '.9em');
+
+        chart.selectAll('g .y.axis text')
+            .style('font-size', '.9em');
+
     },500);
 
     function draw() {
@@ -3240,6 +3247,7 @@ angular.module('npn-viz-tool.vis-scatter',[
           .attr('x',(sizing.width/2))
           .attr('dy', '3em')
           .style('text-anchor', 'middle')
+          .style('font-size', '.9em')
           .text($scope.selection.axis.label);
 
         // update the chart data (TODO transitions??)
@@ -3312,7 +3320,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         var legend = chart.append('g')
           .attr('class','legend')
           .attr('transform','translate(30,-45)') // relative to the chart, not the svg
-          .style('font-size','12px')
+          .style('font-size','1em')
           .call(d3.legend);
 
         if($scope.selection.regressionLines) {
