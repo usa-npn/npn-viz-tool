@@ -2330,6 +2330,7 @@ angular.module('npn-viz-tool.layers',[
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
         controller: function($scope) {
+            $scope.isFilterEmpty = FilterService.isFilterEmpty;
             var eventListeners = [],
                 lastFeature;
 
@@ -2907,7 +2908,11 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
 
 angular.module("js/layers/layerControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/layers/layerControl.html",
-    "<ul class=\"list-unstyled\">\n" +
+    "<p class=\"empty-filter-notes\" ng-if=\"isFilterEmpty()\">\n" +
+    "    Before adding a layer to the map you must create and execute a filter.\n" +
+    "    A map layer will allow you to filter stations based on the geographic boundaries it defines.\n" +
+    "</p>\n" +
+    "<ul class=\"list-unstyled\" ng-if=\"!isFilterEmpty()\">\n" +
     "    <li><label ng-class=\"{'selected-layer': layerOnMap.layer === 'none'}\"><a href ng-click=\"layerOnMap.layer='none'\">None</a></label>\n" +
     "        <!--input type=\"radio\" id=\"layer-none\" ng-model=\"layerOnMap.layer\" value=\"none\"/> <label for=\"layer-none\">None</label-->\n" +
     "    </li>\n" +

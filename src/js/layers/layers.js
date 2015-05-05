@@ -224,6 +224,7 @@ angular.module('npn-viz-tool.layers',[
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
         controller: function($scope) {
+            $scope.isFilterEmpty = FilterService.isFilterEmpty;
             var eventListeners = [],
                 lastFeature;
 
