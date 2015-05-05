@@ -3125,7 +3125,27 @@ angular.module('npn-viz-tool.vis-scatter',[
         {key: 'latitude', label: 'Latitude'},
         {key: 'longitude', label: 'Longitude'},
         {key:'elevation_in_meters',label:'Elevation (m)'},
-        {key:'first_yes_year', label: 'Year'}];
+        {key:'first_yes_year', label: 'Year'},
+
+        {key:'prcp_fall',label:'Precip Fall (mm)'},
+        {key:'prcp_spring',label:'Precip Spring (mm)'},
+        {key:'prcp_summer',label:'Precip Summer (mm)'},
+        {key:'prcp_winter',label:'Precip Winter (mm)'},
+
+        {key:'tmax_fall',label:'Tmax Fall (C\xB0)'},
+        {key:'tmax_spring',label:'Tmax Spring (C\xB0)'},
+        {key:'tmax_summer',label:'Tmax Summer (C\xB0)'},
+        {key:'tmax_winter',label:'Tmax Winter (C\xB0)'},
+
+        {key:'tmin_fall',label:'Tmin Fall (C\xB0)'},
+        {key:'tmin_spring',label:'Tmin Spring (C\xB0)'},
+        {key:'tmin_summer',label:'Tmin Summer (C\xB0)'},
+        {key:'tmin_winter',label:'Tmin Winter (C\xB0)'},
+
+        {key:'daylength',label:'Day Length'},
+        {key:'acc_prcp',label:'Accumulated Precip (mm)'},
+        {key:'gdd',label:'GDD'}
+        ];
     $scope.selection = {
         color: 0,
         axis: $scope.axis[0],
@@ -3313,8 +3333,8 @@ angular.module('npn-viz-tool.vis-scatter',[
                 var datas = seriesData.sort(function(o1,o2){ // sorting isn't necessary but makes it easy to pick min/max x
                         return o1[$scope.selection.axis.key] - o2[$scope.selection.axis.key];
                     }),
-                    xSeries = datas.map(function(d) { return d[$scope.selection.axis.key]; }),
-                    ySeries = datas.map(function(d) { return d.first_yes_doy; }),
+                    xSeries = datas.map(function(d) { return d[$scope.selection.axis.key]; }).filter(angular.isNumber),
+                    ySeries = datas.map(function(d) { return d.first_yes_doy; }).filter(angular.isNumber),
                     leastSquaresCoeff = ChartService.leastSquares(xSeries,ySeries),
                     x1 = xSeries[0],
                     y1 = ChartService.approxY(leastSquaresCoeff,x1),
