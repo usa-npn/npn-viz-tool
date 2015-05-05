@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-04-10
+ * Version: 0.1.0 - 2015-05-05
  */
 
 angular.module('npn-viz-tool.bounds',[
@@ -1716,7 +1716,7 @@ angular.module('npn-viz-tool.filter',[
                             } else if (data.marker.model.observationCount) {
                                 var v = {
                                     count: data.marker.model.observationCount,
-                                    title: 'All Observations',
+                                    title: 'All Records',
                                     scale: scales[0],
                                     domain: scales[0].domain(),
                                     colors: []
@@ -2704,7 +2704,7 @@ angular.module("js/filter/choroplethInfo.html", []).run(["$templateCache", funct
   $templateCache.put("js/filter/choroplethInfo.html",
     "<div id=\"choroplethHelp\" ng-show=\"show\">\n" +
     "    <h4>{{station_name}}</h4>\n" +
-    "    <h5>Observation Densit{{data.length == 1 ? 'y' : 'ies'}}</h5>\n" +
+    "    <h5>Record Densit{{data.length == 1 ? 'y' : 'ies'}}</h5>\n" +
     "    <ul class=\"list-unstyled\">\n" +
     "        <li ng-repeat=\"scale in data\">\n" +
     "            <label>{{scale.title}} ({{scale.count}})</label>\n" +
@@ -2979,7 +2979,7 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
     "            <svg class=\"chart\"></svg>\n" +
-    "            <div ng-if=\"filteredDisclaimer\" class=\"filter-disclaimer\">For quality assurance purposes, only onset dates that are preceded by negative observations are included in the visualization.</div>\n" +
+    "            <div ng-if=\"filteredDisclaimer\" class=\"filter-disclaimer\">For quality assurance purposes, only onset dates that are preceded by negative recordss are included in the visualization.</div>\n" +
     "        </div>\n" +
     "        </center>\n" +
     "    </div>\n" +
@@ -3003,7 +3003,7 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
-    "        <label>Species Badge Contents</label>\n" +
+    "        <label>Variable(s) Displayed</label>\n" +
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-repeat=\"option in settings.tagBadgeFormat.options\">\n" +
     "                <input type=\"radio\"\n" +
@@ -3025,13 +3025,14 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
-    "        <Label for=\"clusterMarkersSetting\">Exclude low quality data from visualizations</label>\n" +
+    "        <label for=\"clusterMarkersSetting\">Exclude low quality data from visualizations</label>\n" +
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-repeat=\"option in [true,false]\">\n" +
     "                <input type=\"radio\" id=\"filterLqdSummary{{option}}\" ng-model=\"settings.filterLqdSummary.value\"\n" +
     "                       ng-value=\"{{option}}\" /> <label for=\"filterLqdSummary{{option}}\">{{option | yesNo}}</label>\n" +
     "            </li>\n" +
     "        </ul>\n" +
+    "        <p>A value of <strong>Yes</strong> will exclude data points which lack a \"no\" observation record preceding the first yes observation record to increase precision and certainty.</p>\n" +
     "    </li>\n" +
     "</ul>");
 }]);
@@ -3404,16 +3405,16 @@ angular.module('npn-viz-tool.settings',[
             options: [{
                 value: 'observation-count',
                 q: 'oc',
-                label: 'Observation Count'
+                label: 'Record Count'
             },{
                 value: 'station-count',
                 q: 'sc',
                 label: 'Station Count'
-            },{
+            }/*,{
                 value: 'station-observation-count',
                 q: 'soc',
-                label: 'Station Count/Observation Count'
-            }]
+                label: 'Station Count/Record Count'
+            }*/]
         },
         filterLqdSummary: {
             name: 'filter-lqd-summary',
@@ -3664,10 +3665,10 @@ angular.module('npn-viz-tool.stations',[
                     html += litem('Site Name',i.site_name);
                     html += litem('Group',i.group_name);
                     if(m.model.observationCount) {
-                        html += litem('Observations',m.model.observationCount);
+                        html += litem('Records',m.model.observationCount);
                     } else {
                         html += litem('Individuals',i.num_individuals);
-                        html += litem('Observations',i.num_records);
+                        html += litem('Records',i.num_records);
                     }
 
                     html += '</ul>';
@@ -4031,12 +4032,12 @@ angular.module('npn-viz-tool.vis',[
         title: 'Scatter Plot',
         controller: 'ScatterVisCtrl',
         template: 'js/scatter/scatter.html',
-        description: 'This visualization allows you to plot various geographic or climactic variables on the X axis against Onset Day Of Year on the Y axis.  Up to three Species/Phenophase pairs may be plotted.'
+        description: 'This visualization plots selected geographic or climactic variables against estimated onset dates for individuals for up to three species/phenophase pairs.'
     },{
         title: 'Calendar',
         controller: 'CalendarVisCtrl',
         template: 'js/calendar/calendar.html',
-        description: 'This visualization illustrates phenophase activity for various species/phenophase pairs of your choosing.  Horizontal bars are graphed representing a "calendar" of phenological activity at a regional level for up to two years allowing year to year comparison of activity.'
+        description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
     }];
     return {
         restrict: 'E',

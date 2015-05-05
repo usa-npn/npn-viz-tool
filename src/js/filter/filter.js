@@ -1175,7 +1175,7 @@ angular.module('npn-viz-tool.filter',[
                             } else if (data.marker.model.observationCount) {
                                 var v = {
                                     count: data.marker.model.observationCount,
-                                    title: 'All Observations',
+                                    title: 'All Records',
                                     scale: scales[0],
                                     domain: scales[0].domain(),
                                     colors: []

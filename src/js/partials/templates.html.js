@@ -70,7 +70,7 @@ angular.module("js/filter/choroplethInfo.html", []).run(["$templateCache", funct
   $templateCache.put("js/filter/choroplethInfo.html",
     "<div id=\"choroplethHelp\" ng-show=\"show\">\n" +
     "    <h4>{{station_name}}</h4>\n" +
-    "    <h5>Observation Densit{{data.length == 1 ? 'y' : 'ies'}}</h5>\n" +
+    "    <h5>Record Densit{{data.length == 1 ? 'y' : 'ies'}}</h5>\n" +
     "    <ul class=\"list-unstyled\">\n" +
     "        <li ng-repeat=\"scale in data\">\n" +
     "            <label>{{scale.title}} ({{scale.count}})</label>\n" +
@@ -345,7 +345,7 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
     "            <svg class=\"chart\"></svg>\n" +
-    "            <div ng-if=\"filteredDisclaimer\" class=\"filter-disclaimer\">For quality assurance purposes, only onset dates that are preceded by negative observations are included in the visualization.</div>\n" +
+    "            <div ng-if=\"filteredDisclaimer\" class=\"filter-disclaimer\">For quality assurance purposes, only onset dates that are preceded by negative recordss are included in the visualization.</div>\n" +
     "        </div>\n" +
     "        </center>\n" +
     "    </div>\n" +
@@ -369,7 +369,7 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
-    "        <label>Species Badge Contents</label>\n" +
+    "        <label>Variable(s) Displayed</label>\n" +
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-repeat=\"option in settings.tagBadgeFormat.options\">\n" +
     "                <input type=\"radio\"\n" +
@@ -391,13 +391,14 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
-    "        <Label for=\"clusterMarkersSetting\">Exclude low quality data from visualizations</label>\n" +
+    "        <label for=\"clusterMarkersSetting\">Exclude low quality data from visualizations</label>\n" +
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-repeat=\"option in [true,false]\">\n" +
     "                <input type=\"radio\" id=\"filterLqdSummary{{option}}\" ng-model=\"settings.filterLqdSummary.value\"\n" +
     "                       ng-value=\"{{option}}\" /> <label for=\"filterLqdSummary{{option}}\">{{option | yesNo}}</label>\n" +
     "            </li>\n" +
     "        </ul>\n" +
+    "        <p>A value of <strong>Yes</strong> will exclude data points which lack a \"no\" observation record preceding the first yes observation record to increase precision and certainty.</p>\n" +
     "    </li>\n" +
     "</ul>");
 }]);

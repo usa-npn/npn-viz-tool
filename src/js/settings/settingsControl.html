@@ -10,7 +10,7 @@
     </li>
     <li class="divider"></li>
     <li>
-        <label>Species Badge Contents</label>
+        <label>Variable(s) Displayed</label>
         <ul class="list-unstyled">
             <li ng-repeat="option in settings.tagBadgeFormat.options">
                 <input type="radio"
@@ -32,12 +32,13 @@
     </li>
     <li class="divider"></li>
     <li>
-        <Label for="clusterMarkersSetting">Exclude low quality data from visualizations</label>
+        <label for="clusterMarkersSetting">Exclude low quality data from visualizations</label>
         <ul class="list-unstyled">
             <li ng-repeat="option in [true,false]">
                 <input type="radio" id="filterLqdSummary{{option}}" ng-model="settings.filterLqdSummary.value"
                        ng-value="{{option}}" /> <label for="filterLqdSummary{{option}}">{{option | yesNo}}</label>
             </li>
         </ul>
+        <p>A value of <strong>Yes</strong> will exclude data points which lack a "no" observation record preceding the first yes observation record to increase precision and certainty.</p>
     </li>
 </ul>

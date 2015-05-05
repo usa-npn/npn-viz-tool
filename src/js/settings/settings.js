@@ -29,16 +29,16 @@ angular.module('npn-viz-tool.settings',[
             options: [{
                 value: 'observation-count',
                 q: 'oc',
-                label: 'Observation Count'
+                label: 'Record Count'
             },{
                 value: 'station-count',
                 q: 'sc',
                 label: 'Station Count'
-            },{
+            }/*,{
                 value: 'station-observation-count',
                 q: 'soc',
-                label: 'Station Count/Observation Count'
-            }]
+                label: 'Station Count/Record Count'
+            }*/]
         },
         filterLqdSummary: {
             name: 'filter-lqd-summary',

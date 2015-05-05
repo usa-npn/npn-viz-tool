@@ -26,10 +26,10 @@ angular.module('npn-viz-tool.stations',[
                     html += litem('Site Name',i.site_name);
                     html += litem('Group',i.group_name);
                     if(m.model.observationCount) {
-                        html += litem('Observations',m.model.observationCount);
+                        html += litem('Records',m.model.observationCount);
                     } else {
                         html += litem('Individuals',i.num_individuals);
-                        html += litem('Observations',i.num_records);
+                        html += litem('Records',i.num_records);
                     }
 
                     html += '</ul>';

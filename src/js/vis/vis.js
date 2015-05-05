@@ -122,12 +122,12 @@ angular.module('npn-viz-tool.vis',[
         title: 'Scatter Plot',
         controller: 'ScatterVisCtrl',
         template: 'js/scatter/scatter.html',
-        description: 'This visualization allows you to plot various geographic or climactic variables on the X axis against Onset Day Of Year on the Y axis.  Up to three Species/Phenophase pairs may be plotted.'
+        description: 'This visualization plots selected geographic or climactic variables against estimated onset dates for individuals for up to three species/phenophase pairs.'
     },{
         title: 'Calendar',
         controller: 'CalendarVisCtrl',
         template: 'js/calendar/calendar.html',
-        description: 'This visualization illustrates phenophase activity for various species/phenophase pairs of your choosing.  Horizontal bars are graphed representing a "calendar" of phenological activity at a regional level for up to two years allowing year to year comparison of activity.'
+        description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
     }];
     return {
         restrict: 'E',
