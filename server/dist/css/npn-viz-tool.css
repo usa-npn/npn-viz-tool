@@ -216,15 +216,15 @@ $gmaps-maptype-right: 30px;
 }
 
 #share-control {
-  top: 120px;
+  top: 90px;
 }
 
 #export-control {
-  top: 158px;
+  top: 128px;
 }
 
 #reset-control {
-  top: 196px;
+  top: 166px;
 }
 
 #share-content {
@@ -247,10 +247,10 @@ $gmaps-maptype-right: 30px;
 
 ul.filter-tags {
   position: absolute;
-  right: 95px;
+  right: 40px;
   top: 0px;
   z-index: 450;
-  margin-left: 100px;
+  margin-left: 70px;
 }
 ul.filter-tags li {
   margin-top: 5px;

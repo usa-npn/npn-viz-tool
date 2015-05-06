@@ -224,7 +224,7 @@ $gmaps-maptype-right: 30px;
     right: $gmaps-maptype-right !important;
 }
 */
-$controls-top: 120px;
+$controls-top: 90px;
 $control-height: 28px;
 $control-margin: 10px;
 $control-font-size: 1.15em;
@@ -267,10 +267,10 @@ $control-font-size: 1.15em;
 
 ul.filter-tags {
     position: absolute;
-    right: 95px;// + $gmaps-maptype-right;
+    right: 40px;// + $gmaps-maptype-right;
     top: 0px;
     z-index: 450;
-    margin-left: 100px;
+    margin-left: 70px;
 
     li {
         margin-top: 5px;
