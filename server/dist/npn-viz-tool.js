@@ -11,8 +11,9 @@ angular.module('npn-viz-tool.bounds',[
     function($rootScope,$log,uiGmapGoogleMapApi,FilterService,BoundsFilterArg){
     return {
         restrict: 'E',
-        template: '<ui-gmap-drawing-manager options="options" control="control"></ui-gmap-drawing-manager>',
+        template: '<ui-gmap-drawing-manager ng-if="!isFilterEmpty()" options="options" control="control"></ui-gmap-drawing-manager>',
         controller: ['$scope',function($scope) {
+            $scope.isFilterEmpty = FilterService.isFilterEmpty;
             function refilter() {
                 if(FilterService.getFilter().hasSufficientCriteria()) {
                     $rootScope.$broadcast('filter-rerun-phase2',{});
@@ -546,6 +547,7 @@ angular.module('npn-viz-tool.filter',[
     'npn-viz-tool.stations',
     'npn-viz-tool.cluster',
     'npn-viz-tool.vis-cache',
+    'npn-viz-tool.help',
     'angular-md5',
     'isteven-multi-select'
 ])
@@ -1906,8 +1908,8 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('filterControl',['$http','$filter','$timeout','FilterService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg',
-    function($http,$filter,$timeout,FilterService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg){
+.directive('filterControl',['$http','$filter','$timeout','FilterService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','HelpService',
+    function($http,$filter,$timeout,FilterService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,HelpService){
     return {
         restrict: 'E',
         templateUrl: 'js/filter/filterControl.html',
@@ -1931,6 +1933,23 @@ angular.module('npn-viz-tool.filter',[
                 },
                 species: []
             };
+            $scope.speciesInput = {
+                animals: [],
+                plants: [],
+                networks: []
+            };
+            $scope.findSpeciesParamsEmpty = true;
+
+            $scope.$watch('selected.species.length',function(length){
+                if(length) {
+                    HelpService.lookAtMe('#add-species-button');
+                }
+            });
+            $scope.$watch('speciesInput.networks.length',function(length){
+                if(length) {
+                    HelpService.lookAtMe('#add-networks-button');
+                }
+            });
 
             $scope.networksMaxedOut = function() {
                 return FilterService.getFilter().getNetworkArgs().length >= 10;
@@ -1939,6 +1958,7 @@ angular.module('npn-viz-tool.filter',[
                 return FilterService.getFilter().getSpeciesArgs().length >= 20;
             };
             $scope.addNetworksToFilter = function() {
+                HelpService.stopLookingAtMe('#add-networks-button');
                 angular.forEach($scope.speciesInput.networks,function(network){
                     if(!$scope.networksMaxedOut()) {
                         FilterService.addToFilter(new NetworkFilterArg(network));
@@ -1946,18 +1966,13 @@ angular.module('npn-viz-tool.filter',[
                 });
             };
             $scope.addSpeciesToFilter = function() {
+                HelpService.stopLookingAtMe('#add-species-button');
                 angular.forEach($scope.selected.species,function(species){
                     if(!$scope.speciesMaxedOut()) {
                         FilterService.addToFilter(new SpeciesFilterArg(species));
                     }
                 });
             };
-            $scope.speciesInput = {
-                animals: [],
-                plants: [],
-                networks: []
-            };
-            $scope.findSpeciesParamsEmpty = true;
 
             var findSpeciesParams,
                 findSpeciesPromise,
@@ -2104,6 +2119,29 @@ angular.module('npn-viz-tool.filters',[
         return input;
     };
 });
+angular.module('npn-viz-tool.help',[
+])
+.factory('HelpService',['$timeout',function($timeout){
+    var LOOK_AT_ME_CLASS = 'look-at-me',
+        LOOK_AT_ME_REMOVE_DELAY = 10000, // how long to leave the class in place, should exeed duration*iteration on the CSS animation
+        service = {
+        lookAtMe: function(selector,delay) {
+            // if the class is there then don't add it again there's a timer set to remove it
+            if(!$(selector).hasClass(LOOK_AT_ME_CLASS)) {
+                $timeout(function(){
+                    $(selector).addClass(LOOK_AT_ME_CLASS);
+                    $timeout(function(){
+                        service.stopLookingAtMe(selector);
+                    },LOOK_AT_ME_REMOVE_DELAY);
+                },(delay||0));
+            }
+        },
+        stopLookingAtMe: function(selector) {
+            $(selector).removeClass(LOOK_AT_ME_CLASS);
+        }
+    };
+    return service;
+}]);
 angular.module('npn-viz-tool.layers',[
 'npn-viz-tool.filter',
 'ngResource'
@@ -2531,9 +2569,11 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.vis',
     'npn-viz-tool.share',
     'npn-viz-tool.export',
+    'npn-viz-tool.help',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
+.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','FilterService','HelpService',
+    function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,FilterService,HelpService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
@@ -2573,7 +2613,6 @@ angular.module('npn-viz-tool.map',[
                 // date is the minimum requirement for filtering.
                 var qargs = $location.search(),
                     qArgFilter = qargs['d'] && (qargs['s'] || qargs['n']);
-                $scope.stationView = !qArgFilter;
 
                 // constrain map movement to N America
                 var allowedBounds = new api.LatLngBounds(
@@ -2600,6 +2639,9 @@ angular.module('npn-viz-tool.map',[
                     }
                     map.panTo(lastValidCenter);
                 });
+                if(!qArgFilter) {
+                    stationViewOn();
+                }
             });
             function stationViewOff() {
                 $scope.stationView = false;
@@ -2612,6 +2654,7 @@ angular.module('npn-viz-tool.map',[
                 $timeout(function(){
                     $scope.stationView = true;
                 },500);
+                HelpService.lookAtMe('#toolbar-icon-filter',5000 /* wait 5 seconds */);
             }
             /*
             $scope.$on('tool-open',function(event,data){
@@ -2629,6 +2672,11 @@ angular.module('npn-viz-tool.map',[
                     $timeout(stationViewOn,500);
                 }
             };
+            $scope.$on('filter-phase2-end',function(event,data){
+                if(data && data.observation) {
+                    HelpService.lookAtMe('#toolbar-icon-visualizations',5000 /* wait 5 seconds */);
+                }
+            });
         }]
     };
 }])
@@ -2825,7 +2873,9 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                    on-close=\"findSpecies()\"></div>\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-3\">\n" +
-    "                <button class=\"btn btn-default\" ng-disabled=\"!speciesInput.networks.length || networksMaxedOut()\" ng-click=\"addNetworksToFilter()\"\n" +
+    "                <button id=\"add-networks-button\" class=\"btn btn-default\"\n" +
+    "                        ng-disabled=\"!speciesInput.networks.length || networksMaxedOut()\"\n" +
+    "                        ng-click=\"addNetworksToFilter()\"\n" +
     "                        popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
     "                        popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
     "                    <i class=\"fa fa-plus\"></i>\n" +
@@ -2849,7 +2899,9 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                    helper-elements=\"none reset filter\"></div>\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-3\">\n" +
-    "                <button class=\"btn btn-default\" ng-disabled=\"!selected.species.length || speciesMaxedOut()\" ng-click=\"addSpeciesToFilter()\"\n" +
+    "                <button id=\"add-species-button\" class=\"btn btn-default\"\n" +
+    "                        ng-disabled=\"!selected.species.length || speciesMaxedOut()\"\n" +
+    "                        ng-click=\"addSpeciesToFilter()\"\n" +
     "                        popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
     "                        popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
     "                    <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
@@ -3079,7 +3131,7 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "    <li ng-repeat=\"t in tools\" ng-class=\"{open: t.selected}\"\n" +
     "        popover-placement=\"right\" popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\"\n" +
     "        ng-click=\"select(t)\">\n" +
-    "      <i class=\"fa {{t.icon}}\"></i>\n" +
+    "      <i id=\"toolbar-icon-{{t.id}}\" class=\"fa {{t.icon}}\"></i>\n" +
     "    </li>\n" +
     "  </ul>\n" +
     "  <div class=\"toolbar-content\" ng-class=\"{open: open}\" ng-transclude></div>\n" +
@@ -3967,8 +4019,9 @@ angular.module('npn-viz-tool.stations',[
     };
 }]);
 angular.module('npn-viz-tool.toolbar',[
+  'npn-viz-tool.help'
 ])
-.directive('toolbar', ['$rootScope',function($rootScope) {
+.directive('toolbar', ['$rootScope','HelpService',function($rootScope,HelpService) {
   return {
     restrict: 'E',
     templateUrl: 'js/toolbar/toolbar.html',
@@ -3984,6 +4037,7 @@ angular.module('npn-viz-tool.toolbar',[
       $scope.select = function(t) {
         t.selected = !t.selected;
         $scope.open = t.selected;
+        HelpService.stopLookingAtMe('#toolbar-icon-'+t.id); // mixing view/controller logic :-(
         broadcastChange(t);
       };
       this.addTool = function(t) {

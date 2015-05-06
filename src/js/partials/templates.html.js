@@ -171,7 +171,9 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                    on-close=\"findSpecies()\"></div>\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-3\">\n" +
-    "                <button class=\"btn btn-default\" ng-disabled=\"!speciesInput.networks.length || networksMaxedOut()\" ng-click=\"addNetworksToFilter()\"\n" +
+    "                <button id=\"add-networks-button\" class=\"btn btn-default\"\n" +
+    "                        ng-disabled=\"!speciesInput.networks.length || networksMaxedOut()\"\n" +
+    "                        ng-click=\"addNetworksToFilter()\"\n" +
     "                        popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
     "                        popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
     "                    <i class=\"fa fa-plus\"></i>\n" +
@@ -195,7 +197,9 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                    helper-elements=\"none reset filter\"></div>\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-3\">\n" +
-    "                <button class=\"btn btn-default\" ng-disabled=\"!selected.species.length || speciesMaxedOut()\" ng-click=\"addSpeciesToFilter()\"\n" +
+    "                <button id=\"add-species-button\" class=\"btn btn-default\"\n" +
+    "                        ng-disabled=\"!selected.species.length || speciesMaxedOut()\"\n" +
+    "                        ng-click=\"addSpeciesToFilter()\"\n" +
     "                        popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
     "                        popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
     "                    <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
@@ -425,7 +429,7 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "    <li ng-repeat=\"t in tools\" ng-class=\"{open: t.selected}\"\n" +
     "        popover-placement=\"right\" popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\"\n" +
     "        ng-click=\"select(t)\">\n" +
-    "      <i class=\"fa {{t.icon}}\"></i>\n" +
+    "      <i id=\"toolbar-icon-{{t.id}}\" class=\"fa {{t.icon}}\"></i>\n" +
     "    </li>\n" +
     "  </ul>\n" +
     "  <div class=\"toolbar-content\" ng-class=\"{open: open}\" ng-transclude></div>\n" +

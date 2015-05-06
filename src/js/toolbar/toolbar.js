@@ -1,6 +1,7 @@
 angular.module('npn-viz-tool.toolbar',[
+  'npn-viz-tool.help'
 ])
-.directive('toolbar', ['$rootScope',function($rootScope) {
+.directive('toolbar', ['$rootScope','HelpService',function($rootScope,HelpService) {
   return {
     restrict: 'E',
     templateUrl: 'js/toolbar/toolbar.html',
@@ -16,6 +17,7 @@ angular.module('npn-viz-tool.toolbar',[
       $scope.select = function(t) {
         t.selected = !t.selected;
         $scope.open = t.selected;
+        HelpService.stopLookingAtMe('#toolbar-icon-'+t.id); // mixing view/controller logic :-(
         broadcastChange(t);
       };
       this.addTool = function(t) {

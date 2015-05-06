@@ -3,7 +3,7 @@
     <li ng-repeat="t in tools" ng-class="{open: t.selected}"
         popover-placement="right" popover="{{t.title}}" popover-trigger="mouseenter" popover-popup-delay="1000"
         ng-click="select(t)">
-      <i class="fa {{t.icon}}"></i>
+      <i id="toolbar-icon-{{t.id}}" class="fa {{t.icon}}"></i>
     </li>
   </ul>
   <div class="toolbar-content" ng-class="{open: open}" ng-transclude></div>

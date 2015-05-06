@@ -145,8 +145,8 @@ $tool-content-overlap: 40px;
     }
     .toolbar-content {
         width: $tb-content-width;
+        height: 1000px;
         height: 100vh;
-        min-height: 1000px;
         padding: $tb-content-padding;
         position: absolute;
         top: 0;
@@ -509,4 +509,41 @@ svg {
 // hides the "hand" icon in the drawing control panel.
 div[title="Stop drawing"] {
     display: none !important;
+}
+
+$max-pulse-scale: 1.25;
+$pulse-duration: 1s;
+$pulse-count: 8;
+
+@-webkit-keyframes pulse {
+     0% {
+     -webkit-transform: scale(1, 1);
+    }
+     50% {
+     -webkit-transform: scale($max-pulse-scale, $max-pulse-scale);
+    }
+     100% {
+     -webkit-transform: scale(1, 1);
+    };
+}
+
+@keyframes pulse {
+     0% {
+     transform: scale(1, 1);
+    }
+     50% {
+     transform: scale($max-pulse-scale, $max-pulse-scale);
+    }
+     100% {
+    transform: scale(1, 1);
+    };
+}
+
+.look-at-me {
+    -webkit-animation: pulse $pulse-duration linear $pulse-count;
+    animation: pulse $pulse-duration linear $pulse-count;
+}
+.look-at-me:hover {
+    -webkit-animation: none;
+    animation:none;
 }

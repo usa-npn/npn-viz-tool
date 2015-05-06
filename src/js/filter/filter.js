@@ -3,6 +3,7 @@ angular.module('npn-viz-tool.filter',[
     'npn-viz-tool.stations',
     'npn-viz-tool.cluster',
     'npn-viz-tool.vis-cache',
+    'npn-viz-tool.help',
     'angular-md5',
     'isteven-multi-select'
 ])
@@ -1363,8 +1364,8 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('filterControl',['$http','$filter','$timeout','FilterService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg',
-    function($http,$filter,$timeout,FilterService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg){
+.directive('filterControl',['$http','$filter','$timeout','FilterService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','HelpService',
+    function($http,$filter,$timeout,FilterService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,HelpService){
     return {
         restrict: 'E',
         templateUrl: 'js/filter/filterControl.html',
@@ -1388,6 +1389,23 @@ angular.module('npn-viz-tool.filter',[
                 },
                 species: []
             };
+            $scope.speciesInput = {
+                animals: [],
+                plants: [],
+                networks: []
+            };
+            $scope.findSpeciesParamsEmpty = true;
+
+            $scope.$watch('selected.species.length',function(length){
+                if(length) {
+                    HelpService.lookAtMe('#add-species-button');
+                }
+            });
+            $scope.$watch('speciesInput.networks.length',function(length){
+                if(length) {
+                    HelpService.lookAtMe('#add-networks-button');
+                }
+            });
 
             $scope.networksMaxedOut = function() {
                 return FilterService.getFilter().getNetworkArgs().length >= 10;
@@ -1396,6 +1414,7 @@ angular.module('npn-viz-tool.filter',[
                 return FilterService.getFilter().getSpeciesArgs().length >= 20;
             };
             $scope.addNetworksToFilter = function() {
+                HelpService.stopLookingAtMe('#add-networks-button');
                 angular.forEach($scope.speciesInput.networks,function(network){
                     if(!$scope.networksMaxedOut()) {
                         FilterService.addToFilter(new NetworkFilterArg(network));
@@ -1403,18 +1422,13 @@ angular.module('npn-viz-tool.filter',[
                 });
             };
             $scope.addSpeciesToFilter = function() {
+                HelpService.stopLookingAtMe('#add-species-button');
                 angular.forEach($scope.selected.species,function(species){
                     if(!$scope.speciesMaxedOut()) {
                         FilterService.addToFilter(new SpeciesFilterArg(species));
                     }
                 });
             };
-            $scope.speciesInput = {
-                animals: [],
-                plants: [],
-                networks: []
-            };
-            $scope.findSpeciesParamsEmpty = true;
 
             var findSpeciesParams,
                 findSpeciesPromise,

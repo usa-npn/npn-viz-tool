@@ -6,8 +6,9 @@ angular.module('npn-viz-tool.bounds',[
     function($rootScope,$log,uiGmapGoogleMapApi,FilterService,BoundsFilterArg){
     return {
         restrict: 'E',
-        template: '<ui-gmap-drawing-manager options="options" control="control"></ui-gmap-drawing-manager>',
+        template: '<ui-gmap-drawing-manager ng-if="!isFilterEmpty()" options="options" control="control"></ui-gmap-drawing-manager>',
         controller: ['$scope',function($scope) {
+            $scope.isFilterEmpty = FilterService.isFilterEmpty;
             function refilter() {
                 if(FilterService.getFilter().hasSufficientCriteria()) {
                     $rootScope.$broadcast('filter-rerun-phase2',{});

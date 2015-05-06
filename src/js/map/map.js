@@ -8,9 +8,11 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.vis',
     'npn-viz-tool.share',
     'npn-viz-tool.export',
+    'npn-viz-tool.help',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','FilterService',function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,FilterService){
+.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','FilterService','HelpService',
+    function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,FilterService,HelpService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
@@ -50,7 +52,6 @@ angular.module('npn-viz-tool.map',[
                 // date is the minimum requirement for filtering.
                 var qargs = $location.search(),
                     qArgFilter = qargs['d'] && (qargs['s'] || qargs['n']);
-                $scope.stationView = !qArgFilter;
 
                 // constrain map movement to N America
                 var allowedBounds = new api.LatLngBounds(
@@ -77,6 +78,9 @@ angular.module('npn-viz-tool.map',[
                     }
                     map.panTo(lastValidCenter);
                 });
+                if(!qArgFilter) {
+                    stationViewOn();
+                }
             });
             function stationViewOff() {
                 $scope.stationView = false;
@@ -89,6 +93,7 @@ angular.module('npn-viz-tool.map',[
                 $timeout(function(){
                     $scope.stationView = true;
                 },500);
+                HelpService.lookAtMe('#toolbar-icon-filter',5000 /* wait 5 seconds */);
             }
             /*
             $scope.$on('tool-open',function(event,data){
@@ -106,6 +111,11 @@ angular.module('npn-viz-tool.map',[
                     $timeout(stationViewOn,500);
                 }
             };
+            $scope.$on('filter-phase2-end',function(event,data){
+                if(data && data.observation) {
+                    HelpService.lookAtMe('#toolbar-icon-visualizations',5000 /* wait 5 seconds */);
+                }
+            });
         }]
     };
 }])

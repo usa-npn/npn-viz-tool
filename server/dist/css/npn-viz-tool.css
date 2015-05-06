@@ -127,8 +127,8 @@ body {
 }
 .toolbar .toolbar-content {
   width: 350px;
+  height: 1000px;
   height: 100vh;
-  min-height: 1000px;
   padding: 15px;
   position: absolute;
   top: 0;
@@ -465,6 +465,38 @@ svg {
 
 div[title="Stop drawing"] {
   display: none !important;
+}
+
+@-webkit-keyframes pulse {
+  0% {
+    -webkit-transform: scale(1, 1);
+  }
+  50% {
+    -webkit-transform: scale(1.25, 1.25);
+  }
+  100% {
+    -webkit-transform: scale(1, 1);
+  }
+}
+@keyframes pulse {
+  0% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.25, 1.25);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+.look-at-me {
+  -webkit-animation: pulse 1s linear 8;
+  animation: pulse 1s linear 8;
+}
+
+.look-at-me:hover {
+  -webkit-animation: none;
+  animation: none;
 }
 
 /*# sourceMappingURL=npn-viz-tool.css.map */
