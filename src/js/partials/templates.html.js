@@ -375,7 +375,7 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
-    "        <label>Variable(s) Displayed</label>\n" +
+    "        <label>Variable Displayed</label>\n" +
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-repeat=\"option in settings.tagBadgeFormat.options\">\n" +
     "                <input type=\"radio\"\n" +

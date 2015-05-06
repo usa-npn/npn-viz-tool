@@ -13,8 +13,8 @@ angular.module('npn-viz-tool.vis-scatter',[
     $scope.colorRange = colorScale.range();
 
     $scope.axis = [
-        {key: 'latitude', label: 'Latitude'},
-        {key: 'longitude', label: 'Longitude'},
+        {key: 'latitude', label: 'Latitude', axisFmt: d3.format('.2f')},
+        {key: 'longitude', label: 'Longitude', axisFmt: d3.format('.2f')},
         {key:'elevation_in_meters',label:'Elevation (m)'},
         {key:'first_yes_year', label: 'Year'},
 
@@ -33,10 +33,16 @@ angular.module('npn-viz-tool.vis-scatter',[
         {key:'tmin_summer',label:'Tmin Summer (C\xB0)'},
         {key:'tmin_winter',label:'Tmin Winter (C\xB0)'},
 
-        {key:'daylength',label:'Day Length'},
+        {key:'daylength',label:'Day Length (s)'},
         {key:'acc_prcp',label:'Accumulated Precip (mm)'},
         {key:'gdd',label:'GDD'}
         ];
+
+    var defaultAxisFmt = d3.format('d');
+    function formatXTickLabels(i) {
+        return ($scope.selection.axis.axisFmt||defaultAxisFmt)(i);
+    }
+
     $scope.selection = {
         color: 0,
         axis: $scope.axis[0],
@@ -123,7 +129,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         sizing = ChartService.getSizeInfo({top: 80,left: 60}),
         chart,
         x = d3.scale.linear().range([0,sizing.width]).domain([0,100]), // bogus domain initially
-        xAxis = d3.svg.axis().scale(x).orient('bottom'),
+        xAxis = d3.svg.axis().scale(x).orient('bottom').tickFormat(formatXTickLabels),
         y = d3.scale.linear().range([sizing.height,0]).domain([1,365]),
         d3_date_fmt = d3.time.format('%x'),
         local_date_fmt = function(d){
@@ -185,7 +191,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         x.domain([d3.min(data,xData)-padding,d3.max(data,xData)+padding]);
         xAxis.scale(x).tickFormat(d3.format('.2f')); // TODO per-selection tick formatting
         var xA = chart.selectAll('g .x.axis');
-        xA.call(xAxis);
+        xA.call(xAxis.tickFormat(formatXTickLabels));
         xA.selectAll('.axis-label').remove();
         xA.append('text')
           .attr('class','axis-label')

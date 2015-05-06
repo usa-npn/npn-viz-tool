@@ -5,7 +5,8 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.vis-calendar',
     'ui.bootstrap'
 ])
-.factory('ChartService',['$window','$http','$log','FilterService',function($window,$http,$log,FilterService){
+.factory('ChartService',['$window','$http','$log','$modal','FilterService',
+    function($window,$http,$log,$modal,FilterService){
     // some hard coded values that will be massaged into generated
     // values at runtime.
     var CHART_W = 930,
@@ -17,7 +18,19 @@ angular.module('npn-viz-tool.vis',[
             margin: MARGIN,
             width: WIDTH,
             height: HEIGHT
-        };
+        },
+        VISUALIZATIONS = [{
+            title: 'Scatter Plot',
+            controller: 'ScatterVisCtrl',
+            template: 'js/scatter/scatter.html',
+            description: 'This visualization plots selected geographic or climactic variables against estimated onset dates for individuals for up to three species/phenophase pairs.'
+        },{
+            title: 'Calendar',
+            controller: 'CalendarVisCtrl',
+            template: 'js/calendar/calendar.html',
+            description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
+        }],
+        visualizeSingleStationId;
     function filterSuspectSummaryData (d){
         var bad = (d.latitude === 0.0 || d.longitude === 0.0 || d.elevation_in_meters < 0);
         if(bad) {
@@ -26,11 +39,15 @@ angular.module('npn-viz-tool.vis',[
         return !bad;
     }
     function addGeoParams(params) {
-        // if geo filtering add the explicit station_ids in question.
-        if(FilterService.getFilter().getGeographicArgs().length) {
-            FilterService.getFilteredMarkers().forEach(function(marker,i){
-                params['station_id['+i+']'] = marker.station_id;
-            });
+        if(visualizeSingleStationId) {
+            params['station_id[0]'] = visualizeSingleStationId;
+        } else {
+            // if geo filtering add the explicit station_ids in question.
+            if(FilterService.getFilter().getGeographicArgs().length) {
+                FilterService.getFilteredMarkers().forEach(function(marker,i){
+                    params['station_id['+i+']'] = marker.station_id;
+                });
+            }
         }
         return params;
     }
@@ -40,6 +57,9 @@ angular.module('npn-viz-tool.vis',[
             encoded.push(encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]));
         }
         return encoded.join('&');
+    }
+    function setVisualizeSingleStationId(id) {
+        visualizeSingleStationId = id;
     }
     var service = {
         ONE_DAY_MILLIS: (24*60*60*1000),
@@ -100,6 +120,32 @@ angular.module('npn-viz-tool.vis',[
                 transformRequest: txformUrlEncoded,
                 data: addGeoParams(params)
             }).success(success);
+        },
+        isFilterEmpty: FilterService.isFilterEmpty,
+        getVisualizations: function() {
+            return VISUALIZATIONS;
+        },
+        openSingleStationVisualization: function(station_id,vis) {
+            setVisualizeSingleStationId(station_id);
+            var modal_instance = service.openVisualization(vis);
+            if(modal_instance) {
+                // when modal instance closes should unset single station id.
+                modal_instance.result.then(setVisualizeSingleStationId,setVisualizeSingleStationId);
+            } else {
+                setVisualizeSingleStationId();
+            }
+        },
+        openVisualization: function(vis) {
+            if(!FilterService.isFilterEmpty()) {
+                return $modal.open({
+                    templateUrl: vis.template,
+                    controller: vis.controller,
+                    windowClass: 'vis-dialog-window',
+                    backdrop: 'static',
+                    keyboard: false,
+                    size: 'lg'
+                });
+            }
         }
     };
     return service;
@@ -117,39 +163,16 @@ angular.module('npn-viz-tool.vis',[
         }]
     };
 }])
-.directive('visControl',['$modal','FilterService',function($modal,FilterService){
-    var visualizations = [{
-        title: 'Scatter Plot',
-        controller: 'ScatterVisCtrl',
-        template: 'js/scatter/scatter.html',
-        description: 'This visualization plots selected geographic or climactic variables against estimated onset dates for individuals for up to three species/phenophase pairs.'
-    },{
-        title: 'Calendar',
-        controller: 'CalendarVisCtrl',
-        template: 'js/calendar/calendar.html',
-        description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
-    }];
+.directive('visControl',['ChartService',function(ChartService){
     return {
         restrict: 'E',
         templateUrl: 'js/vis/visControl.html',
         scope: {
-
         },
         controller: function($scope) {
-            $scope.isFilterEmpty = FilterService.isFilterEmpty;
-            $scope.visualizations = visualizations;
-            $scope.open = function(vis) {
-                if(!FilterService.isFilterEmpty()) {
-                    $modal.open({
-                        templateUrl: vis.template,
-                        controller: vis.controller,
-                        windowClass: 'vis-dialog-window',
-                        backdrop: 'static',
-                        keyboard: false,
-                        size: 'lg'
-                    });
-                }
-            };
+            $scope.isFilterEmpty = ChartService.isFilterEmpty;
+            $scope.open = ChartService.openVisualization;
+            $scope.visualizations = ChartService.getVisualizations();
         }
     };
 }]);

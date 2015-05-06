@@ -89,11 +89,12 @@ angular.module('npn-viz-tool.map',[
                     $scope.stationView = true;
                 },500);
             }
+            /*
             $scope.$on('tool-open',function(event,data){
                 if(data.tool.id === 'layers') {
                     stationViewOff();
                 }
-            });
+            });*/
             $scope.$on('filter-phase1-start',stationViewOff);
             $scope.$on('filter-reset',stationViewOn);
             $scope.reset = function() {

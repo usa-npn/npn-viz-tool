@@ -2,9 +2,10 @@ angular.module('npn-viz-tool.stations',[
     'npn-viz-tool.filter',
     'npn-viz-tool.cluster',
     'npn-viz-tool.settings',
-    'npn-viz-tool.layers'
+    'npn-viz-tool.layers',
+    'npn-viz-tool.vis'
 ])
-.factory('StationService',['$http','$log','FilterService',function($http,$log,FilterService){
+.factory('StationService',['$rootScope','$http','$log','FilterService','ChartService',function($rootScope,$http,$log,FilterService,ChartService){
     var infoWindow,
         markerEvents = {
         'click':function(m){
@@ -48,9 +49,33 @@ angular.module('npn-viz-tool.stations',[
                         html += '</ul>';
                     }
                     html += '</div>';
+                    var details = $.parseHTML(html)[0];
+                    if(!FilterService.isFilterEmpty()) {
+                        var visualizations = ChartService.getVisualizations();
+                        html = '<div>';
+                        html += '<label>Visualize Station Data</label>';
+                        html += '<ul class="list-unstyled">';
+                        ChartService.getVisualizations().forEach(function(vis){
+                            html += '<li>';
+                            html += '<a id="'+vis.controller+'" href="#">'+vis.title+'</a>';
+                            html += '</li>';
+                        });
+                        html += '</ul></div>';
+                        var visLinks = $.parseHTML(html)[0];
+                        $(details).append(visLinks);
+                        ChartService.getVisualizations().forEach(function(vis){
+                            var link = $(details).find('#'+vis.controller);
+                            link.click(function(){
+                                $rootScope.$apply(function(){
+                                    ChartService.openSingleStationVisualization(m.model.station_id,vis);
+                                });
+                            });
+                        });
+                    }
+
                     infoWindow = new google.maps.InfoWindow({
                         maxWidth: 500,
-                        content: html
+                        content: details
                     });
                     infoWindow.open(m.map,m);
                 }
