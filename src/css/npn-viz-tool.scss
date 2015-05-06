@@ -391,24 +391,7 @@ ul.filter-tags {
             color: #000;
         }
     }
-    &.scatter-plot {
-        svg {
-            .circle {
-                stroke: #333;
-                stroke-width: 1;
-            }
-        }
-    }
     &.calendar {
-        svg {
-            .y.axis path {
-                display: none;
-            }
-            .y.axis line {
-              stroke: #777;
-              stroke-dasharray: 2,2;
-            }
-        }
         .calendar-chart-controls {
             margin-right: 15px;
             margin-top: 15px;

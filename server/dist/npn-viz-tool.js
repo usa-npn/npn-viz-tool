@@ -276,6 +276,12 @@ angular.module('npn-viz-tool.vis-calendar',[
         $scope.data = data = undefined;
     };
 
+    function updateYAxisLines() {
+        d3.select('.chart').selectAll('g .y.axis line')
+            .style('stroke','#777')
+            .style('stroke-dasharray','2,2');
+    }
+
     // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
     $timeout(function(){
         chart = d3.select('.chart')
@@ -295,6 +301,12 @@ angular.module('npn-viz-tool.vis-calendar',[
               .call(moveYTickLabels);
           chart.selectAll('g .x.axis text')
             .attr('style','font-size: .95em');
+
+          // hide y axis
+          chart.selectAll('g .y.axis path')
+            .style('display','none');
+
+          updateYAxisLines();
     },500);
 
 
@@ -399,6 +411,8 @@ angular.module('npn-viz-tool.vis-calendar',[
             .text(function(d) {
                 return d.x; // x is the doy
             });
+
+        updateYAxisLines();
 
         $scope.working = false;
     }
@@ -3370,7 +3384,9 @@ angular.module('npn-viz-tool.vis-scatter',[
         var circles = chart.selectAll('.circle').data(data,function(d) { return d.id; });
         circles.exit().remove();
         circles.enter().append('circle')
-          .attr('class', 'circle');
+          .attr('class', 'circle')
+          .style('stroke','#333')
+          .style('stroke-width','1');
 
         circles.attr('cx', function(d) { return x(d[$scope.selection.axis.key]); })
           .attr('cy', function(d) { return y(d.first_yes_doy); })

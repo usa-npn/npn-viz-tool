@@ -205,7 +205,9 @@ angular.module('npn-viz-tool.vis-scatter',[
         var circles = chart.selectAll('.circle').data(data,function(d) { return d.id; });
         circles.exit().remove();
         circles.enter().append('circle')
-          .attr('class', 'circle');
+          .attr('class', 'circle')
+          .style('stroke','#333')
+          .style('stroke-width','1');
 
         circles.attr('cx', function(d) { return x(d[$scope.selection.axis.key]); })
           .attr('cy', function(d) { return y(d.first_yes_doy); })

@@ -345,17 +345,6 @@ ul.filter-tags .filter-tag.date a:first-of-type:hover {
 .vis-dialog .main-vis-panel a {
   color: #000;
 }
-.vis-dialog.scatter-plot svg .circle {
-  stroke: #333;
-  stroke-width: 1;
-}
-.vis-dialog.calendar svg .y.axis path {
-  display: none;
-}
-.vis-dialog.calendar svg .y.axis line {
-  stroke: #777;
-  stroke-dasharray: 2,2;
-}
 .vis-dialog.calendar .calendar-chart-controls {
   margin-right: 15px;
   margin-top: 15px;
