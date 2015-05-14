@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -43,13 +43,18 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
-    "            <svg class=\"chart\"></svg>\n" +
+    "            <div class=\"chart-container\">\n" +
+    "                <vis-download ng-if=\"data\"\n" +
+    "                              selector=\".chart\"\n" +
+    "                              filename=\"npn-calendar.png\"></vis-download>\n" +
+    "                <div><svg class=\"chart\"></svg></div>\n" +
+    "            </div>\n" +
     "        </div>\n" +
     "        </center>\n" +
     "        <ul class=\"list-inline calendar-chart-controls\" ng-if=\"data\" style=\"float: right;\">\n" +
     "            <li>Label Size\n" +
-    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"incrFontSize()\" ng-disabled=\"yAxisConfig.fontSize <= 0.5\"><i class=\"fa fa-minus\"></i></a>\n" +
-    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"decrFontSize()\"><i class=\"fa fa-plus\"></i></a>\n" +
+    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"decrFontSize()\"><i class=\"fa fa-minus\"></i></a>\n" +
+    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"incrFontSize()\"><i class=\"fa fa-plus\"></i></a>\n" +
     "            </li>\n" +
     "            <li>Label Position\n" +
     "                <a href class=\"btn btn-default btn-xs\" ng-click=\"yAxisConfig.labelOffset=(yAxisConfig.labelOffset-1)\"><i class=\"fa fa-minus\"></i></a>\n" +
@@ -228,7 +233,7 @@ angular.module("js/filter/networkFilterTag.html", []).run(["$templateCache", fun
     "<div class=\"btn-group filter-tag date\">\n" +
     "    <a class=\"btn btn-default\">\n" +
     "        <span popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
-    "              popover-trigger=\"mouseenter\" popover=\"Indicates the span of time represented on the map\">{{arg.arg.network_name}} </span>\n" +
+    "              popover-trigger=\"mouseenter\" popover=\"Partner\">{{arg.arg.network_name}} </span>\n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
     "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span>\n" +
@@ -354,7 +359,12 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
-    "            <svg class=\"chart\"></svg>\n" +
+    "            <div class=\"chart-container\">\n" +
+    "                <vis-download ng-if=\"data\"\n" +
+    "                              selector=\".chart\"\n" +
+    "                              filename=\"npn-scatter-plot.png\"></vis-download>\n" +
+    "                <div><svg class=\"chart\"></svg></div>\n" +
+    "            </div>\n" +
     "            <div ng-if=\"filteredDisclaimer\" class=\"filter-disclaimer\">For quality assurance purposes, only onset dates that are preceded by negative recordss are included in the visualization.</div>\n" +
     "        </div>\n" +
     "        </center>\n" +
@@ -458,5 +468,13 @@ angular.module("js/vis/visDialog.html", []).run(["$templateCache", function($tem
     "    <h3 class=\"modal-title\">{{title}}</h3>\n" +
     "</div>\n" +
     "<div class=\"modal-body vis-dialog {{title | cssClassify}}\" ng-transclude>\n" +
+    "</div>");
+}]);
+
+angular.module("js/vis/visDownload.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/vis/visDownload.html",
+    "<div class=\"vis-download\">\n" +
+    "    <a href ng-click=\"download()\" title=\"Download\"><i class=\"fa fa-download\"></i></a>\n" +
+    "    <canvas id=\"visDownloadCanvas\" style=\"display: none;\"></canvas>\n" +
     "</div>");
 }]);

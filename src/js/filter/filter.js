@@ -1021,6 +1021,7 @@ angular.module('npn-viz-tool.filter',[
         },
         resetFilter: function() {
             filter.reset();
+            filterUpdateCount = filter.getUpdateCount();
             broadcastFilterReset();
         },
         getColorScale: function() {

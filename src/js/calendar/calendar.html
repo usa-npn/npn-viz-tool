@@ -39,13 +39,18 @@
         </ul>
         <div id="vis-container">
             <div id="vis-working" ng-show="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>
-            <svg class="chart"></svg>
+            <div class="chart-container">
+                <vis-download ng-if="data"
+                              selector=".chart"
+                              filename="npn-calendar.png"></vis-download>
+                <div><svg class="chart"></svg></div>
+            </div>
         </div>
         </center>
         <ul class="list-inline calendar-chart-controls" ng-if="data" style="float: right;">
             <li>Label Size
-                <a href class="btn btn-default btn-xs" ng-click="incrFontSize()" ng-disabled="yAxisConfig.fontSize <= 0.5"><i class="fa fa-minus"></i></a>
-                <a href class="btn btn-default btn-xs" ng-click="decrFontSize()"><i class="fa fa-plus"></i></a>
+                <a href class="btn btn-default btn-xs" ng-click="decrFontSize()"><i class="fa fa-minus"></i></a>
+                <a href class="btn btn-default btn-xs" ng-click="incrFontSize()"><i class="fa fa-plus"></i></a>
             </li>
             <li>Label Position
                 <a href class="btn btn-default btn-xs" ng-click="yAxisConfig.labelOffset=(yAxisConfig.labelOffset-1)"><i class="fa fa-minus"></i></a>

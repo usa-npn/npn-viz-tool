@@ -145,17 +145,34 @@ angular.module('npn-viz-tool.vis-calendar',[
         $scope.data = data = undefined;
     };
 
-    function updateYAxisLines() {
-        d3.select('.chart').selectAll('g .y.axis line')
+    function commonChartUpdates() {
+        var chart = d3.select('.chart');
+
+        chart.selectAll('g .y.axis line')
             .style('stroke','#777')
             .style('stroke-dasharray','2,2');
+
+        chart.selectAll('.axis path')
+            .style('fill','none')
+            .style('stroke','#000')
+            .style('shape-rendering','crispEdges');
+        chart.selectAll('.axis line')
+            .style('fill','none')
+            .style('stroke','#000')
+            .style('shape-rendering','crispEdges');
+
+        chart.selectAll('text')
+            .style('font-family','Arial');
     }
 
     // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
     $timeout(function(){
-        chart = d3.select('.chart')
+        var svg = d3.select('.chart')
             .attr('width', sizing.width + sizing.margin.left + sizing.margin.right)
-            .attr('height', sizing.height + sizing.margin.top + sizing.margin.bottom)
+            .attr('height', sizing.height + sizing.margin.top + sizing.margin.bottom);
+        svg.append('g').append('rect').attr('width','100%').attr('height','100%').attr('fill','#fff');
+
+        chart = svg
           .append('g')
             .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')');
 
@@ -169,27 +186,27 @@ angular.module('npn-viz-tool.vis-calendar',[
               .call(yAxis)
               .call(moveYTickLabels);
           chart.selectAll('g .x.axis text')
-            .attr('style','font-size: .95em');
+            .attr('style','font-size: 12px');
 
           // hide y axis
           chart.selectAll('g .y.axis path')
             .style('display','none');
 
-          updateYAxisLines();
+          commonChartUpdates();
     },500);
 
 
     $scope.yAxisConfig = {
         labelOffset: 4,
         bandPadding: 0.5,
-        fontSize: 0.95
+        fontSize: 12
     };
     function moveYTickLabels(g) {
       var dy = -1*((y.rangeBand()/2)+$scope.yAxisConfig.labelOffset);
       g.selectAll('text')
           .attr('x', 0)
           .attr('dy', dy)
-          .attr('style', 'text-anchor: start; font-size: '+$scope.yAxisConfig.fontSize+'em;');
+          .attr('style', 'text-anchor: start; font-size: '+$scope.yAxisConfig.fontSize+'px;');
     }
     function updateYAxis(){
         y.rangeBands([sizing.height,0],$scope.yAxisConfig.bandPadding,0.5);
@@ -215,10 +232,10 @@ angular.module('npn-viz-tool.vis-calendar',[
         $scope.yAxisConfig.bandPadding = addFloatFixed($scope.yAxisConfig.bandPadding,-0.05,2);
     };
     $scope.incrFontSize = function() {
-        $scope.yAxisConfig.fontSize = addFloatFixed($scope.yAxisConfig.fontSize,-0.05,2);
+        $scope.yAxisConfig.fontSize++;// = addFloatFixed($scope.yAxisConfig.fontSize,-0.05,2);
     };
     $scope.decrFontSize = function() {
-        $scope.yAxisConfig.fontSize = addFloatFixed($scope.yAxisConfig.fontSize,0.05,2);
+        $scope.yAxisConfig.fontSize--;// = addFloatFixed($scope.yAxisConfig.fontSize,0.05,2);
     };
 
     function formatYTickLabels(i) {
@@ -281,7 +298,7 @@ angular.module('npn-viz-tool.vis-calendar',[
                 return d.x; // x is the doy
             });
 
-        updateYAxisLines();
+        commonChartUpdates();
 
         $scope.working = false;
     }
@@ -306,7 +323,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             params['phenophase_id['+i+']'] = tp.phenophase_id;
         });
         $scope.error_message = undefined;
-        ChartService.getPositiveDates(params,function(response){
+        ChartService.getObservationDates(params,function(response){
             if(response.error_message) {
                 $log.warn('Received error',response);
                 $scope.error_message = response.error_message;

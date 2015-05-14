@@ -138,12 +138,59 @@ angular.module('npn-viz-tool.vis-scatter',[
                 return d3_date_fmt(date);
             },
         yAxis = d3.svg.axis().scale(y).orient('left');
+
+    function commonChartUpdates() {
+        var chart = d3.select('.chart');
+
+        chart.selectAll('.axis path')
+            .style('fill','none')
+            .style('stroke','#000')
+            .style('shape-rendering','crispEdges');
+        chart.selectAll('.axis line')
+            .style('fill','none')
+            .style('stroke','#000')
+            .style('shape-rendering','crispEdges');
+
+        chart.selectAll('text')
+            .style('font-family','Arial');
+
+        chart.selectAll('.legend rect')
+            .style('fill','white')
+            .style('stroke','black')
+            .style('opacity','0.8');
+
+        var fontSize = '12px';
+
+        chart.selectAll('.legend text')
+             .style('font-size', fontSize)
+             .attr('y',function(d,i){
+                return (i*12) + i;
+             });
+
+        chart.selectAll('g .x.axis text')
+            .style('font-size', fontSize);
+
+        chart.selectAll('g .y.axis text')
+            .style('font-size', fontSize);
+
+        // em doesn't work when saving as an image
+        var dyBase = -5,
+            dyIncr = 14;
+        chart.selectAll('.legend circle')
+            .attr('r','5')
+            .attr('cx','5')
+            .attr('cy',function(d,i) {
+                return dyBase + (i*dyIncr);
+            });
+    }
+
     // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
     $timeout(function(){
-        chart = d3.select('.chart')
+        var svg = d3.select('.chart')
             .attr('width', sizing.width + sizing.margin.left + sizing.margin.right)
-            .attr('height', sizing.height + sizing.margin.top + sizing.margin.bottom)
-          .append('g')
+            .attr('height', sizing.height + sizing.margin.top + sizing.margin.bottom);
+        svg.append('g').append('rect').attr('width','100%').attr('height','100%').attr('fill','#fff');
+        chart = svg.append('g')
             .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')');
 
         var dateArg = FilterService.getFilter().getDateArg();
@@ -154,7 +201,7 @@ angular.module('npn-viz-tool.vis-scatter',[
                .attr('dy','-3em')
                .attr('x', (sizing.width/2))
                .style('text-anchor','middle')
-               .style('font-size','1.2em')
+               .style('font-size','18px')
                .text(dateArg.getStartYear()+' - '+dateArg.getEndYear());
           chart.append('g')
               .attr('class', 'x axis')
@@ -172,11 +219,7 @@ angular.module('npn-viz-tool.vis-scatter',[
             .style('text-anchor', 'middle')
             .text('Onset DOY');
 
-        chart.selectAll('g .x.axis text')
-            .style('font-size', '.9em');
-
-        chart.selectAll('g .y.axis text')
-            .style('font-size', '.9em');
+        commonChartUpdates();
 
     },500);
 
@@ -186,9 +229,12 @@ angular.module('npn-viz-tool.vis-scatter',[
         }
         $scope.working = true;
         // update the x-axis
-        var padding = 1;
+        var padding = 1,
+            nonNullData = data.filter(function(d){
+                return d[$scope.selection.axis.key] != -9999;
+            });
         function xData(d) { return d[$scope.selection.axis.key]; }
-        x.domain([d3.min(data,xData)-padding,d3.max(data,xData)+padding]);
+        x.domain([d3.min(nonNullData,xData)-padding,d3.max(nonNullData,xData)+padding]);
         xAxis.scale(x).tickFormat(d3.format('.2f')); // TODO per-selection tick formatting
         var xA = chart.selectAll('g .x.axis');
         xA.call(xAxis.tickFormat(formatXTickLabels));
@@ -198,11 +244,11 @@ angular.module('npn-viz-tool.vis-scatter',[
           .attr('x',(sizing.width/2))
           .attr('dy', '3em')
           .style('text-anchor', 'middle')
-          .style('font-size', '.9em')
+          .style('font-size', '12px')
           .text($scope.selection.axis.label);
 
         // update the chart data (TODO transitions??)
-        var circles = chart.selectAll('.circle').data(data,function(d) { return d.id; });
+        var circles = chart.selectAll('.circle').data(nonNullData,function(d) { return d.id; });
         circles.exit().remove();
         circles.enter().append('circle')
           .attr('class', 'circle')
@@ -227,7 +273,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         var regressionLines = [],float_fmt = d3.format('.2f');
         angular.forEach($scope.toPlot,function(pair){
             var color = $scope.colorRange[pair.color],
-                seriesData = data.filter(function(d) { return d.color === color; });
+                seriesData = nonNullData.filter(function(d) { return d.color === color; });
             if(seriesData.length > 0) {
                 var datas = seriesData.sort(function(o1,o2){ // sorting isn't necessary but makes it easy to pick min/max x
                         return o1[$scope.selection.axis.key] - o2[$scope.selection.axis.key];
@@ -242,7 +288,7 @@ angular.module('npn-viz-tool.vis-scatter',[
                 regressionLines.push({
                     id: pair.species_id+'.'+pair.phenophase_id,
                     legend: $filter('speciesTitle')(pair)+'/'+pair.phenophase_name+
-                            ($scope.selection.regressionLines ? ' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')' : ''),
+                            (($scope.selection.regressionLines && !isNaN(leastSquaresCoeff[2])) ? ' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')' : ''),
                     color: color,
                     p1: [x1,y1],
                     p2: [x2,y2]
@@ -288,6 +334,7 @@ angular.module('npn-viz-tool.vis-scatter',[
                     return d.key.replace('R^2','R<tspan style="baseline-shift: super; font-size: 8px;">2</tspan>');
                 });
         }
+        commonChartUpdates();
         $scope.working = false;
     }
     $scope.visualize = function() {

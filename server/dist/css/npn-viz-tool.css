@@ -368,26 +368,37 @@ ul.to-plot li.criteria {
   margin-bottom: 5px;
 }
 
+.chart-container {
+  position: relative;
+  display: inline-block;
+}
+.chart-container .vis-download {
+  position: absolute;
+  right: 0px;
+  margin: 10px;
+  font-size: 1.25em;
+}
+
+/*
 .axis text {
-  font: 10px sans-serif;
+    font: 10px sans-serif;
 }
 
 .axis path, .axis line {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
-}
-
+}*/
 svg {
   border: 1px solid #aaa;
 }
 
+/*
 .legend rect {
   fill: white;
   stroke: black;
   opacity: 0.8;
-}
-
+}*/
 .disclaimer, .filter-disclaimer {
   margin-top: 5px;
   font-size: .75em;

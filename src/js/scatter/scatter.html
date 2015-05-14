@@ -34,7 +34,12 @@
         </ul>
         <div id="vis-container">
             <div id="vis-working" ng-show="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>
-            <svg class="chart"></svg>
+            <div class="chart-container">
+                <vis-download ng-if="data"
+                              selector=".chart"
+                              filename="npn-scatter-plot.png"></vis-download>
+                <div><svg class="chart"></svg></div>
+            </div>
             <div ng-if="filteredDisclaimer" class="filter-disclaimer">For quality assurance purposes, only onset dates that are preceded by negative recordss are included in the visualization.</div>
         </div>
         </center>

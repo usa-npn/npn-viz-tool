@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-05-06
+ * Version: 0.1.0 - 2015-05-14
  */
 
 angular.module('npn-viz-tool.bounds',[
@@ -276,17 +276,34 @@ angular.module('npn-viz-tool.vis-calendar',[
         $scope.data = data = undefined;
     };
 
-    function updateYAxisLines() {
-        d3.select('.chart').selectAll('g .y.axis line')
+    function commonChartUpdates() {
+        var chart = d3.select('.chart');
+
+        chart.selectAll('g .y.axis line')
             .style('stroke','#777')
             .style('stroke-dasharray','2,2');
+
+        chart.selectAll('.axis path')
+            .style('fill','none')
+            .style('stroke','#000')
+            .style('shape-rendering','crispEdges');
+        chart.selectAll('.axis line')
+            .style('fill','none')
+            .style('stroke','#000')
+            .style('shape-rendering','crispEdges');
+
+        chart.selectAll('text')
+            .style('font-family','Arial');
     }
 
     // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
     $timeout(function(){
-        chart = d3.select('.chart')
+        var svg = d3.select('.chart')
             .attr('width', sizing.width + sizing.margin.left + sizing.margin.right)
-            .attr('height', sizing.height + sizing.margin.top + sizing.margin.bottom)
+            .attr('height', sizing.height + sizing.margin.top + sizing.margin.bottom);
+        svg.append('g').append('rect').attr('width','100%').attr('height','100%').attr('fill','#fff');
+
+        chart = svg
           .append('g')
             .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')');
 
@@ -300,27 +317,27 @@ angular.module('npn-viz-tool.vis-calendar',[
               .call(yAxis)
               .call(moveYTickLabels);
           chart.selectAll('g .x.axis text')
-            .attr('style','font-size: .95em');
+            .attr('style','font-size: 12px');
 
           // hide y axis
           chart.selectAll('g .y.axis path')
             .style('display','none');
 
-          updateYAxisLines();
+          commonChartUpdates();
     },500);
 
 
     $scope.yAxisConfig = {
         labelOffset: 4,
         bandPadding: 0.5,
-        fontSize: 0.95
+        fontSize: 12
     };
     function moveYTickLabels(g) {
       var dy = -1*((y.rangeBand()/2)+$scope.yAxisConfig.labelOffset);
       g.selectAll('text')
           .attr('x', 0)
           .attr('dy', dy)
-          .attr('style', 'text-anchor: start; font-size: '+$scope.yAxisConfig.fontSize+'em;');
+          .attr('style', 'text-anchor: start; font-size: '+$scope.yAxisConfig.fontSize+'px;');
     }
     function updateYAxis(){
         y.rangeBands([sizing.height,0],$scope.yAxisConfig.bandPadding,0.5);
@@ -346,10 +363,10 @@ angular.module('npn-viz-tool.vis-calendar',[
         $scope.yAxisConfig.bandPadding = addFloatFixed($scope.yAxisConfig.bandPadding,-0.05,2);
     };
     $scope.incrFontSize = function() {
-        $scope.yAxisConfig.fontSize = addFloatFixed($scope.yAxisConfig.fontSize,-0.05,2);
+        $scope.yAxisConfig.fontSize++;// = addFloatFixed($scope.yAxisConfig.fontSize,-0.05,2);
     };
     $scope.decrFontSize = function() {
-        $scope.yAxisConfig.fontSize = addFloatFixed($scope.yAxisConfig.fontSize,0.05,2);
+        $scope.yAxisConfig.fontSize--;// = addFloatFixed($scope.yAxisConfig.fontSize,0.05,2);
     };
 
     function formatYTickLabels(i) {
@@ -412,7 +429,7 @@ angular.module('npn-viz-tool.vis-calendar',[
                 return d.x; // x is the doy
             });
 
-        updateYAxisLines();
+        commonChartUpdates();
 
         $scope.working = false;
     }
@@ -437,7 +454,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             params['phenophase_id['+i+']'] = tp.phenophase_id;
         });
         $scope.error_message = undefined;
-        ChartService.getPositiveDates(params,function(response){
+        ChartService.getObservationDates(params,function(response){
             if(response.error_message) {
                 $log.warn('Received error',response);
                 $scope.error_message = response.error_message;
@@ -1579,6 +1596,7 @@ angular.module('npn-viz-tool.filter',[
         },
         resetFilter: function() {
             filter.reset();
+            filterUpdateCount = filter.getUpdateCount();
             broadcastFilterReset();
         },
         getColorScale: function() {
@@ -2714,7 +2732,7 @@ angular.module('npn-viz-tool.map',[
         }
     };
 }]);
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -2759,13 +2777,18 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
-    "            <svg class=\"chart\"></svg>\n" +
+    "            <div class=\"chart-container\">\n" +
+    "                <vis-download ng-if=\"data\"\n" +
+    "                              selector=\".chart\"\n" +
+    "                              filename=\"npn-calendar.png\"></vis-download>\n" +
+    "                <div><svg class=\"chart\"></svg></div>\n" +
+    "            </div>\n" +
     "        </div>\n" +
     "        </center>\n" +
     "        <ul class=\"list-inline calendar-chart-controls\" ng-if=\"data\" style=\"float: right;\">\n" +
     "            <li>Label Size\n" +
-    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"incrFontSize()\" ng-disabled=\"yAxisConfig.fontSize <= 0.5\"><i class=\"fa fa-minus\"></i></a>\n" +
-    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"decrFontSize()\"><i class=\"fa fa-plus\"></i></a>\n" +
+    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"decrFontSize()\"><i class=\"fa fa-minus\"></i></a>\n" +
+    "                <a href class=\"btn btn-default btn-xs\" ng-click=\"incrFontSize()\"><i class=\"fa fa-plus\"></i></a>\n" +
     "            </li>\n" +
     "            <li>Label Position\n" +
     "                <a href class=\"btn btn-default btn-xs\" ng-click=\"yAxisConfig.labelOffset=(yAxisConfig.labelOffset-1)\"><i class=\"fa fa-minus\"></i></a>\n" +
@@ -2944,7 +2967,7 @@ angular.module("js/filter/networkFilterTag.html", []).run(["$templateCache", fun
     "<div class=\"btn-group filter-tag date\">\n" +
     "    <a class=\"btn btn-default\">\n" +
     "        <span popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
-    "              popover-trigger=\"mouseenter\" popover=\"Indicates the span of time represented on the map\">{{arg.arg.network_name}} </span>\n" +
+    "              popover-trigger=\"mouseenter\" popover=\"Partner\">{{arg.arg.network_name}} </span>\n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
     "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span>\n" +
@@ -3070,7 +3093,12 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
     "            <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
-    "            <svg class=\"chart\"></svg>\n" +
+    "            <div class=\"chart-container\">\n" +
+    "                <vis-download ng-if=\"data\"\n" +
+    "                              selector=\".chart\"\n" +
+    "                              filename=\"npn-scatter-plot.png\"></vis-download>\n" +
+    "                <div><svg class=\"chart\"></svg></div>\n" +
+    "            </div>\n" +
     "            <div ng-if=\"filteredDisclaimer\" class=\"filter-disclaimer\">For quality assurance purposes, only onset dates that are preceded by negative recordss are included in the visualization.</div>\n" +
     "        </div>\n" +
     "        </center>\n" +
@@ -3174,6 +3202,14 @@ angular.module("js/vis/visDialog.html", []).run(["$templateCache", function($tem
     "    <h3 class=\"modal-title\">{{title}}</h3>\n" +
     "</div>\n" +
     "<div class=\"modal-body vis-dialog {{title | cssClassify}}\" ng-transclude>\n" +
+    "</div>");
+}]);
+
+angular.module("js/vis/visDownload.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/vis/visDownload.html",
+    "<div class=\"vis-download\">\n" +
+    "    <a href ng-click=\"download()\" title=\"Download\"><i class=\"fa fa-download\"></i></a>\n" +
+    "    <canvas id=\"visDownloadCanvas\" style=\"display: none;\"></canvas>\n" +
     "</div>");
 }]);
 
@@ -3317,12 +3353,59 @@ angular.module('npn-viz-tool.vis-scatter',[
                 return d3_date_fmt(date);
             },
         yAxis = d3.svg.axis().scale(y).orient('left');
+
+    function commonChartUpdates() {
+        var chart = d3.select('.chart');
+
+        chart.selectAll('.axis path')
+            .style('fill','none')
+            .style('stroke','#000')
+            .style('shape-rendering','crispEdges');
+        chart.selectAll('.axis line')
+            .style('fill','none')
+            .style('stroke','#000')
+            .style('shape-rendering','crispEdges');
+
+        chart.selectAll('text')
+            .style('font-family','Arial');
+
+        chart.selectAll('.legend rect')
+            .style('fill','white')
+            .style('stroke','black')
+            .style('opacity','0.8');
+
+        var fontSize = '12px';
+
+        chart.selectAll('.legend text')
+             .style('font-size', fontSize)
+             .attr('y',function(d,i){
+                return (i*12) + i;
+             });
+
+        chart.selectAll('g .x.axis text')
+            .style('font-size', fontSize);
+
+        chart.selectAll('g .y.axis text')
+            .style('font-size', fontSize);
+
+        // em doesn't work when saving as an image
+        var dyBase = -5,
+            dyIncr = 14;
+        chart.selectAll('.legend circle')
+            .attr('r','5')
+            .attr('cx','5')
+            .attr('cy',function(d,i) {
+                return dyBase + (i*dyIncr);
+            });
+    }
+
     // can't initialize the chart until the dialog is rendered so postpone its initialization a short time.
     $timeout(function(){
-        chart = d3.select('.chart')
+        var svg = d3.select('.chart')
             .attr('width', sizing.width + sizing.margin.left + sizing.margin.right)
-            .attr('height', sizing.height + sizing.margin.top + sizing.margin.bottom)
-          .append('g')
+            .attr('height', sizing.height + sizing.margin.top + sizing.margin.bottom);
+        svg.append('g').append('rect').attr('width','100%').attr('height','100%').attr('fill','#fff');
+        chart = svg.append('g')
             .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')');
 
         var dateArg = FilterService.getFilter().getDateArg();
@@ -3333,7 +3416,7 @@ angular.module('npn-viz-tool.vis-scatter',[
                .attr('dy','-3em')
                .attr('x', (sizing.width/2))
                .style('text-anchor','middle')
-               .style('font-size','1.2em')
+               .style('font-size','18px')
                .text(dateArg.getStartYear()+' - '+dateArg.getEndYear());
           chart.append('g')
               .attr('class', 'x axis')
@@ -3351,11 +3434,7 @@ angular.module('npn-viz-tool.vis-scatter',[
             .style('text-anchor', 'middle')
             .text('Onset DOY');
 
-        chart.selectAll('g .x.axis text')
-            .style('font-size', '.9em');
-
-        chart.selectAll('g .y.axis text')
-            .style('font-size', '.9em');
+        commonChartUpdates();
 
     },500);
 
@@ -3365,9 +3444,12 @@ angular.module('npn-viz-tool.vis-scatter',[
         }
         $scope.working = true;
         // update the x-axis
-        var padding = 1;
+        var padding = 1,
+            nonNullData = data.filter(function(d){
+                return d[$scope.selection.axis.key] != -9999;
+            });
         function xData(d) { return d[$scope.selection.axis.key]; }
-        x.domain([d3.min(data,xData)-padding,d3.max(data,xData)+padding]);
+        x.domain([d3.min(nonNullData,xData)-padding,d3.max(nonNullData,xData)+padding]);
         xAxis.scale(x).tickFormat(d3.format('.2f')); // TODO per-selection tick formatting
         var xA = chart.selectAll('g .x.axis');
         xA.call(xAxis.tickFormat(formatXTickLabels));
@@ -3377,11 +3459,11 @@ angular.module('npn-viz-tool.vis-scatter',[
           .attr('x',(sizing.width/2))
           .attr('dy', '3em')
           .style('text-anchor', 'middle')
-          .style('font-size', '.9em')
+          .style('font-size', '12px')
           .text($scope.selection.axis.label);
 
         // update the chart data (TODO transitions??)
-        var circles = chart.selectAll('.circle').data(data,function(d) { return d.id; });
+        var circles = chart.selectAll('.circle').data(nonNullData,function(d) { return d.id; });
         circles.exit().remove();
         circles.enter().append('circle')
           .attr('class', 'circle')
@@ -3406,7 +3488,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         var regressionLines = [],float_fmt = d3.format('.2f');
         angular.forEach($scope.toPlot,function(pair){
             var color = $scope.colorRange[pair.color],
-                seriesData = data.filter(function(d) { return d.color === color; });
+                seriesData = nonNullData.filter(function(d) { return d.color === color; });
             if(seriesData.length > 0) {
                 var datas = seriesData.sort(function(o1,o2){ // sorting isn't necessary but makes it easy to pick min/max x
                         return o1[$scope.selection.axis.key] - o2[$scope.selection.axis.key];
@@ -3421,7 +3503,7 @@ angular.module('npn-viz-tool.vis-scatter',[
                 regressionLines.push({
                     id: pair.species_id+'.'+pair.phenophase_id,
                     legend: $filter('speciesTitle')(pair)+'/'+pair.phenophase_name+
-                            ($scope.selection.regressionLines ? ' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')' : ''),
+                            (($scope.selection.regressionLines && !isNaN(leastSquaresCoeff[2])) ? ' (R^2 = '+float_fmt(leastSquaresCoeff[2])+')' : ''),
                     color: color,
                     p1: [x1,y1],
                     p2: [x2,y2]
@@ -3467,6 +3549,7 @@ angular.module('npn-viz-tool.vis-scatter',[
                     return d.key.replace('R^2','R<tspan style="baseline-shift: super; font-size: 8px;">2</tspan>');
                 });
         }
+        commonChartUpdates();
         $scope.working = false;
     }
     $scope.visualize = function() {
@@ -4162,6 +4245,9 @@ angular.module('npn-viz-tool.vis',[
             return sizing;
         },
         leastSquares: function(xSeries,ySeries) {
+            if(xSeries.length === 0 || ySeries.length === 0) {
+                return [Number.NaN,Number.NaN,Number.NaN];
+            }
             var reduceSumFunc = function(prev, cur) { return prev + cur; };
 
             var xBar = xSeries.reduce(reduceSumFunc) * 1.0 / xSeries.length;
@@ -4199,10 +4285,10 @@ angular.module('npn-viz-tool.vis',[
                 success(response.filter(filterSuspectSummaryData));
             });
         },
-        getPositiveDates: function(params,success) {
+        getObservationDates: function(params,success) {
             $http({
                 method: 'POST',
-                url: '/npn_portal/observations/getPositiveDates.json',
+                url: '/npn_portal/observations/getObservationDates.json',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addGeoParams(params)
@@ -4261,5 +4347,39 @@ angular.module('npn-viz-tool.vis',[
             $scope.open = ChartService.openVisualization;
             $scope.visualizations = ChartService.getVisualizations();
         }
+    };
+}])
+.directive('visDownload',[function(){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/vis/visDownload.html',
+        scope: {
+            selector: '@',
+            filename: '@'
+        },
+        controller: ['$scope',function($scope){
+            $scope.download = function() {
+                var chart = d3.select($scope.selector),
+                    html = chart.attr('version', 1.1)
+                                .attr('xmlns', 'http://www.w3.org/2000/svg')
+                                .node().parentNode.innerHTML,
+                    imgsrc = 'data:image/svg+xml;base64,'+ window.btoa(html),
+                    canvas = document.querySelector('#visDownloadCanvas');
+                canvas.width = chart.attr('width');
+                canvas.height = chart.attr('height');
+
+                var context = canvas.getContext('2d'),
+                    image = new Image();
+                image.src = imgsrc;
+                image.onload = function() {
+                    context.drawImage(image,0,0);
+                    var canvasdata = canvas.toDataURL('image/png'),
+                        a = document.createElement('a');
+                    a.download = $scope.filename||'visualization.png';
+                    a.href = canvasdata;
+                    a.click();
+                };
+            };
+        }]
     };
 }]);

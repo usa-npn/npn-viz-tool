@@ -75,6 +75,9 @@ angular.module('npn-viz-tool.vis',[
             return sizing;
         },
         leastSquares: function(xSeries,ySeries) {
+            if(xSeries.length === 0 || ySeries.length === 0) {
+                return [Number.NaN,Number.NaN,Number.NaN];
+            }
             var reduceSumFunc = function(prev, cur) { return prev + cur; };
 
             var xBar = xSeries.reduce(reduceSumFunc) * 1.0 / xSeries.length;
@@ -112,10 +115,10 @@ angular.module('npn-viz-tool.vis',[
                 success(response.filter(filterSuspectSummaryData));
             });
         },
-        getPositiveDates: function(params,success) {
+        getObservationDates: function(params,success) {
             $http({
                 method: 'POST',
-                url: '/npn_portal/observations/getPositiveDates.json',
+                url: '/npn_portal/observations/getObservationDates.json',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addGeoParams(params)
@@ -174,5 +177,39 @@ angular.module('npn-viz-tool.vis',[
             $scope.open = ChartService.openVisualization;
             $scope.visualizations = ChartService.getVisualizations();
         }
+    };
+}])
+.directive('visDownload',[function(){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/vis/visDownload.html',
+        scope: {
+            selector: '@',
+            filename: '@'
+        },
+        controller: ['$scope',function($scope){
+            $scope.download = function() {
+                var chart = d3.select($scope.selector),
+                    html = chart.attr('version', 1.1)
+                                .attr('xmlns', 'http://www.w3.org/2000/svg')
+                                .node().parentNode.innerHTML,
+                    imgsrc = 'data:image/svg+xml;base64,'+ window.btoa(html),
+                    canvas = document.querySelector('#visDownloadCanvas');
+                canvas.width = chart.attr('width');
+                canvas.height = chart.attr('height');
+
+                var context = canvas.getContext('2d'),
+                    image = new Image();
+                image.src = imgsrc;
+                image.onload = function() {
+                    context.drawImage(image,0,0);
+                    var canvasdata = canvas.toDataURL('image/png'),
+                        a = document.createElement('a');
+                    a.download = $scope.filename||'visualization.png';
+                    a.href = canvasdata;
+                    a.click();
+                };
+            };
+        }]
     };
 }]);
