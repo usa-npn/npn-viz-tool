@@ -486,7 +486,7 @@ angular.module('npn-viz-tool.vis-calendar',[
                     phenophase = species.phenophases[tp.phenophase_id];
                 angular.forEach($scope.toPlotYears,function(year){
                     if(phenophase) {
-                        var doys = phenophase.years[year];
+                        var doys = phenophase.years[year].positive;
                         $log.debug('year',y,year,species.common_name,phenophase,doys);
                         angular.forEach(doys,function(doy){
                             toChart.data.push({
