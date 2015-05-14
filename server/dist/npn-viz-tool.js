@@ -2176,13 +2176,18 @@ angular.module('npn-viz-tool.help',[
 ])
 .factory('HelpService',['$timeout',function($timeout){
     var LOOK_AT_ME_CLASS = 'look-at-me',
-        LOOK_AT_ME_REMOVE_DELAY = 10000, // how long to leave the class in place, should exeed duration*iteration on the CSS animation
+        LOOK_AT_ME_REMOVE_DELAY = 65000, // how long to leave the class in place, should exeed duration*iteration on the CSS animation
+        current,
         service = {
         lookAtMe: function(selector,delay) {
+            if(current) {
+                service.stopLookingAtMe(current);
+            }
             // if the class is there then don't add it again there's a timer set to remove it
             if(!$(selector).hasClass(LOOK_AT_ME_CLASS)) {
                 $timeout(function(){
                     $(selector).addClass(LOOK_AT_ME_CLASS);
+                    current = selector;
                     $timeout(function(){
                         service.stopLookingAtMe(selector);
                     },LOOK_AT_ME_REMOVE_DELAY);
@@ -2191,6 +2196,7 @@ angular.module('npn-viz-tool.help',[
         },
         stopLookingAtMe: function(selector) {
             $(selector).removeClass(LOOK_AT_ME_CLASS);
+            current = null;
         }
     };
     return service;
@@ -2991,8 +2997,7 @@ angular.module("js/filter/networkFilterTag.html", []).run(["$templateCache", fun
   $templateCache.put("js/filter/networkFilterTag.html",
     "<div class=\"btn-group filter-tag date\">\n" +
     "    <a class=\"btn btn-default\">\n" +
-    "        <span popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
-    "              popover-trigger=\"mouseenter\" popover=\"Partner\">{{arg.arg.network_name}} </span>\n" +
+    "        {{arg.arg.network_name}} \n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
     "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span>\n" +
@@ -3198,7 +3203,7 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "    <li ng-repeat=\"t in tools\" ng-class=\"{open: t.selected}\"\n" +
     "        popover-placement=\"right\" popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\"\n" +
     "        ng-click=\"select(t)\">\n" +
-    "      <i id=\"toolbar-icon-{{t.id}}\" class=\"fa {{t.icon}}\"></i>\n" +
+    "      <i id=\"toolbar-icon-{{t.id}}\" class=\"toolbar-icon fa {{t.icon}}\"></i>\n" +
     "    </li>\n" +
     "  </ul>\n" +
     "  <div class=\"toolbar-content\" ng-class=\"{open: open}\" ng-transclude></div>\n" +

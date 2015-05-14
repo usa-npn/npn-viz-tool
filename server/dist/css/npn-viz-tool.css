@@ -419,7 +419,7 @@ svg {
   -ms-border-radius: 4px;
   border-radius: 4px;
   position: absolute;
-  bottom: 20px;
+  bottom: 45px;
   right: 5px;
   z-index: 2000;
   padding: 15px 30px 0px 15px;
@@ -472,7 +472,7 @@ div[title="Stop drawing"] {
     -webkit-transform: scale(1, 1);
   }
   50% {
-    -webkit-transform: scale(1.25, 1.25);
+    -webkit-transform: scale(1.35, 1.35);
   }
   100% {
     -webkit-transform: scale(1, 1);
@@ -483,20 +483,24 @@ div[title="Stop drawing"] {
     transform: scale(1, 1);
   }
   50% {
-    transform: scale(1.25, 1.25);
+    transform: scale(1.35, 1.35);
   }
   100% {
     transform: scale(1, 1);
   }
 }
 .look-at-me {
-  -webkit-animation: pulse 1s linear 8;
-  animation: pulse 1s linear 8;
+  -webkit-animation: pulse 1s linear 60;
+  animation: pulse 1s linear 60;
 }
 
 .look-at-me:hover {
   -webkit-animation: none;
   animation: none;
+}
+
+.toolbar-icon.look-at-me {
+  color: #e5c100;
 }
 
 /*# sourceMappingURL=npn-viz-tool.css.map */

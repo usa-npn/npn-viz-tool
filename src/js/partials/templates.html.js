@@ -236,8 +236,7 @@ angular.module("js/filter/networkFilterTag.html", []).run(["$templateCache", fun
   $templateCache.put("js/filter/networkFilterTag.html",
     "<div class=\"btn-group filter-tag date\">\n" +
     "    <a class=\"btn btn-default\">\n" +
-    "        <span popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
-    "              popover-trigger=\"mouseenter\" popover=\"Partner\">{{arg.arg.network_name}} </span>\n" +
+    "        {{arg.arg.network_name}} \n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
     "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span>\n" +
@@ -443,7 +442,7 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "    <li ng-repeat=\"t in tools\" ng-class=\"{open: t.selected}\"\n" +
     "        popover-placement=\"right\" popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\"\n" +
     "        ng-click=\"select(t)\">\n" +
-    "      <i id=\"toolbar-icon-{{t.id}}\" class=\"fa {{t.icon}}\"></i>\n" +
+    "      <i id=\"toolbar-icon-{{t.id}}\" class=\"toolbar-icon fa {{t.icon}}\"></i>\n" +
     "    </li>\n" +
     "  </ul>\n" +
     "  <div class=\"toolbar-content\" ng-class=\"{open: open}\" ng-transclude></div>\n" +

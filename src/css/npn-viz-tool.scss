@@ -459,7 +459,7 @@ svg {
 #choroplethHelp {
     @include rounded(4px);
     position: absolute;
-    bottom: 20px;
+    bottom: 45px;
     right: 5px;
     z-index: 2000;
     padding: 15px 30px 0px 15px;
@@ -507,9 +507,9 @@ div[title="Stop drawing"] {
     display: none !important;
 }
 
-$max-pulse-scale: 1.25;
+$max-pulse-scale: 1.35;
 $pulse-duration: 1s;
-$pulse-count: 8;
+$pulse-count: 60;
 
 @-webkit-keyframes pulse {
      0% {
@@ -542,4 +542,8 @@ $pulse-count: 8;
 .look-at-me:hover {
     -webkit-animation: none;
     animation:none;
+}
+
+.toolbar-icon.look-at-me {
+    color: #e5c100;
 }
