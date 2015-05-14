@@ -137,7 +137,8 @@ angular.module('npn-viz-tool.vis-calendar',[
 ])
 .controller('CalendarVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','$log','FilterService','ChartService',
     function($scope,$modalInstance,$http,$timeout,$filter,$log,FilterService,ChartService){
-    var data, // the data from the server....
+    var response, // raw response from the server
+        data, // processed data from the server
         dateArg = FilterService.getFilter().getDateArg(),
         sizing = ChartService.getSizeInfo({top: 20, right: 35, bottom: 35, left: 35}),
         chart,
@@ -158,7 +159,8 @@ angular.module('npn-viz-tool.vis-calendar',[
 
     $scope.selection = {
         color: 0,
-        year: (new Date()).getFullYear()
+        year: (new Date()).getFullYear(),
+        netagive: false,
     };
 
     $scope.toPlotYears = [];
@@ -394,6 +396,8 @@ angular.module('npn-viz-tool.vis-calendar',[
         return d3_month_fmt(date);
     }
 
+    var negativeColor = '#aaa';
+
     function draw() {
         if(!data) {
             return;
@@ -410,7 +414,7 @@ angular.module('npn-viz-tool.vis-calendar',[
         // update the y-axis
         updateYAxis();
 
-        var doys = chart.selectAll('.doy').data(data.data);
+        var doys = chart.selectAll('.doy').data(data.data,function(d){ return d.y+'-'+d.x+'-'+d.color; });
         doys.exit().remove();
         doys.enter().insert('line',':first-child').attr('class','doy');
 
@@ -422,7 +426,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             .attr('x2', function(d) { return x(d.x)+dx; })
             .attr('y2', function(d,i) { return y(d.y)+dy; })
             .attr('doy-point',function(d) { return '('+d.x+','+d.y+')'; })
-            .attr('stroke', function(d) { return $scope.colorRange[d.color]; })
+            .attr('stroke', function(d) { return d.color === negativeColor ? negativeColor : $scope.colorRange[d.color]; })
             .attr('stroke-width', y.rangeBand())
             .append('title')
             .text(function(d) {
@@ -433,6 +437,70 @@ angular.module('npn-viz-tool.vis-calendar',[
 
         $scope.working = false;
     }
+
+    function updateData() {
+        if(!response) {
+            return;
+        }
+        if(response.error_message) {
+            $log.warn('Received error',response);
+            $scope.error_message = response.error_message;
+            $scope.working = false;
+            return;
+        }
+        var speciesMap = {},toChart = {
+            labels:[],
+            data:[]
+        },
+        // starting with the largest y and decrementing down because we want to display
+        // the selected data in that order (year1/1st pair, year2/1st pair, ..., year2/last pair)
+        y = ($scope.toPlot.length*$scope.toPlotYears.length)-1;
+
+        // translate arrays into maps
+        angular.forEach(response,function(species){
+            speciesMap[species.species_id] = species;
+            var ppMap = {};
+            angular.forEach(species.phenophases,function(pp){
+                ppMap[pp.phenophase_id] = pp;
+            });
+            species.phenophases = ppMap;
+        });
+
+        $log.debug('speciesMap',speciesMap);
+        function addDoys(doys,color) {
+            angular.forEach(doys,function(doy){
+                toChart.data.push({
+                    y: y,
+                    x: doy,
+                    color: color
+                });
+            });
+        }
+        angular.forEach($scope.toPlot,function(tp){
+            $log.debug('toPlot',tp);
+            var species = speciesMap[tp.species_id],
+                phenophase = species.phenophases[tp.phenophase_id];
+            angular.forEach($scope.toPlotYears,function(year){
+                if(phenophase) {
+                    // conditionally add negative data
+                    if($scope.selection.negative) {
+                        $log.debug('year negative',y,year,species.common_name,phenophase,phenophase.years[year].negative);
+                        addDoys(phenophase.years[year].negative,negativeColor);
+                    }
+                    // add positive data
+                    $log.debug('year positive',y,year,species.common_name,phenophase,phenophase.years[year].positive);
+                    addDoys(phenophase.years[year].positive,tp.color);
+                }
+                toChart.labels.splice(0,0,$filter('speciesTitle')(tp)+'/'+tp.phenophase_name+' ('+year+')');
+                $log.debug('y of '+y+' is for '+toChart.labels[0]);
+                y--;
+            });
+        });
+        $scope.data = data = toChart;
+        $log.debug('calendar data',data);
+        draw();
+    }
+    $scope.$watch('selection.negative',updateData);
 
     $scope.visualize = function() {
         if(data) {
@@ -454,56 +522,9 @@ angular.module('npn-viz-tool.vis-calendar',[
             params['phenophase_id['+i+']'] = tp.phenophase_id;
         });
         $scope.error_message = undefined;
-        ChartService.getObservationDates(params,function(response){
-            if(response.error_message) {
-                $log.warn('Received error',response);
-                $scope.error_message = response.error_message;
-                $scope.working = false;
-                return;
-            }
-            var speciesMap = {},toChart = {
-                labels:[],
-                data:[]
-            },
-            // starting with the largest y and decrementing down because we want to display
-            // the selected data in that order (year1/1st pair, year2/1st pair, ..., year2/last pair)
-            y = ($scope.toPlot.length*$scope.toPlotYears.length)-1;
-
-            // translate arrays into maps
-            angular.forEach(response,function(species){
-                speciesMap[species.species_id] = species;
-                var ppMap = {};
-                angular.forEach(species.phenophases,function(pp){
-                    ppMap[pp.phenophase_id] = pp;
-                });
-                species.phenophases = ppMap;
-            });
-
-            $log.debug('speciesMap',speciesMap);
-            angular.forEach($scope.toPlot,function(tp){
-                $log.debug('toPlot',tp);
-                var species = speciesMap[tp.species_id],
-                    phenophase = species.phenophases[tp.phenophase_id];
-                angular.forEach($scope.toPlotYears,function(year){
-                    if(phenophase) {
-                        var doys = phenophase.years[year].positive;
-                        $log.debug('year',y,year,species.common_name,phenophase,doys);
-                        angular.forEach(doys,function(doy){
-                            toChart.data.push({
-                                y: y,
-                                x: doy,
-                                color: tp.color // TODO - what else is needed here??
-                            });
-                        });
-                    }
-                    toChart.labels.splice(0,0,$filter('speciesTitle')(tp)+'/'+tp.phenophase_name+' ('+year+')');
-                    $log.debug('y of '+y+' is for '+toChart.labels[0]);
-                    y--;
-                });
-            });
-            $scope.data = data = toChart;
-            $log.debug('calendar data',data);
-            draw();
+        ChartService.getObservationDates(params,function(serverResponse){
+            response = serverResponse;
+            updateData();
         });
     };
 }]);
@@ -2772,6 +2793,10 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            </li>\n" +
     "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorRange[tp.color]}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
+    "            </li>\n" +
+    "            <li ng-if=\"data\">\n" +
+    "                <label for=\"negativeInput\">Negative Data</label>\n" +
+    "                <input type=\"checkbox\" id=\"negativeInput\" ng-model=\"selection.negative\" />\n" +
     "            </li>\n" +
     "            <li ng-if=\"!data && toPlotYears.length && toPlot.length\"><button class=\"btn btn-primary\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +

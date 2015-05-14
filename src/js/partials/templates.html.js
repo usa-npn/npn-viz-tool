@@ -39,6 +39,10 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            <li class=\"criteria\" ng-repeat=\"tp in toPlot\">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style=\"color: {{colorRange[tp.color]}};\" class=\"fa fa-circle\"></i>\n" +
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
+    "            <li ng-if=\"data\">\n" +
+    "                <label for=\"negativeInput\">Negative Data</label>\n" +
+    "                <input type=\"checkbox\" id=\"negativeInput\" ng-model=\"selection.negative\" />\n" +
+    "            </li>\n" +
     "            <li ng-if=\"!data && toPlotYears.length && toPlot.length\"><button class=\"btn btn-primary\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +

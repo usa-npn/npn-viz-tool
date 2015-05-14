@@ -35,6 +35,10 @@
             <li class="criteria" ng-repeat="tp in toPlot">{{tp|speciesTitle}}/{{tp.phenophase_name}} <i style="color: {{colorRange[tp.color]}};" class="fa fa-circle"></i>
                 <a href ng-click="removeFromPlot($index)"><i class="fa fa-times-circle-o"></i></a>
             </li>
+            <li ng-if="data">
+                <label for="negativeInput">Negative Data</label>
+                <input type="checkbox" id="negativeInput" ng-model="selection.negative" />
+            </li>
             <li ng-if="!data && toPlotYears.length && toPlot.length"><button class="btn btn-primary" ng-click="visualize()">Visualize</button></li>
         </ul>
         <div id="vis-container">
