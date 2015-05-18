@@ -200,15 +200,15 @@ angular.module('npn-viz-tool.vis',[
 
                 var context = canvas.getContext('2d'),
                     image = new Image();
-                image.src = imgsrc;
                 image.onload = function() {
                     context.drawImage(image,0,0);
                     var canvasdata = canvas.toDataURL('image/png'),
-                        a = document.createElement('a');
+                        a = $('#vis-download-link')[0];//document.createElement('a');
                     a.download = $scope.filename||'visualization.png';
                     a.href = canvasdata;
                     a.click();
                 };
+                image.src = imgsrc;
             };
         }]
     };

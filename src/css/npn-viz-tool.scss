@@ -418,10 +418,11 @@ ul.to-plot {
     position: relative;
     display: inline-block;
     .vis-download {
+        @extend .little-npn-control;
         position: absolute;
         right: 0px;
         margin: 10px;
-        font-size: 1.25em;
+        font-size: 1.5em;
     }
 }
 /*

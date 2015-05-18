@@ -414,7 +414,7 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
-    "        <label for=\"clusterMarkersSetting\">Exclude low quality data from visualizations</label>\n" +
+    "        <label for=\"clusterMarkersSetting\">Exclude less precise data from visualizations</label>\n" +
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-repeat=\"option in [true,false]\">\n" +
     "                <input type=\"radio\" id=\"filterLqdSummary{{option}}\" ng-model=\"settings.filterLqdSummary.value\"\n" +
@@ -479,5 +479,6 @@ angular.module("js/vis/visDownload.html", []).run(["$templateCache", function($t
     "<div class=\"vis-download\">\n" +
     "    <a href ng-click=\"download()\" title=\"Download\"><i class=\"fa fa-download\"></i></a>\n" +
     "    <canvas id=\"visDownloadCanvas\" style=\"display: none;\"></canvas>\n" +
+    "    <a id=\"vis-download-link\" style=\"display: none;\">download</a>\n" +
     "</div>");
 }]);

@@ -202,7 +202,7 @@ $gmaps-maptype-right: 30px;
     right: $gmaps-maptype-right !important;
 }
 */
-.little-npn-control, #reset-control, #share-control, #export-control {
+.little-npn-control, #reset-control, #share-control, #export-control, .chart-container .vis-download {
   height: 28px;
   width: 28px;
   font-size: 1.15em;
@@ -376,7 +376,7 @@ ul.to-plot li.criteria {
   position: absolute;
   right: 0px;
   margin: 10px;
-  font-size: 1.25em;
+  font-size: 1.5em;
 }
 
 /*

@@ -1,6 +1,6 @@
 /*
  * Regs-Dot-Gov-Directives
- * Version: 0.1.0 - 2015-05-14
+ * Version: 0.1.0 - 2015-05-18
  */
 
 angular.module('npn-viz-tool.bounds',[
@@ -3175,7 +3175,7 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
-    "        <label for=\"clusterMarkersSetting\">Exclude low quality data from visualizations</label>\n" +
+    "        <label for=\"clusterMarkersSetting\">Exclude less precise data from visualizations</label>\n" +
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-repeat=\"option in [true,false]\">\n" +
     "                <input type=\"radio\" id=\"filterLqdSummary{{option}}\" ng-model=\"settings.filterLqdSummary.value\"\n" +
@@ -3240,6 +3240,7 @@ angular.module("js/vis/visDownload.html", []).run(["$templateCache", function($t
     "<div class=\"vis-download\">\n" +
     "    <a href ng-click=\"download()\" title=\"Download\"><i class=\"fa fa-download\"></i></a>\n" +
     "    <canvas id=\"visDownloadCanvas\" style=\"display: none;\"></canvas>\n" +
+    "    <a id=\"vis-download-link\" style=\"display: none;\">download</a>\n" +
     "</div>");
 }]);
 
@@ -4400,15 +4401,15 @@ angular.module('npn-viz-tool.vis',[
 
                 var context = canvas.getContext('2d'),
                     image = new Image();
-                image.src = imgsrc;
                 image.onload = function() {
                     context.drawImage(image,0,0);
                     var canvasdata = canvas.toDataURL('image/png'),
-                        a = document.createElement('a');
+                        a = $('#vis-download-link')[0];//document.createElement('a');
                     a.download = $scope.filename||'visualization.png';
                     a.href = canvasdata;
                     a.click();
                 };
+                image.src = imgsrc;
             };
         }]
     };
