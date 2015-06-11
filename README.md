@@ -40,7 +40,7 @@ This only needs to be run once but may need to be re-run if `package.json` chang
 
 ## Building
 
-To build the project simply run `grunt`.  This will validate and compile the contents of `src` into `server/dist`.  The contents of `server/dist` are committed to the source repository since the contents of the `server` directory is automatically deployed to the location where the proxy server is running on squaw.
+To build the project simply run `grunt`.  This will validate and compile the contents of `src` into `server/dist`.  The contents of `server/dist` (the latest compiled version) are committed to the source repository. 
 
 After the build is complete you'll have a few new directories like `bower_components` which contains JavaScript/CSS dependencies and `coverage` which contains auto generated code coverage reports which indicates what lines of JavaScript are, and are not, covered by existing unit tests.
 
@@ -48,9 +48,7 @@ After the build is complete you'll have a few new directories like `bower_compon
 
 The `Gruntfile.js` contains a special target to fire up the proxy server and start a watch on all the source such that as code changes the build re-runs (tests, etc.) and keeps the static content of the server up to date.  Simply run `grunt server`.  This will start the proxy server on port `8000`.  To stop the server simply type `Ctrl-C` in the command window.
 
-Since all that's developed via this module is a core library you can't actually exercise anything without an external application using the library.  For example see the BirdRegsDotOrg repository.
-
-Once the server is running you can modify the code found in the `src` directory and changes will be re-build and applied to your server.  The first change tends to take a bit of time to complete but subsequent changes are fairly quick.  Watching the output of the `grunt server` console window will show what's happening.  If you write code that doesn't comply with code quality standards you'll receive an error (and your changes won't be applied).  If you make changes that result in unit test failures you'll receive errors (and your changes won't be applied).
+Once the server is running you can modify the code found in the `src` directory and changes will be re-built and applied to your server.  The first change tends to take a bit of time to complete but subsequent changes are fairly quick.  Watching the output of the `grunt server` console window will show what's happening.  If you write code that doesn't comply with code quality standards you'll receive an error (and your changes won't be applied).  If you make changes that result in unit test failures you'll receive errors (and your changes won't be applied).
 
 ## Directory Structure
 
@@ -64,5 +62,5 @@ Once the server is running you can modify the code found in the `src` directory 
   - `caching_proxy.js` - The source of the proxy portion of the server.
   - `server.js` - The base Node.JS server logic that sets up the proxy and serves static content from the `dist` directory.
   - `package.json` - The node dependencies of `server.js` and `caching_proxy.js`
-  - `server_control.sh` - A shell script useful for controlling a background instance of the proxy server.  This script is orchestrated via `/etc/init.d/regsdotgov-proxy` on squaw.
+  - `server_control.sh` - A shell script useful for controlling a background instance of the proxy server.
 - `src` - Contains the source code for the AngularJS application.
