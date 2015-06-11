@@ -274,7 +274,7 @@ angular.module("js/layers/layerControl.html", []).run(["$templateCache", functio
   $templateCache.put("js/layers/layerControl.html",
     "<p class=\"empty-filter-notes\" ng-if=\"isFilterEmpty()\">\n" +
     "    Before adding a layer to the map you must create and execute a filter.\n" +
-    "    A map layer will allow you to filter stations based on the geographic boundaries it defines.\n" +
+    "    A map layer will allow you to filter sites based on the geographic boundaries it defines.\n" +
     "</p>\n" +
     "<ul class=\"list-unstyled\" ng-if=\"!isFilterEmpty()\">\n" +
     "    <li><label ng-class=\"{'selected-layer': layerOnMap.layer === 'none'}\"><a href ng-click=\"layerOnMap.layer='none'\">None</a></label>\n" +
@@ -368,7 +368,7 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "                              filename=\"npn-scatter-plot.png\"></vis-download>\n" +
     "                <div><svg class=\"chart\"></svg></div>\n" +
     "            </div>\n" +
-    "            <div ng-if=\"filteredDisclaimer\" class=\"filter-disclaimer\">For quality assurance purposes, only onset dates that are preceded by negative recordss are included in the visualization.</div>\n" +
+    "            <div ng-if=\"filteredDisclaimer\" class=\"filter-disclaimer\">For quality assurance purposes, only onset dates that are preceded by negative records are included in the visualization.</div>\n" +
     "        </div>\n" +
     "        </center>\n" +
     "    </div>\n" +

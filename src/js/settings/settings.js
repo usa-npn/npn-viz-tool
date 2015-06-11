@@ -33,7 +33,7 @@ angular.module('npn-viz-tool.settings',[
             },{
                 value: 'station-count',
                 q: 'sc',
-                label: 'Station Count'
+                label: 'Site Count'
             }/*,{
                 value: 'station-observation-count',
                 q: 'soc',

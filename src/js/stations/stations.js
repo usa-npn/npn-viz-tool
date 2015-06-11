@@ -53,7 +53,7 @@ angular.module('npn-viz-tool.stations',[
                     if(!FilterService.isFilterEmpty()) {
                         var visualizations = ChartService.getVisualizations();
                         html = '<div>';
-                        html += '<label>Visualize Station Data</label>';
+                        html += '<label>Visualize Site Data</label>';
                         html += '<ul class="list-unstyled">';
                         ChartService.getVisualizations().forEach(function(vis){
                             html += '<li>';
