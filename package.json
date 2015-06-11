@@ -1,7 +1,7 @@
 {
-  "name": "Regs-Dot-Gov-Directives",
+  "name": "USANPN-Visualization-Tool",
   "version": "0.1.0",
-  "description": "AngularJS Directives to pull data from proxied regs.gov web services.",
+  "description": "USANPN-Visualization-Tool web app.",
   "author": "Paul Adams <paul@djcase.com>",
   "private": true,
   "devDependencies": {

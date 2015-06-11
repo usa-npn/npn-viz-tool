@@ -1,7 +1,7 @@
 {
-  "name": "Regs-Dot-Gov-Proxy",
+  "name": "USANPN-Proxy",
   "version": "0.1.0",
-  "description": "Simple HTTP Proxy to regulations.gov that caches responses for a time.",
+  "description": "Simple HTTP Proxy to npn web services that caches responses for a time.",
   "author": "Paul Adams <paul@djcase.com>",
   "private": true,
   "dependencies": {
