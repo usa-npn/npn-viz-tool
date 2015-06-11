@@ -204,7 +204,7 @@ module.exports = function(grunt){
         }
     });
 
-    grunt.registerTask('before-test',['bower','htmlhint','jshint','html2js']);
+    grunt.registerTask('before-test',['htmlhint','jshint','html2js']);
     grunt.registerTask('after-test',['sass','copy','build']);
     grunt.registerTask('test',['karma:continuous']);
 

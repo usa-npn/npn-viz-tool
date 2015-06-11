@@ -1,10 +1,10 @@
 {
-  "name": "Regs-Dot-Gov-Directives",
+  "name": "NPN-Viz Tool",
   "version": "0.1.0",
   "authors": [
     "Paul Adams <paul@djcase.com>"
   ],
-  "description": "AngularJS Directives to pull data from proxied regs.gov web services.",
+  "description": "Javascript dependencies for NPN-Viz Tool.",
   "private": true,
   "dependencies": {
     "jquery": "~2.1",
