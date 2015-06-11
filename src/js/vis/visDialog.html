@@ -1,0 +1,6 @@
+<div class="modal-header">
+    <a href class="modal-dismiss" ng-click="modal.dismiss()"><i class="fa fa-times-circle-o fa-2x"></i></a>
+    <h3 class="modal-title">{{title}}</h3>
+</div>
+<div class="modal-body vis-dialog {{title | cssClassify}}" ng-transclude>
+</div>

@@ -1,0 +1,52 @@
+[{
+    "id" : "primary",
+    "label" : "US States",
+    "file" : "us-states.geojson",
+    "img" : "layers/usa-map.jpg"
+},{
+    "id" : "fwsr",
+    "label" : "USFWS Regions",
+    "file" : "FWS_Regional_Boundaries.json",
+    "source" : "http://www.fws.gov/gis/data/national/#REGIONAL BOUNDARIES",
+    "img" : "layers/FWS_Regions.jpg",
+    "link" : "http://www.fws.gov/refuges/realty/index.html"
+},{
+    "id" : "fwser",
+    "label" : "USFWS Ecosystem Regions",
+    "file" : "FWS_Ecoregions.json",
+    "img" : "layers/FWS_Ecoregions.jpg",
+    "source" : "http://www.fws.gov/gis/data/national/#ECOSYSTEM REGIONS"
+},{
+    "id" : "ncar",
+    "label" : "National Climate Assessment Regions",
+    "file" : "NCA_Regions.json",
+    "source" : "http://services.arcgis.com/4OV0eRKiLAYkbH2J/ArcGIS/rest/services/NationalClimateAssessmentRegions/FeatureServer/0",
+    "img" : "layers/NCA_Regions.jpg",
+    "link" : "http://www.globalchange.gov/explore"
+},{
+    "id" : "npsr",
+    "label" : "National Park Service Regions",
+    "file" : "NPS_Regions.json",
+    "img" : "layers/NPS_Regions.jpg",
+    "link" : "http://www.nps.gov/hdp/regions.htm"
+},{
+    "id" : "npsim",
+    "label" : "National Park Service Inventory & Monitoring Networks",
+    "file" : "NPS_IM.json",
+    "img" : "layers/NPS_IM.jpg",
+    "link" : "http://science.nature.nps.gov/im/networks.cfm"
+},{
+    "id" : "lccs",
+    "label" : "LCCs",
+    "file" : "FWS_LCC.json",
+    "source" : "http://www.fws.gov/gis/data/national/#LCC",
+    "img" : "layers/LCCs.jpg",
+    "link" : "http://www.fws.gov/landscape-conservation/lcc.html"
+},{
+    "id" : "nps",
+    "label" : "National Park Boundaries",
+    "file" : "nps_boundary.json",
+    "source" : "https://catalog.data.gov/dataset/national-park-boundariesf0a4c",
+    "img" : "layers/yosemite.jpg",
+    "link" : "http://www.nps.gov/index.htm"
+}]

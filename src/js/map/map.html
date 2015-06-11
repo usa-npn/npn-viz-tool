@@ -1,0 +1,29 @@
+<a title="Reset" href id="reset-control" class="btn btn-default btn-xs" ng-click="reset()"><i class="fa fa-refresh"></i></a>
+
+<npn-working></npn-working>
+
+<ui-gmap-google-map ng-if="map" center='map.center' zoom='map.zoom' options="map.options">
+    <npn-stations ng-if="stationView"></npn-stations>
+    <npn-filter-results></npn-filter-results>
+    <bounds-manager></bounds-manager>
+</ui-gmap-google-map>
+
+<share-control></share-control>
+<export-control></export-control>
+<filter-tags></filter-tags>
+<choropleth-info></choropleth-info>
+
+<toolbar>
+    <tool id="filter" icon="fa-search" title="Filter">
+        <filter-control></filter-control>
+    </tool>
+    <tool id="layers" icon="fa-bars" title="Layers">
+        <layer-control></layer-control>
+    </tool>
+    <tool id="visualizations" icon="fa-bar-chart" title="Visualizations">
+        <vis-control></vis-control>
+    </tool>
+    <tool id="settings" icon="fa-cog" title="Settings">
+        <settings-control></settings-control>
+    </tool>
+</toolbar>

@@ -1,0 +1,11 @@
+<p class="empty-filter-notes" ng-if="isFilterEmpty()">
+    Before using a visualization you must create and execute a filter.
+    Visualizations use the species, and sometimes, date ranges you've identified
+    in your filter as the basis for what you want to visualize.
+</p>
+<ul class="list-unstyled">
+    <li ng-repeat="vis in visualizations">
+        <a href ng-click="open(vis)" ng-class="{disabled: isFilterEmpty()}">{{vis.title}}</a>
+        <p>{{vis.description}}</p>
+    </li>
+</ul>

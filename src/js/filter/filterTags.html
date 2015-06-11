@@ -1,0 +1,5 @@
+<ul class="list-inline filter-tags">
+    <li ng-repeat="s in getFilter().getSpeciesArgs()"><species-filter-tag arg="s"></species-filter-tag></li>
+    <li ng-repeat="n in getFilter().getNetworkArgs()"><network-filter-tag arg="n"></network-filter-tag></li>
+    <li ng-if="(date = getFilter().getDateArg())"><date-filter-tag arg="date"></date-filter-tag></li>
+</ul>
