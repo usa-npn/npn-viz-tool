@@ -421,7 +421,7 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "                       ng-value=\"{{option}}\" /> <label for=\"filterLqdSummary{{option}}\">{{option | yesNo}}</label>\n" +
     "            </li>\n" +
     "        </ul>\n" +
-    "        <p>A value of <strong>Yes</strong> will exclude data points which lack a \"no\" observation record preceding the first yes observation record to increase precision and certainty.</p>\n" +
+    "        <p>Selecting <strong>Yes</strong> will exclude data points which lack a \"no\" record preceding the first \"yes\" record from certain visualizations. </p>\n" +
     "    </li>\n" +
     "</ul>");
 }]);
