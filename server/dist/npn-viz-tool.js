@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 0.1.0 - 2015-06-16
+ * Version: 0.1.0 - 2015-07-17
  */
 
 angular.module('npn-viz-tool.bounds',[
@@ -481,7 +481,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             var species = speciesMap[tp.species_id],
                 phenophase = species.phenophases[tp.phenophase_id];
             angular.forEach($scope.toPlotYears,function(year){
-                if(phenophase) {
+                if(phenophase && phenophase.years && phenophase.years[year]) {
                     // conditionally add negative data
                     if($scope.selection.negative) {
                         $log.debug('year negative',y,year,species.common_name,phenophase,phenophase.years[year].negative);
@@ -4239,16 +4239,21 @@ angular.module('npn-viz-tool.vis',[
         }
         return !bad;
     }
-    function addGeoParams(params) {
+    function addCommonParams(params) {
         if(visualizeSingleStationId) {
             params['station_id[0]'] = visualizeSingleStationId;
         } else {
+            var filter = FilterService.getFilter();
             // if geo filtering add the explicit station_ids in question.
-            if(FilterService.getFilter().getGeographicArgs().length) {
+            if(filter.getGeographicArgs().length) {
                 FilterService.getFilteredMarkers().forEach(function(marker,i){
                     params['station_id['+i+']'] = marker.station_id;
                 });
             }
+            // if network filtering in play add network_id/s
+            filter.getNetworkArgs().forEach(function(n,i){
+                params['network_id['+i+']'] = n.getId();
+            });
         }
         return params;
     }
@@ -4311,7 +4316,7 @@ angular.module('npn-viz-tool.vis',[
                 url: '/npn_portal/observations/getSummarizedData.json',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
-                data: addGeoParams(params)
+                data: addCommonParams(params)
             }).success(function(response){
                 success(response.filter(filterSuspectSummaryData));
             });
@@ -4322,7 +4327,7 @@ angular.module('npn-viz-tool.vis',[
                 url: '/npn_portal/observations/getObservationDates.json',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
-                data: addGeoParams(params)
+                data: addCommonParams(params)
             }).success(success);
         },
         isFilterEmpty: FilterService.isFilterEmpty,

@@ -350,7 +350,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             var species = speciesMap[tp.species_id],
                 phenophase = species.phenophases[tp.phenophase_id];
             angular.forEach($scope.toPlotYears,function(year){
-                if(phenophase) {
+                if(phenophase && phenophase.years && phenophase.years[year]) {
                     // conditionally add negative data
                     if($scope.selection.negative) {
                         $log.debug('year negative',y,year,species.common_name,phenophase,phenophase.years[year].negative);
