@@ -145,7 +145,7 @@ angular.module('npn-viz-tool.filter',[
     };
     return NetworkFilterArg;
 }])
-.factory('SpeciesFilterArg',['$http','$rootScope','FilterArg',function($http,$rootScope,FilterArg){
+.factory('SpeciesFilterArg',['$http','$rootScope','$log','FilterArg',function($http,$rootScope,$log,FilterArg){
     /**
      * Constructs a SpeciesFilterArg.  This type of arg spans both side of the wire.  It's id is used as input
      * to web services and its $filter method deals with post-processing phenophase filtering.  It exposes additional
@@ -216,6 +216,10 @@ angular.module('npn-viz-tool.filter',[
         var self = this,
             hitCount = 0,
             filtered = Object.keys(species).filter(function(pid){
+                if(!self.phenophasesMap[pid]) {
+                    $log.error('phenophase_id: ' + pid + ' not found for species: ' + self.arg.species_id);
+                    return false;
+                }
                 var oCount = SpeciesFilterArg.countObservationsForPhenophase(species[pid]);
                 self.phenophasesMap[pid].count += oCount;
                 // LEAKY this $match is something that the NetworkFilterArg uses to decide which
