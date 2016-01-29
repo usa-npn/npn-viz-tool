@@ -98,6 +98,9 @@ angular.module('npn-viz-tool.filter',[
     NetworkFilterArg.prototype.getId = function() {
         return parseInt(this.arg.network_id);
     };
+    NetworkFilterArg.prototype.getName = function() {
+        return this.arg.network_name;
+    };	
     NetworkFilterArg.prototype.toExportParam = function() {
         return this.getId();
     };
