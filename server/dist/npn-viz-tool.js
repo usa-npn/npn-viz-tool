@@ -2766,13 +2766,128 @@ angular.module('npn-viz-tool.map',[
         }
     };
 }]);
+/**
+ * @ngdoc overview
+ * @name npn-viz-tool.vis-map
+ * @description
+ *
+ * Logic for gridded data map visualization.
+ */
 angular.module('npn-viz-tool.vis-map',[
     'npn-viz-tool.vis',
     'npn-viz-tool.filter',
     'npn-viz-tool.filters',
     'npn-viz-tool.settings',
+    'npn-viz-tool.vis-map-services',
     'ui.bootstrap'
 ])
+/**
+ * @ngdoc controller
+ * @name npn-viz-tool.vis-map:MapVisCtrl
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Controller for the gridded data map visualization dialog.
+ */
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','uiGmapGoogleMapApi','uiGmapIsReady','WmsService','WcsService','FilterService','ChartService','SettingsService',
+    function($scope,$uibModalInstance,$filter,$log,uiGmapGoogleMapApi,uiGmapIsReady,WmsService,WcsService,FilterService,ChartService,SettingsService){
+        var api,map,infoWindow;
+        $scope.modal = $uibModalInstance;
+        $scope.wms_map = {
+            center: { latitude: 48.35674, longitude: -122.39658 },
+            zoom: 3,
+            options: {
+                disableDoubleClickZoom: true, // click on an arbitrary point gets gridded data so disable zoom (use controls).
+                scrollwheel: false,
+                streetViewControl: false,
+                panControl: false,
+                zoomControl: true,
+                zoomControlOptions: {
+                    style: google.maps.ZoomControlStyle.SMALL,
+                    position: google.maps.ControlPosition.RIGHT_TOP
+                }
+            },
+            events: {
+                click: function(m,ename,args) {
+                    var ev = args[0];
+                    $log.debug('click',ev);
+                    if($scope.selection.activeLayer) {
+                        WcsService.getGriddedData($scope.selection.activeLayer,ev.latLng,4/*should gridSize change based on the layer?*/)
+                            .then(function(tuples){
+                                $log.debug('tuples',tuples);
+                                if(!infoWindow) {
+                                    infoWindow = new api.InfoWindow({
+                                        maxWidth: 200,
+                                        content: 'contents'
+                                    });
+                                }
+                                infoWindow.setContent($filter('number')(tuples[0],1)); // TODO: precision is likely layer specific
+                                infoWindow.setPosition(ev.latLng);
+                                infoWindow.open(map);
+                            },function() {
+                                // TODO?
+                                $log.error('unable to get gridded data.');
+                            });
+                    }
+                }
+            }
+        };
+        uiGmapGoogleMapApi.then(function(maps){
+            api = maps;
+            uiGmapIsReady.promise(2).then(function(instances){
+                map = instances[1].map;
+                WmsService.getLayers(map).then(function(layers){
+                    $scope.layers = layers;
+                },function(){
+                    $log.error('unable to get map layers?');
+                });
+            });
+        });
+
+        $scope.selection = {};
+        $scope.$watch('selection.layer',function(layer) {
+            if(!layer) {
+                return;
+            }
+            if(infoWindow) {
+                infoWindow.close();
+            }
+            $log.debug('selection.layer',layer);
+            if($scope.selection.activeLayer) {
+                $log.debug('turning off layer ',$scope.selection.activeLayer.name);
+                $scope.selection.activeLayer.off();
+            }
+            // looks odd that we're not turning the layer on here
+            // but updating the activeLayer reference will also result in
+            // the selection.activeLayer.extent.current watch firing which
+            // toggles the map off/on
+            $log.debug('fitting new layer ',layer.name);
+            $scope.selection.activeLayer = layer.fit();
+        });
+        $scope.$watch('selection.activeLayer.extent.current',function(v) {
+            if($scope.selection.activeLayer) {
+                $log.debug('layer extent change ',$scope.selection.activeLayer.name,v);
+                $scope.selection.activeLayer.off().on();
+            }
+        });
+}]);
+/**
+ * @ngdoc overview
+ * @name npn-viz-tool.vis-map-services
+ * @description
+ *
+ * Service support for gridded data map visualization.
+ */
+angular.module('npn-viz-tool.vis-map-services',[
+])
+/**
+ * @ngdoc service
+ * @name npn-viz-tool.vis-map-services:WmsService
+ * @module npn-viz-tool.vis-map-services
+ * @description
+ *
+ * Interacts with the NPN geoserver WMS instance to supply map layer data.
+ */
 .service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter',function($log,$q,$http,$httpParamSerializer,$filter){
     var WMS_BASE_URL = 'http://geoserver.usanpn.org/geoserver/ows',
         // not safe to change since the capabilities document format changes based on version
@@ -2781,6 +2896,17 @@ angular.module('npn-viz-tool.vis-map',[
         WMS_CAPABILITIES_URL = WMS_BASE_URL+'?service=wms&version='+WMS_VERSION+'&request=GetCapabilities',
         wms_layer_defs,
         service = {
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsService
+             * @name  getLayers
+             * @description
+             *
+             * Get the layers supported by the WMS service (work in progress, list will be a categorized subset eventually).
+             *
+             * @param {google.maps.Map} map The base map the fetched layers will be added to.
+             * @return {promise} A promise that will be resolved with the layers, or rejected.
+             */
             getLayers: function(map) {
                 function defToLayer(def) {
                     return new WmsMapLayer(map,def);
@@ -2810,12 +2936,10 @@ angular.module('npn-viz-tool.vis-map',[
             layers: layer_def.name,
             styles: '',
             format: 'image/png',
-            //format: 'image/svg+xml',
             transparent: true,
             height: 256,
             width: 256,
-            //srs: 'EPSG:4326'
-            srs: 'EPSG:3857'
+            srs: 'EPSG:3857' // 'EPSG:4326'
         },
         googleLayer = new google.maps.ImageMapType({
             getTileUrl: function (coord, zoom) {
@@ -3017,168 +3141,103 @@ angular.module('npn-viz-tool.vis-map',[
     }
     return service;
 }])
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$http','$timeout','$filter','$log','uiGmapGoogleMapApi','uiGmapIsReady','WmsService','FilterService','ChartService','SettingsService',
-    function($scope,$uibModalInstance,$http,$timeout,$filter,$log,uiGmapGoogleMapApi,uiGmapIsReady,WmsService,FilterService,ChartService,SettingsService){
-        // this is introduced in angular 1.4, while this tool is based on 1.3
-        function $httpParamSerializer(params){
-            if(!params) {
-                return '';
-            }
-            var args = [];
-            Object.keys(params).forEach(function(key){
-                var v = params[key];
-                if(angular.isArray(v)) {
-                    v.forEach(function(sv) {
-                        args.push(key+'='+encodeURIComponent(sv));
-                    });
-                } else {
-                    args.push(key+'='+encodeURIComponent(v));
-                }
-            });
-            return args.join('&');
-        }
+/**
+ * @ngdoc service
+ * @name npn-viz-tool.vis-map-services:WcsService
+ * @module npn-viz-tool.vis-map-services
+ * @description
+ *
+ * Interacts with the NPN geoserver WCS instance to supply underlying gridded data.  Loading of this service
+ * extends the protypes of Number and the google.maps.LatLng class.
+ */
+.service('WcsService',['$log','$q','$http','uiGmapGoogleMapApi',function($log,$q,$http,uiGmapGoogleMapApi){
+    // technically we should store and use a promise here but the WcsService
+    // can't be interacted with until the Google Maps API is init'ed so just doing this
+    // and later using it understanding the work has been done.
+    uiGmapGoogleMapApi.then(function(maps){
+        $log.debug('WcsService: adding functionality to Number/Google Maps prototypes.');
+        Number.prototype.toRad = function() {
+           return this * Math.PI / 180;
+        };
+        Number.prototype.toDeg = function() {
+           return this * 180 / Math.PI;
+        };
+        // 0=N,90=E,180=S,270=W dist in km
+        maps.LatLng.prototype.destinationPoint = function(brng, dist) {
+           dist = dist / 6371;
+           brng = brng.toRad();
 
-        var api,map,infoWindow;
-        $scope.modal = $uibModalInstance;
-        $scope.wms_map = {
-                center: { latitude: 48.35674, longitude: -122.39658 },
-                zoom: 3,
-                options: {
-                    scrollwheel: false,
-                    streetViewControl: false,
-                    panControl: false,
-                    zoomControl: true,
-                    zoomControlOptions: {
-                        style: google.maps.ZoomControlStyle.SMALL,
-                        position: google.maps.ControlPosition.RIGHT_TOP
-                    }
+           var lat1 = this.lat().toRad(), lon1 = this.lng().toRad();
+
+           var lat2 = Math.asin(Math.sin(lat1) * Math.cos(dist) +
+                                Math.cos(lat1) * Math.sin(dist) * Math.cos(brng));
+
+           var lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dist) *
+                                        Math.cos(lat1),
+                                        Math.cos(dist) - Math.sin(lat1) *
+                                        Math.sin(lat2));
+
+           if (isNaN(lat2) || isNaN(lon2)) {
+                return null;
+            }
+
+           return new google.maps.LatLng(lat2.toDeg(), lon2.toDeg());
+        };
+    });
+    var WCS_BASE_URL = 'http://geoserver.usanpn.org:80/geoserver/wcs',
+        service = {
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WcsService
+             * @name  getGriddedData
+             * @description
+             *
+             * Fetch gridded data for a specific location on a specific map layer.
+             *
+             * @param {object} activeLayer The map layer returned from the WcsService that the data to fetch is associated with.
+             * @param {google.maps.LatLng} latLng The point under which to fetch the data for.
+             * @param {number} gridSize The side of the grid to ask the WCS service data for (the larger the gridSize the more data).
+             * @return {promise} A promise that will be resolved with an array of numbers, or rejected.
+             */
+            getGriddedData: function(activeLayer,latLng,gridSize) {
+                var def = $q.defer(),
+                edges = [0,80,180,270].map(function(bearing) {
+                    return latLng.destinationPoint(bearing,(gridSize/2));
+                }),
+                wcsArgs = {
+                    service: 'WCS',
+                    request: 'GetCoverage',
+                    version: '2.0.1',
+                    coverageId: activeLayer.name.replace(':','__'), // convention
+                    format: 'application/gml+xml',
+                    subset: []
                 },
-                events: {
-                    click: function(m,ename,args) {
-                        var ev = args[0],
-                            gridSize = 4,
-                            edges,
-                            wcsArgs,url; // actually probably 2.5
-                        $log.debug('click',ev);
-                        if($scope.selection.activeLayer) {
-                            $log.debug('have map layer');
-                            edges = [0,80,180,270].map(function(bearing) {
-                                return ev.latLng.destinationPoint(bearing,(gridSize/2));
-                            });
-                            $log.debug('edges',edges);
-                            wcsArgs = {
-                                service: 'WCS',
-                                request: 'GetCoverage',
-                                version: '2.0.1',
-                                coverageId: $scope.selection.activeLayer.name.replace(':','__'), // convention
-                                format: 'application/gml+xml',
-                                subset: []
-                            };
-                            wcsArgs.subset.push('http://www.opengis.net/def/axis/OGC/0/Long('+[edges[3].lng(),edges[1].lng()].join(',')+')');
-                            wcsArgs.subset.push('http://www.opengis.net/def/axis/OGC/0/Lat('+[edges[2].lat(),edges[0].lat()].join(',')+')');
-                            if($scope.selection.activeLayer.extent && $scope.selection.activeLayer.extent.current) {
-                                $scope.selection.activeLayer.extent.current.addToWcsParams(wcsArgs);
-                            }
-                            $log.debug('wcsArgs',wcsArgs);
-                            url = 'http://geoserver.usanpn.org:80/geoserver/wcs?'+$httpParamSerializer(wcsArgs);
-                            $log.debug('url',url);
-                            $http.get(url).then(function(response){
-                                $log.debug('wcs response',response);
-                                var wcs_data = $($.parseXML(response.data)),
-                                    tuples = wcs_data.find('tupleList').text();
-                                $log.debug('wcs_data',wcs_data);
-                                $log.debug('tuples',tuples);
-                                if(tuples) {
-                                    tuples = tuples.trim().split(' ');
-                                    $log.debug('tuples',tuples);
-                                    if(!infoWindow) {
-                                        infoWindow = new api.InfoWindow({
-                                            maxWidth: 200,
-                                            content: 'contents'
-                                        });
-                                    }
-                                    infoWindow.setContent(tuples[0]);
-                                    infoWindow.setPosition(ev.latLng);
-                                    infoWindow.open(map);
-                                }
-                            });
-//http://geoserver.usanpn.org:80/geoserver/wcs?
-//request=GetCoverage&
-//service=WCS&
-//version=2.0.1&
-//coverageId=gdd__30yr_avg_agdd&
-//Format=application/gml%2Bxml&
-//subset=http://www.opengis.net/def/axis/OGC/0/Long(-96.0414568,-96)&
-//subset=http://www.opengis.net/def/axis/OGC/0/Lat(36,36.03608)&
-//subset=http://www.opengis.net/def/axis/OGC/0/elevation(183.0)
-                        }
+                url;
+                // add edges
+                wcsArgs.subset.push('http://www.opengis.net/def/axis/OGC/0/Long('+[edges[3].lng(),edges[1].lng()].join(',')+')');
+                wcsArgs.subset.push('http://www.opengis.net/def/axis/OGC/0/Lat('+[edges[2].lat(),edges[0].lat()].join(',')+')');
+                if(activeLayer.extent && activeLayer.extent.current) {
+                    activeLayer.extent.current.addToWcsParams(wcsArgs);
+                }
+                $log.debug('wcsArgs',wcsArgs);
+                $http.get(WCS_BASE_URL,{
+                    params: wcsArgs
+                }).then(function(response){
+                    $log.debug('wcs response',response);
+                    var wcs_data = $($.parseXML(response.data)),
+                        tuples = wcs_data.find('tupleList').text();
+                    $log.debug('wcs_data',wcs_data);
+                    $log.debug('tuples',tuples);
+                    if(tuples) {
+                        def.resolve(tuples.trim().split(' ').map(function(tuple) { return parseFloat(tuple); }));
+                    } else {
+                        def.reject();
                     }
-                }
-            };
-        uiGmapGoogleMapApi.then(function(maps){
-            api = maps;
-            Number.prototype.toRad = function() {
-               return this * Math.PI / 180;
-            };
-
-            Number.prototype.toDeg = function() {
-               return this * 180 / Math.PI;
-            };
-
-            // 0=N,90=E,180=S,270=W dist in km
-            maps.LatLng.prototype.destinationPoint = function(brng, dist) {
-               dist = dist / 6371;
-               brng = brng.toRad();
-
-               var lat1 = this.lat().toRad(), lon1 = this.lng().toRad();
-
-               var lat2 = Math.asin(Math.sin(lat1) * Math.cos(dist) +
-                                    Math.cos(lat1) * Math.sin(dist) * Math.cos(brng));
-
-               var lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dist) *
-                                            Math.cos(lat1),
-                                            Math.cos(dist) - Math.sin(lat1) *
-                                            Math.sin(lat2));
-
-               if (isNaN(lat2) || isNaN(lon2)) {
-                    return null;
-                }
-
-               return new google.maps.LatLng(lat2.toDeg(), lon2.toDeg());
-            };
-            uiGmapIsReady.promise(2).then(function(instances){
-                map = instances[1].map;
-                WmsService.getLayers(map).then(function(layers){
-                    $scope.layers = layers;
-                },function(){
-                    $log.error('unable to get map layers?');
-                });
-            });
-        });
-
-        $scope.selection = {};
-        $scope.$watch('selection.layer',function(layer) {
-            if(!layer) {
-                return;
+                },def.reject);
+                return def.promise;
             }
-            $log.debug('selection.layer',layer);
-            if($scope.selection.activeLayer) {
-                $log.debug('turning off layer ',$scope.selection.activeLayer.name);
-                $scope.selection.activeLayer.off();
-            }
-            // looks odd that we're not turning the layer on here
-            // but updating the activeLayer reference will also result in
-            // the selection.activeLayer.extent.current watch firing which
-            // toggles the map off/on
-            $log.debug('fitting new layer ',layer.name);
-            $scope.selection.activeLayer = layer.fit();
-        });
-        $scope.$watch('selection.activeLayer.extent.current',function(v) {
-            if($scope.selection.activeLayer) {
-                $log.debug('layer extent change ',$scope.selection.activeLayer.name,v);
-                $scope.selection.activeLayer.off().on();
-            }
-        });
+        };
+    return service;
 }]);
 angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/mapvis.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
