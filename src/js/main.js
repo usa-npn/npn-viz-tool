@@ -11,7 +11,7 @@ angular.module('npn-viz-tool',[
         v: '3.24',
         libraries: ['geometry','drawing']
     });
-    $logProvider.debugEnabled(window.location.hash && window.location.hash.match(/^#\/debug/));
+    $logProvider.debugEnabled(window.location.hash && window.location.hash.match(/^#.*#debug/));
     window.onbeforeunload = function() {
         return 'You are about to navigate away from the USA-NPN Visualization Tool.  Are you sure you want to do this?';
     };

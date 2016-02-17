@@ -336,7 +336,7 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "    </div>\n" +
     "    <div class=\"form-group\" ng-if=\"selection.layer.extent\">\n" +
     "        <label for=\"selectedExtent\">{{selection.layer.extent.label}}</label>\n" +
-    "        <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.extentValue\" ng-options=\"v for v in selection.layer.extent.values\"></select>\n" +
+    "        <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.layer.extent.current\" ng-options=\"v as v.label for v in selection.layer.extent.values\"></select>\n" +
     "    </div>\n" +
     "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
     "</vis-dialog>");
