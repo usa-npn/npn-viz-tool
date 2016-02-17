@@ -352,6 +352,9 @@ angular.module('npn-viz-tool.vis-map-services',[
                 }).then(function(response){
                     $log.debug('wcs response',response);
                     var wcs_data = $($.parseXML(response.data)),
+                        // this is crazy simple minded, at this time. not sure if it needs to get
+                        // more sophisticated.  there's a lot more info in the resulting gml document
+                        // which may or may not be of interest.
                         tuples = wcs_data.find('tupleList').text();
                     $log.debug('wcs_data',wcs_data);
                     $log.debug('tuples',tuples);

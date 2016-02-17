@@ -142,6 +142,12 @@ module.exports = function(grunt){
                 }
             }
         },
+        ngdocs: {
+            options: {
+                dest: '<%= dist %>/docs'
+            },
+            all: ['src/js/**/*.js','src/js/index.ngdoc']
+        },
         delta: {
             index: {
                 files: ['src/*.html'],
