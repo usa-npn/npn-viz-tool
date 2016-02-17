@@ -57,7 +57,8 @@ angular.module('npn-viz-tool.vis',[
             }
             // if network filtering in play add network_id/s
             filter.getNetworkArgs().forEach(function(n,i){
-                params['network_id['+i+']'] = n.getId();
+                params['network['+i+']'] = n.getName();
+				params['network_id['+i+']'] = n.getId();
             });
         }
         return params;

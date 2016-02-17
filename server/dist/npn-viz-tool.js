@@ -694,6 +694,9 @@ angular.module('npn-viz-tool.filter',[
     NetworkFilterArg.prototype.getId = function() {
         return parseInt(this.arg.network_id);
     };
+    NetworkFilterArg.prototype.getName = function() {
+        return this.arg.network_name;
+    };	
     NetworkFilterArg.prototype.toExportParam = function() {
         return this.getId();
     };
@@ -4280,7 +4283,8 @@ angular.module('npn-viz-tool.vis',[
             }
             // if network filtering in play add network_id/s
             filter.getNetworkArgs().forEach(function(n,i){
-                params['network_id['+i+']'] = n.getId();
+                params['network['+i+']'] = n.getName();
+				params['network_id['+i+']'] = n.getId();
             });
         }
         return params;
