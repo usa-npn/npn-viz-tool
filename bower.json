@@ -7,23 +7,23 @@
   "description": "Javascript dependencies for NPN-Viz Tool.",
   "private": true,
   "dependencies": {
-    "jquery": "~2.1",
-    "angular": "1.3.x",
-    "angular-route": "1.3.x",
-    "angular-resource": "1.3.x",
-    "angular-sanitize": "1.3.x",
-    "angular-animate": "1.3.x",
-    "angular-bootstrap": "0.12.0",
-    "angular-mocks": "1.3.x",
+    "jquery": "2.1.x",
+    "angular": "1.4.x",
+    "angular-route": "1.4.x",
+    "angular-resource": "1.4.x",
+    "angular-sanitize": "1.4.x",
+    "angular-animate": "1.4.x",
+    "angular-bootstrap": "0.14.x",
+    "angular-mocks": "1.4.x",
     "font-awesome": "4.x",
     "jasmine-jquery": "~2.0.7",
-    "angular-google-maps": "~2.0.16",
+    "angular-google-maps": "2.3.x",
     "d3": "~3.5.5",
     "bootstrap": "~3.3.2",
-    "angular-multi-select": "~3.0.0",
-    "angular-md5": "~0.1.7"
+    "angular-multi-select": "4.0.0",
+    "angular-md5": "0.1.x"
   },
   "resolutions": {
-    "angular": "1.3.x"
+    "angular": "1.4.x"
   }
 }

@@ -8,7 +8,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        <label for=\"yearsOneInput\">Select up to two years</label>\n" +
     "        <input id=\"yearsOneInput\" type=\"number\" class=\"form-control\"\n" +
     "               ng-model=\"selection.year\"\n" +
-    "               typeahead=\"year for year in validYears | filter:$viewValue\"\n" +
+    "               uib-typeahead=\"year for year in validYears | filter:$viewValue\"\n" +
     "               required placeholder=\"Year\" />\n" +
     "        <button class=\"btn btn-default\" ng-click=\"addYear()\" ng-disabled=\"!canAddYear()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "    </div>\n" +
@@ -16,8 +16,8 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        <label for=\"speciesInput\">Species phenophase combinations</label>\n" +
     "        <select name=\"speciesInput\" class=\"form-control\" ng-model=\"selection.species\" ng-options=\"(o|speciesTitle) for o in speciesList\"></select>\n" +
     "        <select name=\"phenophaseInput\" class=\"form-control\" ng-model=\"selection.phenophase\" ng-options=\"o.phenophase_name for o in phenophaseList\"></select>\n" +
-    "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
-    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorRange[selection.color]}};\">\n" +
+    "        <div class=\"btn-group\" uib-dropdown is-open=\"selection.color_isopen\">\n" +
+    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" uib-dropdown-toggle style=\"background-color: {{colorRange[selection.color]}};\">\n" +
     "            &nbsp; <span class=\"caret\"></span>\n" +
     "          </button>\n" +
     "          <ul class=\"dropdown-menu\" role=\"menu\">\n" +
@@ -99,10 +99,10 @@ angular.module("js/filter/dateFilterTag.html", []).run(["$templateCache", functi
     "<div class=\"btn-group filter-tag date\">\n" +
     "    <a class=\"btn btn-default\">\n" +
     "        <span popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
-    "              popover-trigger=\"mouseenter\" popover=\"Indicates the span of time represented on the map\">{{arg.arg.start_date}} - {{arg.arg.end_date}} </span>\n" +
+    "              popover-trigger=\"mouseenter\" uib-popover=\"Indicates the span of time represented on the map\">{{arg.arg.start_date}} - {{arg.arg.end_date}} </span>\n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
-    "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{counts | speciesBadge:badgeFormat}}</span>\n" +
+    "              popover-trigger=\"mouseenter\" uib-popover=\"{{badgeTooltip}}\">{{counts | speciesBadge:badgeFormat}}</span>\n" +
     "    </a>\n" +
     "    <a class=\"btn btn-default\" ng-click=\"removeFromFilter(arg)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
@@ -119,12 +119,12 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "        <input id=\"start_date\" type=\"number\" class=\"form-control\"\n" +
     "               max=\"{{selected.date.end_date || thisYear}}\"\n" +
     "               ng-model=\"selected.date.start_date\"\n" +
-    "               typeahead=\"year for year in validYears | lte:selected.date.end_date | filter:$viewValue\"\n" +
+    "               uib-typeahead=\"year for year in validYears | lte:selected.date.end_date | filter:$viewValue\"\n" +
     "               required placeholder=\"From\" /> - \n" +
     "        <input id=\"end_date\" type=\"number\" class=\"form-control\"\n" +
     "                min=\"{{selected.date.start_date || 1900}}\"\n" +
     "                ng-model=\"selected.date.end_date\"\n" +
-    "                typeahead=\"year for year in validYears | gte:selected.date.start_date | filter:$viewValue\"\n" +
+    "                uib-typeahead=\"year for year in validYears | gte:selected.date.start_date | filter:$viewValue\"\n" +
     "                required placeholder=\"To\" />\n" +
     "        <button class=\"btn btn-default\"\n" +
     "                ng-disabled=\"yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 10)\"\n" +
@@ -184,7 +184,7 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                        ng-disabled=\"!speciesInput.networks.length || networksMaxedOut()\"\n" +
     "                        ng-click=\"addNetworksToFilter()\"\n" +
     "                        popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
-    "                        popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
+    "                        popover-trigger=\"mouseenter\" uib-popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
     "                    <i class=\"fa fa-plus\"></i>\n" +
     "                </button>\n" +
     "            </div>\n" +
@@ -210,7 +210,7 @@ angular.module("js/filter/filterControl.html", []).run(["$templateCache", functi
     "                        ng-disabled=\"!selected.species.length || speciesMaxedOut()\"\n" +
     "                        ng-click=\"addSpeciesToFilter()\"\n" +
     "                        popover-placement=\"right\" popover-popup-delay=\"500\"\n" +
-    "                        popover-trigger=\"mouseenter\" popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
+    "                        popover-trigger=\"mouseenter\" uib-popover=\"Add this filter to the map\" popover-append-to-body=\"true\">\n" +
     "                    <i class=\"fa\" ng-class=\"{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}\"></i>\n" +
     "                </button>\n" +
     "            </div>\n" +
@@ -239,7 +239,7 @@ angular.module("js/filter/networkFilterTag.html", []).run(["$templateCache", fun
     "        {{arg.arg.network_name}} \n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
-    "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span>\n" +
+    "              popover-trigger=\"mouseenter\" uib-popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span>\n" +
     "    </a>\n" +
     "    <a class=\"btn btn-default\" ng-click=\"removeFromFilter(arg)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
@@ -254,7 +254,7 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
     "        {{arg.arg | speciesTitle:titleFormat}} \n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
-    "              popover-trigger=\"mouseenter\" popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span> \n" +
+    "              popover-trigger=\"mouseenter\" uib-popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span> \n" +
     "        <span class=\"caret\"></span>\n" +
     "    </a>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
@@ -332,8 +332,8 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "        <label for=\"speciesInput\">Select up to three species phenophase combinations</label>\n" +
     "        <select name=\"speciesInput\" class=\"form-control\" ng-model=\"selection.species\" ng-options=\"(o|speciesTitle) for o in speciesList\"></select>\n" +
     "        <select name=\"phenophaseInput\" class=\"form-control\" ng-model=\"selection.phenophase\" ng-options=\"o.phenophase_name for o in phenophaseList\"></select>\n" +
-    "        <div class=\"btn-group\" dropdown is-open=\"selection.color_isopen\">\n" +
-    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" dropdown-toggle style=\"background-color: {{colorRange[selection.color]}};\">\n" +
+    "        <div class=\"btn-group\" uib-dropdown is-open=\"selection.color_isopen\">\n" +
+    "          <button type=\"button\" class=\"btn btn-default dropdown-toggle\" uib-dropdown-toggle style=\"background-color: {{colorRange[selection.color]}};\">\n" +
     "            &nbsp; <span class=\"caret\"></span>\n" +
     "          </button>\n" +
     "          <ul class=\"dropdown-menu\" role=\"menu\">\n" +
@@ -440,7 +440,7 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "<div class=\"toolbar\">\n" +
     "  <ul class=\"tools-list\">\n" +
     "    <li ng-repeat=\"t in tools\" ng-class=\"{open: t.selected}\"\n" +
-    "        popover-placement=\"right\" popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\"\n" +
+    "        popover-placement=\"right\" uib-popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\"\n" +
     "        ng-click=\"select(t)\">\n" +
     "      <i id=\"toolbar-icon-{{t.id}}\" class=\"toolbar-icon fa {{t.icon}}\"></i>\n" +
     "    </li>\n" +

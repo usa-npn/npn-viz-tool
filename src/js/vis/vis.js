@@ -6,8 +6,8 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.vis-wms',
     'ui.bootstrap'
 ])
-.factory('ChartService',['$window','$http','$log','$modal','FilterService',
-    function($window,$http,$log,$modal,FilterService){
+.factory('ChartService',['$window','$http','$log','$uibModal','FilterService',
+    function($window,$http,$log,$uibModal,FilterService){
     // some hard coded values that will be massaged into generated
     // values at runtime.
     var CHART_W = 930,
@@ -152,7 +152,7 @@ angular.module('npn-viz-tool.vis',[
         },
         openVisualization: function(vis) {
             if(!FilterService.isFilterEmpty()) {
-                return $modal.open({
+                return $uibModal.open({
                     templateUrl: vis.template,
                     controller: vis.controller,
                     windowClass: 'vis-dialog-window',

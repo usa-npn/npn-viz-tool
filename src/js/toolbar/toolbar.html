@@ -1,7 +1,7 @@
 <div class="toolbar">
   <ul class="tools-list">
     <li ng-repeat="t in tools" ng-class="{open: t.selected}"
-        popover-placement="right" popover="{{t.title}}" popover-trigger="mouseenter" popover-popup-delay="1000"
+        popover-placement="right" uib-popover="{{t.title}}" popover-trigger="mouseenter" popover-popup-delay="1000"
         ng-click="select(t)">
       <i id="toolbar-icon-{{t.id}}" class="toolbar-icon fa {{t.icon}}"></i>
     </li>

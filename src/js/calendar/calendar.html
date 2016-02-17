@@ -4,7 +4,7 @@
         <label for="yearsOneInput">Select up to two years</label>
         <input id="yearsOneInput" type="number" class="form-control"
                ng-model="selection.year"
-               typeahead="year for year in validYears | filter:$viewValue"
+               uib-typeahead="year for year in validYears | filter:$viewValue"
                required placeholder="Year" />
         <button class="btn btn-default" ng-click="addYear()" ng-disabled="!canAddYear()"><i class="fa fa-plus"></i></button>
     </div>
@@ -12,8 +12,8 @@
         <label for="speciesInput">Species phenophase combinations</label>
         <select name="speciesInput" class="form-control" ng-model="selection.species" ng-options="(o|speciesTitle) for o in speciesList"></select>
         <select name="phenophaseInput" class="form-control" ng-model="selection.phenophase" ng-options="o.phenophase_name for o in phenophaseList"></select>
-        <div class="btn-group" dropdown is-open="selection.color_isopen">
-          <button type="button" class="btn btn-default dropdown-toggle" dropdown-toggle style="background-color: {{colorRange[selection.color]}};">
+        <div class="btn-group" uib-dropdown is-open="selection.color_isopen">
+          <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle style="background-color: {{colorRange[selection.color]}};">
             &nbsp; <span class="caret"></span>
           </button>
           <ul class="dropdown-menu" role="menu">

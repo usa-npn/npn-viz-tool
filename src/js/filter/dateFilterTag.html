@@ -1,10 +1,10 @@
 <div class="btn-group filter-tag date">
     <a class="btn btn-default">
         <span popover-placement="bottom" popover-popup-delay="500" popover-append-to-body="true"
-              popover-trigger="mouseenter" popover="Indicates the span of time represented on the map">{{arg.arg.start_date}} - {{arg.arg.end_date}} </span>
+              popover-trigger="mouseenter" uib-popover="Indicates the span of time represented on the map">{{arg.arg.start_date}} - {{arg.arg.end_date}} </span>
         <span class="badge"
               popover-placement="bottom" popover-popup-delay="500" popover-append-to-body="true"
-              popover-trigger="mouseenter" popover="{{badgeTooltip}}">{{counts | speciesBadge:badgeFormat}}</span>
+              popover-trigger="mouseenter" uib-popover="{{badgeTooltip}}">{{counts | speciesBadge:badgeFormat}}</span>
     </a>
     <a class="btn btn-default" ng-click="removeFromFilter(arg)">
         <i class="fa fa-times-circle-o"></i>

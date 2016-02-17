@@ -4,8 +4,8 @@ angular.module('npn-viz-tool.vis-calendar',[
     'npn-viz-tool.filters',
     'ui.bootstrap'
 ])
-.controller('CalendarVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','$log','FilterService','ChartService',
-    function($scope,$modalInstance,$http,$timeout,$filter,$log,FilterService,ChartService){
+.controller('CalendarVisCtrl',['$scope','$uibModalInstance','$http','$timeout','$filter','$log','FilterService','ChartService',
+    function($scope,$uibModalInstance,$http,$timeout,$filter,$log,FilterService,ChartService){
     var response, // raw response from the server
         data, // processed data from the server
         dateArg = FilterService.getFilter().getDateArg(),
@@ -20,7 +20,7 @@ angular.module('npn-viz-tool.vis-calendar',[
         }).tickFormat(formatYTickLabels);
 
     $scope.validYears = d3.range(1900,((new Date()).getFullYear()+1));
-    $scope.modal = $modalInstance;
+    $scope.modal = $uibModalInstance;
 
     var colorScale = FilterService.getColorScale();
     $scope.colors = colorScale.domain();

@@ -5,8 +5,8 @@ angular.module('npn-viz-tool.vis-wms',[
     'npn-viz-tool.settings',
     'ui.bootstrap'
 ])
-.controller('WmsVisCtrl',['$scope','$modalInstance','$http','$timeout','$filter','$log','uiGmapGoogleMapApi','uiGmapIsReady','FilterService','ChartService','SettingsService',
-    function($scope,$modalInstance,$http,$timeout,$filter,$log,uiGmapGoogleMapApi,uiGmapIsReady,FilterService,ChartService,SettingsService){
+.controller('WmsVisCtrl',['$scope','$uibModalInstance','$http','$timeout','$filter','$log','uiGmapGoogleMapApi','uiGmapIsReady','FilterService','ChartService','SettingsService',
+    function($scope,$uibModalInstance,$http,$timeout,$filter,$log,uiGmapGoogleMapApi,uiGmapIsReady,FilterService,ChartService,SettingsService){
         // this is introduced in angular 1.4, while this tool is based on 1.3
         function $httpParamSerializer(params){
             if(!params) {
@@ -27,7 +27,7 @@ angular.module('npn-viz-tool.vis-wms',[
         }
 
         var api,map,infoWindow;
-        $scope.modal = $modalInstance;
+        $scope.modal = $uibModalInstance;
         $scope.wms_map = {
                 center: { latitude: 48.35674, longitude: -122.39658 },
                 zoom: 3,

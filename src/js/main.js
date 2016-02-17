@@ -8,7 +8,7 @@ angular.module('npn-viz-tool',[
 .config(['uiGmapGoogleMapApiProvider','$logProvider',function(uiGmapGoogleMapApiProvider,$logProvider) {
     uiGmapGoogleMapApiProvider.configure({
         key: 'AIzaSyAsTM8XaktfkwpjEeDMXkNrojaiB2W5WyE',
-        v: '3.20',
+        v: '3.24',
         libraries: ['geometry','drawing']
     });
     $logProvider.debugEnabled(window.location.hash && window.location.hash.match(/^#\/debug/));
