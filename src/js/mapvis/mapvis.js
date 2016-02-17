@@ -1,11 +1,11 @@
-angular.module('npn-viz-tool.vis-wms',[
+angular.module('npn-viz-tool.vis-map',[
     'npn-viz-tool.vis',
     'npn-viz-tool.filter',
     'npn-viz-tool.filters',
     'npn-viz-tool.settings',
     'ui.bootstrap'
 ])
-.controller('WmsVisCtrl',['$scope','$uibModalInstance','$http','$timeout','$filter','$log','uiGmapGoogleMapApi','uiGmapIsReady','FilterService','ChartService','SettingsService',
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$http','$timeout','$filter','$log','uiGmapGoogleMapApi','uiGmapIsReady','FilterService','ChartService','SettingsService',
     function($scope,$uibModalInstance,$http,$timeout,$filter,$log,uiGmapGoogleMapApi,uiGmapIsReady,FilterService,ChartService,SettingsService){
         // this is introduced in angular 1.4, while this tool is based on 1.3
         function $httpParamSerializer(params){
