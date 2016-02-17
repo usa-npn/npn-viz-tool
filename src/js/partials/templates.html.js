@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html', 'js/wms/wms.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -481,4 +481,22 @@ angular.module("js/vis/visDownload.html", []).run(["$templateCache", function($t
     "    <canvas id=\"visDownloadCanvas\" style=\"display: none;\"></canvas>\n" +
     "    <a id=\"vis-download-link\" style=\"display: none;\">download</a>\n" +
     "</div>");
+}]);
+
+angular.module("js/wms/wms.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/wms/wms.html",
+    "<vis-dialog title=\"Map\" modal=\"modal\">\n" +
+    "    <img ng-src=\"{{selection.layer.style.legend}}\" class=\"legend\" />\n" +
+    "    <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
+    "    </ui-gmap-google-map>\n" +
+    "    <div class=\"form-group\">\n" +
+    "        <label for=\"selectedLayer\">Layer</label>\n" +
+    "        <select id=\"selectedLayer\" class=\"form-control\" ng-model=\"selection.layer\" ng-options=\"l as (l.style.title+' ('+l.title+')') for l in layers\"></select>\n" +
+    "    </div>\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.layer.extent\">\n" +
+    "        <label for=\"selectedExtent\">{{selection.layer.extent.label}}</label>\n" +
+    "        <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.extentValue\" ng-options=\"v for v in selection.layer.extent.values\"></select>\n" +
+    "    </div>\n" +
+    "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
+    "</vis-dialog>");
 }]);

@@ -3,6 +3,7 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.filters',
     'npn-viz-tool.vis-scatter',
     'npn-viz-tool.vis-calendar',
+    'npn-viz-tool.vis-wms',
     'ui.bootstrap'
 ])
 .factory('ChartService',['$window','$http','$log','$modal','FilterService',
@@ -29,6 +30,11 @@ angular.module('npn-viz-tool.vis',[
             controller: 'CalendarVisCtrl',
             template: 'js/calendar/calendar.html',
             description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
+        },{
+            title: 'Map',
+            controller: 'WmsVisCtrl',
+            template: 'js/wms/wms.html',
+            description: 'Prelim research...  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac lectus nec augue cursus lacinia. Praesent sit amet eros nisi.'
         }],
         visualizeSingleStationId;
     function filterSuspectSummaryData (d){

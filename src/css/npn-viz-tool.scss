@@ -548,3 +548,18 @@ $pulse-count: 60;
 .toolbar-icon.look-at-me {
     color: #e5c100;
 }
+
+.vis-dialog.map {
+    .angular-google-map-container {
+        position: inherit;
+        width:90%;
+        height:500px;
+        margin: 10px;
+        @include rounded(5px);
+        border: 1px solid #aaa;
+    }
+    .legend {
+        float: right;
+        max-height: 500px;
+    }
+}

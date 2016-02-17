@@ -503,4 +503,20 @@ div[title="Stop drawing"] {
   color: #e5c100;
 }
 
+.vis-dialog.map .angular-google-map-container {
+  position: inherit;
+  width: 90%;
+  height: 500px;
+  margin: 10px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  border-radius: 5px;
+  border: 1px solid #aaa;
+}
+.vis-dialog.map .legend {
+  float: right;
+  max-height: 500px;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */
