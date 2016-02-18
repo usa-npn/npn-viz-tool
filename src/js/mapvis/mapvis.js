@@ -14,7 +14,99 @@ angular.module('npn-viz-tool.vis-map',[
     'ui.bootstrap'
 ])
 /**
- * @ngdoc controller
+ * @ngdoc directive
+ * @name npn-viz-tool.vis-map:map-vis-doy-control
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * control for day of year extents.
+ */
+.directive('mapVisDoyControl',['$log','thirtyYearAvgDayOfYearFilter',function($log,thirtyYearAvgDayOfYearFilter){
+    var BASE_YEAR = thirtyYearAvgDayOfYearFilter(1,true).getFullYear(),
+        ONE_DAY = (24*60*60*1000),
+        MONTHS = d3.range(0,12).map(function(m) { return new Date(BASE_YEAR,m); });
+    function getDaysInMonth(date) {
+        var month = date.getMonth(),
+            tmp;
+        if(month === 11) {
+            return 31;
+        }
+        tmp = new Date(date.getTime());
+        tmp.setMonth(tmp.getMonth()+1);
+        tmp.setTime(tmp.getTime()-ONE_DAY);
+        $log.debug('last day of month '+(month+1)+' is '+tmp);
+        return tmp.getDate();
+    }
+    return {
+        restrict: 'E',
+        templateUrl: 'js/mapvis/doy-control.html',
+        link: function($scope) {
+            $scope.selection.doyControl= $scope.selection.doyControl||{};
+            $scope.selection.doyControl.months = MONTHS;
+            $scope.selection.doyControl.selection = $scope.selection.doyControl.selection||{};
+            var currentDate = thirtyYearAvgDayOfYearFilter($scope.selection.layer.extent.current.value,true);
+            $scope.selection.doyControl.selection.month = MONTHS[currentDate.getMonth()];
+            function dateWatch(date) {
+                $scope.selection.doyControl.selection.month.setDate(date);
+                // this feels a little hoakey matching on label but...
+                var label = thirtyYearAvgDayOfYearFilter($scope.selection.doyControl.selection.month);
+                $log.debug('doy-control:date '+label);
+                $scope.selection.layer.extent.current = $scope.selection.layer.extent.values.reduce(function(current,v){
+                    return current||(v.label === label ? v : undefined);
+                },undefined);
+            }
+            $scope.$watch('selection.doyControl.selection.month',function(date) {
+                var month = $scope.selection.doyControl.selection.month;
+                $log.debug('doy-control:month '+(month.getMonth()+1));
+                $scope.selection.doyControl.dates = d3.range(1,getDaysInMonth(month)+1);
+                if(currentDate) {
+                    // this is the first change (init)
+                    $scope.selection.doyControl.selection.date = currentDate.getDate();
+                    currentDate = undefined;
+                } else if($scope.selection.doyControl.selection.date === 1) {
+                    dateWatch(1); // month change without date change, need to force the extent to update.
+                } else {
+                    $scope.selection.doyControl.selection.date = 1;
+                }
+            });
+            $scope.$watch('selection.doyControl.selection.date',dateWatch);
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @name npn-viz-tool.vis-map:map-vis-year-control
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Control for year extents.
+ */
+.directive('mapVisYearControl',['$log',function($log){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/mapvis/year-control.html',
+        link: function($scope) {
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @name npn-viz-tool.vis-map:map-vis-date-control
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Control for date extents.
+ */
+.directive('mapVisDateControl',['$log',function($log){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/mapvis/date-control.html',
+        link: function($scope) {
+        }
+    };
+}])
+/**
+ * @ngdoc directive
  * @name npn-viz-tool.vis-map:map-vis-layer-control
  * @module npn-viz-tool.vis-map
  * @description

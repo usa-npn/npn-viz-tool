@@ -21,11 +21,12 @@ angular.module('npn-viz-tool.vis-map-services',[
 .filter('thirtyYearAvgDayOfYear',['dateFilter',function(dateFilter){
     var JAN_ONE = new Date(2010/*(new Date()).getFullYear()*/,0),
         ONE_DAY = (24*60*60*1000);
-    return function(doy) {
+    return function(doy,return_date) {
         if(typeof(doy) === 'string') {
             doy = parseFloat(doy);
         }
-        return dateFilter(new Date(JAN_ONE.getTime()+((doy-1)*ONE_DAY)),'MMMM d');
+        var date = doy instanceof Date ? doy : new Date(JAN_ONE.getTime()+((doy-1)*ONE_DAY));
+        return return_date ? date : dateFilter(date,'MMMM d');
     };
 }])
 /**

@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/layer-control.html', 'js/mapvis/mapvis.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/date-control.html', 'js/mapvis/doy-control.html', 'js/mapvis/layer-control.html', 'js/mapvis/mapvis.html', 'js/mapvis/year-control.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -324,6 +324,31 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "</toolbar>");
 }]);
 
+angular.module("js/mapvis/date-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/date-control.html",
+    "<div class=\"form-group\" ng-if=\"selection.layer.extent\">\n" +
+    "    <label for=\"selectedExtent\">{{selection.layer.extent.label}} (Date:TODO)</label>\n" +
+    "    <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.layer.extent.current\" ng-options=\"v as v.label for v in selection.layer.extent.values\"></select>\n" +
+    "</div>");
+}]);
+
+angular.module("js/mapvis/doy-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/doy-control.html",
+    "<label>Day of Year</label>\n" +
+    "<div class=\"form-inline\" style=\"margin-bottom: 15px;\">\n" +
+    "    <div class=\"form-group\">\n" +
+    "        <label for=\"selectedMonth\" class=\"sr-only\">Month</label>\n" +
+    "        <select id=\"selectedMonth\" class=\"form-control\" ng-model=\"selection.doyControl.selection.month\"\n" +
+    "                ng-options=\"m as (m | date:'MMMM') for m in selection.doyControl.months\"></select>\n" +
+    "    </div>\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.doyControl.selection.month\">\n" +
+    "        <label for=\"selectedDate\" class=\"sr-only\">Day</label>\n" +
+    "        <select id=\"selectedDate\" class=\"form-control\" ng-model=\"selection.doyControl.selection.date\"\n" +
+    "                ng-options=\"d for d in selection.doyControl.dates\"></select>\n" +
+    "    </div>\n" +
+    "</div>");
+}]);
+
 angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/layer-control.html",
     "<div ng-if=\"layers\" class=\"map-vis-layer-control\">\n" +
@@ -337,9 +362,10 @@ angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", functi
     "        <select id=\"selectedLayer\" class=\"form-control\" ng-model=\"selection.layer\"\n" +
     "                ng-options=\"l as (l.style.title + ' - ' + l.title) for l in selection.layerCategory.layers\"></select>\n" +
     "    </div>\n" +
-    "    <div class=\"form-group\" ng-if=\"selection.layer.extent\">\n" +
-    "        <label for=\"selectedExtent\">{{selection.layer.extent.label}}</label>\n" +
-    "        <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.layer.extent.current\" ng-options=\"v as v.label for v in selection.layer.extent.values\"></select>\n" +
+    "    <div class=\"extent-control\" ng-if=\"selection.layer.extent\" ng-switch=\"selection.layer.extent.type\">\n" +
+    "        <map-vis-doy-control ng-switch-when=\"doy\"></map-vis-doy-control>\n" +
+    "        <map-vis-date-control ng-switch-when=\"date\"></map-vis-date-control>\n" +
+    "        <map-vis-year-control ng-switch-when=\"year\"></map-vis-year-control>\n" +
     "    </div>\n" +
     "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
     "</div>");
@@ -361,6 +387,14 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "    </div>\n" +
     "    <!--img ng-if=\"selection.activeLayer\" ng-src=\"{{selection.activeLayer.style.legend}}\" class=\"legend\" /-->\n" +
     "</vis-dialog>");
+}]);
+
+angular.module("js/mapvis/year-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/year-control.html",
+    "<div class=\"form-group\" ng-if=\"selection.layer.extent\">\n" +
+    "    <label for=\"selectedExtent\">{{selection.layer.extent.label}} (Year:TODO)</label>\n" +
+    "    <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.layer.extent.current\" ng-options=\"v as v.label for v in selection.layer.extent.values\"></select>\n" +
+    "</div>");
 }]);
 
 angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($templateCache) {

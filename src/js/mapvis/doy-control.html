@@ -1,0 +1,13 @@
+<label>Day of Year</label>
+<div class="form-inline" style="margin-bottom: 15px;">
+    <div class="form-group">
+        <label for="selectedMonth" class="sr-only">Month</label>
+        <select id="selectedMonth" class="form-control" ng-model="selection.doyControl.selection.month"
+                ng-options="m as (m | date:'MMMM') for m in selection.doyControl.months"></select>
+    </div>
+    <div class="form-group" ng-if="selection.doyControl.selection.month">
+        <label for="selectedDate" class="sr-only">Day</label>
+        <select id="selectedDate" class="form-control" ng-model="selection.doyControl.selection.date"
+                ng-options="d for d in selection.doyControl.dates"></select>
+    </div>
+</div>
