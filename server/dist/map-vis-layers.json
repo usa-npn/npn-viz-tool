@@ -1,0 +1,102 @@
+{
+    "categories": [{
+        "name": "30-year Average AGDD",
+        "layers":[{
+                "title": "32\u00B0F",
+                "name": "gdd:30yr_avg_agdd"
+            },{
+                "title": "50\u00B0F",
+                "name": "gdd:30yr_avg_agdd_50f"
+            }]
+    },{
+        "name": "Current Year AGDD",
+        "layers":[{
+                "title": "32\u00B0F",
+                "name": "gdd:agdd"
+            },{
+                "title": "50\u00B0F",
+                "name": "gdd:agdd_50f"
+            }]
+    },{
+        "name": "AGDD Anomaly Map",
+        "layers":[{
+                "title": "32\u00B0F",
+                "name": "gdd:agdd_anomaly"
+            },{
+                "title": "50\u00B0F",
+                "name": "gdd:agdd_anomaly_50f"
+            }]
+    },{
+        "name": "Spring Index, Annual Map",
+        "layers":[{
+                "title": "Arnold Red Leaf (prism)",
+                "name": "si-x:arnoldred_leaf_prism"
+            },{
+                "title": "Arnold Red Bloom (prism)",
+                "name": "si-x:arnoldred_bloom_prism"
+            },{
+                "title": "Average Bloom (prism)",
+                "name": "si-x:average_bloom_prism"
+            },{
+                "title": "Average Leaf (prism)",
+                "name": "si-x:average_leaf_prism"
+            },{
+                "title": "Lilac Leaf (prism)",
+                "name": "si-x:lilac_leaf_prism"
+            },{
+                "title": "Lilac Bloom (prism)",
+                "name": "si-x:lilac_bloom_prism"
+            },{
+                "title": "Zabelli Leaf (prism)",
+                "name": "si-x:zabelli_leaf_prism"
+            },{
+                "title": "Zabelli Bloom (prism)",
+                "name": "si-x:zabelli_bloom_prism"
+            }]
+    },{
+        "name": "Spring Index, Current Year",
+        "layers": [{
+                "title": "Arnold Red Leaf (ncep)",
+                "name": "si-x:arnoldred_leaf_ncep"
+            },{
+                "title": "Arnold Red Bloom (ncep)",
+                "name": "si-x:arnoldred_bloom_ncep"
+            },{
+                "title": "Average Bloom (ncep)",
+                "name": "si-x:average_bloom_ncep"
+            },{
+                "title": "Average Leaf (ncep)",
+                "name": "si-x:average_leaf_ncep"
+            },{
+                "title": "Lilac Leaf (ncep)",
+                "name": "si-x:lilac_leaf_ncep"
+            },{
+                "title": "Lilac Bloom (ncep)",
+                "name": "si-x:lilac_bloom_ncep"
+            },{
+                "title": "Zabelli Bloom (ncep)",
+                "name": "si-x:zabelli_bloom_ncep"
+            },{
+                "title": "Zabelli Leaf (ncep)",
+                "name": "si-x:zabelli_leaf_ncep"
+            }]
+    },{
+        "name": "Spring Index, Anomaly",
+        "layers": [{
+                "title": "Leaf Anomaly",
+                "name": "si-x:leaf_anomaly"
+            },{
+                "title": "Bloom Anomaly",
+                "name": "si-x:bloom_anomaly"
+            }]
+    },{
+        "name": "Spring Index, 30-Year Average",
+        "layers": [{
+                "title": "30 Year Average Six Leaf",
+                "name": "si-x:30yr_avg_six_leaf"
+            },{
+                "title": "30 Year Average Six Bloom",
+                "name": "si-x:30yr_avg_six_bloom"
+            }]
+    }]
+}

@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/mapvis.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/layer-control.html', 'js/mapvis/mapvis.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -324,20 +324,33 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "</toolbar>");
 }]);
 
-angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("js/mapvis/mapvis.html",
-    "<vis-dialog title=\"Map\" modal=\"modal\">\n" +
-    "    <img ng-src=\"{{selection.layer.style.legend}}\" class=\"legend\" />\n" +
-    "    <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
-    "    </ui-gmap-google-map>\n" +
+angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/layer-control.html",
+    "<div ng-if=\"layers\" class=\"map-vis-layer-control\">\n" +
     "    <div class=\"form-group\">\n" +
+    "        <label for=\"selectedCategory\">Category</label>\n" +
+    "        <select id=\"selectedCategory\" class=\"form-control\" ng-model=\"selection.layerCategory\"\n" +
+    "                ng-options=\"cat as cat.name for cat in layers.categories\"></select>\n" +
+    "    </div>\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.layerCategory\">\n" +
     "        <label for=\"selectedLayer\">Layer</label>\n" +
-    "        <select id=\"selectedLayer\" class=\"form-control\" ng-model=\"selection.layer\" ng-options=\"l as (l.style.title+' ('+l.title+')') for l in layers\"></select>\n" +
+    "        <select id=\"selectedLayer\" class=\"form-control\" ng-model=\"selection.layer\"\n" +
+    "                ng-options=\"l as (l.style.title + ' - ' + l.title) for l in selection.layerCategory.layers\"></select>\n" +
     "    </div>\n" +
     "    <div class=\"form-group\" ng-if=\"selection.layer.extent\">\n" +
     "        <label for=\"selectedExtent\">{{selection.layer.extent.label}}</label>\n" +
     "        <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.layer.extent.current\" ng-options=\"v as v.label for v in selection.layer.extent.values\"></select>\n" +
     "    </div>\n" +
+    "</div>");
+}]);
+
+angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/mapvis.html",
+    "<vis-dialog title=\"Map\" modal=\"modal\">\n" +
+    "    <img ng-if=\"selection.activeLayer\" ng-src=\"{{selection.activeLayer.style.legend}}\" class=\"legend\" />\n" +
+    "    <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
+    "    </ui-gmap-google-map>\n" +
+    "    <map-vis-layer-control></map-vis-layer-control>\n" +
     "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
     "</vis-dialog>");
 }]);

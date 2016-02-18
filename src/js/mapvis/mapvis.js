@@ -15,6 +15,22 @@ angular.module('npn-viz-tool.vis-map',[
 ])
 /**
  * @ngdoc controller
+ * @name npn-viz-tool.vis-map:map-vis-layer-control
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Directive to control categorized selection of WMS layers.
+ */
+.directive('mapVisLayerControl',['$log',function($log){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/mapvis/layer-control.html',
+        link: function($scope) {
+        }
+    };
+}])
+/**
+ * @ngdoc controller
  * @name npn-viz-tool.vis-map:MapVisCtrl
  * @module npn-viz-tool.vis-map
  * @description
@@ -69,6 +85,7 @@ angular.module('npn-viz-tool.vis-map',[
             uiGmapIsReady.promise(2).then(function(instances){
                 map = instances[1].map;
                 WmsService.getLayers(map).then(function(layers){
+                    $log.debug('layers',layers);
                     $scope.layers = layers;
                 },function(){
                     $log.error('unable to get map layers?');
@@ -77,6 +94,14 @@ angular.module('npn-viz-tool.vis-map',[
         });
 
         $scope.selection = {};
+        $scope.$watch('selection.layerCategory',function(category) {
+            $log.debug('layer category change ',category);
+            if($scope.selection.activeLayer) {
+                $log.debug('turning off layer ',$scope.selection.activeLayer.name);
+                $scope.selection.activeLayer.off();
+                delete $scope.selection.activeLayer;
+            }
+        });
         $scope.$watch('selection.layer',function(layer) {
             if(!layer) {
                 return;
@@ -94,7 +119,7 @@ angular.module('npn-viz-tool.vis-map',[
             // the selection.activeLayer.extent.current watch firing which
             // toggles the map off/on
             $log.debug('fitting new layer ',layer.name);
-            $scope.selection.activeLayer = layer.fit();
+            $scope.selection.activeLayer = layer.fit().on();
         });
         $scope.$watch('selection.activeLayer.extent.current',function(v) {
             if($scope.selection.activeLayer) {

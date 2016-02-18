@@ -1,0 +1,16 @@
+<div ng-if="layers" class="map-vis-layer-control">
+    <div class="form-group">
+        <label for="selectedCategory">Category</label>
+        <select id="selectedCategory" class="form-control" ng-model="selection.layerCategory"
+                ng-options="cat as cat.name for cat in layers.categories"></select>
+    </div>
+    <div class="form-group" ng-if="selection.layerCategory">
+        <label for="selectedLayer">Layer</label>
+        <select id="selectedLayer" class="form-control" ng-model="selection.layer"
+                ng-options="l as (l.style.title + ' - ' + l.title) for l in selection.layerCategory.layers"></select>
+    </div>
+    <div class="form-group" ng-if="selection.layer.extent">
+        <label for="selectedExtent">{{selection.layer.extent.label}}</label>
+        <select id="selectedExtent" class="form-control" ng-model="selection.layer.extent.current" ng-options="v as v.label for v in selection.layer.extent.values"></select>
+    </div>
+</div>

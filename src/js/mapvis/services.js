@@ -16,11 +16,13 @@ angular.module('npn-viz-tool.vis-map-services',[
  * Interacts with the NPN geoserver WMS instance to supply map layer data.
  */
 .service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter',function($log,$q,$http,$httpParamSerializer,$filter){
-    var WMS_BASE_URL = 'http://geoserver.usanpn.org/geoserver/ows',
+    var LAYER_CONFIG = $http.get('map-vis-layers.json'),
+        WMS_BASE_URL = 'http://geoserver.usanpn.org/geoserver/ows',
         // not safe to change since the capabilities document format changes based on version
         // so a version change -may- require code changes wrt interpreting the document
         WMS_VERSION = '1.1.1',
         WMS_CAPABILITIES_URL = WMS_BASE_URL+'?service=wms&version='+WMS_VERSION+'&request=GetCapabilities',
+        wms_layer_config,
         wms_layer_defs,
         service = {
             /**
@@ -35,21 +37,32 @@ angular.module('npn-viz-tool.vis-map-services',[
              * @return {promise} A promise that will be resolved with the layers, or rejected.
              */
             getLayers: function(map) {
-                function defToLayer(def) {
-                    return new WmsMapLayer(map,def);
+
+                function mergeLayersIntoConfig() {
+                    var result = angular.copy(wms_layer_config);
+                    result.categories.forEach(function(category){
+                        category.layers = category.layers.map(function(l){
+                            return new WmsMapLayer(map,angular.extend({},wms_layer_defs[l.name],l));
+                        });
+                    });
+                    return result;
                 }
                 var def = $q.defer();
-                if(wms_layer_defs) {
-                    def.resolve(wms_layer_defs.map(defToLayer));
+                if(wms_layer_config && wms_layer_defs) {
+                    def.resolve(mergeLayersIntoConfig());
                 } else {
-                    $http.get(WMS_CAPABILITIES_URL).then(function(response){
-                        var wms_capabilities = $($.parseXML(response.data));
-                        wms_layer_defs = getLayers(wms_capabilities.find('Layer'));
-                        $log.debug('wms_layer_defs',wms_layer_defs);
-                        def.resolve(wms_layer_defs.map(defToLayer));
-                    },function() {
-                        def.reject(); // TODO, what if WMS is down, need to tell user??
-                    });
+                    // TODO need to deal with failures
+                    LAYER_CONFIG.then(function(response){
+                        wms_layer_config = response.data;
+                        $log.debug('layer_config',response.data);
+                        $http.get(WMS_CAPABILITIES_URL).then(function(response){
+                            var wms_capabilities = $($.parseXML(response.data));
+                            wms_layer_defs = getLayers(wms_capabilities.find('Layer'));
+                            $log.debug('wms_layer_defs',wms_layer_defs);
+                            def.resolve(mergeLayersIntoConfig());
+                        },def.reject);
+                    },def.reject);
+
                 }
                 return def.promise;
             }
@@ -133,6 +146,7 @@ angular.module('npn-viz-tool.vis-map-services',[
             return {lng: x, lat: 3189068.5 * Math.log((1.0 + Math.sin(a)) / (1.0 - Math.sin(a)))};
         }
     }
+    // returns an associative array of machine name layer to layer definition
     function getLayers(layers) {
         if(!layers || layers.length < 2) { // 1st layer is parent, children are the real layers
             return;
@@ -142,7 +156,10 @@ angular.module('npn-viz-tool.vis-map-services',[
         layers.slice(1).each(function(i,o) {
             ls.push(o);
         });
-        return ls.map(layerToObject);
+        return ls.map(layerToObject).reduce(function(map,l){
+            map[l.name] = l;
+            return map;
+        },{});
     }
     function layerToObject(layer) {
         var l = $(layer);

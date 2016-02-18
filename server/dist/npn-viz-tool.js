@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 0.1.0 - 2016-02-17
+ * Version: 0.1.0 - 2016-02-18
  */
 
 angular.module('npn-viz-tool.bounds',[
@@ -2787,6 +2787,22 @@ angular.module('npn-viz-tool.vis-map',[
 ])
 /**
  * @ngdoc controller
+ * @name npn-viz-tool.vis-map:map-vis-layer-control
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Directive to control categorized selection of WMS layers.
+ */
+.directive('mapVisLayerControl',['$log',function($log){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/mapvis/layer-control.html',
+        link: function($scope) {
+        }
+    };
+}])
+/**
+ * @ngdoc controller
  * @name npn-viz-tool.vis-map:MapVisCtrl
  * @module npn-viz-tool.vis-map
  * @description
@@ -2841,6 +2857,7 @@ angular.module('npn-viz-tool.vis-map',[
             uiGmapIsReady.promise(2).then(function(instances){
                 map = instances[1].map;
                 WmsService.getLayers(map).then(function(layers){
+                    $log.debug('layers',layers);
                     $scope.layers = layers;
                 },function(){
                     $log.error('unable to get map layers?');
@@ -2849,6 +2866,14 @@ angular.module('npn-viz-tool.vis-map',[
         });
 
         $scope.selection = {};
+        $scope.$watch('selection.layerCategory',function(category) {
+            $log.debug('layer category change ',category);
+            if($scope.selection.activeLayer) {
+                $log.debug('turning off layer ',$scope.selection.activeLayer.name);
+                $scope.selection.activeLayer.off();
+                delete $scope.selection.activeLayer;
+            }
+        });
         $scope.$watch('selection.layer',function(layer) {
             if(!layer) {
                 return;
@@ -2866,7 +2891,7 @@ angular.module('npn-viz-tool.vis-map',[
             // the selection.activeLayer.extent.current watch firing which
             // toggles the map off/on
             $log.debug('fitting new layer ',layer.name);
-            $scope.selection.activeLayer = layer.fit();
+            $scope.selection.activeLayer = layer.fit().on();
         });
         $scope.$watch('selection.activeLayer.extent.current',function(v) {
             if($scope.selection.activeLayer) {
@@ -2893,11 +2918,13 @@ angular.module('npn-viz-tool.vis-map-services',[
  * Interacts with the NPN geoserver WMS instance to supply map layer data.
  */
 .service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter',function($log,$q,$http,$httpParamSerializer,$filter){
-    var WMS_BASE_URL = 'http://geoserver.usanpn.org/geoserver/ows',
+    var LAYER_CONFIG = $http.get('map-vis-layers.json'),
+        WMS_BASE_URL = 'http://geoserver.usanpn.org/geoserver/ows',
         // not safe to change since the capabilities document format changes based on version
         // so a version change -may- require code changes wrt interpreting the document
         WMS_VERSION = '1.1.1',
         WMS_CAPABILITIES_URL = WMS_BASE_URL+'?service=wms&version='+WMS_VERSION+'&request=GetCapabilities',
+        wms_layer_config,
         wms_layer_defs,
         service = {
             /**
@@ -2912,21 +2939,32 @@ angular.module('npn-viz-tool.vis-map-services',[
              * @return {promise} A promise that will be resolved with the layers, or rejected.
              */
             getLayers: function(map) {
-                function defToLayer(def) {
-                    return new WmsMapLayer(map,def);
+
+                function mergeLayersIntoConfig() {
+                    var result = angular.copy(wms_layer_config);
+                    result.categories.forEach(function(category){
+                        category.layers = category.layers.map(function(l){
+                            return new WmsMapLayer(map,angular.extend({},wms_layer_defs[l.name],l));
+                        });
+                    });
+                    return result;
                 }
                 var def = $q.defer();
-                if(wms_layer_defs) {
-                    def.resolve(wms_layer_defs.map(defToLayer));
+                if(wms_layer_config && wms_layer_defs) {
+                    def.resolve(mergeLayersIntoConfig());
                 } else {
-                    $http.get(WMS_CAPABILITIES_URL).then(function(response){
-                        var wms_capabilities = $($.parseXML(response.data));
-                        wms_layer_defs = getLayers(wms_capabilities.find('Layer'));
-                        $log.debug('wms_layer_defs',wms_layer_defs);
-                        def.resolve(wms_layer_defs.map(defToLayer));
-                    },function() {
-                        def.reject(); // TODO, what if WMS is down, need to tell user??
-                    });
+                    // TODO need to deal with failures
+                    LAYER_CONFIG.then(function(response){
+                        wms_layer_config = response.data;
+                        $log.debug('layer_config',response.data);
+                        $http.get(WMS_CAPABILITIES_URL).then(function(response){
+                            var wms_capabilities = $($.parseXML(response.data));
+                            wms_layer_defs = getLayers(wms_capabilities.find('Layer'));
+                            $log.debug('wms_layer_defs',wms_layer_defs);
+                            def.resolve(mergeLayersIntoConfig());
+                        },def.reject);
+                    },def.reject);
+
                 }
                 return def.promise;
             }
@@ -3010,6 +3048,7 @@ angular.module('npn-viz-tool.vis-map-services',[
             return {lng: x, lat: 3189068.5 * Math.log((1.0 + Math.sin(a)) / (1.0 - Math.sin(a)))};
         }
     }
+    // returns an associative array of machine name layer to layer definition
     function getLayers(layers) {
         if(!layers || layers.length < 2) { // 1st layer is parent, children are the real layers
             return;
@@ -3019,7 +3058,10 @@ angular.module('npn-viz-tool.vis-map-services',[
         layers.slice(1).each(function(i,o) {
             ls.push(o);
         });
-        return ls.map(layerToObject);
+        return ls.map(layerToObject).reduce(function(map,l){
+            map[l.name] = l;
+            return map;
+        },{});
     }
     function layerToObject(layer) {
         var l = $(layer);
@@ -3246,7 +3288,7 @@ angular.module('npn-viz-tool.vis-map-services',[
         };
     return service;
 }]);
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/mapvis.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/layer-control.html', 'js/mapvis/mapvis.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -3572,20 +3614,33 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "</toolbar>");
 }]);
 
-angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("js/mapvis/mapvis.html",
-    "<vis-dialog title=\"Map\" modal=\"modal\">\n" +
-    "    <img ng-src=\"{{selection.layer.style.legend}}\" class=\"legend\" />\n" +
-    "    <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
-    "    </ui-gmap-google-map>\n" +
+angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/layer-control.html",
+    "<div ng-if=\"layers\" class=\"map-vis-layer-control\">\n" +
     "    <div class=\"form-group\">\n" +
+    "        <label for=\"selectedCategory\">Category</label>\n" +
+    "        <select id=\"selectedCategory\" class=\"form-control\" ng-model=\"selection.layerCategory\"\n" +
+    "                ng-options=\"cat as cat.name for cat in layers.categories\"></select>\n" +
+    "    </div>\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.layerCategory\">\n" +
     "        <label for=\"selectedLayer\">Layer</label>\n" +
-    "        <select id=\"selectedLayer\" class=\"form-control\" ng-model=\"selection.layer\" ng-options=\"l as (l.style.title+' ('+l.title+')') for l in layers\"></select>\n" +
+    "        <select id=\"selectedLayer\" class=\"form-control\" ng-model=\"selection.layer\"\n" +
+    "                ng-options=\"l as (l.style.title + ' - ' + l.title) for l in selection.layerCategory.layers\"></select>\n" +
     "    </div>\n" +
     "    <div class=\"form-group\" ng-if=\"selection.layer.extent\">\n" +
     "        <label for=\"selectedExtent\">{{selection.layer.extent.label}}</label>\n" +
     "        <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.layer.extent.current\" ng-options=\"v as v.label for v in selection.layer.extent.values\"></select>\n" +
     "    </div>\n" +
+    "</div>");
+}]);
+
+angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/mapvis.html",
+    "<vis-dialog title=\"Map\" modal=\"modal\">\n" +
+    "    <img ng-if=\"selection.activeLayer\" ng-src=\"{{selection.activeLayer.style.legend}}\" class=\"legend\" />\n" +
+    "    <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
+    "    </ui-gmap-google-map>\n" +
+    "    <map-vis-layer-control></map-vis-layer-control>\n" +
     "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
     "</vis-dialog>");
 }]);
