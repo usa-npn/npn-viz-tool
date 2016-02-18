@@ -552,7 +552,7 @@ $pulse-count: 60;
 .vis-dialog.map {
     .angular-google-map-container {
         position: inherit;
-        width:90%;
+        width:100%;
         height:500px;
         margin: 10px;
         @include rounded(5px);

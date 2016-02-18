@@ -505,7 +505,7 @@ div[title="Stop drawing"] {
 
 .vis-dialog.map .angular-google-map-container {
   position: inherit;
-  width: 90%;
+  width: 100%;
   height: 500px;
   margin: 10px;
   -webkit-border-radius: 5px;

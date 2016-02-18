@@ -13,4 +13,5 @@
         <label for="selectedExtent">{{selection.layer.extent.label}}</label>
         <select id="selectedExtent" class="form-control" ng-model="selection.layer.extent.current" ng-options="v as v.label for v in selection.layer.extent.values"></select>
     </div>
+    <p ng-if="selection.layer.abstract">{{selection.layer.abstract}}</p>
 </div>

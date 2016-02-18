@@ -8,6 +8,27 @@
 angular.module('npn-viz-tool.vis-map-services',[
 ])
 /**
+ * @ngdoc filter
+ * @name npn-viz-tool.vis-map-services:thirtyYearAvgDayOfYear
+ * @module npn-viz-tool.vis-map-services
+ * @description
+ *
+ * Filter that translates a doy value (number) into date text of 'Month day'
+ * this filter uses a base year of 2010 since the 30 yr avg layers are based on
+ * 1981-2010 and 2010 is known to have been a 365 day year (unlike, for instance,
+ * 2016 which has 366 days).
+ */
+.filter('thirtyYearAvgDayOfYear',['dateFilter',function(dateFilter){
+    var JAN_ONE = new Date(2010/*(new Date()).getFullYear()*/,0),
+        ONE_DAY = (24*60*60*1000);
+    return function(doy) {
+        if(typeof(doy) === 'string') {
+            doy = parseFloat(doy);
+        }
+        return dateFilter(new Date(JAN_ONE.getTime()+((doy-1)*ONE_DAY)),'MMMM d');
+    };
+}])
+/**
  * @ngdoc service
  * @name npn-viz-tool.vis-map-services:WmsService
  * @module npn-viz-tool.vis-map-services
@@ -223,12 +244,12 @@ angular.module('npn-viz-tool.vis-map-services',[
         }
     }
     // represents an extent value of month/day/year
-    function DateExtentValue(value) {
-        var d = new Date(value);
+    function DateExtentValue(value,dateFmt) {
+        var d = new Date(value.replace(/T.*$/,' 00:00:00')); // remove GMT, parse as if relative to local TZ
         return {
             value: value,
             date: d,
-            label: $filter('date')(d,'shortDate'),
+            label: $filter('date')(d,(dateFmt||'longDate')),
             addToWmsParams: function(params) {
                 params.time = value;
             },
@@ -244,7 +265,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     function DoyExtentValue(value) {
         return {
             value: value,
-            label: ''+value, // TODO translate to DOY
+            label: $filter('thirtyYearAvgDayOfYear')(value),
             addToWmsParams: function(params) {
                 params.elevation = value;
             },
@@ -257,29 +278,58 @@ angular.module('npn-viz-tool.vis-map-services',[
         };
     }
     function parseExtent(extent) {
-        var e = $(extent),content,dflt,
-            name = e.attr('name');
+        var e = $(extent),
+            content = e.text(),
+            dfltValue = e.attr('default'),
+            dflt,values,
+            name = e.attr('name'),
+            start,end,yearFmt = 'yyyy',i;
+        if(!name || !content) {
+            return undefined;
+        }
+        function findDefault(current,value) {
+            return current||(value.value == dfltValue ? value : undefined);
+        }
         if(name === 'time') {
-            content = e.text();
-            if(content && content.indexOf('/') === -1) { // for now skip <lower>/<upper>/<resolution>
-                dflt = new DateExtentValue(e.attr('default'));
+            if(content.indexOf('/') === -1) { // for now skip <lower>/<upper>/<resolution>
+                values = content.split(',').map(function(d) { return new DateExtentValue(d); });
+                // ugh
+                dfltValue = dfltValue.replace(/0Z/,'0.000Z'); // extent values in ms preceision but not the default...
+                dflt = values.reduce(findDefault,undefined);
                 return {
-                    label: 'Time',
-                    type: 'time',
-                    dflt: dflt,
+                    label: 'Date',
+                    type: 'date',
                     current: dflt, // bind the extent value to use here
-                    values: content.split(',').map(function(d) { return new DateExtentValue(d); })
+                    values: values
                 };
+            } else {
+                values = /^([^\/]+)\/(.*)\/P1Y$/.exec(content);
+                if(values && values.length === 3) {
+                    start = new DateExtentValue(values[1],yearFmt);
+                    end = new DateExtentValue(values[2],yearFmt);
+                    if(end.date.getFullYear() > start.date.getFullYear()) { // should never happen but to be safe
+                        values = [start];
+                        for(i = start.date.getFullYear()+1; i < end.date.getFullYear();i++) {
+                            values.push(new DateExtentValue(i+'-01-01T00:00:00.000Z',yearFmt));
+                        }
+                        values.push(end);
+                        return {
+                            label: 'Year',
+                            type: 'year',
+                            current: end,
+                            values: values
+                        };
+                    }
+                }
             }
         } else if (name === 'elevation') {
-            content = e.text();
-            dflt = new DoyExtentValue(e.attr('default'));
+            values = content.split(',').map(function(e) { return new DoyExtentValue(e); });
+            dflt = values.reduce(findDefault,undefined);
             return {
-                label: 'Elevation',
-                type: 'elevation',
-                dflt: dflt,
+                label: 'Day of Year',
+                type: 'doy',
                 current: dflt, // bind the extent value to use here
-                values: content.split(',').map(function(e) { return new DoyExtentValue(e); })
+                values: values
             };
         }
     }

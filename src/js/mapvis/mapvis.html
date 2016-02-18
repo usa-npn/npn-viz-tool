@@ -1,7 +1,14 @@
 <vis-dialog title="Map" modal="modal">
-    <img ng-if="selection.activeLayer" ng-src="{{selection.activeLayer.style.legend}}" class="legend" />
-    <ui-gmap-google-map ng-if="wms_map" center='wms_map.center' zoom='wms_map.zoom' options="wms_map.options" events="wms_map.events">
-    </ui-gmap-google-map>
-    <map-vis-layer-control></map-vis-layer-control>
-    <p ng-if="selection.layer.abstract">{{selection.layer.abstract}}</p>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-8">
+                <ui-gmap-google-map ng-if="wms_map" center='wms_map.center' zoom='wms_map.zoom' options="wms_map.options" events="wms_map.events">
+                </ui-gmap-google-map>
+            </div>
+            <div class="col-xs-4">
+                <map-vis-layer-control></map-vis-layer-control>
+            </div>
+        </div>
+    </div>
+    <!--img ng-if="selection.activeLayer" ng-src="{{selection.activeLayer.style.legend}}" class="legend" /-->
 </vis-dialog>

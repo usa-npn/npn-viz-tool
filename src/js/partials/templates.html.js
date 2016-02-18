@@ -341,17 +341,25 @@ angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", functi
     "        <label for=\"selectedExtent\">{{selection.layer.extent.label}}</label>\n" +
     "        <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.layer.extent.current\" ng-options=\"v as v.label for v in selection.layer.extent.values\"></select>\n" +
     "    </div>\n" +
+    "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
     "</div>");
 }]);
 
 angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/mapvis.html",
     "<vis-dialog title=\"Map\" modal=\"modal\">\n" +
-    "    <img ng-if=\"selection.activeLayer\" ng-src=\"{{selection.activeLayer.style.legend}}\" class=\"legend\" />\n" +
-    "    <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
-    "    </ui-gmap-google-map>\n" +
-    "    <map-vis-layer-control></map-vis-layer-control>\n" +
-    "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
+    "    <div class=\"container-fluid\">\n" +
+    "        <div class=\"row\">\n" +
+    "            <div class=\"col-xs-8\">\n" +
+    "                <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
+    "                </ui-gmap-google-map>\n" +
+    "            </div>\n" +
+    "            <div class=\"col-xs-4\">\n" +
+    "                <map-vis-layer-control></map-vis-layer-control>\n" +
+    "            </div>\n" +
+    "        </div>\n" +
+    "    </div>\n" +
+    "    <!--img ng-if=\"selection.activeLayer\" ng-src=\"{{selection.activeLayer.style.legend}}\" class=\"legend\" /-->\n" +
     "</vis-dialog>");
 }]);
 
