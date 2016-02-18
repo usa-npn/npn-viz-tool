@@ -2265,6 +2265,14 @@ angular.module('npn-viz-tool.layers',[
             };
         }
     }
+    function addMissingFeatureNames(f,i){
+        if(!f.properties) {
+            f.properties = {};
+        }
+        if(!f.properties.NAME) {
+            f.properties.NAME = ''+i;
+        }
+    }
     function loadLayerData(layer) {
         var def = $q.defer();
         if(layer.data) {
@@ -2285,16 +2293,12 @@ angular.module('npn-viz-tool.layers',[
                     });
                     data.type = 'FeatureCollection';
                     delete data.geometries;
-                } else {
-                    data.features.forEach(function(f,i){
-                        if(!f.properties) {
-                            f.properties = {};
-                        }
-                        if(!f.properties.NAME) {
-                            f.properties.NAME = ''+i;
-                        }
-                    });
+                } else if (data.type === 'Topology') {
+                    $log.debug('Translating Topojson to GeoJson');
+                    data = topojson.feature(data,data.objects[Object.keys(data.objects)[0]]);
                 }
+                // make sure all features have a name
+                data.features.forEach(addMissingFeatureNames);
                 // calculate centers
                 data.features.forEach(calculateCenter);
                 layer.data = data;

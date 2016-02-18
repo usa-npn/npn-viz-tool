@@ -1,7 +1,7 @@
 [{
     "id" : "primary",
     "label" : "US States",
-    "file" : "us-states.geojson",
+    "file" : "us-states.json",
     "img" : "layers/usa-map.jpg"
 },{
     "id" : "fwsr",

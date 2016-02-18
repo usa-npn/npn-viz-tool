@@ -19,6 +19,7 @@
     "jasmine-jquery": "~2.0.7",
     "angular-google-maps": "2.3.x",
     "d3": "~3.5.5",
+    "topojson": "~1.6.19",
     "bootstrap": "~3.3.2",
     "angular-multi-select": "4.0.0",
     "angular-md5": "0.1.x"
