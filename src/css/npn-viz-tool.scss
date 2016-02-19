@@ -554,12 +554,12 @@ $pulse-count: 60;
         position: inherit;
         width:100%;
         height:500px;
-        margin: 10px;
         @include rounded(5px);
         border: 1px solid #aaa;
     }
     .legend {
-        float: right;
-        max-height: 500px;
+        width: 100%;
+        margin-top: 10px;
+        border: none;
     }
 }

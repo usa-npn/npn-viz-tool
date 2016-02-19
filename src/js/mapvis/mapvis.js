@@ -143,6 +143,83 @@ angular.module('npn-viz-tool.vis-map',[
         }
     };
 }])
+.directive('mapVisLegend',['$log','$window',function($log,$window){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/mapvis/legend.html',
+        scope: {
+            legend: '='
+        },
+        link: function($scope,$element) {
+            function redraw() {
+                var legend = $scope.legend,
+                    svg = d3.select('.legend');
+
+                svg.selectAll('g').remove(); // clean slate
+                if(!legend) {
+                    return;
+                }
+                $log.debug('legend.title',legend.getTitle());
+                $log.debug('legend.length',legend.length);
+                $log.debug('legend.colors',legend.getColors());
+                $log.debug('legend.quantities',legend.getQuantities());
+                $log.debug('legend.labels',legend.getLabels());
+
+                var width = parseFloat(svg.style('width').replace('px','')),
+                    height = parseFloat(svg.style('height').replace('px','')),
+                    data = legend.getData(),
+                    cell_width = width/data.length,
+                    cell_height = 30;
+                $log.debug('svg dimensions',width,height);
+                $log.debug('legend cell width',cell_width);
+
+                var g = svg.append('g');
+                g.selectAll('g.cell')
+                 .data(data)
+                 .enter()
+                 .append('g')
+                 .attr('class','cell')
+                 .attr('transform',function(d,i) { return 'translate('+(i*cell_width)+',0)'; })
+                 .append('rect')
+                 .attr('height',cell_height)
+                 .attr('width',cell_width)
+                 .style('stroke','black')
+                 .style('stroke-width','1px')
+                 .style('fill',function(d,i) { return d.color; });
+
+                var tick_length = 5,
+                    tick_padding = 3;
+
+                function label_cell(cell,label,anchor) {
+                    var tick_start = (cell_height+tick_padding);
+                    cell.append('line')
+                        .attr('x1',(cell_width/2))
+                        .attr('y1',tick_start)
+                        .attr('x2',(cell_width/2))
+                        .attr('y2',tick_start+tick_length)
+                        .attr('stroke','black')
+                        .attr('stroke-width','1');
+                    cell.append('text')
+                        .attr('dx',(cell_width/2))
+                        .attr('dy','3.8em'/*cell_height+tick_length+(2*tick_padding)*/) // need to know line height of text
+                        .style('text-anchor',anchor)
+                        .text(label);
+                }
+                var cells = g.selectAll('g.cell')[0],
+                    mid_idx = Math.floor(cells.length/2);
+                label_cell(d3.select(cells[0]),data[0].label,'start');
+                label_cell(d3.select(cells[mid_idx]),data[mid_idx].label,'middle');
+                label_cell(d3.select(cells[cells.length-1]),data[data.length-1].label,'end');
+            }
+            $scope.$watch('legend',redraw);
+            $($window).bind('resize',redraw);
+            $scope.$on('$destroy',function(){
+                $log.debug('legend removing resize handler');
+                $($window).unbind('resize',redraw);
+            });
+        }
+    };
+}])
 /**
  * @ngdoc controller
  * @name npn-viz-tool.vis-map:MapVisCtrl
@@ -218,6 +295,7 @@ angular.module('npn-viz-tool.vis-map',[
                 $log.debug('turning off layer ',$scope.selection.activeLayer.name);
                 $scope.selection.activeLayer.off();
                 delete $scope.selection.activeLayer;
+                delete $scope.legend;
             }
         });
         $scope.$watch('selection.layer',function(layer) {
@@ -239,6 +317,10 @@ angular.module('npn-viz-tool.vis-map',[
             $log.debug('fitting new layer ',layer.name);
             $scope.selection.activeLayer = layer.fit().on();
             boundsRestrictor.setBounds(layer.getBounds());
+            delete $scope.legend;
+            WmsService.getLegend(layer).then(function(legend){
+                $scope.legend = legend;
+            });
         });
         $scope.$watch('selection.activeLayer.extent.current',function(v) {
             if($scope.selection.activeLayer) {

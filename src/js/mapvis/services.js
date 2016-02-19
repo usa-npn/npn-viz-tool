@@ -39,13 +39,14 @@ angular.module('npn-viz-tool.vis-map-services',[
  */
 .service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter',function($log,$q,$http,$httpParamSerializer,$filter){
     var LAYER_CONFIG = $http.get('map-vis-layers.json'),
-        WMS_BASE_URL = 'http://geoserver.usanpn.org/geoserver/ows',
+        WMS_BASE_URL = 'http://geoserver.usanpn.org/geoserver/wms',
         // not safe to change since the capabilities document format changes based on version
         // so a version change -may- require code changes wrt interpreting the document
         WMS_VERSION = '1.1.1',
         WMS_CAPABILITIES_URL = WMS_BASE_URL+'?service=wms&version='+WMS_VERSION+'&request=GetCapabilities',
         wms_layer_config,
         wms_layer_defs,
+        legends = {},
         service = {
             /**
              * @ngdoc method
@@ -87,8 +88,64 @@ angular.module('npn-viz-tool.vis-map-services',[
 
                 }
                 return def.promise;
+            },
+            getLegend: function(layer) {
+                var def = $q.defer();
+                if(legends.hasOwnProperty(layer.name)) {
+                    def.resolve(legends[layer.name]);
+                } else {
+                    //http://geoserver.usanpn.org/geoserver/wms?request=GetStyles&layers=gdd%3A30yr_avg_agdd&service=wms&version=1.1.1
+                    $http.get(WMS_BASE_URL,{
+                        params: {
+                            service: 'wms',
+                            request: 'GetStyles',
+                            version: WMS_VERSION,
+                            layers: layer.name,
+                        }
+                    }).then(function(response) {
+                        $log.debug('legend response',response);
+                        var legend_data = $($.parseXML(response.data)),
+                            color_map = legend_data.find('ColorMap');
+                        // this code is selecting the first if there are multiples....
+                        // as is the case for si-x:leaf_anomaly
+                        legends[layer.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0])) : undefined;
+                        def.resolve(legends[layer.name]);
+                    },def.reject);
+                }
+                return def.promise;
             }
         };
+
+    function WmsMapLegend(color_map) {
+        var data = color_map.find('ColorMapEntry').toArray().reduce(function(arr,entry){
+            var e = $(entry);
+            arr.push({
+                color: e.attr('color'),
+                quantity: parseFloat(e.attr('quantity')),
+                label: e.attr('label')
+            });
+            return arr;
+        },[]);
+        this.title_data = data[0];
+        this.data = data.slice(1);
+        this.length = this.data.length;
+    }
+    WmsMapLegend.prototype.getData = function() {
+        return this.data;
+    };
+    WmsMapLegend.prototype.getTitle = function() {
+        return this.title_data.label;
+    };
+    WmsMapLegend.prototype.getColors = function() {
+        return this.data.map(function(data){ return data.color; });
+    };
+    WmsMapLegend.prototype.getQuantities = function() {
+        return this.data.map(function(data){ return data.quantity; });
+    };
+    WmsMapLegend.prototype.getLabels = function() {
+        return this.data.map(function(data){ return data.label; });
+    };
+
 
     function WmsMapLayer(map,layer_def) {
         var wmsArgs = {

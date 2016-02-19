@@ -4,6 +4,7 @@
             <div class="col-xs-8">
                 <ui-gmap-google-map ng-if="wms_map" center='wms_map.center' zoom='wms_map.zoom' options="wms_map.options" events="wms_map.events">
                 </ui-gmap-google-map>
+                <map-vis-legend legend="legend"></map-vis-legend>
             </div>
             <div class="col-xs-4">
                 <map-vis-layer-control></map-vis-layer-control>

@@ -2998,6 +2998,83 @@ angular.module('npn-viz-tool.vis-map',[
         }
     };
 }])
+.directive('mapVisLegend',['$log','$window',function($log,$window){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/mapvis/legend.html',
+        scope: {
+            legend: '='
+        },
+        link: function($scope,$element) {
+            function redraw() {
+                var legend = $scope.legend,
+                    svg = d3.select('.legend');
+
+                svg.selectAll('g').remove(); // clean slate
+                if(!legend) {
+                    return;
+                }
+                $log.debug('legend.title',legend.getTitle());
+                $log.debug('legend.length',legend.length);
+                $log.debug('legend.colors',legend.getColors());
+                $log.debug('legend.quantities',legend.getQuantities());
+                $log.debug('legend.labels',legend.getLabels());
+
+                var width = parseFloat(svg.style('width').replace('px','')),
+                    height = parseFloat(svg.style('height').replace('px','')),
+                    data = legend.getData(),
+                    cell_width = width/data.length,
+                    cell_height = 30;
+                $log.debug('svg dimensions',width,height);
+                $log.debug('legend cell width',cell_width);
+
+                var g = svg.append('g');
+                g.selectAll('g.cell')
+                 .data(data)
+                 .enter()
+                 .append('g')
+                 .attr('class','cell')
+                 .attr('transform',function(d,i) { return 'translate('+(i*cell_width)+',0)'; })
+                 .append('rect')
+                 .attr('height',cell_height)
+                 .attr('width',cell_width)
+                 .style('stroke','black')
+                 .style('stroke-width','1px')
+                 .style('fill',function(d,i) { return d.color; });
+
+                var tick_length = 5,
+                    tick_padding = 3;
+
+                function label_cell(cell,label,anchor) {
+                    var tick_start = (cell_height+tick_padding);
+                    cell.append('line')
+                        .attr('x1',(cell_width/2))
+                        .attr('y1',tick_start)
+                        .attr('x2',(cell_width/2))
+                        .attr('y2',tick_start+tick_length)
+                        .attr('stroke','black')
+                        .attr('stroke-width','1');
+                    cell.append('text')
+                        .attr('dx',(cell_width/2))
+                        .attr('dy','3.8em'/*cell_height+tick_length+(2*tick_padding)*/) // need to know line height of text
+                        .style('text-anchor',anchor)
+                        .text(label);
+                }
+                var cells = g.selectAll('g.cell')[0],
+                    mid_idx = Math.floor(cells.length/2);
+                label_cell(d3.select(cells[0]),data[0].label,'start');
+                label_cell(d3.select(cells[mid_idx]),data[mid_idx].label,'middle');
+                label_cell(d3.select(cells[cells.length-1]),data[data.length-1].label,'end');
+            }
+            $scope.$watch('legend',redraw);
+            $($window).bind('resize',redraw);
+            $scope.$on('$destroy',function(){
+                $log.debug('legend removing resize handler');
+                $($window).unbind('resize',redraw);
+            });
+        }
+    };
+}])
 /**
  * @ngdoc controller
  * @name npn-viz-tool.vis-map:MapVisCtrl
@@ -3073,6 +3150,7 @@ angular.module('npn-viz-tool.vis-map',[
                 $log.debug('turning off layer ',$scope.selection.activeLayer.name);
                 $scope.selection.activeLayer.off();
                 delete $scope.selection.activeLayer;
+                delete $scope.legend;
             }
         });
         $scope.$watch('selection.layer',function(layer) {
@@ -3094,6 +3172,10 @@ angular.module('npn-viz-tool.vis-map',[
             $log.debug('fitting new layer ',layer.name);
             $scope.selection.activeLayer = layer.fit().on();
             boundsRestrictor.setBounds(layer.getBounds());
+            delete $scope.legend;
+            WmsService.getLegend(layer).then(function(legend){
+                $scope.legend = legend;
+            });
         });
         $scope.$watch('selection.activeLayer.extent.current',function(v) {
             if($scope.selection.activeLayer) {
@@ -3143,13 +3225,14 @@ angular.module('npn-viz-tool.vis-map-services',[
  */
 .service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter',function($log,$q,$http,$httpParamSerializer,$filter){
     var LAYER_CONFIG = $http.get('map-vis-layers.json'),
-        WMS_BASE_URL = 'http://geoserver.usanpn.org/geoserver/ows',
+        WMS_BASE_URL = 'http://geoserver.usanpn.org/geoserver/wms',
         // not safe to change since the capabilities document format changes based on version
         // so a version change -may- require code changes wrt interpreting the document
         WMS_VERSION = '1.1.1',
         WMS_CAPABILITIES_URL = WMS_BASE_URL+'?service=wms&version='+WMS_VERSION+'&request=GetCapabilities',
         wms_layer_config,
         wms_layer_defs,
+        legends = {},
         service = {
             /**
              * @ngdoc method
@@ -3191,8 +3274,64 @@ angular.module('npn-viz-tool.vis-map-services',[
 
                 }
                 return def.promise;
+            },
+            getLegend: function(layer) {
+                var def = $q.defer();
+                if(legends.hasOwnProperty(layer.name)) {
+                    def.resolve(legends[layer.name]);
+                } else {
+                    //http://geoserver.usanpn.org/geoserver/wms?request=GetStyles&layers=gdd%3A30yr_avg_agdd&service=wms&version=1.1.1
+                    $http.get(WMS_BASE_URL,{
+                        params: {
+                            service: 'wms',
+                            request: 'GetStyles',
+                            version: WMS_VERSION,
+                            layers: layer.name,
+                        }
+                    }).then(function(response) {
+                        $log.debug('legend response',response);
+                        var legend_data = $($.parseXML(response.data)),
+                            color_map = legend_data.find('ColorMap');
+                        // this code is selecting the first if there are multiples....
+                        // as is the case for si-x:leaf_anomaly
+                        legends[layer.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0])) : undefined;
+                        def.resolve(legends[layer.name]);
+                    },def.reject);
+                }
+                return def.promise;
             }
         };
+
+    function WmsMapLegend(color_map) {
+        var data = color_map.find('ColorMapEntry').toArray().reduce(function(arr,entry){
+            var e = $(entry);
+            arr.push({
+                color: e.attr('color'),
+                quantity: parseFloat(e.attr('quantity')),
+                label: e.attr('label')
+            });
+            return arr;
+        },[]);
+        this.title_data = data[0];
+        this.data = data.slice(1);
+        this.length = this.data.length;
+    }
+    WmsMapLegend.prototype.getData = function() {
+        return this.data;
+    };
+    WmsMapLegend.prototype.getTitle = function() {
+        return this.title_data.label;
+    };
+    WmsMapLegend.prototype.getColors = function() {
+        return this.data.map(function(data){ return data.color; });
+    };
+    WmsMapLegend.prototype.getQuantities = function() {
+        return this.data.map(function(data){ return data.quantity; });
+    };
+    WmsMapLegend.prototype.getLabels = function() {
+        return this.data.map(function(data){ return data.label; });
+    };
+
 
     function WmsMapLayer(map,layer_def) {
         var wmsArgs = {
@@ -3541,7 +3680,7 @@ angular.module('npn-viz-tool.vis-map-services',[
         };
     return service;
 }]);
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/date-control.html', 'js/mapvis/doy-control.html', 'js/mapvis/layer-control.html', 'js/mapvis/mapvis.html', 'js/mapvis/year-control.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/date-control.html', 'js/mapvis/doy-control.html', 'js/mapvis/layer-control.html', 'js/mapvis/legend.html', 'js/mapvis/mapvis.html', 'js/mapvis/year-control.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -3923,6 +4062,11 @@ angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", functi
     "</div>");
 }]);
 
+angular.module("js/mapvis/legend.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/legend.html",
+    "<svg class=\"legend\"></svg>");
+}]);
+
 angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/mapvis.html",
     "<vis-dialog title=\"Map\" modal=\"modal\">\n" +
@@ -3931,6 +4075,7 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "            <div class=\"col-xs-8\">\n" +
     "                <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
     "                </ui-gmap-google-map>\n" +
+    "                <map-vis-legend legend=\"legend\"></map-vis-legend>\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
     "                <map-vis-layer-control></map-vis-layer-control>\n" +
