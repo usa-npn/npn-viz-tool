@@ -151,9 +151,12 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Controller for the gridded data map visualization dialog.
  */
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','uiGmapGoogleMapApi','uiGmapIsReady','WmsService','WcsService','FilterService','ChartService','SettingsService',
-    function($scope,$uibModalInstance,$filter,$log,uiGmapGoogleMapApi,uiGmapIsReady,WmsService,WcsService,FilterService,ChartService,SettingsService){
-        var api,map,infoWindow;
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','WcsService','FilterService','ChartService','SettingsService',
+    function($scope,$uibModalInstance,$filter,$log,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,WcsService,FilterService,ChartService,SettingsService){
+        var api,
+            map,
+            infoWindow,
+            boundsRestrictor = RestrictedBoundsService.getRestrictor('map_vis');
         $scope.modal = $uibModalInstance;
         $scope.wms_map = {
             center: { latitude: 48.35674, longitude: -122.39658 },
@@ -191,7 +194,8 @@ angular.module('npn-viz-tool.vis-map',[
                                 $log.error('unable to get gridded data.');
                             });
                     }
-                }
+                },
+                center_changed: boundsRestrictor.center_changed
             }
         };
         uiGmapGoogleMapApi.then(function(maps){
@@ -234,6 +238,7 @@ angular.module('npn-viz-tool.vis-map',[
             // toggles the map off/on
             $log.debug('fitting new layer ',layer.name);
             $scope.selection.activeLayer = layer.fit().on();
+            boundsRestrictor.setBounds(layer.getBounds());
         });
         $scope.$watch('selection.activeLayer.extent.current',function(v) {
             if($scope.selection.activeLayer) {

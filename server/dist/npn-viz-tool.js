@@ -3,10 +3,111 @@
  * Version: 0.1.0 - 2016-02-19
  */
 
+/**
+ * @ngdoc overview
+ * @name npn-viz-tool.bounds
+ * @description
+ *
+ * Bounds related functionality.
+ */
 angular.module('npn-viz-tool.bounds',[
     'npn-viz-tool.filter',
     'uiGmapgoogle-maps'
 ])
+/**
+ * @ngdoc service
+ * @name npn-viz-tool.bounds:RestrictedBoundsService
+ * @module npn-viz-tool.bounds
+ * @description
+ *
+ * Provides objects that can be used to handle Google Map 'center_changed' events to keep the user
+ * from moving a map outside a set of defined boundaries.
+ *
+ * If you add the query argument <code>allowedBounds</code> to the app then the first time the user tries to
+ * recenter the map a partially opaque white rectangle will be added to the map showing the bounds the given map
+ * will be restricted to.
+ */
+.service('RestrictedBoundsService',['$log','$location','uiGmapGoogleMapApi',function($log,$location,uiGmapGoogleMapApi){
+    var DEBUG = $location.search()['allowedBounds'],
+        instances = {},
+        service = {
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.bounds:RestrictedBoundsService
+             * @name  getRestrictor
+             * @description
+             *
+             * Fetch an object that can be used to keep a user from panning a map outside of a
+             * set of defined bounds.
+             *
+             * E.g.
+             * <pre>
+             * var restrictor = RestrictedBoundsService.getRestrictor('main_map',latLngBounds);
+             * $scope.map.events.center_changed = restrictor.center_changned;
+             * </pre>
+             *
+             * @param {string} key A unique key to identifiy the map instance the restrictor is associated with.
+             * @param {google.maps.LatLngBounds} bounds The initial set of bounds to restrict movements to.  Can be changed via setBounds.
+             * @return {object} A "BoundsRestrictor" object.
+             */
+            getRestrictor: function(key,bounds) {
+                if(!instances[key]) {
+                    instances[key] = new BoundsRestrictor(key);
+                }
+                instances[key].setBounds(bounds);
+                return instances[key];
+            }
+        };
+    var BoundsRestrictor = function(key) {
+        this.key = key;
+        var self = this;
+        self.center_changed = function(map,ename,args) {
+            $log.debug('['+self.key+'].center_changed');
+            if(!self.bounds) {
+                $log.debug('['+self.key+'] no bounds set ignoring.');
+                return;
+            }
+            if(DEBUG && !self.rectangle) {
+                self.rectangle = new google.maps.Rectangle({
+                    strokeColor: '#FFF',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: '#FFF',
+                    fillOpacity: 0.35,
+                    map: map,
+                    bounds: self.bounds
+                });
+            }
+            if(self.bounds.contains(map.getCenter())) {
+                self.lastValidCenter = map.getCenter();
+                return;
+            }
+            $log.debug('['+self.key+'] attempted to pan center out of bounds, panning back to ',self.lastValidCenter);
+            map.panTo(self.lastValidCenter);
+        };
+    };
+    BoundsRestrictor.prototype.setBounds = function(newBounds) {
+        $log.debug('['+this.key+'].setBounds:',newBounds);
+        this.bounds = newBounds;
+        this.lastValidCenter = newBounds ? newBounds.getCenter() : undefined;
+        if(this.rectangle) {
+            this.rectangle.setMap(null);
+        }
+        this.rectangle = undefined;
+    };
+    BoundsRestrictor.prototype.getBounds = function() {
+        return this.bounds;
+    };
+    return service;
+}])
+/**
+ * @ngdoc directive
+ * @name npn-viz-tool.bounds:bounds-manager
+ * @module npn-viz-tool.bounds
+ * @description
+ *
+ * Handles the ability for users to draw rectangles on the main map and have it affect the underlying filter.
+ */
 .directive('boundsManager',['$rootScope','$log','uiGmapGoogleMapApi','FilterService','BoundsFilterArg',
     function($rootScope,$log,uiGmapGoogleMapApi,FilterService,BoundsFilterArg){
     return {
@@ -2642,8 +2743,8 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.help',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','FilterService','HelpService',
-    function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,FilterService,HelpService){
+.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','FilterService','HelpService',
+    function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,FilterService,HelpService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
@@ -2657,6 +2758,10 @@ angular.module('npn-viz-tool.map',[
             $scope.stationView = false;
             uiGmapGoogleMapApi.then(function(maps) {
                 api = maps;
+                var boundsRestrictor = RestrictedBoundsService.getRestrictor('base_map',new api.LatLngBounds(
+                             new google.maps.LatLng(0.0,-174.0),// SW - out in the pacific SWof HI
+                             new google.maps.LatLng(75.0,-43.0) // NE - somewhere in greenland
+                        ));
                 $scope.map = {
                     center: dfltCenter,
                     zoom: dfltZoom,
@@ -2674,45 +2779,23 @@ angular.module('npn-viz-tool.map',[
                             style: maps.ZoomControlStyle.SMALL,
                             position: maps.ControlPosition.RIGHT_TOP
                         }
+                    },
+                    events: {
+                        center_changed: boundsRestrictor.center_changed
                     }
                 };
-            });
-            uiGmapIsReady.promise(1).then(function(instances){
-                map = instances[0].map;
-                // this is a little leaky, the map knows which args the "share" control cares about...
-                // date is the minimum requirement for filtering.
-                var qargs = $location.search(),
-                    qArgFilter = qargs['d'] && (qargs['s'] || qargs['n']);
-
-                // constrain map movement to N America
-                var allowedBounds = new api.LatLngBounds(
-                         new google.maps.LatLng(0.0,-174.0),// SW - out in the pacific SWof HI
-                         new google.maps.LatLng(75.0,-43.0) // NE - somewhere in greenland
-                    ),
-                    lastValidCenter = map.getCenter();
-                if(qargs['allowedBounds']) {
-                    var allowedBoundsRectangle = new api.Rectangle();
-                    allowedBoundsRectangle.setOptions({
-                      strokeColor: '#FFF',
-                      strokeOpacity: 0.8,
-                      strokeWeight: 2,
-                      fillColor: '#FFF',
-                      fillOpacity: 0.35,
-                      map: map,
-                      bounds: allowedBounds
-                    });
-                }
-                api.event.addListener(map,'center_changed',function(){
-                    if(allowedBounds.contains(map.getCenter())) {
-                        lastValidCenter = map.getCenter();
-                        return;
+                uiGmapIsReady.promise(1).then(function(instances){
+                    map = instances[0].map;
+                    // this is a little leaky, the map knows which args the "share" control cares about...
+                    // date is the minimum requirement for filtering.
+                    var qargs = $location.search(),
+                        qArgFilter = qargs['d'] && (qargs['s'] || qargs['n']);
+                    if(!qArgFilter) {
+                        stationViewOn();
                     }
-                    map.panTo(lastValidCenter);
                 });
-                if(!qArgFilter) {
-                    stationViewOn();
-                }
             });
+
             function stationViewOff() {
                 $scope.stationView = false;
             }
@@ -2923,9 +3006,12 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Controller for the gridded data map visualization dialog.
  */
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','uiGmapGoogleMapApi','uiGmapIsReady','WmsService','WcsService','FilterService','ChartService','SettingsService',
-    function($scope,$uibModalInstance,$filter,$log,uiGmapGoogleMapApi,uiGmapIsReady,WmsService,WcsService,FilterService,ChartService,SettingsService){
-        var api,map,infoWindow;
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','WcsService','FilterService','ChartService','SettingsService',
+    function($scope,$uibModalInstance,$filter,$log,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,WcsService,FilterService,ChartService,SettingsService){
+        var api,
+            map,
+            infoWindow,
+            boundsRestrictor = RestrictedBoundsService.getRestrictor('map_vis');
         $scope.modal = $uibModalInstance;
         $scope.wms_map = {
             center: { latitude: 48.35674, longitude: -122.39658 },
@@ -2963,7 +3049,8 @@ angular.module('npn-viz-tool.vis-map',[
                                 $log.error('unable to get gridded data.');
                             });
                     }
-                }
+                },
+                center_changed: boundsRestrictor.center_changed
             }
         };
         uiGmapGoogleMapApi.then(function(maps){
@@ -3006,6 +3093,7 @@ angular.module('npn-viz-tool.vis-map',[
             // toggles the map off/on
             $log.debug('fitting new layer ',layer.name);
             $scope.selection.activeLayer = layer.fit().on();
+            boundsRestrictor.setBounds(layer.getBounds());
         });
         $scope.$watch('selection.activeLayer.extent.current',function(v) {
             if($scope.selection.activeLayer) {
@@ -3752,7 +3840,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "\n" +
     "<npn-working></npn-working>\n" +
     "\n" +
-    "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\">\n" +
+    "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\" events=\"map.events\">\n" +
     "    <npn-stations ng-if=\"stationView\"></npn-stations>\n" +
     "    <npn-filter-results></npn-filter-results>\n" +
     "    <bounds-manager></bounds-manager>\n" +

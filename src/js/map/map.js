@@ -11,8 +11,8 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.help',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','FilterService','HelpService',
-    function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,FilterService,HelpService){
+.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','FilterService','HelpService',
+    function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,FilterService,HelpService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
@@ -26,6 +26,10 @@ angular.module('npn-viz-tool.map',[
             $scope.stationView = false;
             uiGmapGoogleMapApi.then(function(maps) {
                 api = maps;
+                var boundsRestrictor = RestrictedBoundsService.getRestrictor('base_map',new api.LatLngBounds(
+                             new google.maps.LatLng(0.0,-174.0),// SW - out in the pacific SWof HI
+                             new google.maps.LatLng(75.0,-43.0) // NE - somewhere in greenland
+                        ));
                 $scope.map = {
                     center: dfltCenter,
                     zoom: dfltZoom,
@@ -43,45 +47,23 @@ angular.module('npn-viz-tool.map',[
                             style: maps.ZoomControlStyle.SMALL,
                             position: maps.ControlPosition.RIGHT_TOP
                         }
+                    },
+                    events: {
+                        center_changed: boundsRestrictor.center_changed
                     }
                 };
-            });
-            uiGmapIsReady.promise(1).then(function(instances){
-                map = instances[0].map;
-                // this is a little leaky, the map knows which args the "share" control cares about...
-                // date is the minimum requirement for filtering.
-                var qargs = $location.search(),
-                    qArgFilter = qargs['d'] && (qargs['s'] || qargs['n']);
-
-                // constrain map movement to N America
-                var allowedBounds = new api.LatLngBounds(
-                         new google.maps.LatLng(0.0,-174.0),// SW - out in the pacific SWof HI
-                         new google.maps.LatLng(75.0,-43.0) // NE - somewhere in greenland
-                    ),
-                    lastValidCenter = map.getCenter();
-                if(qargs['allowedBounds']) {
-                    var allowedBoundsRectangle = new api.Rectangle();
-                    allowedBoundsRectangle.setOptions({
-                      strokeColor: '#FFF',
-                      strokeOpacity: 0.8,
-                      strokeWeight: 2,
-                      fillColor: '#FFF',
-                      fillOpacity: 0.35,
-                      map: map,
-                      bounds: allowedBounds
-                    });
-                }
-                api.event.addListener(map,'center_changed',function(){
-                    if(allowedBounds.contains(map.getCenter())) {
-                        lastValidCenter = map.getCenter();
-                        return;
+                uiGmapIsReady.promise(1).then(function(instances){
+                    map = instances[0].map;
+                    // this is a little leaky, the map knows which args the "share" control cares about...
+                    // date is the minimum requirement for filtering.
+                    var qargs = $location.search(),
+                        qArgFilter = qargs['d'] && (qargs['s'] || qargs['n']);
+                    if(!qArgFilter) {
+                        stationViewOn();
                     }
-                    map.panTo(lastValidCenter);
                 });
-                if(!qArgFilter) {
-                    stationViewOn();
-                }
             });
+
             function stationViewOff() {
                 $scope.stationView = false;
             }

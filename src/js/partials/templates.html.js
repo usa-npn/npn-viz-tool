@@ -297,7 +297,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "\n" +
     "<npn-working></npn-working>\n" +
     "\n" +
-    "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\">\n" +
+    "<ui-gmap-google-map ng-if=\"map\" center='map.center' zoom='map.zoom' options=\"map.options\" events=\"map.events\">\n" +
     "    <npn-stations ng-if=\"stationView\"></npn-stations>\n" +
     "    <npn-filter-results></npn-filter-results>\n" +
     "    <bounds-manager></bounds-manager>\n" +

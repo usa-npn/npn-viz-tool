@@ -1,0 +1,29 @@
+<h1><code ng:non-bindable="">RestrictedBoundsService</code>
+<div><span class="hint">service in module <code ng:non-bindable="">npn-viz-tool</code>
+</span>
+</div>
+</h1>
+<div><h2 id="description">Description</h2>
+<div class="description"><div class="npn-viz-tool-bounds-page npn-viz-tool-bounds-restrictedboundsservice-page"><p>Provides objects that can be used to handle Google Map &#39;center_changed&#39; events to keep the user
+from moving a map outside a set of defined boundaries.</p>
+<p>If you add the query argument <code>allowedBounds</code> to the app then the first time the user tries to
+recenter the map a partially opaque white rectangle will be added to the map showing the bounds the given map
+will be restricted to.</p>
+</div></div>
+<div class="member method"><h2 id="methods">Methods</h2>
+<ul class="methods"><li><h3 id="methods_getrestrictor">getRestrictor(key, bounds)</h3>
+<div class="getrestrictor"><div class="getrestrictor-page"><p>Fetch an object that can be used to keep a user from panning a map outside of a
+set of defined bounds.</p>
+<p>E.g.
+<pre class="prettyprint linenums">
+var restrictor = RestrictedBoundsService.getRestrictor('main_map',latLngBounds);
+$scope.map.events.center_changed = restrictor.center_changned;
+</pre>
+</div><h5 id="methods_getrestrictor_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>key</td><td><a href="" class="label type-hint type-hint-string">string</a></td><td><div class="getrestrictor-page"><p>A unique key to identifiy the map instance the restrictor is associated with.</p>
+</div></td></tr><tr><td>bounds</td><td><a href="" class="label type-hint type-hint-google">google.maps.LatLngBounds</a></td><td><div class="getrestrictor-page"><p>The initial set of bounds to restrict movements to.  Can be changed via setBounds.</p>
+</div></td></tr></tbody></table><h5 id="methods_getrestrictor_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="getrestrictor-page"><p>A &quot;BoundsRestrictor&quot; object.</p>
+</div></td></tr></table></div>
+</li>
+</ul>
+</div>
+</div>
