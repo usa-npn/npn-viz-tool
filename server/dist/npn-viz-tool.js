@@ -2812,36 +2812,39 @@ angular.module('npn-viz-tool.vis-map',[
     return {
         restrict: 'E',
         templateUrl: 'js/mapvis/doy-control.html',
+        scope: {
+            layer: '='
+        },
         link: function($scope) {
-            $scope.selection.doyControl= $scope.selection.doyControl||{};
-            $scope.selection.doyControl.months = MONTHS;
-            $scope.selection.doyControl.selection = $scope.selection.doyControl.selection||{};
-            var currentDate = thirtyYearAvgDayOfYearFilter($scope.selection.layer.extent.current.value,true);
-            $scope.selection.doyControl.selection.month = MONTHS[currentDate.getMonth()];
+            $scope.months = MONTHS;
+            var currentDate = thirtyYearAvgDayOfYearFilter($scope.layer.extent.current.value,true);
+            $scope.selection = {
+                month: MONTHS[currentDate.getMonth()]
+            };
             function dateWatch(date) {
-                $scope.selection.doyControl.selection.month.setDate(date);
+                $scope.selection.month.setDate(date);
                 // this feels a little hoakey matching on label but...
-                var label = thirtyYearAvgDayOfYearFilter($scope.selection.doyControl.selection.month);
+                var label = thirtyYearAvgDayOfYearFilter($scope.selection.month);
                 $log.debug('doy-control:date '+label);
-                $scope.selection.layer.extent.current = $scope.selection.layer.extent.values.reduce(function(current,v){
+                $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,v){
                     return current||(v.label === label ? v : undefined);
                 },undefined);
             }
-            $scope.$watch('selection.doyControl.selection.month',function(date) {
-                var month = $scope.selection.doyControl.selection.month;
+            $scope.$watch('selection.month',function(date) {
+                var month = $scope.selection.month;
                 $log.debug('doy-control:month '+(month.getMonth()+1));
-                $scope.selection.doyControl.dates = d3.range(1,getDaysInMonth(month)+1);
+                $scope.dates = d3.range(1,getDaysInMonth(month)+1);
                 if(currentDate) {
-                    // this is the first change (init)
-                    $scope.selection.doyControl.selection.date = currentDate.getDate();
+                    // init
+                    $scope.selection.date = currentDate.getDate();
                     currentDate = undefined;
-                } else if($scope.selection.doyControl.selection.date === 1) {
+                } else if($scope.selection.date === 1) {
                     dateWatch(1); // month change without date change, need to force the extent to update.
                 } else {
-                    $scope.selection.doyControl.selection.date = 1;
+                    $scope.selection.date = 1;
                 }
             });
-            $scope.$watch('selection.doyControl.selection.date',dateWatch);
+            $scope.$watch('selection.date',dateWatch);
         }
     };
 }])
@@ -2857,6 +2860,9 @@ angular.module('npn-viz-tool.vis-map',[
     return {
         restrict: 'E',
         templateUrl: 'js/mapvis/year-control.html',
+        scope: {
+            layer: '='
+        },
         link: function($scope) {
         }
     };
@@ -2869,11 +2875,27 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Control for date extents.
  */
-.directive('mapVisDateControl',['$log',function($log){
+.directive('mapVisDateControl',['$log','dateFilter',function($log,dateFilter){
     return {
         restrict: 'E',
         templateUrl: 'js/mapvis/date-control.html',
+        scope: {
+            layer: '='
+        },
         link: function($scope) {
+            // TODO - hide the today/clear buttons
+            $scope.selection = $scope.layer.extent.current.date;
+            $scope.open = function() {
+                $scope.isOpen = true;
+            };
+            $scope.$watch('selection',function(date) {
+                $log.debug('selection',date);
+                var fmt = 'longDate',
+                    formattedDate = dateFilter(date,fmt);
+                $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,value){
+                    return current||(formattedDate === dateFilter(value.date,fmt) ? value : undefined);
+                },undefined);
+            });
         }
     };
 }])
@@ -3759,10 +3781,19 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
 
 angular.module("js/mapvis/date-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/date-control.html",
-    "<div class=\"form-group\" ng-if=\"selection.layer.extent\">\n" +
-    "    <label for=\"selectedExtent\">{{selection.layer.extent.label}} (Date:TODO)</label>\n" +
-    "    <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.layer.extent.current\" ng-options=\"v as v.label for v in selection.layer.extent.values\"></select>\n" +
-    "</div>");
+    "<label>Date</label>\n" +
+    "<p class=\"input-group\">\n" +
+    "  <input type=\"text\" class=\"form-control\"\n" +
+    "        uib-datepicker-popup=\"longDate\"\n" +
+    "        ng-model=\"selection\"\n" +
+    "        is-open=\"isOpen\"\n" +
+    "        min-date=\"layer.extent.values[0].date\"\n" +
+    "        max-date=\"layer.extent.values[layer.extent.values.length-1].date\"\n" +
+    "        close-text=\"Close\" />\n" +
+    "  <span class=\"input-group-btn\">\n" +
+    "    <button type=\"button\" class=\"btn btn-default\" ng-click=\"open()\"><i class=\"glyphicon glyphicon-calendar\"></i></button>\n" +
+    "  </span>\n" +
+    "</p>");
 }]);
 
 angular.module("js/mapvis/doy-control.html", []).run(["$templateCache", function($templateCache) {
@@ -3771,13 +3802,13 @@ angular.module("js/mapvis/doy-control.html", []).run(["$templateCache", function
     "<div class=\"form-inline\" style=\"margin-bottom: 15px;\">\n" +
     "    <div class=\"form-group\">\n" +
     "        <label for=\"selectedMonth\" class=\"sr-only\">Month</label>\n" +
-    "        <select id=\"selectedMonth\" class=\"form-control\" ng-model=\"selection.doyControl.selection.month\"\n" +
-    "                ng-options=\"m as (m | date:'MMMM') for m in selection.doyControl.months\"></select>\n" +
+    "        <select id=\"selectedMonth\" class=\"form-control\" ng-model=\"selection.month\"\n" +
+    "                ng-options=\"m as (m | date:'MMMM') for m in months\"></select>\n" +
     "    </div>\n" +
-    "    <div class=\"form-group\" ng-if=\"selection.doyControl.selection.month\">\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.month\">\n" +
     "        <label for=\"selectedDate\" class=\"sr-only\">Day</label>\n" +
-    "        <select id=\"selectedDate\" class=\"form-control\" ng-model=\"selection.doyControl.selection.date\"\n" +
-    "                ng-options=\"d for d in selection.doyControl.dates\"></select>\n" +
+    "        <select id=\"selectedDate\" class=\"form-control\" ng-model=\"selection.date\"\n" +
+    "                ng-options=\"d for d in dates\"></select>\n" +
     "    </div>\n" +
     "</div>");
 }]);
@@ -3796,9 +3827,9 @@ angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", functi
     "                ng-options=\"l as (l.style.title + ' - ' + l.title) for l in selection.layerCategory.layers\"></select>\n" +
     "    </div>\n" +
     "    <div class=\"extent-control\" ng-if=\"selection.layer.extent\" ng-switch=\"selection.layer.extent.type\">\n" +
-    "        <map-vis-doy-control ng-switch-when=\"doy\"></map-vis-doy-control>\n" +
-    "        <map-vis-date-control ng-switch-when=\"date\"></map-vis-date-control>\n" +
-    "        <map-vis-year-control ng-switch-when=\"year\"></map-vis-year-control>\n" +
+    "        <map-vis-doy-control ng-switch-when=\"doy\" layer=\"selection.layer\"></map-vis-doy-control>\n" +
+    "        <map-vis-date-control ng-switch-when=\"date\" layer=\"selection.layer\"></map-vis-date-control>\n" +
+    "        <map-vis-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></map-vis-year-control>\n" +
     "    </div>\n" +
     "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
     "</div>");
@@ -3824,9 +3855,9 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
 
 angular.module("js/mapvis/year-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/year-control.html",
-    "<div class=\"form-group\" ng-if=\"selection.layer.extent\">\n" +
-    "    <label for=\"selectedExtent\">{{selection.layer.extent.label}} (Year:TODO)</label>\n" +
-    "    <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.layer.extent.current\" ng-options=\"v as v.label for v in selection.layer.extent.values\"></select>\n" +
+    "<div class=\"form-group\" ng-if=\"layer.extent\">\n" +
+    "    <label for=\"selectedExtent\">Year</label>\n" +
+    "    <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"layer.extent.current\" ng-options=\"v as v.label for v in layer.extent.values\"></select>\n" +
     "</div>");
 }]);
 

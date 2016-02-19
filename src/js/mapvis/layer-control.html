@@ -10,9 +10,9 @@
                 ng-options="l as (l.style.title + ' - ' + l.title) for l in selection.layerCategory.layers"></select>
     </div>
     <div class="extent-control" ng-if="selection.layer.extent" ng-switch="selection.layer.extent.type">
-        <map-vis-doy-control ng-switch-when="doy"></map-vis-doy-control>
-        <map-vis-date-control ng-switch-when="date"></map-vis-date-control>
-        <map-vis-year-control ng-switch-when="year"></map-vis-year-control>
+        <map-vis-doy-control ng-switch-when="doy" layer="selection.layer"></map-vis-doy-control>
+        <map-vis-date-control ng-switch-when="date" layer="selection.layer"></map-vis-date-control>
+        <map-vis-year-control ng-switch-when="year" layer="selection.layer"></map-vis-year-control>
     </div>
     <p ng-if="selection.layer.abstract">{{selection.layer.abstract}}</p>
 </div>

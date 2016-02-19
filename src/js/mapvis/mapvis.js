@@ -40,36 +40,39 @@ angular.module('npn-viz-tool.vis-map',[
     return {
         restrict: 'E',
         templateUrl: 'js/mapvis/doy-control.html',
+        scope: {
+            layer: '='
+        },
         link: function($scope) {
-            $scope.selection.doyControl= $scope.selection.doyControl||{};
-            $scope.selection.doyControl.months = MONTHS;
-            $scope.selection.doyControl.selection = $scope.selection.doyControl.selection||{};
-            var currentDate = thirtyYearAvgDayOfYearFilter($scope.selection.layer.extent.current.value,true);
-            $scope.selection.doyControl.selection.month = MONTHS[currentDate.getMonth()];
+            $scope.months = MONTHS;
+            var currentDate = thirtyYearAvgDayOfYearFilter($scope.layer.extent.current.value,true);
+            $scope.selection = {
+                month: MONTHS[currentDate.getMonth()]
+            };
             function dateWatch(date) {
-                $scope.selection.doyControl.selection.month.setDate(date);
+                $scope.selection.month.setDate(date);
                 // this feels a little hoakey matching on label but...
-                var label = thirtyYearAvgDayOfYearFilter($scope.selection.doyControl.selection.month);
+                var label = thirtyYearAvgDayOfYearFilter($scope.selection.month);
                 $log.debug('doy-control:date '+label);
-                $scope.selection.layer.extent.current = $scope.selection.layer.extent.values.reduce(function(current,v){
+                $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,v){
                     return current||(v.label === label ? v : undefined);
                 },undefined);
             }
-            $scope.$watch('selection.doyControl.selection.month',function(date) {
-                var month = $scope.selection.doyControl.selection.month;
+            $scope.$watch('selection.month',function(date) {
+                var month = $scope.selection.month;
                 $log.debug('doy-control:month '+(month.getMonth()+1));
-                $scope.selection.doyControl.dates = d3.range(1,getDaysInMonth(month)+1);
+                $scope.dates = d3.range(1,getDaysInMonth(month)+1);
                 if(currentDate) {
-                    // this is the first change (init)
-                    $scope.selection.doyControl.selection.date = currentDate.getDate();
+                    // init
+                    $scope.selection.date = currentDate.getDate();
                     currentDate = undefined;
-                } else if($scope.selection.doyControl.selection.date === 1) {
+                } else if($scope.selection.date === 1) {
                     dateWatch(1); // month change without date change, need to force the extent to update.
                 } else {
-                    $scope.selection.doyControl.selection.date = 1;
+                    $scope.selection.date = 1;
                 }
             });
-            $scope.$watch('selection.doyControl.selection.date',dateWatch);
+            $scope.$watch('selection.date',dateWatch);
         }
     };
 }])
@@ -85,6 +88,9 @@ angular.module('npn-viz-tool.vis-map',[
     return {
         restrict: 'E',
         templateUrl: 'js/mapvis/year-control.html',
+        scope: {
+            layer: '='
+        },
         link: function($scope) {
         }
     };
@@ -97,11 +103,27 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Control for date extents.
  */
-.directive('mapVisDateControl',['$log',function($log){
+.directive('mapVisDateControl',['$log','dateFilter',function($log,dateFilter){
     return {
         restrict: 'E',
         templateUrl: 'js/mapvis/date-control.html',
+        scope: {
+            layer: '='
+        },
         link: function($scope) {
+            // TODO - hide the today/clear buttons
+            $scope.selection = $scope.layer.extent.current.date;
+            $scope.open = function() {
+                $scope.isOpen = true;
+            };
+            $scope.$watch('selection',function(date) {
+                $log.debug('selection',date);
+                var fmt = 'longDate',
+                    formattedDate = dateFilter(date,fmt);
+                $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,value){
+                    return current||(formattedDate === dateFilter(value.date,fmt) ? value : undefined);
+                },undefined);
+            });
         }
     };
 }])

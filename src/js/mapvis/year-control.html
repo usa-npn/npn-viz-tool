@@ -1,4 +1,4 @@
-<div class="form-group" ng-if="selection.layer.extent">
-    <label for="selectedExtent">{{selection.layer.extent.label}} (Year:TODO)</label>
-    <select id="selectedExtent" class="form-control" ng-model="selection.layer.extent.current" ng-options="v as v.label for v in selection.layer.extent.values"></select>
+<div class="form-group" ng-if="layer.extent">
+    <label for="selectedExtent">Year</label>
+    <select id="selectedExtent" class="form-control" ng-model="layer.extent.current" ng-options="v as v.label for v in layer.extent.values"></select>
 </div>

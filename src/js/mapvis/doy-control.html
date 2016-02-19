@@ -2,12 +2,12 @@
 <div class="form-inline" style="margin-bottom: 15px;">
     <div class="form-group">
         <label for="selectedMonth" class="sr-only">Month</label>
-        <select id="selectedMonth" class="form-control" ng-model="selection.doyControl.selection.month"
-                ng-options="m as (m | date:'MMMM') for m in selection.doyControl.months"></select>
+        <select id="selectedMonth" class="form-control" ng-model="selection.month"
+                ng-options="m as (m | date:'MMMM') for m in months"></select>
     </div>
-    <div class="form-group" ng-if="selection.doyControl.selection.month">
+    <div class="form-group" ng-if="selection.month">
         <label for="selectedDate" class="sr-only">Day</label>
-        <select id="selectedDate" class="form-control" ng-model="selection.doyControl.selection.date"
-                ng-options="d for d in selection.doyControl.dates"></select>
+        <select id="selectedDate" class="form-control" ng-model="selection.date"
+                ng-options="d for d in dates"></select>
     </div>
 </div>

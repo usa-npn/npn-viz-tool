@@ -326,10 +326,19 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
 
 angular.module("js/mapvis/date-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/date-control.html",
-    "<div class=\"form-group\" ng-if=\"selection.layer.extent\">\n" +
-    "    <label for=\"selectedExtent\">{{selection.layer.extent.label}} (Date:TODO)</label>\n" +
-    "    <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.layer.extent.current\" ng-options=\"v as v.label for v in selection.layer.extent.values\"></select>\n" +
-    "</div>");
+    "<label>Date</label>\n" +
+    "<p class=\"input-group\">\n" +
+    "  <input type=\"text\" class=\"form-control\"\n" +
+    "        uib-datepicker-popup=\"longDate\"\n" +
+    "        ng-model=\"selection\"\n" +
+    "        is-open=\"isOpen\"\n" +
+    "        min-date=\"layer.extent.values[0].date\"\n" +
+    "        max-date=\"layer.extent.values[layer.extent.values.length-1].date\"\n" +
+    "        close-text=\"Close\" />\n" +
+    "  <span class=\"input-group-btn\">\n" +
+    "    <button type=\"button\" class=\"btn btn-default\" ng-click=\"open()\"><i class=\"glyphicon glyphicon-calendar\"></i></button>\n" +
+    "  </span>\n" +
+    "</p>");
 }]);
 
 angular.module("js/mapvis/doy-control.html", []).run(["$templateCache", function($templateCache) {
@@ -338,13 +347,13 @@ angular.module("js/mapvis/doy-control.html", []).run(["$templateCache", function
     "<div class=\"form-inline\" style=\"margin-bottom: 15px;\">\n" +
     "    <div class=\"form-group\">\n" +
     "        <label for=\"selectedMonth\" class=\"sr-only\">Month</label>\n" +
-    "        <select id=\"selectedMonth\" class=\"form-control\" ng-model=\"selection.doyControl.selection.month\"\n" +
-    "                ng-options=\"m as (m | date:'MMMM') for m in selection.doyControl.months\"></select>\n" +
+    "        <select id=\"selectedMonth\" class=\"form-control\" ng-model=\"selection.month\"\n" +
+    "                ng-options=\"m as (m | date:'MMMM') for m in months\"></select>\n" +
     "    </div>\n" +
-    "    <div class=\"form-group\" ng-if=\"selection.doyControl.selection.month\">\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.month\">\n" +
     "        <label for=\"selectedDate\" class=\"sr-only\">Day</label>\n" +
-    "        <select id=\"selectedDate\" class=\"form-control\" ng-model=\"selection.doyControl.selection.date\"\n" +
-    "                ng-options=\"d for d in selection.doyControl.dates\"></select>\n" +
+    "        <select id=\"selectedDate\" class=\"form-control\" ng-model=\"selection.date\"\n" +
+    "                ng-options=\"d for d in dates\"></select>\n" +
     "    </div>\n" +
     "</div>");
 }]);
@@ -363,9 +372,9 @@ angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", functi
     "                ng-options=\"l as (l.style.title + ' - ' + l.title) for l in selection.layerCategory.layers\"></select>\n" +
     "    </div>\n" +
     "    <div class=\"extent-control\" ng-if=\"selection.layer.extent\" ng-switch=\"selection.layer.extent.type\">\n" +
-    "        <map-vis-doy-control ng-switch-when=\"doy\"></map-vis-doy-control>\n" +
-    "        <map-vis-date-control ng-switch-when=\"date\"></map-vis-date-control>\n" +
-    "        <map-vis-year-control ng-switch-when=\"year\"></map-vis-year-control>\n" +
+    "        <map-vis-doy-control ng-switch-when=\"doy\" layer=\"selection.layer\"></map-vis-doy-control>\n" +
+    "        <map-vis-date-control ng-switch-when=\"date\" layer=\"selection.layer\"></map-vis-date-control>\n" +
+    "        <map-vis-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></map-vis-year-control>\n" +
     "    </div>\n" +
     "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
     "</div>");
@@ -391,9 +400,9 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
 
 angular.module("js/mapvis/year-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/year-control.html",
-    "<div class=\"form-group\" ng-if=\"selection.layer.extent\">\n" +
-    "    <label for=\"selectedExtent\">{{selection.layer.extent.label}} (Year:TODO)</label>\n" +
-    "    <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"selection.layer.extent.current\" ng-options=\"v as v.label for v in selection.layer.extent.values\"></select>\n" +
+    "<div class=\"form-group\" ng-if=\"layer.extent\">\n" +
+    "    <label for=\"selectedExtent\">Year</label>\n" +
+    "    <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"layer.extent.current\" ng-options=\"v as v.label for v in layer.extent.values\"></select>\n" +
     "</div>");
 }]);
 
