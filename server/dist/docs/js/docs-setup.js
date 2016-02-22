@@ -59,6 +59,42 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.vis-map-services:legendAgddAnomaly",
+      "shortName": "legendAgddAnomaly",
+      "type": "filter",
+      "moduleName": "npn-viz-tool.vis-map-services",
+      "shortDescription": "Formats legend numbers for agdd anomaly layers.",
+      "keywords": "agdd anomaly api filter formats layers legend npn-viz-tool numbers vis-map-services"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.vis-map-services:legendDegrees",
+      "shortName": "legendDegrees",
+      "type": "filter",
+      "moduleName": "npn-viz-tool.vis-map-services",
+      "shortDescription": "Formats legend numbers in degrees, assumes F if no unit supplied.",
+      "keywords": "api assumes degrees filter formats legend npn-viz-tool numbers supplied unit vis-map-services"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.vis-map-services:legendDoy",
+      "shortName": "legendDoy",
+      "type": "filter",
+      "moduleName": "npn-viz-tool.vis-map-services",
+      "shortDescription": "Simplified version of thirtyYearAvgDayOfYear that simply takes a number day of year",
+      "keywords": "api day default doy equates filter format formatted inconsistent legend mmm npn-viz-tool number regard returns scales simplified simply takes thirtyyearavgdayofyear version vis-map-services year"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.vis-map-services:legendSixAnomaly",
+      "shortName": "legendSixAnomaly",
+      "type": "filter",
+      "moduleName": "npn-viz-tool.vis-map-services",
+      "shortDescription": "Formats legend numbers for spring index anomaly layers",
+      "keywords": "anomaly api filter formats layers legend npn-viz-tool numbers spring vis-map-services"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.vis-map-services:thirtyYearAvgDayOfYear",
       "shortName": "thirtyYearAvgDayOfYear",
       "type": "filter",
@@ -110,6 +146,15 @@ NG_DOCS={
       "moduleName": "npn-viz-tool.vis-map",
       "shortDescription": "Directive to control categorized selection of WMS layers.",
       "keywords": "api categorized control directive layers npn-viz-tool selection vis-map wms"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.vis-map:map-vis-legend",
+      "shortName": "map-vis-legend",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.vis-map",
+      "shortDescription": "Directive to dynamically display an interactive legend for a seleted map layer.",
+      "keywords": "api directive display dynamically interactive layer legend map npn-viz-tool seleted vis-map"
     },
     {
       "section": "api",

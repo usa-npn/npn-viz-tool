@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 0.1.0 - 2016-02-19
+ * Version: 0.1.0 - 2016-02-22
  */
 
 /**
@@ -2998,6 +2998,14 @@ angular.module('npn-viz-tool.vis-map',[
         }
     };
 }])
+/**
+ * @ngdoc directive
+ * @name npn-viz-tool.vis-map:map-vis-legend
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Directive to dynamically display an interactive legend for a seleted map layer.
+ */
 .directive('mapVisLegend',['$log','$window',function($log,$window){
     return {
         restrict: 'E',
@@ -3019,6 +3027,7 @@ angular.module('npn-viz-tool.vis-map',[
                 $log.debug('legend.colors',legend.getColors());
                 $log.debug('legend.quantities',legend.getQuantities());
                 $log.debug('legend.labels',legend.getLabels());
+                $log.debug('legend.original_labels',legend.getOriginalLabels());
 
                 var width = parseFloat(svg.style('width').replace('px','')),
                     height = parseFloat(svg.style('height').replace('px','')),
@@ -3040,7 +3049,9 @@ angular.module('npn-viz-tool.vis-map',[
                  .attr('width',cell_width)
                  .style('stroke','black')
                  .style('stroke-width','1px')
-                 .style('fill',function(d,i) { return d.color; });
+                 .style('fill',function(d,i) { return d.color; })
+                 .append('title')
+                 .text(function(d) { return d.label; });
 
                 var tick_length = 5,
                     tick_padding = 3;
@@ -3173,7 +3184,7 @@ angular.module('npn-viz-tool.vis-map',[
             $scope.selection.activeLayer = layer.fit().on();
             boundsRestrictor.setBounds(layer.getBounds());
             delete $scope.legend;
-            WmsService.getLegend(layer).then(function(legend){
+            $scope.selection.activeLayer.getLegend(layer).then(function(legend){
                 $scope.legend = legend;
             });
         });
@@ -3216,6 +3227,80 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
 }])
 /**
+ * @ngdoc filter
+ * @name npn-viz-tool.vis-map-services:legendDoy
+ * @module npn-viz-tool.vis-map-services
+ * @description
+ *
+ * Simplified version of thirtyYearAvgDayOfYear that simply takes a number day of year
+ * and returns a formatted date.  Default format is 'MMM d'.
+ *
+ * This filter equates doy 0 with doy 1 since legend scales are inconsistent in this regard.
+ */
+.filter('legendDoy',['dateFilter',function(dateFilter){
+    var JAN_ONE_2010 = new Date(2010/*(new Date()).getFullYear()*/,0),
+        JAN_ONE_THIS_YEAR = new Date((new Date()).getFullYear(),0),
+        ONE_DAY = (24*60*60*1000);
+    return function(doy,fmt,current_year) {
+        if(doy === 0) {
+            doy = 1;
+        }
+        fmt = fmt||'MMM d'; // e.g. Jan 1
+        return dateFilter(new Date((current_year ? JAN_ONE_THIS_YEAR : JAN_ONE_2010).getTime()+((doy-1)*ONE_DAY)),fmt);
+    };
+}])
+/**
+ * @ngdoc filter
+ * @name npn-viz-tool.vis-map-services:legendDegrees
+ * @module npn-viz-tool.vis-map-services
+ * @description
+ *
+ * Formats legend numbers in degrees, assumes F if no unit supplied.
+ */
+.filter('legendDegrees',[function(){
+    return function(n,unit) {
+        return n+'\u00B0'+(unit||'F');
+    };
+}])
+/**
+ * @ngdoc filter
+ * @name npn-viz-tool.vis-map-services:legendAgddAnomaly
+ * @module npn-viz-tool.vis-map-services
+ * @description
+ *
+ * Formats legend numbers for agdd anomaly layers.
+ */
+.filter('legendAgddAnomaly',[function(){
+    return function(n) {
+        if(n === 0) {
+            return 'No Difference';
+        }
+        var lt = n < 0;
+        return Math.abs(n)+'\u00B0F '+(lt ? '<' : '>') +' Avg';
+    };
+}])
+/**
+ * @ngdoc filter
+ * @name npn-viz-tool.vis-map-services:legendSixAnomaly
+ * @module npn-viz-tool.vis-map-services
+ * @description
+ *
+ * Formats legend numbers for spring index anomaly layers
+ */
+.filter('legendSixAnomaly',[function(){
+    return function(n) {
+        if(n === 0) {
+            return 'No Difference';
+        }
+        var lt = n < 0,
+            abs = Math.abs(n);
+        if(abs === 20) { // this is very weird but it's in alignment with how the original scale was built.
+            abs = 10;
+        }
+        return abs+' Days '+(lt ? 'Early' : 'Late');
+    };
+}])
+/**
  * @ngdoc service
  * @name npn-viz-tool.vis-map-services:WmsService
  * @module npn-viz-tool.vis-map-services
@@ -3246,12 +3331,16 @@ angular.module('npn-viz-tool.vis-map-services',[
              * @return {promise} A promise that will be resolved with the layers, or rejected.
              */
             getLayers: function(map) {
-
                 function mergeLayersIntoConfig() {
                     var result = angular.copy(wms_layer_config);
                     result.categories.forEach(function(category){
+                        // layers can inherit config like filters (if all in common) from
+                        // the base category
+                        var base_config = angular.copy(category);
+                        delete base_config.name;
+                        delete base_config.layers;
                         category.layers = category.layers.map(function(l){
-                            return new WmsMapLayer(map,angular.extend({},wms_layer_defs[l.name],l));
+                            return new WmsMapLayer(map,angular.extend(angular.copy(base_config),wms_layer_defs[l.name],l));
                         });
                     });
                     return result;
@@ -3274,44 +3363,35 @@ angular.module('npn-viz-tool.vis-map-services',[
 
                 }
                 return def.promise;
-            },
-            getLegend: function(layer) {
-                var def = $q.defer();
-                if(legends.hasOwnProperty(layer.name)) {
-                    def.resolve(legends[layer.name]);
-                } else {
-                    //http://geoserver.usanpn.org/geoserver/wms?request=GetStyles&layers=gdd%3A30yr_avg_agdd&service=wms&version=1.1.1
-                    $http.get(WMS_BASE_URL,{
-                        params: {
-                            service: 'wms',
-                            request: 'GetStyles',
-                            version: WMS_VERSION,
-                            layers: layer.name,
-                        }
-                    }).then(function(response) {
-                        $log.debug('legend response',response);
-                        var legend_data = $($.parseXML(response.data)),
-                            color_map = legend_data.find('ColorMap');
-                        // this code is selecting the first if there are multiples....
-                        // as is the case for si-x:leaf_anomaly
-                        legends[layer.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0])) : undefined;
-                        def.resolve(legends[layer.name]);
-                    },def.reject);
-                }
-                return def.promise;
             }
         };
 
-    function WmsMapLegend(color_map) {
-        var data = color_map.find('ColorMapEntry').toArray().reduce(function(arr,entry){
-            var e = $(entry);
-            arr.push({
-                color: e.attr('color'),
-                quantity: parseFloat(e.attr('quantity')),
-                label: e.attr('label')
-            });
-            return arr;
-        },[]);
+    function WmsMapLegend(color_map,ldef) {
+        var lformat = ldef.legend_label_filter ?
+                (function(){
+                    var filter = $filter(ldef.legend_label_filter.name);
+                    return function(l,q) {
+                        var args = [q];
+                        if(ldef.legend_label_filter.args) {
+                            args = args.concat(ldef.legend_label_filter.args);
+                        }
+                        return filter.apply(undefined, args);
+                    };
+                })() : angular.identity,
+            data = color_map.find('ColorMapEntry').toArray().reduce(function(arr,entry,i){
+                var e = $(entry),
+                    q = parseFloat(e.attr('quantity')),
+                    l = e.attr('label');
+                arr.push({
+                    color: e.attr('color'),
+                    quantity: q,
+                    original_label: l,
+                    label: i === 0 ? l : lformat(l,q)
+                });
+                return arr;
+            },[]);
+        this.ldef = ldef;
+        this.lformat = lformat;
         this.title_data = data[0];
         this.data = data.slice(1);
         this.length = this.data.length;
@@ -3331,7 +3411,9 @@ angular.module('npn-viz-tool.vis-map-services',[
     WmsMapLegend.prototype.getLabels = function() {
         return this.data.map(function(data){ return data.label; });
     };
-
+    WmsMapLegend.prototype.getOriginalLabels = function() {
+        return this.data.map(function(data){ return data.original_label; });
+    };
 
     function WmsMapLayer(map,layer_def) {
         var wmsArgs = {
@@ -3386,6 +3468,31 @@ angular.module('npn-viz-tool.vis-map-services',[
                     map.overlayMapTypes.pop();
                 }
                 return l;
+            },
+            getLegend: function() {
+                var def = $q.defer();
+                if(legends.hasOwnProperty(layer_def.name)) {
+                    def.resolve(legends[layer_def.name]);
+                } else {
+                    //http://geoserver.usanpn.org/geoserver/wms?request=GetStyles&layers=gdd%3A30yr_avg_agdd&service=wms&version=1.1.1
+                    $http.get(WMS_BASE_URL,{
+                        params: {
+                            service: 'wms',
+                            request: 'GetStyles',
+                            version: WMS_VERSION,
+                            layers: layer_def.name,
+                        }
+                    }).then(function(response) {
+                        $log.debug('legend response',response);
+                        var legend_data = $($.parseXML(response.data)),
+                            color_map = legend_data.find('ColorMap');
+                        // this code is selecting the first if there are multiples....
+                        // as is the case for si-x:leaf_anomaly
+                        legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def) : undefined;
+                        def.resolve(legends[layer_def.name]);
+                    },def.reject);
+                }
+                return def.promise;
             }
         });
         return l;

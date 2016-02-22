@@ -143,6 +143,14 @@ angular.module('npn-viz-tool.vis-map',[
         }
     };
 }])
+/**
+ * @ngdoc directive
+ * @name npn-viz-tool.vis-map:map-vis-legend
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Directive to dynamically display an interactive legend for a seleted map layer.
+ */
 .directive('mapVisLegend',['$log','$window',function($log,$window){
     return {
         restrict: 'E',
@@ -164,6 +172,7 @@ angular.module('npn-viz-tool.vis-map',[
                 $log.debug('legend.colors',legend.getColors());
                 $log.debug('legend.quantities',legend.getQuantities());
                 $log.debug('legend.labels',legend.getLabels());
+                $log.debug('legend.original_labels',legend.getOriginalLabels());
 
                 var width = parseFloat(svg.style('width').replace('px','')),
                     height = parseFloat(svg.style('height').replace('px','')),
@@ -185,7 +194,9 @@ angular.module('npn-viz-tool.vis-map',[
                  .attr('width',cell_width)
                  .style('stroke','black')
                  .style('stroke-width','1px')
-                 .style('fill',function(d,i) { return d.color; });
+                 .style('fill',function(d,i) { return d.color; })
+                 .append('title')
+                 .text(function(d) { return d.label; });
 
                 var tick_length = 5,
                     tick_padding = 3;
@@ -318,7 +329,7 @@ angular.module('npn-viz-tool.vis-map',[
             $scope.selection.activeLayer = layer.fit().on();
             boundsRestrictor.setBounds(layer.getBounds());
             delete $scope.legend;
-            WmsService.getLegend(layer).then(function(legend){
+            $scope.selection.activeLayer.getLegend(layer).then(function(legend){
                 $scope.legend = legend;
             });
         });

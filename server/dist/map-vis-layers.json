@@ -1,6 +1,10 @@
 {
     "categories": [{
         "name": "30-year Average AGDD",
+        "legend_label_filter": {
+            "name": "legendDegrees",
+            "args": ["F"]
+        },
         "layers":[{
                 "title": "32\u00B0F",
                 "name": "gdd:30yr_avg_agdd"
@@ -10,6 +14,10 @@
             }]
     },{
         "name": "Current Year AGDD",
+        "legend_label_filter": {
+            "name": "legendDegrees",
+            "args": ["F"]
+        },
         "layers":[{
                 "title": "32\u00B0F",
                 "name": "gdd:agdd"
@@ -19,6 +27,9 @@
             }]
     },{
         "name": "AGDD Anomaly Map",
+        "legend_label_filter": {
+            "name": "legendAgddAnomaly"
+        },
         "layers":[{
                 "title": "32\u00B0F",
                 "name": "gdd:agdd_anomaly"
@@ -28,6 +39,10 @@
             }]
     },{
         "name": "Spring Index, Annual Map",
+        "legend_label_filter": {
+            "name": "legendDoy",
+            "args": ["MMM d", true]
+        },
         "layers":[{
                 "title": "Arnold Red Leaf (prism)",
                 "name": "si-x:arnoldred_leaf_prism"
@@ -55,6 +70,10 @@
             }]
     },{
         "name": "Spring Index, Current Year",
+        "legend_label_filter": {
+            "name": "legendDoy",
+            "args": ["MMM d", true]
+        },
         "layers": [{
                 "title": "Arnold Red Leaf (ncep)",
                 "name": "si-x:arnoldred_leaf_ncep"
@@ -82,6 +101,9 @@
             }]
     },{
         "name": "Spring Index, Anomaly",
+        "legend_label_filter": {
+            "name": "legendSixAnomaly"
+        },
         "layers": [{
                 "title": "Leaf Anomaly",
                 "name": "si-x:leaf_anomaly"
@@ -91,6 +113,9 @@
             }]
     },{
         "name": "Spring Index, 30-Year Average",
+        "legend_label_filter": {
+            "name": "legendDoy"
+        },
         "layers": [{
                 "title": "30 Year Average Six Leaf",
                 "name": "si-x:30yr_avg_six_leaf"
