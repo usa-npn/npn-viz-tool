@@ -122,6 +122,7 @@ angular.module('npn-viz-tool.vis-map-services',[
         wms_layer_defs,
         legends = {},
         service = {
+            baseUrl: WMS_BASE_URL,
             /**
              * @ngdoc method
              * @methodOf npn-viz-tool.vis-map-services:WmsService
@@ -266,6 +267,9 @@ angular.module('npn-viz-tool.vis-map-services',[
             name: (layer_def.title||layer_def.name)
         }),
         l = angular.extend({},layer_def,{
+            getMap: function() {
+                return map;
+            },
             getBounds: function() {
                 if(layer_def.bbox) {
                     return layer_def.bbox.getBounds();

@@ -11,8 +11,81 @@ angular.module('npn-viz-tool.vis-map',[
     'npn-viz-tool.filters',
     'npn-viz-tool.settings',
     'npn-viz-tool.vis-map-services',
-    'ui.bootstrap'
+    'ui.bootstrap',
+    'angularAwesomeSlider'
 ])
+/**
+ * @ngdoc directive
+ * @name npn-viz-tool.vis-map:map-vis-opacity-slider
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Dynamically controls the opacity of map tiles.
+ */
+.directive('mapVisOpacitySlider',['$log','$timeout','WmsService',function($log,$timeout,WmsService) {
+    var SELECTOR = 'img[src*="'+WmsService.baseUrl+'"';
+    return {
+        restrict: 'E',
+        template: '<div ng-if="layer" class="form-group"><label for="mapVisOpacitySlider" style="margin-bottom: 15px;">Opacity</label><input ng-model="selection.opacity" type="text" id="mapVisOpacitySlider" slider options="options" /></div>',
+        scope: {
+            layer: '='
+        },
+        link: function($scope) {
+
+            $scope.selection = {
+                opacity: 75
+            };
+            $scope.options = {
+                from: 1,
+                to: 100,
+                step: 1,
+                dimension: ' %'
+            };
+            function updateOpacity() {
+                var elms = $(SELECTOR);
+                if(elms.length) {
+                    elms.css('opacity',($scope.selection.opacity/100.0));
+                    $log.debug('updated opacity of '+elms.length+' map tiles to '+$scope.selection.opacity);
+                }
+                return elms.length;
+            }
+            var tilesChanged,lastTilesChanged;
+            // will repeat opacity settings until the # of tiles changed stabilizes.
+            function extentChange() {
+                tilesChanged = updateOpacity();
+                if(!tilesChanged || tilesChanged !== lastTilesChanged) {
+                    lastTilesChanged = tilesChanged;
+                    $timeout(extentChange,250);
+                }
+            }
+            $scope.$watch('layer.extent.current',function(extent) {
+                if(extent) {
+                    extentChange();
+                }
+            });
+            $scope.$watch('selection.opacity',updateOpacity);
+            // deal with the same thing when the map zoom changes or the center changes.
+            var mapEventListeners = [];
+            $scope.$watch('layer',function(layer){
+                if(layer && !mapEventListeners.length) { // layers/extents may change but the map does not
+                    mapEventListeners.push(layer.getMap().addListener('zoom_changed',function(event){
+                        $log.debug('zoom_changed');
+                        extentChange();
+                    }));
+                    mapEventListeners.push(layer.getMap().addListener('center_changed',function(event){
+                        $log.debug('center_changed');
+                        extentChange();
+                    }));
+                }
+            });
+            $scope.$on('$destroy',function(){
+                mapEventListeners.forEach(function(el){
+                    el.remove();
+                });
+            });
+        }
+    };
+}])
 /**
  * @ngdoc directive
  * @name npn-viz-tool.vis-map:map-vis-doy-control

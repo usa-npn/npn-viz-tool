@@ -377,6 +377,7 @@ angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", functi
     "        <map-vis-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></map-vis-year-control>\n" +
     "    </div>\n" +
     "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
+    "    <map-vis-opacity-slider layer=\"selection.layer\"></map-vis-opacity-slider>\n" +
     "</div>");
 }]);
 

@@ -158,6 +158,15 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.vis-map:map-vis-opacity-slider",
+      "shortName": "map-vis-opacity-slider",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.vis-map",
+      "shortDescription": "Dynamically controls the opacity of map tiles.",
+      "keywords": "api controls directive dynamically map npn-viz-tool opacity tiles vis-map"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.vis-map:map-vis-year-control",
       "shortName": "map-vis-year-control",
       "type": "directive",

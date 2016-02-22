@@ -22,7 +22,8 @@
     "topojson": "~1.6.19",
     "bootstrap": "~3.3.2",
     "angular-multi-select": "4.0.0",
-    "angular-md5": "0.1.x"
+    "angular-md5": "0.1.x",
+    "angular-awesome-slider": "ng-slider#^2.4.4"
   },
   "resolutions": {
     "angular": "1.4.x"
