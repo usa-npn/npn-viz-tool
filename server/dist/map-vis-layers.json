@@ -40,8 +40,7 @@
     },{
         "name": "Spring Index, Annual Map",
         "legend_label_filter": {
-            "name": "legendDoy",
-            "args": ["MMM d", true]
+            "name": "legendDoy"
         },
         "layers":[{
                 "title": "Arnold Red Leaf (prism)",
@@ -71,8 +70,7 @@
     },{
         "name": "Spring Index, Current Year",
         "legend_label_filter": {
-            "name": "legendDoy",
-            "args": ["MMM d", true]
+            "name": "legendDoy"
         },
         "layers": [{
                 "title": "Arnold Red Leaf (ncep)",

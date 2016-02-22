@@ -4,8 +4,8 @@
         uib-datepicker-popup="longDate"
         ng-model="selection"
         is-open="isOpen"
-        min-date="layer.extent.values[0].date"
-        max-date="layer.extent.values[layer.extent.values.length-1].date"
+        min-date="minDate"
+        max-date="maxDate"
         close-text="Close" />
   <span class="input-group-btn">
     <button type="button" class="btn btn-default" ng-click="open()"><i class="glyphicon glyphicon-calendar"></i></button>

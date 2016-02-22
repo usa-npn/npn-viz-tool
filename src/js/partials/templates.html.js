@@ -332,8 +332,8 @@ angular.module("js/mapvis/date-control.html", []).run(["$templateCache", functio
     "        uib-datepicker-popup=\"longDate\"\n" +
     "        ng-model=\"selection\"\n" +
     "        is-open=\"isOpen\"\n" +
-    "        min-date=\"layer.extent.values[0].date\"\n" +
-    "        max-date=\"layer.extent.values[layer.extent.values.length-1].date\"\n" +
+    "        min-date=\"minDate\"\n" +
+    "        max-date=\"maxDate\"\n" +
     "        close-text=\"Close\" />\n" +
     "  <span class=\"input-group-btn\">\n" +
     "    <button type=\"button\" class=\"btn btn-default\" ng-click=\"open()\"><i class=\"glyphicon glyphicon-calendar\"></i></button>\n" +

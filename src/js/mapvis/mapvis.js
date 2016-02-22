@@ -113,6 +113,10 @@ angular.module('npn-viz-tool.vis-map',[
         link: function($scope) {
             // TODO - hide the today/clear buttons
             $scope.selection = $scope.layer.extent.current.date;
+            $scope.minDate = $scope.layer.extent.values[0].date;
+            $scope.maxDate = $scope.layer.extent.values[$scope.layer.extent.values.length-1].date;
+            $log.debug('minDate',$scope.minDate);
+            $log.debug('maxDate',$scope.maxDate);
             $scope.open = function() {
                 $scope.isOpen = true;
             };
@@ -284,7 +288,7 @@ angular.module('npn-viz-tool.vis-map',[
                                     $log.debug('data from legend:',$scope.gridded_point_data,$scope.gridded_point_legend);
                                     html = '<div><div id="griddedPointInfoWindow" class="ng-cloak">';
                                     html += '<div class="gridded-legend-color" style="background-color: {{gridded_point_legend.color}};">&nbsp;</div>';
-                                    html += '<div class="gridded-point-data">{{legend.formatPointData(gridded_point_data)}}</div>';
+                                    html += '<div class="gridded-point-data">{{legend.formatPointData(gridded_point_data)}} ({{gridded_point_data | number:0}})</div>';
                                     //html += '<pre>\n{{gridded_point_data}}\n{{gridded_point_legend}}</pre>';
                                     html += '</div></div>';
                                     compiled = $compile(html)($scope);
