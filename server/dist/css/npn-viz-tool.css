@@ -519,4 +519,15 @@ div[title="Stop drawing"] {
   border: none;
 }
 
+#griddedPointInfoWindow .gridded-legend-color {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #aaa;
+}
+#griddedPointInfoWindow .gridded-point-data {
+  display: inline-block;
+  margin-left: 10px;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */

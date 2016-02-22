@@ -60,9 +60,9 @@ angular.module('npn-viz-tool.vis-map-services',[
  *
  * Formats legend numbers in degrees, assumes F if no unit supplied.
  */
-.filter('legendDegrees',[function(){
+.filter('legendDegrees',['numberFilter',function(numberFilter){
     return function(n,unit) {
-        return n+'\u00B0'+(unit||'F');
+        return numberFilter(n,0)+'\u00B0'+(unit||'F');
     };
 }])
 /**
@@ -73,13 +73,13 @@ angular.module('npn-viz-tool.vis-map-services',[
  *
  * Formats legend numbers for agdd anomaly layers.
  */
-.filter('legendAgddAnomaly',[function(){
+.filter('legendAgddAnomaly',['numberFilter',function(numberFilter){
     return function(n) {
         if(n === 0) {
             return 'No Difference';
         }
         var lt = n < 0;
-        return Math.abs(n)+'\u00B0F '+(lt ? '<' : '>') +' Avg';
+        return numberFilter(Math.abs(n),0)+'\u00B0F '+(lt ? '<' : '>') +' Avg';
     };
 }])
 /**
@@ -216,6 +216,22 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
     WmsMapLegend.prototype.getOriginalLabels = function() {
         return this.data.map(function(data){ return data.original_label; });
+    };
+    WmsMapLegend.prototype.formatPointData = function(q) {
+        return this.lformat(q,q);
+    };
+    WmsMapLegend.prototype.getPointData = function(q) {
+        var i,d,n;
+        for(i = 0; i < this.data.length; i++) {
+            d = this.data[i];
+            n = (i+1) < this.data.length ? this.data[i+1] : undefined;
+            if(q == d.quantity) {
+                return d;
+            }
+            if(n && q >= d.quantity && q < n.quantity) {
+                return d;
+            }
+        }
     };
 
     function WmsMapLayer(map,layer_def) {

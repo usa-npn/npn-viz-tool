@@ -239,8 +239,8 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Controller for the gridded data map visualization dialog.
  */
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','WcsService','FilterService','ChartService','SettingsService',
-    function($scope,$uibModalInstance,$filter,$log,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,WcsService,FilterService,ChartService,SettingsService){
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','WcsService','FilterService','ChartService','SettingsService',
+    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,WcsService,FilterService,ChartService,SettingsService){
         var api,
             map,
             infoWindow,
@@ -267,16 +267,38 @@ angular.module('npn-viz-tool.vis-map',[
                     if($scope.selection.activeLayer) {
                         WcsService.getGriddedData($scope.selection.activeLayer,ev.latLng,4/*should gridSize change based on the layer?*/)
                             .then(function(tuples){
+                                var html,compiled;
                                 $log.debug('tuples',tuples);
+                                $scope.gridded_point_data = tuples && tuples.length ? tuples[0] : undefined;
+                                if(typeof($scope.gridded_point_data) === 'undefined') {
+                                    return;
+                                }
                                 if(!infoWindow) {
                                     infoWindow = new api.InfoWindow({
                                         maxWidth: 200,
                                         content: 'contents'
                                     });
                                 }
-                                infoWindow.setContent($filter('number')(tuples[0],1)); // TODO: precision is likely layer specific
-                                infoWindow.setPosition(ev.latLng);
-                                infoWindow.open(map);
+                                $scope.gridded_point_legend = $scope.legend ? $scope.legend.getPointData($scope.gridded_point_data) : undefined;
+                                if($scope.gridded_point_legend){
+                                    $log.debug('data from legend:',$scope.gridded_point_data,$scope.gridded_point_legend);
+                                    html = '<div><div id="griddedPointInfoWindow" class="ng-cloak">';
+                                    html += '<div class="gridded-legend-color" style="background-color: {{gridded_point_legend.color}};">&nbsp;</div>';
+                                    html += '<div class="gridded-point-data">{{legend.formatPointData(gridded_point_data)}}</div>';
+                                    //html += '<pre>\n{{gridded_point_data}}\n{{gridded_point_legend}}</pre>';
+                                    html += '</div></div>';
+                                    compiled = $compile(html)($scope);
+                                    $timeout(function(){
+                                        infoWindow.setContent(compiled.html());
+                                        infoWindow.setPosition(ev.latLng);
+                                        infoWindow.open(map);
+                                    });
+                                } else {
+                                    infoWindow.setContent($filter('number')($scope.gridded_point_data,1)); // TODO: precision is likely layer specific
+                                    infoWindow.setPosition(ev.latLng);
+                                    infoWindow.open(map);
+                                }
+
                             },function() {
                                 // TODO?
                                 $log.error('unable to get gridded data.');
