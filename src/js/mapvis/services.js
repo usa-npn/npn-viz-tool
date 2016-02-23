@@ -392,6 +392,7 @@ angular.module('npn-viz-tool.vis-map-services',[
             name: (layer_def.title||layer_def.name)
         }),
         l = angular.extend({},layer_def,{
+            googleLayer: googleLayer,
             getMap: function() {
                 return map;
             },

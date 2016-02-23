@@ -27,7 +27,6 @@ angular.module('npn-viz-tool.vis-map',[
  * @param {object} layer The currently selected map layer.
  */
 .directive('mapVisOpacitySlider',['$log','$timeout','WmsService',function($log,$timeout,WmsService) {
-    var SELECTOR = 'img[src*="'+WmsService.baseUrl+'"';
     return {
         restrict: 'E',
         template: '<div ng-if="layer" class="form-group"><label for="mapVisOpacitySlider" style="margin-bottom: 15px;">Opacity</label><input ng-model="selection.opacity" type="text" id="mapVisOpacitySlider" slider options="options" /></div>',
@@ -46,47 +45,13 @@ angular.module('npn-viz-tool.vis-map',[
                 dimension: ' %'
             };
             function updateOpacity() {
-                var elms = $(SELECTOR);
-                if(elms.length) {
-                    elms.css('opacity',($scope.selection.opacity/100.0));
-                    $log.debug('updated opacity of '+elms.length+' map tiles to '+$scope.selection.opacity);
-                }
-                return elms.length;
-            }
-            var tilesChanged,lastTilesChanged;
-            // will repeat opacity settings until the # of tiles changed stabilizes.
-            function extentChange() {
-                tilesChanged = updateOpacity();
-                if(!tilesChanged || tilesChanged !== lastTilesChanged) {
-                    lastTilesChanged = tilesChanged;
-                    $timeout(extentChange,250);
+                if($scope.layer) {
+                    $scope.layer.googleLayer.setOpacity($scope.selection.opacity/100.0);
                 }
             }
-            $scope.$watch('layer.extent.current',function(extent) {
-                if(extent) {
-                    extentChange();
-                }
-            });
+            $scope.$watch('layer.extent.current',updateOpacity);
             $scope.$watch('selection.opacity',updateOpacity);
-            // deal with the same thing when the map zoom changes or the center changes.
-            var mapEventListeners = [];
-            $scope.$watch('layer',function(layer){
-                if(layer && !mapEventListeners.length) { // layers/extents may change but the map does not
-                    mapEventListeners.push(layer.getMap().addListener('zoom_changed',function(event){
-                        $log.debug('zoom_changed');
-                        extentChange();
-                    }));
-                    mapEventListeners.push(layer.getMap().addListener('center_changed',function(event){
-                        $log.debug('center_changed');
-                        extentChange();
-                    }));
-                }
-            });
-            $scope.$on('$destroy',function(){
-                mapEventListeners.forEach(function(el){
-                    el.remove();
-                });
-            });
+            $scope.$watch('layer',updateOpacity);
         }
     };
 }])
