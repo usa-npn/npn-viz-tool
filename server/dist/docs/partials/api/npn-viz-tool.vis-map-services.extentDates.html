@@ -1,0 +1,26 @@
+<h1><code ng:non-bindable="">extentDates</code>
+<div><span class="hint">filter in module <code ng:non-bindable="">npn-viz-tool</code>
+</span>
+</div>
+</h1>
+<div><h2 id="description">Description</h2>
+<div class="description"><div class="npn-viz-tool-vis-map-services-page npn-viz-tool-vis-map-services-extentdates-page"><p>Filters an array of extent dates relative to days.</p>
+</div></div>
+<h2 id="usage">Usage</h2>
+<div class="usage"><h3 id="usage_in-html-template-binding">In HTML Template Binding</h3>
+<div class="in-html-template-binding"><code ng:non-bindable=""><span>{{</span> extentDates_expression | extentDates <span>}}</span></code>
+</div>
+<h3 id="usage_in-javascript">In JavaScript</h3>
+<div class="in-javascript"><code ng:non-bindable="">$filter('extentDates')()</code>
+</div>
+</div>
+<h2 id="example">Example</h2>
+<div class="example"><div class="npn-viz-tool-vis-map-services-page npn-viz-tool-vis-map-services-extentdates-page"><pre class="prettyprint linenums">
+//$filter('extentDates')(dates,&lt;after&gt;,&lt;before&gt;);
+$filter('extentDates')(dates,undefined,'today'); // before today
+$filter('extentDates')(dates,'today',undefined); // after today
+$filter('extentDates')(dates,undefined,'05-01'); // before may 1st of this year
+$filter('extentDates')(dates,undefined,'2020-05-01T00:00:00.000Z'); // before may 1st of 2020
+</pre>
+</div></div>
+</div>

@@ -18,6 +18,10 @@
             "name": "legendDegrees",
             "args": ["F"]
         },
+        "extent_values_filter": {
+            "name": "extentDates",
+            "args": [null,"today"]
+        },
         "layers":[{
                 "title": "32\u00B0F",
                 "name": "gdd:agdd"
@@ -29,6 +33,10 @@
         "name": "AGDD Anomaly Map",
         "legend_label_filter": {
             "name": "legendAgddAnomaly"
+        },
+        "extent_values_filter": {
+            "name": "extentDates",
+            "args": [null,"today"]
         },
         "layers":[{
                 "title": "32\u00B0F",
@@ -74,33 +82,69 @@
         },
         "layers": [{
                 "title": "Arnold Red Leaf (ncep)",
-                "name": "si-x:arnoldred_leaf_ncep"
+                "name": "si-x:arnoldred_leaf_ncep",
+                "extent_values_filter": {
+                    "name": "extentDates",
+                    "args": [null,"05-16"]
+                }
             },{
                 "title": "Arnold Red Bloom (ncep)",
-                "name": "si-x:arnoldred_bloom_ncep"
+                "name": "si-x:arnoldred_bloom_ncep",
+                "extent_values_filter": {
+                    "name": "extentDates",
+                    "args": [null,"09-02"]
+                }
             },{
                 "title": "Average Bloom (ncep)",
-                "name": "si-x:average_bloom_ncep"
+                "name": "si-x:average_bloom_ncep",
+                "extent_values_filter": {
+                    "name": "extentDates",
+                    "args": [null,"09-02"]
+                }
             },{
                 "title": "Average Leaf (ncep)",
-                "name": "si-x:average_leaf_ncep"
+                "name": "si-x:average_leaf_ncep",
+                "extent_values_filter": {
+                    "name": "extentDates",
+                    "args": [null,"05-16"]
+                }
             },{
                 "title": "Lilac Leaf (ncep)",
-                "name": "si-x:lilac_leaf_ncep"
+                "name": "si-x:lilac_leaf_ncep",
+                "extent_values_filter": {
+                    "name": "extentDates",
+                    "args": [null,"05-16"]
+                }
             },{
                 "title": "Lilac Bloom (ncep)",
-                "name": "si-x:lilac_bloom_ncep"
+                "name": "si-x:lilac_bloom_ncep",
+                "extent_values_filter": {
+                    "name": "extentDates",
+                    "args": [null,"09-02"]
+                }
             },{
                 "title": "Zabelli Bloom (ncep)",
-                "name": "si-x:zabelli_bloom_ncep"
+                "name": "si-x:zabelli_bloom_ncep",
+                "extent_values_filter": {
+                    "name": "extentDates",
+                    "args": [null,"09-02"]
+                }
             },{
                 "title": "Zabelli Leaf (ncep)",
-                "name": "si-x:zabelli_leaf_ncep"
+                "name": "si-x:zabelli_leaf_ncep",
+                "extent_values_filter": {
+                    "name": "extentDates",
+                    "args": [null,"05-16"]
+                }
             }]
     },{
         "name": "Spring Index, Anomaly",
         "legend_label_filter": {
             "name": "legendSixAnomaly"
+        },
+        "extent_values_filter": {
+            "name": "extentDates",
+            "args": [null,"today"]
         },
         "layers": [{
                 "title": "Leaf Anomaly",

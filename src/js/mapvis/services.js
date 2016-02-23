@@ -36,9 +36,16 @@ angular.module('npn-viz-tool.vis-map-services',[
  * @description
  *
  * Simplified version of thirtyYearAvgDayOfYear that simply takes a number day of year
- * and returns a formatted date.  Default format is 'MMM d'.
+ * and returns a formatted date.  The optional second argument defines the date format
+ * which defaults to 'MMM d'.  The optional third argument defines whether or not the
+ * current year should be used as oposed to one known to have 365 days (2010).
  *
  * This filter equates doy 0 with doy 1 since legend scales are inconsistent in this regard.
+ *
+ * @example
+ * <pre>
+ * $filter('legendDoy')(1.0,undefined,true|false|undefined); // Jan 1
+ * </pre>
  */
 .filter('legendDoy',['dateFilter',function(dateFilter){
     var JAN_ONE_2010 = new Date(2010/*(new Date()).getFullYear()*/,0),
@@ -59,6 +66,11 @@ angular.module('npn-viz-tool.vis-map-services',[
  * @description
  *
  * Formats legend numbers in degrees, assumes F if no unit supplied.
+ *
+ * @example
+ * <pre>
+ * $filter('legendDegrees')(10) // 10&deg;F
+ * </pre>
  */
 .filter('legendDegrees',['numberFilter',function(numberFilter){
     return function(n,unit) {
@@ -104,12 +116,108 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
 }])
 /**
+ * @ngdoc filter
+ * @name npn-viz-tool.vis-map-services:extentDates
+ * @module npn-viz-tool.vis-map-services
+ * @description
+ *
+ * Filters an array of extent dates relative to days.
+ * @example
+ * <pre>
+ * //$filter('extentDates')(dates,<after>,<before>);
+ * $filter('extentDates')(dates,undefined,'today'); // before today
+ * $filter('extentDates')(dates,'today',undefined); // after today
+ * $filter('extentDates')(dates,undefined,'05-01'); // before may 1st of this year
+ * $filter('extentDates')(dates,undefined,'2020-05-01T00:00:00.000Z'); // before may 1st of 2020
+ * </pre>
+ */
+.filter('extentDates',['$log','dateFilter',function($log,dateFilter){
+    var ONE_DAY = (24*60*60*1000);
+    function toTime(s) {
+        var d = new Date();
+        if(s === 'yesterday' || s === 'today' || s === 'tomorrow') {
+            if(s === 'yesterday') {
+                d.setTime(d.getTime()-ONE_DAY);
+            } else if (s === 'tomorrow') {
+                d.setTime(d.getTime()+ONE_DAY);
+            }
+            s = dateFilter(d,'yyyy-MM-dd 00:00:00');
+        } else if(s.indexOf('T') === -1) {
+            s = d.getFullYear()+'-'+s+' 00:00:00';
+        }
+        return (new Date(s.replace(/T.*$/,' 00:00:00'))).getTime();
+    }
+    return function(arr,after,before) {
+        var a = after ? toTime(after) : undefined,
+            b = before ? toTime(before) : undefined;
+        if(a || b) {
+            arr = arr.filter(function(d) {
+                var t = (new Date(d.replace(/T.*$/,' 00:00:00'))).getTime();
+                return (!a || (a && t > a)) && (!b || (b && t < b));
+            });
+        }
+        return arr;
+    };
+}])
+/**
  * @ngdoc service
  * @name npn-viz-tool.vis-map-services:WmsService
  * @module npn-viz-tool.vis-map-services
  * @description
  *
  * Interacts with the NPN geoserver WMS instance to supply map layer data.
+ *
+ * This service is driven by the <code>map-vis-layers.json</code> JSON document which
+ * defines categorized organization for layers known to be supported by the geoserver instance.
+ * In addition it specifies what UI code may be involved for formatting legend/gridded data points
+ * as strings and valid extent values (despite what the geoserver capabilities may report).
+ * The list of layers exposed by the map visualization will almost certainly be a re-organized subset
+ * of those exposed by the geoserver.
+ *
+ * The JSON document exposes a single object with a single property <code>categories</code> which is an array
+ * of objects (an object rather than array is used to ease later extention if necessaary).
+ * Each "category" has, at a minimum, a <code>name</code> and <code>layers</code> property.
+ * The <code>layers</code> property is an array of "layer" objects which, at a minimum, contain a <code>title</code>
+ * and <code>name</code> properties.  The layer <code>name</code> contains the machine name of the associated WMS layer.
+ *
+ * Each category or layer can also have <code>legend_label_filter</code> and/or </code>extent_values_filter</code> properties.
+ * If defined at the category level then all layers will inherit these values otherwise individual layers can define/override
+ * the property values if defined at the category level.
+ *
+ * Both the <code>legend_label_filter</code> and </code>extent_values_filter</code> define an object that names an angular <code>$filter</code>
+ * instance and optional arguments to that filter.
+ * E.g.
+ * <pre>
+{
+    "categories": [
+    ...
+    ,{
+        "name": "Current Year AGDD",
+        "legend_label_filter": {
+            "name": "legendDegrees",
+            "args": ["F"]
+        },
+        "extent_values_filter": {
+            "name": "extentDates",
+            "args": [null,"today"]
+        },
+        "layers":[{
+                "title": "32\u00B0F",
+                "name": "gdd:agdd"
+            },{
+                "title": "50\u00B0F",
+                "name": "gdd:agdd_50f"
+            }]
+    },
+    ...
+    ]
+}
+ * </pre>
+ *
+ * The "Current Year AGDD" category contains two layers.  For both layers the same <code>legend_label_filter</code>
+ * will be applied to format numbers to strings for use in displaying the legend and gridded data retrived from the WCS.
+ * Similarly both layers will use the same <code>extent_values_filter</code> whilch will filter valid extent values as reported
+ * by the WMS to only those <em>before</em> "today".
  */
 .service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter',function($log,$q,$http,$httpParamSerializer,$filter){
     var LAYER_CONFIG = $http.get('map-vis-layers.json'),
@@ -236,6 +344,23 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
 
     function WmsMapLayer(map,layer_def) {
+        if(layer_def.extent_values_filter) {
+            $log.debug('layer has an extent values filter, processing',layer_def.extent_values_filter);
+            var valuesFilter = $filter(layer_def.extent_values_filter.name),
+                extentValues = layer_def.extent.values.map(function(e){ return e.value; }),
+                filterArgs = [extentValues].concat(layer_def.extent_values_filter.args||[]),
+                filteredValues;
+            $log.debug('filterArgs',filterArgs);
+            filteredValues = valuesFilter.apply(undefined,filterArgs);
+            $log.debug('filteredValues',filteredValues);
+            layer_def.extent.values = layer_def.extent.values.filter(function(v) {
+                return filteredValues.indexOf(v.value) !== -1;
+            });
+            if(layer_def.extent.current && filteredValues.indexOf(layer_def.extent.current.value) === -1) {
+                $log.debug('current extent value has become invalid, replacing with last option');
+                layer_def.extent.current = layer_def.extent.values.length ? layer_def.extent.values[layer_def.extent.values.length-1] : undefined;
+            }
+        }
         var wmsArgs = {
             service: 'WMS',
             request: 'GetMap',

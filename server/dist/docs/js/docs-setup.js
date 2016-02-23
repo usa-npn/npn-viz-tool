@@ -59,6 +59,15 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.vis-map-services:extentDates",
+      "shortName": "extentDates",
+      "type": "filter",
+      "moduleName": "npn-viz-tool.vis-map-services",
+      "shortDescription": "Filters an array of extent dates relative to days.",
+      "keywords": "$filter api array dates days extent extentdates filter filters npn-viz-tool relative today undefined vis-map-services year"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.vis-map-services:legendAgddAnomaly",
       "shortName": "legendAgddAnomaly",
       "type": "filter",
@@ -73,7 +82,7 @@ NG_DOCS={
       "type": "filter",
       "moduleName": "npn-viz-tool.vis-map-services",
       "shortDescription": "Formats legend numbers in degrees, assumes F if no unit supplied.",
-      "keywords": "api assumes degrees filter formats legend npn-viz-tool numbers supplied unit vis-map-services"
+      "keywords": "$filter api assumes degrees filter formats legend legenddegrees npn-viz-tool numbers supplied unit vis-map-services"
     },
     {
       "section": "api",
@@ -82,7 +91,7 @@ NG_DOCS={
       "type": "filter",
       "moduleName": "npn-viz-tool.vis-map-services",
       "shortDescription": "Simplified version of thirtyYearAvgDayOfYear that simply takes a number day of year",
-      "keywords": "api day default doy equates filter format formatted inconsistent legend mmm npn-viz-tool number regard returns scales simplified simply takes thirtyyearavgdayofyear version vis-map-services year"
+      "keywords": "$filter api argument current day days defaults defines doy equates filter format formatted inconsistent jan legend legenddoy mmm npn-viz-tool number oposed optional regard returns scales second simplified simply takes third thirtyyearavgdayofyear true undefined version vis-map-services year"
     },
     {
       "section": "api",
@@ -118,7 +127,7 @@ NG_DOCS={
       "type": "service",
       "moduleName": "npn-viz-tool.vis-map-services",
       "shortDescription": "Interacts with the NPN geoserver WMS instance to supply map layer data.",
-      "keywords": "api base categorized data eventually fetched geoserver getlayers instance interacts layer layers list map maps method npn npn-viz-tool progress promise rejected resolved service subset supply supported vis-map-services wms"
+      "keywords": "addition agdd angular api applied args arguments array associated base capabilities categories categorized category code current data define defined defines displaying document driven ease eventually exposed exposes extent extent_values_filter extentdates extention fetched filter format formatting gdd geoserver getlayers gridded individual inherit instance interacts involved json layer layers legend legend_label_filter legenddegrees level list machine map maps method minimum names necessaary npn npn-viz-tool numbers object objects optional organization points progress promise properties property re-organized rejected report reported resolved retrived service single specifies strings subset supply supported title today ui valid values vis-map-services visualization wcs whilch wms year"
     },
     {
       "section": "api",
