@@ -131,6 +131,15 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.vis-map:map-vis-bounds-layer",
+      "shortName": "map-vis-bounds-layer",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.vis-map",
+      "shortDescription": "Transfers any rectangles from the base map to the vis map based on BoundsFilterArgs.",
+      "keywords": "api base based boundsfilterargs constrained data directive filtered in-situ map markers npn-viz-tool placing play rectangles strictly transfers vis vis-map visual"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.vis-map:map-vis-date-control",
       "shortName": "map-vis-date-control",
       "type": "directive",
@@ -154,7 +163,7 @@ NG_DOCS={
       "type": "directive",
       "moduleName": "npn-viz-tool.vis-map",
       "shortDescription": "Transfers any geojson features from the base map to the vis map based on GeoFilterArgs.",
-      "keywords": "api args base based constrained data directive features filtered geofilter geofilterargs geojson in-situ map markers npn-viz-tool placing play strictly transfers vis vis-map visual"
+      "keywords": "api base based constrained data directive features filtered geofilterargs geojson in-situ map markers npn-viz-tool placing play strictly transfers vis vis-map visual"
     },
     {
       "section": "api",

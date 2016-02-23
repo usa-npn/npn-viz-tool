@@ -3203,7 +3203,7 @@ angular.module('npn-viz-tool.vis-map',[
  * @description
  *
  * Transfers any geojson features from the base map to the vis map based on GeoFilterArgs.
- * This is strictly for visual effect.  If such geofilter args are in play on then the filtered results
+ * This is strictly for visual effect.  If such GeoFilterArgs are in play on then the filtered results
  * will be used when placing in-situ data and as such markers will be similarly constrained.
  *
  * @scope
@@ -3252,6 +3252,50 @@ angular.module('npn-viz-tool.vis-map',[
                             };
                         });
                     });
+                });
+            }
+
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.vis-map:map-vis-bounds-layer
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Transfers any rectangles from the base map to the vis map based on BoundsFilterArgs.
+ * This is strictly for visual effect.  If such BoundsFilterArgs are in play on then the filtered results
+ * will be used when placing in-situ data and as such markers will be similarly constrained.
+ *
+ * @scope
+ */
+.directive('mapVisBoundsLayer',['$log','$q','$timeout','uiGmapIsReady','FilterService','BoundsFilterArg',function($log,$q,$timeout,uiGmapIsReady,FilterService,BoundsFilterArg){
+    return {
+        restrict: 'E',
+        template: '',
+        scope: {},
+        link: function($scope,$element,$attrs) {
+            var boundsArgs = FilterService.getFilter().getBoundsArgs(),
+                mapContainer = $element.parent().parent().find('.angular-google-map-container');
+            if(boundsArgs.length) {
+                $timeout(function(){
+                    // this is a comlete hack but there appears to be no valid way to put features/polygons below a
+                    // custom map layer.
+                    $(mapContainer.children().first().children().first().children().first().children()[1]).css('z-index','99');
+                },1000);
+                uiGmapIsReady.promise(2).then(function(instances){
+                    var baseMap = instances[0].map,
+                        visMap = instances[1].map;
+                    var rectangles = boundsArgs.map(function(arg){
+                        return new google.maps.Rectangle(angular.extend({
+                            clickable: false,
+                            bounds: arg.arg.getBounds(),
+                            map: visMap
+                        },BoundsFilterArg.RECTANGLE_OPTIONS));
+                    });
+                    $log.debug('mapVisBoundsLayer.rectangles',rectangles);
                 });
             }
 
