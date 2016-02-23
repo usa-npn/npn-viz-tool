@@ -387,14 +387,20 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * @scope
  */
-.directive('mapVisGeoLayer',['$log','$q','uiGmapIsReady','FilterService',function($log,$q,uiGmapIsReady,FilterService){
+.directive('mapVisGeoLayer',['$log','$q','$timeout','uiGmapIsReady','FilterService',function($log,$q,$timeout,uiGmapIsReady,FilterService){
     return {
         restrict: 'E',
         template: '',
         scope: {},
-        link: function($scope) {
-            var geoArgs = FilterService.getFilter().getGeoArgs();
+        link: function($scope,$element,$attrs) {
+            var geoArgs = FilterService.getFilter().getGeoArgs(),
+                mapContainer = $element.parent().parent().find('.angular-google-map-container');
             if(geoArgs.length) {
+                $timeout(function(){
+                    // this is a comlete hack but there appears to be no valid way to put features/polygons below a
+                    // custom map layer.
+                    $(mapContainer.children().first().children().first().children().first().children()[1]).css('z-index','99');
+                },1000);
                 uiGmapIsReady.promise(2).then(function(instances){
                     var baseMap = instances[0].map,
                         visMap = instances[1].map,
@@ -415,6 +421,7 @@ angular.module('npn-viz-tool.vis-map',[
                         });
                         visMap.data.setStyle(function(feature){
                             return {
+                                clickable: false,
                                 strokeColor: '#666',
                                 strokeOpacity: null,
                                 strokeWeight: 1,
