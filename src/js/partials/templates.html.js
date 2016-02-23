@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/date-control.html', 'js/mapvis/doy-control.html', 'js/mapvis/layer-control.html', 'js/mapvis/legend.html', 'js/mapvis/mapvis.html', 'js/mapvis/year-control.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/date-control.html', 'js/mapvis/doy-control.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/layer-control.html', 'js/mapvis/legend.html', 'js/mapvis/mapvis.html', 'js/mapvis/year-control.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -358,6 +358,28 @@ angular.module("js/mapvis/doy-control.html", []).run(["$templateCache", function
     "</div>");
 }]);
 
+angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/in-situ-control.html",
+    "<div class=\"in-situ-control\" ng-if=\"layer\">\n" +
+    "    <hr />\n" +
+    "    <div class=\"form-group\" ng-if=\"speciesList\">\n" +
+    "        <label for=\"selectedSpecies\">Species</label>\n" +
+    "        <select id=\"selectedSpecies\" class=\"form-control\" ng-model=\"selection.species\"\n" +
+    "                ng-options=\"s as (s | speciesTitle) for s in speciesList\"></select>\n" +
+    "    </div>\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.species && phenophaseList.length\">\n" +
+    "        <label for=\"selectedPhenophse\">Species</label>\n" +
+    "        <select id=\"selectedPhenophse\" class=\"form-control\" ng-model=\"selection.phenophase\"\n" +
+    "                ng-options=\"p as p.phenophase_name for p in phenophaseList\"></select>\n" +
+    "    </div>\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.species && selection.phenophase\">\n" +
+    "        <label for=\"selectedYear\">Year</label>\n" +
+    "        <select id=\"selectedYear\" class=\"form-control\" ng-model=\"selection.year\"\n" +
+    "                ng-options=\"y as y for y in years\"></select>\n" +
+    "    </div>\n" +
+    "</div>");
+}]);
+
 angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/layer-control.html",
     "<div ng-if=\"layers\" class=\"map-vis-layer-control\">\n" +
@@ -376,8 +398,8 @@ angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", functi
     "        <map-vis-date-control ng-switch-when=\"date\" layer=\"selection.layer\"></map-vis-date-control>\n" +
     "        <map-vis-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></map-vis-year-control>\n" +
     "    </div>\n" +
-    "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
     "    <map-vis-opacity-slider layer=\"selection.layer\"></map-vis-opacity-slider>\n" +
+    "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
     "</div>");
 }]);
 
@@ -393,11 +415,14 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +
     "                <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
+    "                    <map-vis-geo-layer></map-vis-geo-layer>\n" +
+    "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
     "                </ui-gmap-google-map>\n" +
     "                <map-vis-legend legend=\"legend\"></map-vis-legend>\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
     "                <map-vis-layer-control></map-vis-layer-control>\n" +
+    "                <map-vis-in-situ-control layer=\"selection.layer\"></map-vis-in-situ-control>\n" +
     "            </div>\n" +
     "        </div>\n" +
     "    </div>\n" +

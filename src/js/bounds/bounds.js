@@ -97,6 +97,7 @@ angular.module('npn-viz-tool.bounds',[
 }])
 /**
  * @ngdoc directive
+ * @restrict E
  * @name npn-viz-tool.bounds:bounds-manager
  * @module npn-viz-tool.bounds
  * @description

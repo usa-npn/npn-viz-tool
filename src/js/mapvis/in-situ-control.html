@@ -1,0 +1,18 @@
+<div class="in-situ-control" ng-if="layer">
+    <hr />
+    <div class="form-group" ng-if="speciesList">
+        <label for="selectedSpecies">Species</label>
+        <select id="selectedSpecies" class="form-control" ng-model="selection.species"
+                ng-options="s as (s | speciesTitle) for s in speciesList"></select>
+    </div>
+    <div class="form-group" ng-if="selection.species && phenophaseList.length">
+        <label for="selectedPhenophse">Species</label>
+        <select id="selectedPhenophse" class="form-control" ng-model="selection.phenophase"
+                ng-options="p as p.phenophase_name for p in phenophaseList"></select>
+    </div>
+    <div class="form-group" ng-if="selection.species && selection.phenophase">
+        <label for="selectedYear">Year</label>
+        <select id="selectedYear" class="form-control" ng-model="selection.year"
+                ng-options="y as y for y in years"></select>
+    </div>
+</div>

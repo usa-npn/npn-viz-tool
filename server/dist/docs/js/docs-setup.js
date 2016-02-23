@@ -136,7 +136,7 @@ NG_DOCS={
       "type": "directive",
       "moduleName": "npn-viz-tool.vis-map",
       "shortDescription": "Control for date extents.",
-      "keywords": "api control directive extents npn-viz-tool vis-map"
+      "keywords": "api control currently directive extents layer map npn-viz-tool selected vis-map"
     },
     {
       "section": "api",
@@ -145,7 +145,25 @@ NG_DOCS={
       "type": "directive",
       "moduleName": "npn-viz-tool.vis-map",
       "shortDescription": "control for day of year extents.",
-      "keywords": "api control day directive extents npn-viz-tool vis-map year"
+      "keywords": "api control currently day directive extents layer map npn-viz-tool selected vis-map year"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.vis-map:map-vis-geo-layer",
+      "shortName": "map-vis-geo-layer",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.vis-map",
+      "shortDescription": "Transfers any geojson features from the base map to the vis map based on GeoFilterArgs.",
+      "keywords": "api args base based constrained data directive features filtered geofilter geofilterargs geojson in-situ map markers npn-viz-tool placing play strictly transfers vis vis-map visual"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.vis-map:map-vis-in-situ-control",
+      "shortName": "map-vis-in-situ-control",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.vis-map",
+      "shortDescription": "Directive to control addition of in-situ data to the visualization map.",
+      "keywords": "addition api control currently data directive in-situ layer map npn-viz-tool selected vis-map visualization"
     },
     {
       "section": "api",
@@ -153,8 +171,8 @@ NG_DOCS={
       "shortName": "map-vis-layer-control",
       "type": "directive",
       "moduleName": "npn-viz-tool.vis-map",
-      "shortDescription": "Directive to control categorized selection of WMS layers.",
-      "keywords": "api categorized control directive layers npn-viz-tool selection vis-map wms"
+      "shortDescription": "Directive to control categorized selection of WMS layers.  This directive",
+      "keywords": "api categorized control directive layers npn-viz-tool parent scope selection shares vis-map wms"
     },
     {
       "section": "api",
@@ -163,7 +181,7 @@ NG_DOCS={
       "type": "directive",
       "moduleName": "npn-viz-tool.vis-map",
       "shortDescription": "Directive to dynamically display an interactive legend for a seleted map layer.",
-      "keywords": "api directive display dynamically interactive layer legend map npn-viz-tool seleted vis-map"
+      "keywords": "api currently directive display dynamically interactive layer legend map npn-viz-tool selected seleted vis-map"
     },
     {
       "section": "api",
@@ -172,7 +190,7 @@ NG_DOCS={
       "type": "directive",
       "moduleName": "npn-viz-tool.vis-map",
       "shortDescription": "Dynamically controls the opacity of map tiles.",
-      "keywords": "api controls directive dynamically map npn-viz-tool opacity tiles vis-map"
+      "keywords": "api controls currently directive dynamically layer map npn-viz-tool opacity selected tiles vis-map"
     },
     {
       "section": "api",
@@ -181,7 +199,7 @@ NG_DOCS={
       "type": "directive",
       "moduleName": "npn-viz-tool.vis-map",
       "shortDescription": "Control for year extents.",
-      "keywords": "api control directive extents npn-viz-tool vis-map year"
+      "keywords": "api control currently directive extents layer map npn-viz-tool selected vis-map year"
     },
     {
       "section": "api",

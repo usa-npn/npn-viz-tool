@@ -16,11 +16,15 @@ angular.module('npn-viz-tool.vis-map',[
 ])
 /**
  * @ngdoc directive
+ * @restrict E
  * @name npn-viz-tool.vis-map:map-vis-opacity-slider
  * @module npn-viz-tool.vis-map
  * @description
  *
  * Dynamically controls the opacity of map tiles.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
  */
 .directive('mapVisOpacitySlider',['$log','$timeout','WmsService',function($log,$timeout,WmsService) {
     var SELECTOR = 'img[src*="'+WmsService.baseUrl+'"';
@@ -88,11 +92,15 @@ angular.module('npn-viz-tool.vis-map',[
 }])
 /**
  * @ngdoc directive
+ * @restrict E
  * @name npn-viz-tool.vis-map:map-vis-doy-control
  * @module npn-viz-tool.vis-map
  * @description
  *
  * control for day of year extents.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
  */
 .directive('mapVisDoyControl',['$log','thirtyYearAvgDayOfYearFilter',function($log,thirtyYearAvgDayOfYearFilter){
     var BASE_YEAR = thirtyYearAvgDayOfYearFilter(1,true).getFullYear(),
@@ -151,11 +159,15 @@ angular.module('npn-viz-tool.vis-map',[
 }])
 /**
  * @ngdoc directive
+ * @restrict E
  * @name npn-viz-tool.vis-map:map-vis-year-control
  * @module npn-viz-tool.vis-map
  * @description
  *
  * Control for year extents.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
  */
 .directive('mapVisYearControl',['$log',function($log){
     return {
@@ -170,11 +182,15 @@ angular.module('npn-viz-tool.vis-map',[
 }])
 /**
  * @ngdoc directive
+ * @restrict E
  * @name npn-viz-tool.vis-map:map-vis-date-control
  * @module npn-viz-tool.vis-map
  * @description
  *
  * Control for date extents.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
  */
 .directive('mapVisDateControl',['$log','dateFilter',function($log,dateFilter){
     return {
@@ -206,11 +222,13 @@ angular.module('npn-viz-tool.vis-map',[
 }])
 /**
  * @ngdoc directive
+ * @restrict E
  * @name npn-viz-tool.vis-map:map-vis-layer-control
  * @module npn-viz-tool.vis-map
  * @description
  *
- * Directive to control categorized selection of WMS layers.
+ * Directive to control categorized selection of WMS layers.  This directive
+ * shares the parent scope.
  */
 .directive('mapVisLayerControl',['$log',function($log){
     return {
@@ -222,11 +240,15 @@ angular.module('npn-viz-tool.vis-map',[
 }])
 /**
  * @ngdoc directive
+ * @restrict E
  * @name npn-viz-tool.vis-map:map-vis-legend
  * @module npn-viz-tool.vis-map
  * @description
  *
  * Directive to dynamically display an interactive legend for a seleted map layer.
+ *
+ * @scope
+ * @param {object} legend The legend of the currently selected layer.
  */
 .directive('mapVisLegend',['$log','$window',function($log,$window){
     return {
@@ -309,6 +331,106 @@ angular.module('npn-viz-tool.vis-map',[
     };
 }])
 /**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.vis-map:map-vis-in-situ-control
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Directive to control addition of in-situ data to the visualization map.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
+ */
+.directive('mapVisInSituControl',['$log','FilterService',function($log,FilterService){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/mapvis/in-situ-control.html',
+        scope: {
+            layer: '='
+        },
+        link: function($scope) {
+            var filter = FilterService.getFilter(),
+                dateArg = filter.getDateArg();
+            $scope.years = d3.range(dateArg.getStartYear(),dateArg.getEndYear()+1);
+            $scope.selection = {
+                year: $scope.years[0]
+            };
+            filter.getSpeciesList().then(function(list){
+                $log.debug('speciesList',list);
+                $scope.speciesList = list;
+                $scope.selection.species = list.length ? list[0] : undefined;
+            });
+            $scope.$watch('selection.species',function(species){
+                $scope.phenophaseList = [];
+                if(species) {
+                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id).then(function(list){
+                        $log.debug('phenophaseList',list);
+                        $scope.phenophaseList = list;
+                        $scope.selection.phenophase = list.length ? list[0] : undefined;
+                    });
+                }
+            });
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.vis-map:map-vis-geo-layer
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Transfers any geojson features from the base map to the vis map based on GeoFilterArgs.
+ * This is strictly for visual effect.  If such geofilter args are in play on then the filtered results
+ * will be used when placing in-situ data and as such markers will be similarly constrained.
+ *
+ * @scope
+ */
+.directive('mapVisGeoLayer',['$log','$q','uiGmapIsReady','FilterService',function($log,$q,uiGmapIsReady,FilterService){
+    return {
+        restrict: 'E',
+        template: '',
+        scope: {},
+        link: function($scope) {
+            var geoArgs = FilterService.getFilter().getGeoArgs();
+            if(geoArgs.length) {
+                uiGmapIsReady.promise(2).then(function(instances){
+                    var baseMap = instances[0].map,
+                        visMap = instances[1].map,
+                        featurePromises = geoArgs.map(function(arg){
+                            var def = $q.defer();
+                            // arg.arg is the actual Google Maps API Feature that was
+                            // selected on the base map which then needs to be translatedback
+                            // to valid geojson.
+                            arg.arg.toGeoJson(function(json){
+                                def.resolve(json);
+                            });
+                            return def.promise;
+                        });
+                    $q.all(featurePromises).then(function(features){
+                        visMap.data.addGeoJson({
+                            type: 'FeatureCollection',
+                            features: features
+                        });
+                        visMap.data.setStyle(function(feature){
+                            return {
+                                strokeColor: '#666',
+                                strokeOpacity: null,
+                                strokeWeight: 1,
+                                fillColor: '#800000',
+                                fillOpacity: null,
+                                zIndex: 0
+                            };
+                        });
+                    });
+                });
+            }
+
+        }
+    };
+}])
+/**
  * @ngdoc controller
  * @name npn-viz-tool.vis-map:MapVisCtrl
  * @module npn-viz-tool.vis-map
@@ -316,8 +438,8 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Controller for the gridded data map visualization dialog.
  */
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','WcsService','FilterService','ChartService','SettingsService',
-    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,WcsService,FilterService,ChartService,SettingsService){
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','WcsService',
+    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,WcsService){
         var api,
             map,
             infoWindow,
