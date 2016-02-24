@@ -240,7 +240,8 @@ angular.module('npn-viz-tool.vis-map-services',[
              * Get the layers supported by the WMS service (work in progress, list will be a categorized subset eventually).
              *
              * @param {google.maps.Map} map The base map the fetched layers will be added to.
-             * @return {promise} A promise that will be resolved with the layers, or rejected.
+             * @return {promise} A promise that will be resolved with the layers, or rejected.  The layers will be instances of {@link npn-viz-tool.vis-map-services:WmsMapLayer}
+             *                   and merged into the in categories as defined by <code>map-vis-layers.json</code>.
              */
             getLayers: function(map) {
                 function mergeLayersIntoConfig() {
@@ -278,6 +279,14 @@ angular.module('npn-viz-tool.vis-map-services',[
             }
         };
 
+    /**
+     * @ngdoc object
+     * @name npn-viz-tool.vis-map-services:WmsMapLegend
+     * @module  npn-viz-tool.vis-map-services
+     * @description
+     *
+     * A legend object associated with a specific map layer.
+     */
     function WmsMapLegend(color_map,ldef) {
         var lformat = ldef.legend_label_filter ?
                 (function(){
@@ -308,27 +317,85 @@ angular.module('npn-viz-tool.vis-map-services',[
         this.data = data.slice(1);
         this.length = this.data.length;
     }
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @name  getData
+     * @description Get the raw legend cell data.
+     * @returns {Array} The cell data.
+     */
     WmsMapLegend.prototype.getData = function() {
         return this.data;
     };
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @name  getTitle
+     * @description Get the legend title (from the original zero-index cell)
+     * @returns {string} The legend title.
+     */
     WmsMapLegend.prototype.getTitle = function() {
         return this.title_data.label;
     };
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @name  getColors
+     * @description Get the colors for the cells.
+     * @returns {Array} Array of string hex colors.
+     */
     WmsMapLegend.prototype.getColors = function() {
         return this.data.map(function(data){ return data.color; });
     };
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @name  getQuantities
+     * @description Get numberic quantities for the cells.
+     * @returns {Array} Array of numbers.
+     */
     WmsMapLegend.prototype.getQuantities = function() {
         return this.data.map(function(data){ return data.quantity; });
     };
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @name  getLabels
+     * @description Get cell labels (translated).
+     * @returns {Array} Array of strings.
+     */
     WmsMapLegend.prototype.getLabels = function() {
         return this.data.map(function(data){ return data.label; });
     };
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @name  getOriginalLabels
+     * @description Get cell labels (originals).
+     * @returns {Array} Array of strings.
+     */
     WmsMapLegend.prototype.getOriginalLabels = function() {
         return this.data.map(function(data){ return data.original_label; });
     };
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @name  formatPointData
+     * @description Translate point data for the associated layer into text.
+     * @param {number} q The point data to format.
+     * @returns {string} point data formatted.
+     */
     WmsMapLegend.prototype.formatPointData = function(q) {
         return this.lformat(q,q);
     };
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @name  getPointData
+     * @description Get the legend cell data for a given point.
+     * @param {number} q The point data to get the associated legend cell for.
+     * @returns {object} The cell data for the point or undefined if none.
+     */
     WmsMapLegend.prototype.getPointData = function(q) {
         var i,d,n;
         for(i = 0; i < this.data.length; i++) {
@@ -343,6 +410,14 @@ angular.module('npn-viz-tool.vis-map-services',[
         }
     };
 
+    /**
+     * @ngdoc object
+     * @name npn-viz-tool.vis-map-services:WmsMapLayer
+     * @module  npn-viz-tool.vis-map-services
+     * @description
+     *
+     * A map layer object associated with a specific google map.
+     */
     function WmsMapLayer(map,layer_def) {
         if(layer_def.extent_values_filter) {
             $log.debug('layer '+layer_def.name+' has an extent values filter, processing',layer_def.extent_values_filter);
@@ -391,15 +466,42 @@ angular.module('npn-viz-tool.vis-map-services',[
             name: (layer_def.title||layer_def.name)
         }),
         l = angular.extend({},layer_def,{
+            /**
+             * @ngdoc property
+             * @propertyOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  googleLayer
+             * @description The underlying google layer (google.maps.ImageMapType)
+             */
             googleLayer: googleLayer,
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  getMap
+             * @description Get the google map instance this layer is associated with.
+             * @returns {google.maps.Map} The map instance.
+             */
             getMap: function() {
                 return map;
             },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  getBounds
+             * @description Get the bounds for this layer.
+             * @returns {google.maps.LatLngBounds} The layer's bounds.
+             */
             getBounds: function() {
                 if(layer_def.bbox) {
                     return layer_def.bbox.getBounds();
                 }
             },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  fit
+             * @description Fit the map to this layers defined bounds.
+             * @returns {npn-viz-tool.vis-map-services:WmsMapLayer} this map layer instance.
+             */
             fit: function() {
                 var bounds = l.getBounds();
                 if(bounds) {
@@ -407,16 +509,37 @@ angular.module('npn-viz-tool.vis-map-services',[
                 }
                 return l;
             },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  on
+             * @description Put this layer on the map.
+             * @returns {npn-viz-tool.vis-map-services:WmsMapLayer} this map layer instance.
+             */
             on: function() {
                 map.overlayMapTypes.push(googleLayer);
                 return l;
             },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  off
+             * @description Take this layer off the map.
+             * @returns {npn-viz-tool.vis-map-services:WmsMapLayer} this map layer instance.
+             */
             off: function() {
                 if(map.overlayMapTypes.length) {
                     map.overlayMapTypes.pop();
                 }
                 return l;
             },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  getLegend
+             * @description Get the legend associated with this layer.
+             * @returns {promise} A promise that will be resolve with the legend when it arrives ({@link npn-viz-tool.vis-map-services:WmsMapLegend}) .
+             */
             getLegend: function() {
                 var def = $q.defer();
                 if(legends.hasOwnProperty(layer_def.name)) {

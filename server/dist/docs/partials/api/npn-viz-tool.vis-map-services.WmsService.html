@@ -57,7 +57,8 @@ by the WMS to only those <em>before</em> &quot;today&quot;.</p>
 <ul class="methods"><li><h3 id="methods_getlayers">getLayers(map)</h3>
 <div class="getlayers"><div class="getlayers-page"><p>Get the layers supported by the WMS service (work in progress, list will be a categorized subset eventually).</p>
 </div><h5 id="methods_getlayers_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>map</td><td><a href="" class="label type-hint type-hint-google">google.maps.Map</a></td><td><div class="getlayers-page"><p>The base map the fetched layers will be added to.</p>
-</div></td></tr></tbody></table><h5 id="methods_getlayers_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-promise">promise</a></td><td><div class="getlayers-page"><p>A promise that will be resolved with the layers, or rejected.</p>
+</div></td></tr></tbody></table><h5 id="methods_getlayers_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-promise">promise</a></td><td><div class="getlayers-page"><p>A promise that will be resolved with the layers, or rejected.  The layers will be instances of <a href="#/api/npn-viz-tool.vis-map-services:WmsMapLayer">npn-viz-tool.vis-map-services:WmsMapLayer</a>
+and merged into the in categories as defined by <code>map-vis-layers.json</code>.</p>
 </div></td></tr></table></div>
 </li>
 </ul>
