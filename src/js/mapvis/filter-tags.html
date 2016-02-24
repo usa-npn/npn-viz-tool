@@ -1,0 +1,13 @@
+<ul class="filter-tags map-vis list-inline pull-right">
+    <li ng-repeat="tag in mapVisFilter">
+        <div class="btn-group filter-tag">
+            <a class="btn btn-default">
+                <span>{{tag.species | speciesTitle}}, {{tag.phenophase.phenophase_name}}, {{tag.year}} </span>
+                <svg id="map-vis-marker-{{$index}}"></svg>
+            </a>
+            <a class="btn btn-default" ng-click="removeFromFilter($index)">
+                <i class="fa fa-times-circle-o"></i>
+            </a>
+        </div>
+    </li>
+</ul>

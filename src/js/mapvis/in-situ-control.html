@@ -10,9 +10,27 @@
         <select id="selectedPhenophse" class="form-control" ng-model="selection.phenophase"
                 ng-options="p as p.phenophase_name for p in phenophaseList"></select>
     </div>
-    <div class="form-group" ng-if="selection.species && selection.phenophase">
-        <label for="selectedYear">Year</label>
-        <select id="selectedYear" class="form-control" ng-model="selection.year"
-                ng-options="y as y for y in years"></select>
+    <div class="row">
+        <div class="col-xs-9">
+            <div class="form-group" ng-if="selection.species && selection.phenophase">
+                <label for="selectedYear">Year</label>
+                <select id="selectedYear" class="form-control" ng-model="selection.year"
+                        ng-options="y as y for y in years"></select>
+            </div>
+        </div>
+        <div class="col-xs-3">
+            <div class="form-group text-right">
+                <label for="addToMapVis" style="visibility: hidden; display: block;">Add</label>
+                <button id="addToMapVis" class="btn btn-default"
+                        ng-click="addSelectionToFilter()"
+                        ng-disabled="!validSelection()"
+                        popover-placement="left" popover-popup-delay="500"
+                        popover-trigger="mouseenter"
+                        uib-popover="Add this species/phenophase/year to the map"
+                        popover-append-to-body="true">
+                    <i class="fa fa-plus"></i>
+                </button>
+            </div>
+        </div>
     </div>
 </div>

@@ -158,6 +158,15 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.vis-map:map-vis-filter-tags",
+      "shortName": "map-vis-filter-tags",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.vis-map",
+      "shortDescription": "Displays filter tags on top of the map visualization and supports removal of selections from the",
+      "keywords": "api array binding directive displays filter map map-vis-filter npn-viz-tool removal selections species supports tags top vis-map visualization"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.vis-map:map-vis-geo-layer",
       "shortName": "map-vis-geo-layer",
       "type": "directive",
@@ -218,6 +227,15 @@ NG_DOCS={
       "moduleName": "npn-viz-tool.vis-map",
       "shortDescription": "Controller for the gridded data map visualization dialog.",
       "keywords": "api controller data dialog gridded map npn-viz-tool vis-map visualization"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.vis-map:mapVisMarkerService",
+      "shortName": "mapVisMarkerService",
+      "type": "service",
+      "moduleName": "npn-viz-tool.vis-map",
+      "shortDescription": "Holds SVG marker paths for shared use between tags and map markers.  Exposes basic",
+      "keywords": "api array basic d3 exposes function functionality holds identifies idx map marker markers method npn-viz-tool path paths property render rendering rendermarkertosvg selector service shared svg svgs tags uniquely vis vis-map"
     }
   ],
   "apis": {

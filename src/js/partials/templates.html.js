@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/date-control.html', 'js/mapvis/doy-control.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/layer-control.html', 'js/mapvis/legend.html', 'js/mapvis/mapvis.html', 'js/mapvis/year-control.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/date-control.html', 'js/mapvis/doy-control.html', 'js/mapvis/filter-tags.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/layer-control.html', 'js/mapvis/legend.html', 'js/mapvis/mapvis.html', 'js/mapvis/year-control.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -358,6 +358,23 @@ angular.module("js/mapvis/doy-control.html", []).run(["$templateCache", function
     "</div>");
 }]);
 
+angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/filter-tags.html",
+    "<ul class=\"filter-tags map-vis list-inline pull-right\">\n" +
+    "    <li ng-repeat=\"tag in mapVisFilter\">\n" +
+    "        <div class=\"btn-group filter-tag\">\n" +
+    "            <a class=\"btn btn-default\">\n" +
+    "                <span>{{tag.species | speciesTitle}}, {{tag.phenophase.phenophase_name}}, {{tag.year}} </span>\n" +
+    "                <svg id=\"map-vis-marker-{{$index}}\"></svg>\n" +
+    "            </a>\n" +
+    "            <a class=\"btn btn-default\" ng-click=\"removeFromFilter($index)\">\n" +
+    "                <i class=\"fa fa-times-circle-o\"></i>\n" +
+    "            </a>\n" +
+    "        </div>\n" +
+    "    </li>\n" +
+    "</ul>");
+}]);
+
 angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/in-situ-control.html",
     "<div class=\"in-situ-control\" ng-if=\"layer\">\n" +
@@ -372,10 +389,28 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "        <select id=\"selectedPhenophse\" class=\"form-control\" ng-model=\"selection.phenophase\"\n" +
     "                ng-options=\"p as p.phenophase_name for p in phenophaseList\"></select>\n" +
     "    </div>\n" +
-    "    <div class=\"form-group\" ng-if=\"selection.species && selection.phenophase\">\n" +
-    "        <label for=\"selectedYear\">Year</label>\n" +
-    "        <select id=\"selectedYear\" class=\"form-control\" ng-model=\"selection.year\"\n" +
-    "                ng-options=\"y as y for y in years\"></select>\n" +
+    "    <div class=\"row\">\n" +
+    "        <div class=\"col-xs-9\">\n" +
+    "            <div class=\"form-group\" ng-if=\"selection.species && selection.phenophase\">\n" +
+    "                <label for=\"selectedYear\">Year</label>\n" +
+    "                <select id=\"selectedYear\" class=\"form-control\" ng-model=\"selection.year\"\n" +
+    "                        ng-options=\"y as y for y in years\"></select>\n" +
+    "            </div>\n" +
+    "        </div>\n" +
+    "        <div class=\"col-xs-3\">\n" +
+    "            <div class=\"form-group text-right\">\n" +
+    "                <label for=\"addToMapVis\" style=\"visibility: hidden; display: block;\">Add</label>\n" +
+    "                <button id=\"addToMapVis\" class=\"btn btn-default\"\n" +
+    "                        ng-click=\"addSelectionToFilter()\"\n" +
+    "                        ng-disabled=\"!validSelection()\"\n" +
+    "                        popover-placement=\"left\" popover-popup-delay=\"500\"\n" +
+    "                        popover-trigger=\"mouseenter\"\n" +
+    "                        uib-popover=\"Add this species/phenophase/year to the map\"\n" +
+    "                        popover-append-to-body=\"true\">\n" +
+    "                    <i class=\"fa fa-plus\"></i>\n" +
+    "                </button>\n" +
+    "            </div>\n" +
+    "        </div>\n" +
     "    </div>\n" +
     "</div>");
 }]);
@@ -414,6 +449,7 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "    <div class=\"container-fluid\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +
+    "                <map-vis-filter-tags map-vis-filter=\"speciesSelections\"></map-vis-filter-tags>\n" +
     "                <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
     "                    <map-vis-geo-layer></map-vis-geo-layer>\n" +
     "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
@@ -422,7 +458,7 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
     "                <map-vis-layer-control></map-vis-layer-control>\n" +
-    "                <map-vis-in-situ-control layer=\"selection.layer\"></map-vis-in-situ-control>\n" +
+    "                <map-vis-in-situ-control layer=\"selection.layer\" map-vis-filter=\"speciesSelections\"></map-vis-in-situ-control>\n" +
     "            </div>\n" +
     "        </div>\n" +
     "    </div>\n" +

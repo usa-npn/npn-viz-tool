@@ -345,14 +345,13 @@ angular.module('npn-viz-tool.vis-map-services',[
 
     function WmsMapLayer(map,layer_def) {
         if(layer_def.extent_values_filter) {
-            $log.debug('layer has an extent values filter, processing',layer_def.extent_values_filter);
+            $log.debug('layer '+layer_def.name+' has an extent values filter, processing',layer_def.extent_values_filter);
             var valuesFilter = $filter(layer_def.extent_values_filter.name),
                 extentValues = layer_def.extent.values.map(function(e){ return e.value; }),
                 filterArgs = [extentValues].concat(layer_def.extent_values_filter.args||[]),
                 filteredValues;
-            $log.debug('filterArgs',filterArgs);
             filteredValues = valuesFilter.apply(undefined,filterArgs);
-            $log.debug('filteredValues',filteredValues);
+            $log.debug('filteredValues',(filteredValues.length > 1 ? (filteredValues[0]+'...'+filteredValues[filteredValues.length-1]) : filteredValues));
             layer_def.extent.values = layer_def.extent.values.filter(function(v) {
                 return filteredValues.indexOf(v.value) !== -1;
             });

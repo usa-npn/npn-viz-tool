@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 0.1.0 - 2016-02-23
+ * Version: 0.1.0 - 2016-02-24
  */
 
 /**
@@ -3154,50 +3154,6 @@ angular.module('npn-viz-tool.vis-map',[
 /**
  * @ngdoc directive
  * @restrict E
- * @name npn-viz-tool.vis-map:map-vis-in-situ-control
- * @module npn-viz-tool.vis-map
- * @description
- *
- * Directive to control addition of in-situ data to the visualization map.
- *
- * @scope
- * @param {object} layer The currently selected map layer.
- */
-.directive('mapVisInSituControl',['$log','FilterService',function($log,FilterService){
-    return {
-        restrict: 'E',
-        templateUrl: 'js/mapvis/in-situ-control.html',
-        scope: {
-            layer: '='
-        },
-        link: function($scope) {
-            var filter = FilterService.getFilter(),
-                dateArg = filter.getDateArg();
-            $scope.years = d3.range(dateArg.getStartYear(),dateArg.getEndYear()+1);
-            $scope.selection = {
-                year: $scope.years[0]
-            };
-            filter.getSpeciesList().then(function(list){
-                $log.debug('speciesList',list);
-                $scope.speciesList = list;
-                $scope.selection.species = list.length ? list[0] : undefined;
-            });
-            $scope.$watch('selection.species',function(species){
-                $scope.phenophaseList = [];
-                if(species) {
-                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id).then(function(list){
-                        $log.debug('phenophaseList',list);
-                        $scope.phenophaseList = list;
-                        $scope.selection.phenophase = list.length ? list[0] : undefined;
-                    });
-                }
-            });
-        }
-    };
-}])
-/**
- * @ngdoc directive
- * @restrict E
  * @name npn-viz-tool.vis-map:map-vis-geo-layer
  * @module npn-viz-tool.vis-map
  * @description
@@ -3299,6 +3255,153 @@ angular.module('npn-viz-tool.vis-map',[
                 });
             }
 
+        }
+    };
+}])
+/**
+ * @ngdoc service
+ * @name npn-viz-tool.vis-map:mapVisMarkerService
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Holds SVG marker paths for shared use between tags and map markers.  Exposes basic
+ * functionality for rendering marker paths in SVGs outside of the map itself (filter tags).
+ *
+ * @scope
+ */
+.service('mapVisMarkerService',['$log',function($log){
+    var service = {
+        /**
+         * @ngdoc property
+         * @propertyOf npn-viz-tool.vis-map:mapVisMarkerService
+         * @name  paths
+         * @description
+         *
+         * Array containing SVG paths (strings) for the map vis markers.
+         */
+        paths: [
+            'M24 48 L32 44 L32 36 L24 32 L16 36 L16 44 Z', // hexagon
+            'M16 48 L32 48 L24 32 Z', // triangle
+            'M16 48 L32 48 L32 32 L16 32 Z' // square
+        ],
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis-map:mapVisMarkerService
+         * @name  renderMarkerToSvg
+         * @description
+         *
+         * Render a marker path, by index to an SVG.
+         *
+         * @param {string} selector The d3/css selector that uniquely identifies the SVG to render the marker path to.
+         * @param {int} idx The marker index (0-2 otherwise the function does nothing).
+         */
+        renderMarkerToSvg: function(selector,idx) {
+            if(idx < 0 || idx >= service.paths.length) {
+                return; // invalid index, just ignore it.
+            }
+            var svg = d3.select(selector);
+            svg.selectAll('path').remove();
+            svg.attr('viewBox','0 0 16 16')
+                .attr('width',16)
+                .attr('height',16);
+            svg.append('path')
+                .attr('d',service.paths[idx])
+                .attr('transform','translate(-16,-32)')
+                .attr('fill','steelblue');
+        }
+    };
+    return service;
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.vis-map:map-vis-filter-tags
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Displays filter tags on top of the map visualization and supports removal of selections from the
+ * filter.
+ *
+ * @scope
+ * @param {Array} map-vis-filter Two way binding to an array containing the species/phenophase/year selections.
+ */
+.directive('mapVisFilterTags',['$log','$timeout','mapVisMarkerService',function($log,$timeout,mapVisMarkerService){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/mapvis/filter-tags.html',
+        scope: {
+            mapVisFilter: '='
+        },
+        link: function($scope) {
+            $scope.removeFromFilter = function(i) {
+                $scope.mapVisFilter.splice(i,1);
+            };
+            $scope.$watchCollection('mapVisFilter',function(){
+                $timeout(function(){
+                    $scope.mapVisFilter.forEach(function(o,i){
+                        mapVisMarkerService.renderMarkerToSvg('svg#map-vis-marker-'+i,i);
+                    });
+                });
+            });
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.vis-map:map-vis-in-situ-control
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Directive to control addition of in-situ data to the visualization map.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
+ */
+.directive('mapVisInSituControl',['$log','FilterService',function($log,FilterService){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/mapvis/in-situ-control.html',
+        scope: {
+            mapVisFilter: '=',
+            layer: '='
+        },
+        link: function($scope) {
+            var filter = FilterService.getFilter(),
+                dateArg = filter.getDateArg();
+            $scope.years = d3.range(dateArg.getStartYear(),dateArg.getEndYear()+1);
+            $scope.selection = {
+                year: $scope.years[0]
+            };
+            filter.getSpeciesList().then(function(list){
+                $log.debug('speciesList',list);
+                $scope.speciesList = list;
+                $scope.selection.species = list.length ? list[0] : undefined;
+            });
+            $scope.$watch('selection.species',function(species){
+                $scope.phenophaseList = [];
+                if(species) {
+                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id).then(function(list){
+                        $log.debug('phenophaseList',list);
+                        $scope.phenophaseList = list;
+                        $scope.selection.phenophase = list.length ? list[0] : undefined;
+                    });
+                }
+            });
+            $scope.validSelection = function() {
+                var s = $scope.selection;
+                if(s.species && s.phenophase && s.year) {
+                    return $scope.mapVisFilter.length < 3 &&
+                            ($scope.mapVisFilter.length === 0 ||
+                            !$scope.mapVisFilter.reduce(function(found,f){
+                                return found||(s.species === f.species && s.phenophase === f.phenophase && s.year === f.year);
+                            },false));
+                }
+                return false;
+            };
+            $scope.addSelectionToFilter = function() {
+                $scope.mapVisFilter.push(angular.extend({},$scope.selection));
+            };
         }
     };
 }])
@@ -3431,6 +3534,13 @@ angular.module('npn-viz-tool.vis-map',[
                 $log.debug('layer extent change ',$scope.selection.activeLayer.name,v);
                 $scope.selection.activeLayer.off().on();
             }
+        });
+
+        // This is an array of species/phenohpase selections which is passed to other directives
+        // to manipulate.
+        $scope.speciesSelections = [];
+        $scope.$watchCollection('speciesSelections',function(speciesSelections) {
+            $log.debug('speciesSelections',speciesSelections);
         });
 }]);
 /**
@@ -3780,14 +3890,13 @@ angular.module('npn-viz-tool.vis-map-services',[
 
     function WmsMapLayer(map,layer_def) {
         if(layer_def.extent_values_filter) {
-            $log.debug('layer has an extent values filter, processing',layer_def.extent_values_filter);
+            $log.debug('layer '+layer_def.name+' has an extent values filter, processing',layer_def.extent_values_filter);
             var valuesFilter = $filter(layer_def.extent_values_filter.name),
                 extentValues = layer_def.extent.values.map(function(e){ return e.value; }),
                 filterArgs = [extentValues].concat(layer_def.extent_values_filter.args||[]),
                 filteredValues;
-            $log.debug('filterArgs',filterArgs);
             filteredValues = valuesFilter.apply(undefined,filterArgs);
-            $log.debug('filteredValues',filteredValues);
+            $log.debug('filteredValues',(filteredValues.length > 1 ? (filteredValues[0]+'...'+filteredValues[filteredValues.length-1]) : filteredValues));
             layer_def.extent.values = layer_def.extent.values.filter(function(v) {
                 return filteredValues.indexOf(v.value) !== -1;
             });
@@ -4171,7 +4280,7 @@ angular.module('npn-viz-tool.vis-map-services',[
         };
     return service;
 }]);
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/date-control.html', 'js/mapvis/doy-control.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/layer-control.html', 'js/mapvis/legend.html', 'js/mapvis/mapvis.html', 'js/mapvis/year-control.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/date-control.html', 'js/mapvis/doy-control.html', 'js/mapvis/filter-tags.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/layer-control.html', 'js/mapvis/legend.html', 'js/mapvis/mapvis.html', 'js/mapvis/year-control.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -4531,6 +4640,23 @@ angular.module("js/mapvis/doy-control.html", []).run(["$templateCache", function
     "</div>");
 }]);
 
+angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/filter-tags.html",
+    "<ul class=\"filter-tags map-vis list-inline pull-right\">\n" +
+    "    <li ng-repeat=\"tag in mapVisFilter\">\n" +
+    "        <div class=\"btn-group filter-tag\">\n" +
+    "            <a class=\"btn btn-default\">\n" +
+    "                <span>{{tag.species | speciesTitle}}, {{tag.phenophase.phenophase_name}}, {{tag.year}} </span>\n" +
+    "                <svg id=\"map-vis-marker-{{$index}}\"></svg>\n" +
+    "            </a>\n" +
+    "            <a class=\"btn btn-default\" ng-click=\"removeFromFilter($index)\">\n" +
+    "                <i class=\"fa fa-times-circle-o\"></i>\n" +
+    "            </a>\n" +
+    "        </div>\n" +
+    "    </li>\n" +
+    "</ul>");
+}]);
+
 angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/in-situ-control.html",
     "<div class=\"in-situ-control\" ng-if=\"layer\">\n" +
@@ -4545,10 +4671,28 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "        <select id=\"selectedPhenophse\" class=\"form-control\" ng-model=\"selection.phenophase\"\n" +
     "                ng-options=\"p as p.phenophase_name for p in phenophaseList\"></select>\n" +
     "    </div>\n" +
-    "    <div class=\"form-group\" ng-if=\"selection.species && selection.phenophase\">\n" +
-    "        <label for=\"selectedYear\">Year</label>\n" +
-    "        <select id=\"selectedYear\" class=\"form-control\" ng-model=\"selection.year\"\n" +
-    "                ng-options=\"y as y for y in years\"></select>\n" +
+    "    <div class=\"row\">\n" +
+    "        <div class=\"col-xs-9\">\n" +
+    "            <div class=\"form-group\" ng-if=\"selection.species && selection.phenophase\">\n" +
+    "                <label for=\"selectedYear\">Year</label>\n" +
+    "                <select id=\"selectedYear\" class=\"form-control\" ng-model=\"selection.year\"\n" +
+    "                        ng-options=\"y as y for y in years\"></select>\n" +
+    "            </div>\n" +
+    "        </div>\n" +
+    "        <div class=\"col-xs-3\">\n" +
+    "            <div class=\"form-group text-right\">\n" +
+    "                <label for=\"addToMapVis\" style=\"visibility: hidden; display: block;\">Add</label>\n" +
+    "                <button id=\"addToMapVis\" class=\"btn btn-default\"\n" +
+    "                        ng-click=\"addSelectionToFilter()\"\n" +
+    "                        ng-disabled=\"!validSelection()\"\n" +
+    "                        popover-placement=\"left\" popover-popup-delay=\"500\"\n" +
+    "                        popover-trigger=\"mouseenter\"\n" +
+    "                        uib-popover=\"Add this species/phenophase/year to the map\"\n" +
+    "                        popover-append-to-body=\"true\">\n" +
+    "                    <i class=\"fa fa-plus\"></i>\n" +
+    "                </button>\n" +
+    "            </div>\n" +
+    "        </div>\n" +
     "    </div>\n" +
     "</div>");
 }]);
@@ -4587,6 +4731,7 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "    <div class=\"container-fluid\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +
+    "                <map-vis-filter-tags map-vis-filter=\"speciesSelections\"></map-vis-filter-tags>\n" +
     "                <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
     "                    <map-vis-geo-layer></map-vis-geo-layer>\n" +
     "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
@@ -4595,7 +4740,7 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
     "                <map-vis-layer-control></map-vis-layer-control>\n" +
-    "                <map-vis-in-situ-control layer=\"selection.layer\"></map-vis-in-situ-control>\n" +
+    "                <map-vis-in-situ-control layer=\"selection.layer\" map-vis-filter=\"speciesSelections\"></map-vis-in-situ-control>\n" +
     "            </div>\n" +
     "        </div>\n" +
     "    </div>\n" +

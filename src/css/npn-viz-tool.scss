@@ -300,6 +300,18 @@ ul.filter-tags {
         }
     }
 }
+ul.filter-tags.map-vis {
+    position: inherit;
+    .filter-tag {
+        margin-bottom: 5px;
+        .btn {
+            height: 35px;
+        }
+        svg {
+            border: none;
+        }
+    }
+}
 
 // layers
 .tool-content.layers {

@@ -275,6 +275,19 @@ ul.filter-tags .filter-tag.date a:first-of-type:hover {
   background-color: #fff;
 }
 
+ul.filter-tags.map-vis {
+  position: inherit;
+}
+ul.filter-tags.map-vis .filter-tag {
+  margin-bottom: 5px;
+}
+ul.filter-tags.map-vis .filter-tag .btn {
+  height: 35px;
+}
+ul.filter-tags.map-vis .filter-tag svg {
+  border: none;
+}
+
 .tool-content.layers ul {
   margin-bottom: 50px;
 }
