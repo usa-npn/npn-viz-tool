@@ -224,7 +224,7 @@ $gmaps-maptype-right: 30px;
     right: $gmaps-maptype-right !important;
 }
 */
-$controls-top: 90px;
+$controls-top: 110px;
 $control-height: 28px;
 $control-margin: 10px;
 $control-font-size: 1.15em;
@@ -237,7 +237,7 @@ $control-font-size: 1.15em;
 #reset-control,#share-control,#export-control {
     @extend .little-npn-control;
     position: absolute;
-    right: 5px;
+    right: 10px;
     z-index: 2;
     box-shadow: rgba(0, 0, 0, 0.298039) 0px 1px 4px -1px;
 }

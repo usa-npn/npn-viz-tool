@@ -210,21 +210,21 @@ $gmaps-maptype-right: 30px;
 
 #reset-control, #share-control, #export-control {
   position: absolute;
-  right: 5px;
+  right: 10px;
   z-index: 2;
   box-shadow: rgba(0, 0, 0, 0.29804) 0px 1px 4px -1px;
 }
 
 #share-control {
-  top: 90px;
+  top: 110px;
 }
 
 #export-control {
-  top: 128px;
+  top: 148px;
 }
 
 #reset-control {
-  top: 166px;
+  top: 186px;
 }
 
 #share-content {
