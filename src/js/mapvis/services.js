@@ -180,11 +180,17 @@ angular.module('npn-viz-tool.vis-map-services',[
  * The <code>layers</code> property is an array of "layer" objects which, at a minimum, contain a <code>title</code>
  * and <code>name</code> properties.  The layer <code>name</code> contains the machine name of the associated WMS layer.
  *
- * Each category or layer can also have <code>legend_label_filter</code> and/or </code>extent_values_filter</code> properties.
- * If defined at the category level then all layers will inherit these values otherwise individual layers can define/override
- * the property values if defined at the category level.
+ * Each category or layer can also have the following (optional) properties:
+ * <ul>
+ *   <li><code>legend_label_filter</code> - specifies an angular filter and optional arguments used to translate point data into strings for legends and map info windows.</li>
+ *   <li><code>extent_values_filter</code> - specifies an angualr filter and optional arguments used to filter extent values for layers.</li>
+ *   <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true if not specified).</li>
+ * </ul>
  *
- * Both the <code>legend_label_filter</code> and </code>extent_values_filter</code> define an object that names an angular <code>$filter</code>
+ * If any of the above properties are defined at the category level then all of the category's layers will inherit the values.
+ * Individual layers can define properties of the same name to over-ride the definition found at the category level.
+ *
+ * The <code>*_filter</code> properties define an object that names an angular <code>$filter</code>
  * instance and optional arguments to that filter.
  * E.g.
  * <pre>
@@ -193,6 +199,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     ...
     ,{
         "name": "Current Year AGDD",
+        "supports_data": false,
         "legend_label_filter": {
             "name": "legendDegrees",
             "args": ["F"]
@@ -494,6 +501,16 @@ angular.module('npn-viz-tool.vis-map-services',[
                 if(layer_def.bbox) {
                     return layer_def.bbox.getBounds();
                 }
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  supportsData
+             * @description Indicates whether a given data supports data to be plotted on it or not.
+             * @returns {boolean} false if the layer doesn't support data plotted on it.
+             */
+            supportsData: function() {
+                return typeof(layer_def.supports_data) === 'boolean' ? layer_def.supports_data : true; /* by default a layer supports data */
             },
             /**
              * @ngdoc method

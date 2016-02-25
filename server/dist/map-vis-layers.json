@@ -1,6 +1,7 @@
 {
     "categories": [{
         "name": "30-year Average AGDD",
+        "supports_data": false,
         "legend_label_filter": {
             "name": "legendDegrees",
             "args": ["F"]
@@ -14,6 +15,7 @@
             }]
     },{
         "name": "Current Year AGDD",
+        "supports_data": false,
         "legend_label_filter": {
             "name": "legendDegrees",
             "args": ["F"]
@@ -31,6 +33,7 @@
             }]
     },{
         "name": "AGDD Anomaly Map",
+        "supports_data": false,
         "legend_label_filter": {
             "name": "legendAgddAnomaly"
         },

@@ -127,7 +127,7 @@ NG_DOCS={
       "type": "object",
       "moduleName": "npn-viz-tool.vis-map-services",
       "shortDescription": "A map layer object associated with a specific google map.",
-      "keywords": "api arrives associated bounds defined fit getbounds getlegend getmap google googlelayer imagemaptype instance latlngbounds layer layers legend map maps method npn-viz-tool object promise property resolve specific underlying vis-map-services"
+      "keywords": "api arrives associated bounds data defined doesn false fit getbounds getlegend getmap google googlelayer imagemaptype indicates instance latlngbounds layer layers legend map maps method npn-viz-tool object plotted promise property resolve specific support supports supportsdata underlying vis-map-services"
     },
     {
       "section": "api",
@@ -145,7 +145,7 @@ NG_DOCS={
       "type": "service",
       "moduleName": "npn-viz-tool.vis-map-services",
       "shortDescription": "Interacts with the NPN geoserver WMS instance to supply map layer data.",
-      "keywords": "addition agdd angular api applied args arguments array associated base capabilities categories categorized category code current data define defined defines displaying document driven ease eventually exposed exposes extent extent_values_filter extentdates extention fetched filter format formatting gdd geoserver getlayers gridded individual inherit instance instances interacts involved json layer layers legend legend_label_filter legenddegrees level list machine map maps merged method minimum names necessaary npn npn-viz-tool numbers object objects optional organization points progress promise properties property re-organized rejected report reported resolved retrived service single specifies strings subset supply supported title today ui valid values vis-map-services visualization wcs whilch wms year"
+      "keywords": "addition agdd angualr angular api applied args arguments array associated base boolean capabilities categories categorized category code current data define defined defines definition displaying document driven ease eventually exposed exposes extent extent_values_filter extentdates extention false fetched filter format formatting gdd geoserver getlayers gridded indicating individual info inherit instance instances interacts involved json layer layers legend legend_label_filter legenddegrees legends level list machine map maps merged method minimum names necessaary npn npn-viz-tool numbers object objects optional organization over-ride plotting point points progress promise properties property re-organized rejected report reported resolved retrived service single specifies strings subset supply supported supports supports_data title today translate true ui valid values vis-map-services visualization wcs whilch windows wms year"
     },
     {
       "section": "api",

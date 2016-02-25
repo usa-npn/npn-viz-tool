@@ -16,10 +16,16 @@ of objects (an object rather than array is used to ease later extention if neces
 Each &quot;category&quot; has, at a minimum, a <code>name</code> and <code>layers</code> property.
 The <code>layers</code> property is an array of &quot;layer&quot; objects which, at a minimum, contain a <code>title</code>
 and <code>name</code> properties.  The layer <code>name</code> contains the machine name of the associated WMS layer.</p>
-<p>Each category or layer can also have <code>legend_label_filter</code> and/or </code>extent_values_filter</code> properties.
-If defined at the category level then all layers will inherit these values otherwise individual layers can define/override
-the property values if defined at the category level.</p>
-<p>Both the <code>legend_label_filter</code> and </code>extent_values_filter</code> define an object that names an angular <code>$filter</code>
+<p>Each category or layer can also have the following (optional) properties:</p>
+<ul>
+  <li><code>legend_label_filter</code> - specifies an angular filter and optional arguments used to translate point data into strings for legends and map info windows.</li>
+  <li><code>extent_values_filter</code> - specifies an angualr filter and optional arguments used to filter extent values for layers.</li>
+  <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true if not specified).</li>
+</ul>
+
+<p>If any of the above properties are defined at the category level then all of the category&#39;s layers will inherit the values.
+Individual layers can define properties of the same name to over-ride the definition found at the category level.</p>
+<p>The <code>*_filter</code> properties define an object that names an angular <code>$filter</code>
 instance and optional arguments to that filter.
 E.g.
 <pre class="prettyprint linenums">
@@ -28,6 +34,7 @@ E.g.
     ...
     ,{
         "name": "Current Year AGDD",
+        "supports_data": false,
         "legend_label_filter": {
             "name": "legendDegrees",
             "args": ["F"]

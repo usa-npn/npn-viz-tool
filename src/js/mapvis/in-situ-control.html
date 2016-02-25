@@ -1,4 +1,4 @@
-<div class="in-situ-control" ng-if="layer">
+<div class="in-situ-control" ng-if="layer && layer.supportsData()">
     <hr />
     <div class="form-group" ng-if="speciesList">
         <label for="selectedSpecies">Species</label>

@@ -377,7 +377,7 @@ angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function
 
 angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/in-situ-control.html",
-    "<div class=\"in-situ-control\" ng-if=\"layer\">\n" +
+    "<div class=\"in-situ-control\" ng-if=\"layer && layer.supportsData()\">\n" +
     "    <hr />\n" +
     "    <div class=\"form-group\" ng-if=\"speciesList\">\n" +
     "        <label for=\"selectedSpecies\">Species</label>\n" +
