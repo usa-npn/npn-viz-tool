@@ -3885,7 +3885,7 @@ angular.module('npn-viz-tool.vis-map-services',[
  */
 .service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter',function($log,$q,$http,$httpParamSerializer,$filter){
     var LAYER_CONFIG = $http.get('map-vis-layers.json'),
-        WMS_BASE_URL = 'http://geoserver.usanpn.org/geoserver/wms',
+        WMS_BASE_URL = '//geoserver.usanpn.org/geoserver/wms',
         // not safe to change since the capabilities document format changes based on version
         // so a version change -may- require code changes wrt interpreting the document
         WMS_VERSION = '1.1.1',
@@ -4474,7 +4474,7 @@ angular.module('npn-viz-tool.vis-map-services',[
            return new google.maps.LatLng(lat2.toDeg(), lon2.toDeg());
         };
     });
-    var WCS_BASE_URL = 'http://geoserver.usanpn.org:80/geoserver/wcs',
+    var WCS_BASE_URL = '//geoserver.usanpn.org:80/geoserver/wcs',
         service = {
             /**
              * @ngdoc method
