@@ -9,6 +9,7 @@ angular.module('npn-viz-tool.stations',[
     var infoWindow,
         markerEvents = {
         'click':function(m){
+            $log.debug('click',m);
             if(infoWindow) {
                 infoWindow.close();
                 infoWindow = undefined;

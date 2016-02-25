@@ -33,4 +33,15 @@
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <button id="mapVisPlot" class="btn btn-default pull-right"
+                    ng-click="mapVisPlot()"
+                    ng-disabled="!mapVisFilter.length"
+                    popover-placement="left" popover-popup-delay="500"
+                    popover-trigger="mouseenter"
+                    uib-popover="Add this species/phenophase/year to the map"
+                    popover-append-to-body="true">Plot data</button>
+        </div>
+    </div>
 </div>

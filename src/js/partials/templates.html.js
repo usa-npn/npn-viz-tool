@@ -415,6 +415,17 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "            </div>\n" +
     "        </div>\n" +
     "    </div>\n" +
+    "    <div class=\"row\">\n" +
+    "        <div class=\"col-xs-12\">\n" +
+    "            <button id=\"mapVisPlot\" class=\"btn btn-default pull-right\"\n" +
+    "                    ng-click=\"mapVisPlot()\"\n" +
+    "                    ng-disabled=\"!mapVisFilter.length\"\n" +
+    "                    popover-placement=\"left\" popover-popup-delay=\"500\"\n" +
+    "                    popover-trigger=\"mouseenter\"\n" +
+    "                    uib-popover=\"Add this species/phenophase/year to the map\"\n" +
+    "                    popover-append-to-body=\"true\">Plot data</button>\n" +
+    "        </div>\n" +
+    "    </div>\n" +
     "</div>");
 }]);
 
@@ -452,8 +463,16 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "    <div class=\"container-fluid\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +
+    "                <div id=\"vis-working\" ng-show=\"working\"><i class=\"fa fa-circle-o-notch fa-spin fa-5x\"></i></div>\n" +
     "                <map-vis-filter-tags map-vis-filter=\"speciesSelections\"></map-vis-filter-tags>\n" +
     "                <ui-gmap-google-map ng-if=\"wms_map\" center='wms_map.center' zoom='wms_map.zoom' options=\"wms_map.options\" events=\"wms_map.events\">\n" +
+    "                    <ui-gmap-markers models=\"results.markers\"\n" +
+    "                                    idKey=\"'$markerKey'\"\n" +
+    "                                    coords=\"'self'\"\n" +
+    "                                    icon=\"'icon'\"\n" +
+    "                                    options=\"'markerOpts'\"\n" +
+    "                                    doCluster=\"false\"\n" +
+    "                                    events=\"markerEvents\"></ui-gmap-markers>\n" +
     "                    <map-vis-geo-layer></map-vis-geo-layer>\n" +
     "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
     "                </ui-gmap-google-map>\n" +
@@ -461,11 +480,10 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
     "                <map-vis-layer-control></map-vis-layer-control>\n" +
-    "                <map-vis-in-situ-control layer=\"selection.layer\" map-vis-filter=\"speciesSelections\"></map-vis-in-situ-control>\n" +
+    "                <map-vis-in-situ-control layer=\"selection.layer\" map-vis-filter=\"speciesSelections\" map-vis-plot=\"plotMarkers()\"></map-vis-in-situ-control>\n" +
     "            </div>\n" +
     "        </div>\n" +
     "    </div>\n" +
-    "    <!--img ng-if=\"selection.activeLayer\" ng-src=\"{{selection.activeLayer.style.legend}}\" class=\"legend\" /-->\n" +
     "</vis-dialog>");
 }]);
 

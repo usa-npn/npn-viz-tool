@@ -2,8 +2,16 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-xs-8">
+                <div id="vis-working" ng-show="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>
                 <map-vis-filter-tags map-vis-filter="speciesSelections"></map-vis-filter-tags>
                 <ui-gmap-google-map ng-if="wms_map" center='wms_map.center' zoom='wms_map.zoom' options="wms_map.options" events="wms_map.events">
+                    <ui-gmap-markers models="results.markers"
+                                    idKey="'$markerKey'"
+                                    coords="'self'"
+                                    icon="'icon'"
+                                    options="'markerOpts'"
+                                    doCluster="false"
+                                    events="markerEvents"></ui-gmap-markers>
                     <map-vis-geo-layer></map-vis-geo-layer>
                     <map-vis-bounds-layer></map-vis-bounds-layer>
                 </ui-gmap-google-map>
@@ -11,9 +19,8 @@
             </div>
             <div class="col-xs-4">
                 <map-vis-layer-control></map-vis-layer-control>
-                <map-vis-in-situ-control layer="selection.layer" map-vis-filter="speciesSelections"></map-vis-in-situ-control>
+                <map-vis-in-situ-control layer="selection.layer" map-vis-filter="speciesSelections" map-vis-plot="plotMarkers()"></map-vis-in-situ-control>
             </div>
         </div>
     </div>
-    <!--img ng-if="selection.activeLayer" ng-src="{{selection.activeLayer.style.legend}}" class="legend" /-->
 </vis-dialog>
