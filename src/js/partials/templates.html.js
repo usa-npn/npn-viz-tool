@@ -355,6 +355,9 @@ angular.module("js/mapvis/doy-control.html", []).run(["$templateCache", function
     "        <select id=\"selectedDate\" class=\"form-control\" ng-model=\"selection.date\"\n" +
     "                ng-options=\"d for d in dates\"></select>\n" +
     "    </div>\n" +
+    "    <div class=\"form-group\">\n" +
+    "        <input class=\"form-control\" style=\"width: 50px; cursor: default;\" type=\"text\" value=\"{{layer.extent.current.value | number:0}}\" disabled />\n" +
+    "    </div>\n" +
     "</div>");
 }]);
 

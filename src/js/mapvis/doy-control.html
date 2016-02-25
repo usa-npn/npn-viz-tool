@@ -10,4 +10,7 @@
         <select id="selectedDate" class="form-control" ng-model="selection.date"
                 ng-options="d for d in dates"></select>
     </div>
+    <div class="form-group">
+        <input class="form-control" style="width: 50px; cursor: default;" type="text" value="{{layer.extent.current.value | number:0}}" disabled />
+    </div>
 </div>
