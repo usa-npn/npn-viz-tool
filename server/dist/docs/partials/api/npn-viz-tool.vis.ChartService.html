@@ -1,0 +1,79 @@
+<h1><code ng:non-bindable="">ChartService</code>
+<div><span class="hint">service in module <code ng:non-bindable="">npn-viz-tool</code>
+</span>
+</div>
+</h1>
+<div><h2 id="description">Description</h2>
+<div class="description"><div class="npn-viz-tool-vis-page npn-viz-tool-vis-chartservice-page"><p>Handles data gathering in a generic fashion for visualizations that should share, rather than
+duplicate such logic.</p>
+</div></div>
+<div class="member method"><h2 id="methods">Methods</h2>
+<ul class="methods"><li><h3 id="methods_approxy">approxY(leastSquaresCoeff, x)</h3>
+<div class="approxy"><div class="approxy-page"><p>Generate an approximate value for y based on the least squares coefficient and a known x.</p>
+</div><h5 id="methods_approxy_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>leastSquaresCoeff</td><td><a href="" class="label type-hint type-hint-array">Array</a></td><td><div class="approxy-page"><p>the coefficient array.</p>
+</div></td></tr><tr><td>x</td><td><a href="" class="label type-hint type-hint-number">number</a></td><td><div class="approxy-page"><p>The value for x.</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_getobservationdates">getObservationDates(params, success)</h3>
+<div class="getobservationdates"><div class="getobservationdates-page"><p>Issue a request for observation.  Common parameters will be implicitly added like
+networks in the base filter or lists of sites if geographic filtering is enabled.</p>
+</div><h5 id="methods_getobservationdates_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>params</td><td><a href="" class="label type-hint type-hint-object">Object</a></td><td><div class="getobservationdates-page"><p>Parameters to send to the web service.</p>
+</div></td></tr><tr><td>success</td><td><a href="" class="label type-hint type-hint-function">function</a></td><td><div class="getobservationdates-page"><p>The success callback to receive the response data.</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_getsizeinfo">getSizeInfo(marginOverride)</h3>
+<div class="getsizeinfo"><div class="getsizeinfo-page"><p>Get common info about how a chart should be sized with respect to actual
+window size.</p>
+<p><strong>Note:</strong> This method will result in information about how to
+statically size an image within a visualization dialog.  However d3 can dynamically
+deliver width/height information for an SVG if full height/width is desired.  E.g.
+<pre class="prettyprint linenums">
+var width = parseFloat(svg.style('width').replace('px','')),
+    height = parseFloat(svg.style('height').replace('px',''));
+</pre>
+</div><h5 id="methods_getsizeinfo_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>marginOverride</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="getsizeinfo-page"><p>Allows for overriding of defaults.</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_getsummarizeddata">getSummarizedData(params, success)</h3>
+<div class="getsummarizeddata"><div class="getsummarizeddata-page"><p>Issue a request for summarized data.  Common parameters will be implicitly added like
+networks in the base filter or lists of sites if geographic filtering is enabled.</p>
+</div><h5 id="methods_getsummarizeddata_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>params</td><td><a href="" class="label type-hint type-hint-object">Object</a></td><td><div class="getsummarizeddata-page"><p>Parameters to send to the web service.</p>
+</div></td></tr><tr><td>success</td><td><a href="" class="label type-hint type-hint-function">function</a></td><td><div class="getsummarizeddata-page"><p>The success callback to receive the data, &quot;suspect&quot; and &quot;imprecise&quot; data (if told to do so) will be implicitly filtered from the result.</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_getvisualizations">getVisualizations()</h3>
+<div class="getvisualizations"><div class="getvisualizations-page"><p>Get the coded list of visualization definitions.</p>
+</div><h5 id="methods_getvisualizations_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-array">Array</a></td><td><div class="getvisualizations-page"><p>The visualization definitions for use by the UI control.</p>
+</div></td></tr></table></div>
+</li>
+<li><h3 id="methods_isfilterempty">isFilterEmpty()</h3>
+<div class="isfilterempty"><div class="isfilterempty-page"><p>Convenience shortcut to <code>FilterService.isFilterEmpty</code>.</p>
+</div></div>
+</li>
+<li><h3 id="methods_leastsquares">leastSquares(xSeries, ySeries)</h3>
+<div class="leastsquares"><div class="leastsquares-page"><p>Perform leastSquares regression mathematics for drawing regression lines.</p>
+</div><h5 id="methods_leastsquares_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>xSeries</td><td><a href="" class="label type-hint type-hint-array">Array</a></td><td><div class="leastsquares-page"><p>the x-series</p>
+</div></td></tr><tr><td>ySeries</td><td><a href="" class="label type-hint type-hint-array">Array</a></td><td><div class="leastsquares-page"><p>the y-series</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_opensinglestationvisualization">openSingleStationVisualization(station_id, vis)</h3>
+<div class="opensinglestationvisualization"><div class="opensinglestationvisualization-page"><p>Open a visualization dialog focused on a single station.</p>
+</div><h5 id="methods_opensinglestationvisualization_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>station_id</td><td><a href="" class="label type-hint type-hint-string">string</a></td><td><div class="opensinglestationvisualization-page"><p>The station id.</p>
+</div></td></tr><tr><td>vis</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="opensinglestationvisualization-page"><p>The visualization object.</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_openvisualization">openVisualization(vis)</h3>
+<div class="openvisualization"><div class="openvisualization-page"><p>Open a visualization dialog.</p>
+</div><h5 id="methods_openvisualization_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>vis</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="openvisualization-page"><p>The visualization object.</p>
+</div></td></tr></tbody></table></div>
+</li>
+</ul>
+</div>
+<div class="member property"><h2 id="properties">Properties</h2>
+<ul class="properties"><li><h3 id="properties_one_day_millis">ONE_DAY_MILLIS</h3>
+<div class="one_day_millis"><div class="one-day-millis-page"><p>constant for the number of milliseconds in a day.</p>
+</div></div>
+</li>
+</ul>
+</div>
+</div>

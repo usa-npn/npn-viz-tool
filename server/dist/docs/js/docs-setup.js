@@ -41,6 +41,15 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.vis",
+      "shortName": "npn-viz-tool.vis",
+      "type": "overview",
+      "moduleName": "npn-viz-tool.vis",
+      "shortDescription": "Module for generic visualization support, dialog framework, common services, etc.",
+      "keywords": "api common dialog framework generic module npn-viz-tool overview services support vis visualization"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.vis-map",
       "shortName": "npn-viz-tool.vis-map",
       "type": "overview",
@@ -254,6 +263,42 @@ NG_DOCS={
       "moduleName": "npn-viz-tool.vis-map",
       "shortDescription": "Holds SVG marker paths for shared use between tags and map markers.  Exposes basic",
       "keywords": "api array basic d3 exposes function functionality holds identifies idx map marker markers method npn-viz-tool path paths property render rendering rendermarkertosvg selector service shared svg svgs tags uniquely vis vis-map"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.vis:ChartService",
+      "shortName": "ChartService",
+      "type": "service",
+      "moduleName": "npn-viz-tool.vis",
+      "shortDescription": "Handles data gathering in a generic fashion for visualizations that should share, rather than",
+      "keywords": "actual allows api approximate approxy array base based callback chart coded coefficient common constant control convenience d3 data day defaults definitions deliver desired dialog drawing duplicate dynamically enabled fashion filter filtered filtering focused full gathering generate generic geographic getobservationdates getsizeinfo getsummarizeddata getvisualizations handles height image implicitly imprecise info isfilterempty issue leastsquares leastsquarescoeff lines list lists logic marginoverride mathematics method milliseconds networks npn-viz-tool number object observation one_day_millis open opensinglestationvisualization openvisualization overriding parameters params parsefloat perform property px receive regression replace request respect response result send service share shortcut single sites size sized squares statically station station_id style success summarized suspect svg told ui var vis visualization visualizations web width window x-series xseries y-series yseries"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.vis:vis-control",
+      "shortName": "vis-control",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.vis",
+      "shortDescription": "The visualization slide out control.",
+      "keywords": "api control directive npn-viz-tool slide vis visualization"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.vis:vis-dialog",
+      "shortName": "vis-dialog",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.vis",
+      "shortDescription": "A visualization dialog",
+      "keywords": "api dialog directive modal npn-viz-tool title vis visualization"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.vis:vis-download",
+      "shortName": "vis-download",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.vis",
+      "shortDescription": "Vis download.",
+      "keywords": "api directive download npn-viz-tool vis"
     }
   ],
   "apis": {

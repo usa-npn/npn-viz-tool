@@ -360,25 +360,22 @@ angular.module('npn-viz-tool.vis-scatter',[
         ChartService.getSummarizedData(params,function(response){
             var filterLqd = SettingsService.getSettingValue('filterLqdSummary');
             $scope.data = data = response.filter(function(d,i) {
-                var keep = !filterLqd||d.numdays_since_prior_no >= 0;
-                if(keep) {
-                    d.color = $scope.colorRange[colorMap[d.species_id+'.'+d.phenophase_id]];
-                    if(d.color) {
-                        d.id = i;
-                        // this is the day # that will get plotted 1 being the first day of the start_year
-                        // 366 being the first day of start_year+1, etc.
-                        d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
-                    } else {
-                        // this can happen if a phenophase id spans two species but is only plotted for one
-                        // e.g. boxelder/breaking leaf buds, boxelder/unfolding leaves, red maple/breaking leaf buds
-                        // the service will return data for 'red maple/unfolding leaves' but the user hasn't requested
-                        // that be plotted so we need to discard this data.
-                        keep = false;
-                    }
+                var keep = true;
+                d.color = $scope.colorRange[colorMap[d.species_id+'.'+d.phenophase_id]];
+                if(d.color) {
+                    d.id = i;
+                    // this is the day # that will get plotted 1 being the first day of the start_year
+                    // 366 being the first day of start_year+1, etc.
+                    d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
+                } else {
+                    // this can happen if a phenophase id spans two species but is only plotted for one
+                    // e.g. boxelder/breaking leaf buds, boxelder/unfolding leaves, red maple/breaking leaf buds
+                    // the service will return data for 'red maple/unfolding leaves' but the user hasn't requested
+                    // that be plotted so we need to discard this data.
+                    keep = false;
                 }
                 return keep;
             });
-            $log.debug('filtered out '+(response.length-data.length)+'/'+response.length+' records with negative num_days_prior_no.');
             $scope.filteredDisclaimer = response.length != data.length;
             $log.debug('scatterPlot data',data);
             draw();

@@ -5420,25 +5420,22 @@ angular.module('npn-viz-tool.vis-scatter',[
         ChartService.getSummarizedData(params,function(response){
             var filterLqd = SettingsService.getSettingValue('filterLqdSummary');
             $scope.data = data = response.filter(function(d,i) {
-                var keep = !filterLqd||d.numdays_since_prior_no >= 0;
-                if(keep) {
-                    d.color = $scope.colorRange[colorMap[d.species_id+'.'+d.phenophase_id]];
-                    if(d.color) {
-                        d.id = i;
-                        // this is the day # that will get plotted 1 being the first day of the start_year
-                        // 366 being the first day of start_year+1, etc.
-                        d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
-                    } else {
-                        // this can happen if a phenophase id spans two species but is only plotted for one
-                        // e.g. boxelder/breaking leaf buds, boxelder/unfolding leaves, red maple/breaking leaf buds
-                        // the service will return data for 'red maple/unfolding leaves' but the user hasn't requested
-                        // that be plotted so we need to discard this data.
-                        keep = false;
-                    }
+                var keep = true;
+                d.color = $scope.colorRange[colorMap[d.species_id+'.'+d.phenophase_id]];
+                if(d.color) {
+                    d.id = i;
+                    // this is the day # that will get plotted 1 being the first day of the start_year
+                    // 366 being the first day of start_year+1, etc.
+                    d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
+                } else {
+                    // this can happen if a phenophase id spans two species but is only plotted for one
+                    // e.g. boxelder/breaking leaf buds, boxelder/unfolding leaves, red maple/breaking leaf buds
+                    // the service will return data for 'red maple/unfolding leaves' but the user hasn't requested
+                    // that be plotted so we need to discard this data.
+                    keep = false;
                 }
                 return keep;
             });
-            $log.debug('filtered out '+(response.length-data.length)+'/'+response.length+' records with negative num_days_prior_no.');
             $scope.filteredDisclaimer = response.length != data.length;
             $log.debug('scatterPlot data',data);
             draw();
@@ -6013,6 +6010,13 @@ angular.module('npn-viz-tool.toolbar',[
     }
   };
 }]);
+/**
+ * @ngdoc overview
+ * @name npn-viz-tool.vis
+ * @description
+ *
+ * Module for generic visualization support, dialog framework, common services, etc.
+ */
 angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.filter',
     'npn-viz-tool.filters',
@@ -6021,8 +6025,17 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.vis-map',
     'ui.bootstrap'
 ])
-.factory('ChartService',['$window','$http','$log','$uibModal','FilterService',
-    function($window,$http,$log,$uibModal,FilterService){
+/**
+ * @ngdoc service
+ * @name npn-viz-tool.vis:ChartService
+ * @module npn-viz-tool.vis
+ * @description
+ *
+ * Handles data gathering in a generic fashion for visualizations that should share, rather than
+ * duplicate such logic.
+ */
+.factory('ChartService',['$window','$http','$log','$uibModal','FilterService','SettingsService',
+    function($window,$http,$log,$uibModal,FilterService,SettingsService){
     // some hard coded values that will be massaged into generated
     // values at runtime.
     var CHART_W = 930,
@@ -6059,6 +6072,13 @@ angular.module('npn-viz-tool.vis',[
         }
         return !bad;
     }
+    function filterLqSummaryData (d) {
+        var keep = d.numdays_since_prior_no >= 0;
+        if(!keep) {
+            $log.debug('filtering less precise data from summary output',d);
+        }
+        return keep;
+    }
     function addCommonParams(params) {
         if(visualizeSingleStationId) {
             params['station_id[0]'] = visualizeSingleStationId;
@@ -6089,7 +6109,32 @@ angular.module('npn-viz-tool.vis',[
         visualizeSingleStationId = id;
     }
     var service = {
+        /**
+         * @ngdoc property
+         * @propertyOf npn-viz-tool.vis:ChartService
+         * @name ONE_DAY_MILLIS
+         * @description constant for the number of milliseconds in a day.
+         */
         ONE_DAY_MILLIS: (24*60*60*1000),
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
+         * @name getSizeInfo
+         * @description
+         *
+         * Get common info about how a chart should be sized with respect to actual
+         * window size.
+         *
+         * <strong>Note:</strong> This method will result in information about how to
+         * statically size an image within a visualization dialog.  However d3 can dynamically
+         * deliver width/height information for an SVG if full height/width is desired.  E.g.
+         * <pre>
+         * var width = parseFloat(svg.style('width').replace('px','')),
+         *     height = parseFloat(svg.style('height').replace('px',''));
+         * </pre>
+         *
+         * @param {object} marginOverride Allows for overriding of defaults.
+         */
         getSizeInfo: function(marginOverride){
             // make the chart 92% of the window width
             var margin = angular.extend({},MARGIN,marginOverride),
@@ -6101,6 +6146,17 @@ angular.module('npn-viz-tool.vis',[
             $log.debug('sizing',sizing);
             return sizing;
         },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
+         * @name leastSquares
+         * @description
+         *
+         * Perform leastSquares regression mathematics for drawing regression lines.
+         *
+         * @param {Array} xSeries the x-series
+         * @param {Array} ySeries the y-series
+         */
         leastSquares: function(xSeries,ySeries) {
             if(xSeries.length === 0 || ySeries.length === 0) {
                 return [Number.NaN,Number.NaN,Number.NaN];
@@ -6125,12 +6181,35 @@ angular.module('npn-viz-tool.vis',[
 
             return [slope, intercept, rSquare];
         },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
+         * @name approxY
+         * @description
+         *
+         * Generate an approximate value for y based on the least squares coefficient and a known x.
+         *
+         * @param {Array} leastSquaresCoeff the coefficient array.
+         * @param {number} x The value for x.
+         */
         approxY: function(leastSquaresCoeff,x) {
             // y = a + bx
             var a = leastSquaresCoeff[1],
                 b = leastSquaresCoeff[0];
             return a + (b*x);
         },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
+         * @name getSummarizedData
+         * @description
+         *
+         * Issue a request for summarized data.  Common parameters will be implicitly added like
+         * networks in the base filter or lists of sites if geographic filtering is enabled.
+         *
+         * @param {Object} params Parameters to send to the web service.
+         * @param {function} success The success callback to receive the data, "suspect" and "imprecise" data (if told to do so) will be implicitly filtered from the result.
+         */
         getSummarizedData: function(params,success) {
             $http({
                 method: 'POST',
@@ -6139,9 +6218,25 @@ angular.module('npn-viz-tool.vis',[
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
             }).success(function(response){
-                success(response.filter(filterSuspectSummaryData));
+                var filtered = response
+                                .filter(filterSuspectSummaryData)
+                                .filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSummaryData : angular.identity);
+                $log.debug('filtered out '+(response.length-filtered.length)+'/'+response.length+' suspect records or with negative num_days_prior_no.');
+                success(filtered);
             });
         },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
+         * @name getObservationDates
+         * @description
+         *
+         * Issue a request for observation.  Common parameters will be implicitly added like
+         * networks in the base filter or lists of sites if geographic filtering is enabled.
+         *
+         * @param {Object} params Parameters to send to the web service.
+         * @param {function} success The success callback to receive the response data.
+         */
         getObservationDates: function(params,success) {
             $http({
                 method: 'POST',
@@ -6151,10 +6246,34 @@ angular.module('npn-viz-tool.vis',[
                 data: addCommonParams(params)
             }).success(success);
         },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
+         * @name isFilterEmpty
+         * @description
+         *
+         * Convenience shortcut to <code>FilterService.isFilterEmpty</code>.
+         */
         isFilterEmpty: FilterService.isFilterEmpty,
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
+         * @name getVisualizations
+         * @description Get the coded list of visualization definitions.
+         * @returns {Array} The visualization definitions for use by the UI control.
+         */
         getVisualizations: function() {
             return VISUALIZATIONS;
         },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
+         * @name openSingleStationVisualization
+         * @description Open a visualization dialog focused on a single station.
+         *
+         * @param {string} station_id The station id.
+         * @param {object} vis The visualization object.
+         */
         openSingleStationVisualization: function(station_id,vis) {
             setVisualizeSingleStationId(station_id);
             var modal_instance = service.openVisualization(vis);
@@ -6165,6 +6284,14 @@ angular.module('npn-viz-tool.vis',[
                 setVisualizeSingleStationId();
             }
         },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
+         * @name openVisualization
+         * @description Open a visualization dialog.
+         *
+         * @param {object} vis The visualization object.
+         */
         openVisualization: function(vis) {
             if(!FilterService.isFilterEmpty()) {
                 return $uibModal.open({
@@ -6180,6 +6307,16 @@ angular.module('npn-viz-tool.vis',[
     };
     return service;
 }])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.vis:vis-dialog
+ * @module npn-viz-tool.vis
+ * @description A visualization dialog
+ *
+ * @param {string} title The title.
+ * @param {object} modal The modal dialog.
+ */
 .directive('visDialog',[function(){
     return {
         restrict: 'E',
@@ -6193,6 +6330,13 @@ angular.module('npn-viz-tool.vis',[
         }]
     };
 }])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.vis:vis-control
+ * @module npn-viz-tool.vis
+ * @description The visualization slide out control.
+ */
 .directive('visControl',['ChartService',function(ChartService){
     return {
         restrict: 'E',
@@ -6206,6 +6350,13 @@ angular.module('npn-viz-tool.vis',[
         }
     };
 }])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.vis:vis-download
+ * @module npn-viz-tool.vis
+ * @description Vis download.
+ */
 .directive('visDownload',[function(){
     return {
         restrict: 'E',
