@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 0.1.0 - 2016-02-25
+ * Version: 0.1.0 - 2016-02-26
  */
 
 /**
@@ -3963,18 +3963,23 @@ angular.module('npn-viz-tool.vis-map-services',[
                         return filter.apply(undefined, args);
                     };
                 })() : angular.identity,
-            data = color_map.find('ColorMapEntry').toArray().reduce(function(arr,entry,i){
-                var e = $(entry),
-                    q = parseFloat(e.attr('quantity')),
-                    l = e.attr('label');
-                arr.push({
-                    color: e.attr('color'),
-                    quantity: q,
-                    original_label: l,
-                    label: i === 0 ? l : lformat(l,q)
-                });
-                return arr;
-            },[]);
+                entries,data;
+        entries = color_map.find('ColorMapEntry');
+        if(entries.length === 0) {
+            entries = color_map.find('sld\\:ColorMapEntry');
+        }
+        data = entries.toArray().reduce(function(arr,entry,i){
+            var e = $(entry),
+                q = parseFloat(e.attr('quantity')),
+                l = e.attr('label');
+            arr.push({
+                color: e.attr('color'),
+                quantity: q,
+                original_label: l,
+                label: i === 0 ? l : lformat(l,q)
+            });
+            return arr;
+        },[]);
         this.ldef = ldef;
         this.lformat = lformat;
         this.title_data = data[0];
@@ -4231,6 +4236,10 @@ angular.module('npn-viz-tool.vis-map-services',[
                         $log.debug('legend response',response);
                         var legend_data = $($.parseXML(response.data)),
                             color_map = legend_data.find('ColorMap');
+                        if(color_map.length === 0) {
+                            // FF
+                            color_map = legend_data.find('sld\\:ColorMap');
+                        }
                         // this code is selecting the first if there are multiples....
                         // as is the case for si-x:leaf_anomaly
                         legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def) : undefined;
