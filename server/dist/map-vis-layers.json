@@ -84,62 +84,34 @@
         "legend_label_filter": {
             "name": "legendDoy"
         },
+        "extent_values_filter": {
+            "name": "extentDates",
+            "args": [null,"today"]
+        },
         "layers": [{
                 "title": "Arnold Red Leaf (ncep)",
-                "name": "si-x:arnoldred_leaf_ncep",
-                "extent_values_filter": {
-                    "name": "extentDates",
-                    "args": [null,"05-16"]
-                }
+                "name": "si-x:arnoldred_leaf_ncep"
             },{
                 "title": "Arnold Red Bloom (ncep)",
-                "name": "si-x:arnoldred_bloom_ncep",
-                "extent_values_filter": {
-                    "name": "extentDates",
-                    "args": [null,"09-02"]
-                }
+                "name": "si-x:arnoldred_bloom_ncep"
             },{
                 "title": "Average Bloom (ncep)",
-                "name": "si-x:average_bloom_ncep",
-                "extent_values_filter": {
-                    "name": "extentDates",
-                    "args": [null,"09-02"]
-                }
+                "name": "si-x:average_bloom_ncep"
             },{
                 "title": "Average Leaf (ncep)",
-                "name": "si-x:average_leaf_ncep",
-                "extent_values_filter": {
-                    "name": "extentDates",
-                    "args": [null,"05-16"]
-                }
+                "name": "si-x:average_leaf_ncep"
             },{
                 "title": "Lilac Leaf (ncep)",
-                "name": "si-x:lilac_leaf_ncep",
-                "extent_values_filter": {
-                    "name": "extentDates",
-                    "args": [null,"05-16"]
-                }
+                "name": "si-x:lilac_leaf_ncep"
             },{
                 "title": "Lilac Bloom (ncep)",
-                "name": "si-x:lilac_bloom_ncep",
-                "extent_values_filter": {
-                    "name": "extentDates",
-                    "args": [null,"09-02"]
-                }
+                "name": "si-x:lilac_bloom_ncep"
             },{
                 "title": "Zabelli Bloom (ncep)",
-                "name": "si-x:zabelli_bloom_ncep",
-                "extent_values_filter": {
-                    "name": "extentDates",
-                    "args": [null,"09-02"]
-                }
+                "name": "si-x:zabelli_bloom_ncep"
             },{
                 "title": "Zabelli Leaf (ncep)",
-                "name": "si-x:zabelli_leaf_ncep",
-                "extent_values_filter": {
-                    "name": "extentDates",
-                    "args": [null,"05-16"]
-                }
+                "name": "si-x:zabelli_leaf_ncep"
             }]
     },{
         "name": "Spring Index, Anomaly",

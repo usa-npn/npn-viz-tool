@@ -3672,6 +3672,18 @@ angular.module('npn-viz-tool.vis-map',[
  */
 angular.module('npn-viz-tool.vis-map-services',[
 ])
+.service('DateExtentUtil',[function(){
+    var FMT_REGEX = /^(\d\d\d\d)-0?(\d+)-0?(\d+)/;
+    return {
+        parse: function(s) {
+            var match = FMT_REGEX.exec(s.replace(/T.*$/,'')),
+                year = parseInt(match[1]),
+                month = parseInt(match[2])-1,
+                day = parseInt(match[3]);
+            return new Date(year,month,day);
+        }
+    };
+}])
 /**
  * @ngdoc filter
  * @name npn-viz-tool.vis-map-services:thirtyYearAvgDayOfYear
@@ -3814,7 +3826,7 @@ angular.module('npn-viz-tool.vis-map-services',[
  * $filter('extentDates')(dates,undefined,'2020-05-01T00:00:00.000Z'); // before may 1st of 2020
  * </pre>
  */
-.filter('extentDates',['$log','dateFilter',function($log,dateFilter){
+.filter('extentDates',['$log','dateFilter','DateExtentUtil',function($log,dateFilter,DateExtentUtil){
     var ONE_DAY = (24*60*60*1000);
     function toTime(s) {
         var d = new Date();
@@ -3828,14 +3840,14 @@ angular.module('npn-viz-tool.vis-map-services',[
         } else if(s.indexOf('T') === -1) {
             s = d.getFullYear()+'-'+s+' 00:00:00';
         }
-        return (new Date(s.replace(/T.*$/,' 00:00:00'))).getTime();
+        return DateExtentUtil.parse(s).getTime();
     }
     return function(arr,after,before) {
         var a = after ? toTime(after) : undefined,
             b = before ? toTime(before) : undefined;
         if(a || b) {
             arr = arr.filter(function(d) {
-                var t = (new Date(d.replace(/T.*$/,' 00:00:00'))).getTime();
+                var t = DateExtentUtil.parse(d).getTime();
                 return (!a || (a && t > a)) && (!b || (b && t < b));
             });
         }
@@ -3917,7 +3929,7 @@ angular.module('npn-viz-tool.vis-map-services',[
  * Similarly both layers will use the same <code>extent_values_filter</code> whilch will filter valid extent values as reported
  * by the WMS to only those <em>before</em> "today".
  */
-.service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter','WcsService',function($log,$q,$http,$httpParamSerializer,$filter,WcsService){
+.service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter','DateExtentUtil','WcsService',function($log,$q,$http,$httpParamSerializer,$filter,DateExtentUtil,WcsService){
     function setGeoServerUrl(url) {
         GEOSERVER_URL = url;
         WMS_BASE_URL = GEOSERVER_URL+'/wms';
@@ -4404,7 +4416,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     }
     // represents an extent value of month/day/year
     function DateExtentValue(value,dateFmt) {
-        var d = new Date(value.replace(/T.*$/,' 00:00:00')); // remove GMT, parse as if relative to local TZ
+        var d = DateExtentUtil.parse(value);
         return {
             value: value,
             date: d,
