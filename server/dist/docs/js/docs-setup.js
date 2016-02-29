@@ -127,7 +127,7 @@ NG_DOCS={
       "type": "service",
       "moduleName": "npn-viz-tool.vis-map-services",
       "shortDescription": "Interacts with the NPN geoserver WCS instance to supply underlying gridded data.  Loading of this service",
-      "keywords": "activelayer api array associated class data extends fetch geoserver getgriddeddata google grid gridded gridsize instance interacts larger latlng layer loading location map maps method npn npn-viz-tool number numbers point promise protypes rejected resolved returned service side specific supply underlying vis-map-services wcs wcsservice"
+      "keywords": "activelayer api array associated base based call class data directly expose extends fetch fetching geoserver geoserverurl getgriddeddata google grid gridded gridsize import indivdual instance interact interacts larger latlng layer layers loading location map maps method methods_getgriddeddata npn npn-viz-tool number numbers point promise protypes rejected resolved returned service side specific supply underlying url vis-map-services wcs wcsservice"
     },
     {
       "section": "api",
@@ -136,7 +136,7 @@ NG_DOCS={
       "type": "object",
       "moduleName": "npn-viz-tool.vis-map-services",
       "shortDescription": "A map layer object associated with a specific google map.",
-      "keywords": "api arrives associated bounds data defined doesn false fit getbounds getlegend getmap google googlelayer imagemaptype indicates instance latlngbounds layer layers legend map maps method npn-viz-tool object plotted promise property resolve specific support supports supportsdata underlying vis-map-services"
+      "keywords": "api array arrives associated bounds data defined doesn false fetch fit getbounds getgriddeddata getlegend getmap google googlelayer gridded imagemaptype indicates instance latlng latlngbounds layer layers legend location map maps method npn-viz-tool numbers object plotted point promise property rejected resolve resolved specific support supports supportsdata underlying vis-map-services"
     },
     {
       "section": "api",
@@ -154,7 +154,7 @@ NG_DOCS={
       "type": "service",
       "moduleName": "npn-viz-tool.vis-map-services",
       "shortDescription": "Interacts with the NPN geoserver WMS instance to supply map layer data.",
-      "keywords": "addition agdd angualr angular api applied args arguments array associated base boolean capabilities categories categorized category code current data define defined defines definition displaying document driven ease eventually exposed exposes extent extent_values_filter extentdates extention false fetched filter format formatting gdd geoserver getlayers gridded indicating individual info inherit instance instances interacts involved json layer layers legend legend_label_filter legenddegrees legends level list machine map maps merged method minimum names necessaary npn npn-viz-tool numbers object objects optional organization over-ride plotting point points progress promise properties property re-organized rejected report reported resolved retrived service single specifies strings subset supply supported supports supports_data title today translate true ui valid values vis-map-services visualization wcs whilch windows wms year"
+      "keywords": "addition agdd angualr angular api applied args arguments array associated base behavior boolean capabilities categories categorized category code configuration configure current data define defined defines definition displaying document driven eventually exposed exposes extent extent_values_filter extentdates false fetched filter format formatting gdd geo geo_server geoserver getlayers gridded indicating individual info inherit instance instances interact interacts involved json layer layers legend legend_label_filter legenddegrees legends level list location machine map maps merged method minimum names npn npn-viz-tool numbers object objects optional org organization organize over-ride plotting point points progress promise properties property re-organized rejected report reported resolved retrived server service single specifies strings subset supply supported supports supports_data title today translate true ui url usanpn valid values vis-map-services visualization wcs whilch windows wms year"
     },
     {
       "section": "api",
@@ -257,12 +257,12 @@ NG_DOCS={
     },
     {
       "section": "api",
-      "id": "npn-viz-tool.vis-map:mapVisMarkerService",
-      "shortName": "mapVisMarkerService",
+      "id": "npn-viz-tool.vis-map:MapVisMarkerService",
+      "shortName": "MapVisMarkerService",
       "type": "service",
       "moduleName": "npn-viz-tool.vis-map",
       "shortDescription": "Holds SVG marker paths for shared use between tags and map markers.  Exposes basic",
-      "keywords": "api array basic d3 exposes function functionality holds identifies idx map marker markers method npn-viz-tool path paths property render rendering rendermarkertosvg selector service shared svg svgs tags uniquely vis vis-map"
+      "keywords": "api array base basic build d3 definition exposes function functionality getbaseicon google holds icon identifies idx map marker markers method npn-viz-tool object path paths property render rendering rendermarkertosvg selector service shared svg svgs tags uniquely vis vis-map"
     },
     {
       "section": "api",

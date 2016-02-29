@@ -1,4 +1,7 @@
 {
+    "geo_server": {
+        "url": "//geoserver-dev.usanpn.org/geoserver"
+    },
     "categories": [{
         "name": "30-year Average AGDD",
         "supports_data": false,

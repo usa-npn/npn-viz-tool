@@ -576,8 +576,8 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Controller for the gridded data map visualization dialog.
  */
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','WcsService','ChartService','MapVisMarkerService','md5',
-    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,WcsService,ChartService,MapVisMarkerService,md5){
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5',
+    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5){
         var api,
             map,
             infoWindow,
@@ -602,7 +602,7 @@ angular.module('npn-viz-tool.vis-map',[
                     var ev = args[0];
                     $log.debug('click',ev);
                     if($scope.selection.activeLayer) {
-                        WcsService.getGriddedData($scope.selection.activeLayer,ev.latLng,4/*should gridSize change based on the layer?*/)
+                        $scope.selection.activeLayer.getGriddedData(ev.latLng)
                             .then(function(tuples){
                                 var html,compiled;
                                 $log.debug('tuples',tuples);

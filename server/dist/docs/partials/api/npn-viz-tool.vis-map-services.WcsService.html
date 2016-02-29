@@ -6,11 +6,15 @@
 <div><h2 id="description">Description</h2>
 <div class="description"><div class="npn-viz-tool-vis-map-services-page npn-viz-tool-vis-map-services-wcsservice-page"><p>Interacts with the NPN geoserver WCS instance to supply underlying gridded data.  Loading of this service
 extends the protypes of Number and the google.maps.LatLng class.</p>
+<p><strong>Important:</strong> There should be no need to import and interact with this service directly.  Indivdual
+layers (<a href="#/api/npn-viz-tool.vis-map-services:WmsMapLayer#methods_getgriddeddata">npn-viz-tool.vis-map-services:WmsMapLayer#methods_getgriddeddata</a>) expose an instance based method for fetching gridded data specific to those layers which should be used instead (they
+call through to this service).</p>
 </div></div>
 <div class="member method"><h2 id="methods">Methods</h2>
-<ul class="methods"><li><h3 id="methods_getgriddeddata">getGriddedData(activeLayer, latLng, gridSize)</h3>
+<ul class="methods"><li><h3 id="methods_getgriddeddata">getGriddedData(geoServerUrl, activeLayer, latLng, gridSize)</h3>
 <div class="getgriddeddata"><div class="getgriddeddata-page"><p>Fetch gridded data for a specific location on a specific map layer.</p>
-</div><h5 id="methods_getgriddeddata_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>activeLayer</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="getgriddeddata-page"><p>The map layer returned from the WcsService that the data to fetch is associated with.</p>
+</div><h5 id="methods_getgriddeddata_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>geoServerUrl</td><td><a href="" class="label type-hint type-hint-string">string</a></td><td><div class="getgriddeddata-page"><p>The base URL of the geoserver instance.</p>
+</div></td></tr><tr><td>activeLayer</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="getgriddeddata-page"><p>The map layer returned from the WcsService that the data to fetch is associated with.</p>
 </div></td></tr><tr><td>latLng</td><td><a href="" class="label type-hint type-hint-google">google.maps.LatLng</a></td><td><div class="getgriddeddata-page"><p>The point under which to fetch the data for.</p>
 </div></td></tr><tr><td>gridSize</td><td><a href="" class="label type-hint type-hint-number">number</a></td><td><div class="getgriddeddata-page"><p>The side of the grid to ask the WCS service data for (the larger the gridSize the more data).</p>
 </div></td></tr></tbody></table><h5 id="methods_getgriddeddata_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-promise">promise</a></td><td><div class="getgriddeddata-page"><p>A promise that will be resolved with an array of numbers, or rejected.</p>

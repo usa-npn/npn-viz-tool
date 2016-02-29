@@ -11,8 +11,13 @@ In addition it specifies what UI code may be involved for formatting legend/grid
 as strings and valid extent values (despite what the geoserver capabilities may report).
 The list of layers exposed by the map visualization will almost certainly be a re-organized subset
 of those exposed by the geoserver.</p>
-<p>The JSON document exposes a single object with a single property <code>categories</code> which is an array
-of objects (an object rather than array is used to ease later extention if necessaary).
+<p>The JSON document exposes a single object with the properties:</p>
+<ul>
+    <li><code>geo_server</code> - Contains configuration about the location of the geoserver to interact with.</li>
+    <li><code>categories</code> - An array of category objects used to organize and configure the behavior of geo server map layers.</li>
+</ul>
+
+<p>The <code>categories</code> property is an array of objects.
 Each &quot;category&quot; has, at a minimum, a <code>name</code> and <code>layers</code> property.
 The <code>layers</code> property is an array of &quot;layer&quot; objects which, at a minimum, contain a <code>title</code>
 and <code>name</code> properties.  The layer <code>name</code> contains the machine name of the associated WMS layer.</p>
@@ -30,6 +35,9 @@ instance and optional arguments to that filter.
 E.g.
 <pre class="prettyprint linenums">
 {
+    "geo_server": {
+        "url": "//geoserver.usanpn.org/geoserver"
+    },
     "categories": [
     ...
     ,{

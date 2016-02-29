@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 0.1.0 - 2016-02-26
+ * Version: 0.1.0 - 2016-02-29
  */
 
 /**
@@ -3432,8 +3432,8 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Controller for the gridded data map visualization dialog.
  */
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','WcsService','ChartService','MapVisMarkerService','md5',
-    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,WcsService,ChartService,MapVisMarkerService,md5){
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5',
+    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5){
         var api,
             map,
             infoWindow,
@@ -3458,7 +3458,7 @@ angular.module('npn-viz-tool.vis-map',[
                     var ev = args[0];
                     $log.debug('click',ev);
                     if($scope.selection.activeLayer) {
-                        WcsService.getGriddedData($scope.selection.activeLayer,ev.latLng,4/*should gridSize change based on the layer?*/)
+                        $scope.selection.activeLayer.getGriddedData(ev.latLng)
                             .then(function(tuples){
                                 var html,compiled;
                                 $log.debug('tuples',tuples);
@@ -3831,8 +3831,13 @@ angular.module('npn-viz-tool.vis-map-services',[
  * The list of layers exposed by the map visualization will almost certainly be a re-organized subset
  * of those exposed by the geoserver.
  *
- * The JSON document exposes a single object with a single property <code>categories</code> which is an array
- * of objects (an object rather than array is used to ease later extention if necessaary).
+ * The JSON document exposes a single object with the properties:
+ * <ul>
+ *     <li><code>geo_server</code> - Contains configuration about the location of the geoserver to interact with.</li>
+ *     <li><code>categories</code> - An array of category objects used to organize and configure the behavior of geo server map layers.</li>
+ * </ul>
+ *
+ * The <code>categories</code> property is an array of objects.
  * Each "category" has, at a minimum, a <code>name</code> and <code>layers</code> property.
  * The <code>layers</code> property is an array of "layer" objects which, at a minimum, contain a <code>title</code>
  * and <code>name</code> properties.  The layer <code>name</code> contains the machine name of the associated WMS layer.
@@ -3852,6 +3857,9 @@ angular.module('npn-viz-tool.vis-map-services',[
  * E.g.
  * <pre>
 {
+    "geo_server": {
+        "url": "//geoserver.usanpn.org/geoserver"
+    },
     "categories": [
     ...
     ,{
@@ -3883,13 +3891,19 @@ angular.module('npn-viz-tool.vis-map-services',[
  * Similarly both layers will use the same <code>extent_values_filter</code> whilch will filter valid extent values as reported
  * by the WMS to only those <em>before</em> "today".
  */
-.service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter',function($log,$q,$http,$httpParamSerializer,$filter){
+.service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter','WcsService',function($log,$q,$http,$httpParamSerializer,$filter,WcsService){
+    function setGeoServerUrl(url) {
+        GEOSERVER_URL = url;
+        WMS_BASE_URL = GEOSERVER_URL+'/wms';
+        WMS_CAPABILITIES_URL = WMS_BASE_URL+'?service=wms&version='+WMS_VERSION+'&request=GetCapabilities';
+    }
     var LAYER_CONFIG = $http.get('map-vis-layers.json'),
-        WMS_BASE_URL = '//geoserver.usanpn.org/geoserver/wms',
+        GEOSERVER_URL,
+        WMS_BASE_URL,
+        WMS_CAPABILITIES_URL,
         // not safe to change since the capabilities document format changes based on version
         // so a version change -may- require code changes wrt interpreting the document
         WMS_VERSION = '1.1.1',
-        WMS_CAPABILITIES_URL = WMS_BASE_URL+'?service=wms&version='+WMS_VERSION+'&request=GetCapabilities',
         wms_layer_config,
         wms_layer_defs,
         legends = {},
@@ -3926,9 +3940,9 @@ angular.module('npn-viz-tool.vis-map-services',[
                 if(wms_layer_config && wms_layer_defs) {
                     def.resolve(mergeLayersIntoConfig());
                 } else {
-                    // TODO need to deal with failures
                     LAYER_CONFIG.then(function(response){
                         wms_layer_config = response.data;
+                        setGeoServerUrl(wms_layer_config.geo_server.url);
                         $log.debug('layer_config',response.data);
                         $http.get(WMS_CAPABILITIES_URL).then(function(response){
                             var wms_capabilities = $($.parseXML(response.data));
@@ -4247,6 +4261,20 @@ angular.module('npn-viz-tool.vis-map-services',[
                     },def.reject);
                 }
                 return def.promise;
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  getGriddedData
+             * @description
+             *
+             * Fetch gridded data for a specific location on this map layer.
+             *
+             * @param {google.maps.LatLng} latLng The point under which to fetch the data for.
+             * @return {promise} A promise that will be resolved with an array of numbers, or rejected.
+             */
+            getGriddedData: function(latLng) {
+                return WcsService.getGriddedData(GEOSERVER_URL,this,latLng,4/*should gridSize change based on the layer?*/);
             }
         });
         return l;
@@ -4448,6 +4476,10 @@ angular.module('npn-viz-tool.vis-map-services',[
  *
  * Interacts with the NPN geoserver WCS instance to supply underlying gridded data.  Loading of this service
  * extends the protypes of Number and the google.maps.LatLng class.
+ *
+ * <strong>Important:</strong> There should be no need to import and interact with this service directly.  Indivdual
+ * layers ({@link npn-viz-tool.vis-map-services:WmsMapLayer#methods_getgriddeddata}) expose an instance based method for fetching gridded data specific to those layers which should be used instead (they
+ * call through to this service).
  */
 .service('WcsService',['$log','$q','$http','uiGmapGoogleMapApi',function($log,$q,$http,uiGmapGoogleMapApi){
     // technically we should store and use a promise here but the WcsService
@@ -4483,8 +4515,7 @@ angular.module('npn-viz-tool.vis-map-services',[
            return new google.maps.LatLng(lat2.toDeg(), lon2.toDeg());
         };
     });
-    var WCS_BASE_URL = '//geoserver.usanpn.org:80/geoserver/wcs',
-        service = {
+    var service = {
             /**
              * @ngdoc method
              * @methodOf npn-viz-tool.vis-map-services:WcsService
@@ -4493,13 +4524,15 @@ angular.module('npn-viz-tool.vis-map-services',[
              *
              * Fetch gridded data for a specific location on a specific map layer.
              *
+             * @param {string} geoServerUrl The base URL of the geoserver instance.
              * @param {object} activeLayer The map layer returned from the WcsService that the data to fetch is associated with.
              * @param {google.maps.LatLng} latLng The point under which to fetch the data for.
              * @param {number} gridSize The side of the grid to ask the WCS service data for (the larger the gridSize the more data).
              * @return {promise} A promise that will be resolved with an array of numbers, or rejected.
              */
-            getGriddedData: function(activeLayer,latLng,gridSize) {
-                var def = $q.defer(),
+            getGriddedData: function(geoServerUrl,activeLayer,latLng,gridSize) {
+                var wcs_base_url =geoServerUrl+'/wcs',
+                    def = $q.defer(),
                 edges = [0,80,180,270].map(function(bearing) {
                     return latLng.destinationPoint(bearing,(gridSize/2));
                 }),
@@ -4519,7 +4552,7 @@ angular.module('npn-viz-tool.vis-map-services',[
                     activeLayer.extent.current.addToWcsParams(wcsArgs);
                 }
                 $log.debug('wcsArgs',wcsArgs);
-                $http.get(WCS_BASE_URL,{
+                $http.get(wcs_base_url,{
                     params: wcsArgs
                 }).then(function(response){
                     $log.debug('wcs response',response);
