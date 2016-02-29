@@ -3460,9 +3460,15 @@ angular.module('npn-viz-tool.vis-map',[
                     if($scope.selection.activeLayer) {
                         $scope.selection.activeLayer.getGriddedData(ev.latLng)
                             .then(function(tuples){
-                                var html,compiled;
+                                var html,compiled,point;
                                 $log.debug('tuples',tuples);
-                                $scope.gridded_point_data = tuples && tuples.length ? tuples[0] : undefined;
+                                $scope.gridded_point_data = undefined;
+                                point = tuples && tuples.length ? tuples[0] : undefined;
+                                if(point === -9999 || isNaN(point)) {
+                                    $log.debug('received -9999 or Nan ignoring');
+                                    return;
+                                }
+                                $scope.gridded_point_data = point;
                                 if(typeof($scope.gridded_point_data) === 'undefined') {
                                     return;
                                 }
@@ -3487,7 +3493,9 @@ angular.module('npn-viz-tool.vis-map',[
                                         infoWindow.open(map);
                                     });
                                 } else {
-                                    infoWindow.setContent($filter('number')($scope.gridded_point_data,1)); // TODO: precision is likely layer specific
+                                    infoWindow.setContent($scope.legend ?
+                                        $scope.legend.formatPointData($scope.gridded_point_data) :
+                                        $filter('number')($scope.gridded_point_data,1));
                                     infoWindow.setPosition(ev.latLng);
                                     infoWindow.open(map);
                                 }
@@ -3714,6 +3722,24 @@ angular.module('npn-viz-tool.vis-map-services',[
         }
         fmt = fmt||'MMM d'; // e.g. Jan 1
         return dateFilter(new Date((current_year ? JAN_ONE_THIS_YEAR : JAN_ONE_2010).getTime()+((doy-1)*ONE_DAY)),fmt);
+    };
+}])
+/**
+ * @ngdoc filter
+ * @name npn-viz-tool.vis-map-services:legendGddUnits
+ * @module npn-viz-tool.vis-map-services
+ * @description
+ *
+ * Formats legend numbers for gdd units.
+ *
+ * @example
+ * <pre>
+ * $filter('legendGddUnits')(10.0) // 10 GDD Units
+ * </pre>
+ */
+.filter('legendGddUnits',['numberFilter',function(numberFilter){
+    return function(n) {
+        return numberFilter(n,0)+ ' GDD Units';
     };
 }])
 /**
@@ -5035,7 +5061,7 @@ angular.module("js/mapvis/legend.html", []).run(["$templateCache", function($tem
 
 angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/mapvis.html",
-    "<vis-dialog title=\"Map\" modal=\"modal\">\n" +
+    "<vis-dialog title=\"Gridded Data\" modal=\"modal\">\n" +
     "    <div class=\"container-fluid\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +
@@ -6232,7 +6258,7 @@ angular.module('npn-viz-tool.vis',[
             template: 'js/calendar/calendar.html',
             description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
         },{
-            title: 'Map',
+            title: 'Gridded Data',
             controller: 'MapVisCtrl',
             template: 'js/mapvis/mapvis.html',
             description: 'Prelim research...  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac lectus nec augue cursus lacinia. Praesent sit amet eros nisi.'

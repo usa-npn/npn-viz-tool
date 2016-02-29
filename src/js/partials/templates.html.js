@@ -459,7 +459,7 @@ angular.module("js/mapvis/legend.html", []).run(["$templateCache", function($tem
 
 angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/mapvis.html",
-    "<vis-dialog title=\"Map\" modal=\"modal\">\n" +
+    "<vis-dialog title=\"Gridded Data\" modal=\"modal\">\n" +
     "    <div class=\"container-fluid\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +

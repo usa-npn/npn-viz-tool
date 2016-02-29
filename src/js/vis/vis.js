@@ -47,7 +47,7 @@ angular.module('npn-viz-tool.vis',[
             template: 'js/calendar/calendar.html',
             description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
         },{
-            title: 'Map',
+            title: 'Gridded Data',
             controller: 'MapVisCtrl',
             template: 'js/mapvis/mapvis.html',
             description: 'Prelim research...  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac lectus nec augue cursus lacinia. Praesent sit amet eros nisi.'

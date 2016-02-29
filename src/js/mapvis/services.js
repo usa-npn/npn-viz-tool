@@ -61,6 +61,24 @@ angular.module('npn-viz-tool.vis-map-services',[
 }])
 /**
  * @ngdoc filter
+ * @name npn-viz-tool.vis-map-services:legendGddUnits
+ * @module npn-viz-tool.vis-map-services
+ * @description
+ *
+ * Formats legend numbers for gdd units.
+ *
+ * @example
+ * <pre>
+ * $filter('legendGddUnits')(10.0) // 10 GDD Units
+ * </pre>
+ */
+.filter('legendGddUnits',['numberFilter',function(numberFilter){
+    return function(n) {
+        return numberFilter(n,0)+ ' GDD Units';
+    };
+}])
+/**
+ * @ngdoc filter
  * @name npn-viz-tool.vis-map-services:legendDegrees
  * @module npn-viz-tool.vis-map-services
  * @description

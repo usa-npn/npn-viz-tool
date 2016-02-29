@@ -6,32 +6,30 @@
         "name": "30-year Average AGDD",
         "supports_data": false,
         "legend_label_filter": {
-            "name": "legendDegrees",
-            "args": ["F"]
+            "name": "legendGddUnits"
         },
         "layers":[{
-                "title": "32\u00B0F",
+                "title": "32 GDD Units",
                 "name": "gdd:30yr_avg_agdd"
             },{
-                "title": "50\u00B0F",
+                "title": "50 GDD Units",
                 "name": "gdd:30yr_avg_agdd_50f"
             }]
     },{
         "name": "Current Year AGDD",
         "supports_data": false,
         "legend_label_filter": {
-            "name": "legendDegrees",
-            "args": ["F"]
+            "name": "legendGddUnits"
         },
         "extent_values_filter": {
             "name": "extentDates",
             "args": [null,"today"]
         },
         "layers":[{
-                "title": "32\u00B0F",
+                "title": "32 GDD Units",
                 "name": "gdd:agdd"
             },{
-                "title": "50\u00B0F",
+                "title": "50 GDD Units",
                 "name": "gdd:agdd_50f"
             }]
     },{
@@ -45,10 +43,10 @@
             "args": [null,"today"]
         },
         "layers":[{
-                "title": "32\u00B0F",
+                "title": "32 GDD Units",
                 "name": "gdd:agdd_anomaly"
             },{
-                "title": "50\u00B0F",
+                "title": "50 GDD Units",
                 "name": "gdd:agdd_anomaly_50f"
             }]
     },{
@@ -145,6 +143,7 @@
             }]
     },{
         "name": "Spring Index, Anomaly",
+        "supports_data": false,
         "legend_label_filter": {
             "name": "legendSixAnomaly"
         },

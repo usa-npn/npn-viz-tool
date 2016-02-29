@@ -604,9 +604,15 @@ angular.module('npn-viz-tool.vis-map',[
                     if($scope.selection.activeLayer) {
                         $scope.selection.activeLayer.getGriddedData(ev.latLng)
                             .then(function(tuples){
-                                var html,compiled;
+                                var html,compiled,point;
                                 $log.debug('tuples',tuples);
-                                $scope.gridded_point_data = tuples && tuples.length ? tuples[0] : undefined;
+                                $scope.gridded_point_data = undefined;
+                                point = tuples && tuples.length ? tuples[0] : undefined;
+                                if(point === -9999 || isNaN(point)) {
+                                    $log.debug('received -9999 or Nan ignoring');
+                                    return;
+                                }
+                                $scope.gridded_point_data = point;
                                 if(typeof($scope.gridded_point_data) === 'undefined') {
                                     return;
                                 }
@@ -631,7 +637,9 @@ angular.module('npn-viz-tool.vis-map',[
                                         infoWindow.open(map);
                                     });
                                 } else {
-                                    infoWindow.setContent($filter('number')($scope.gridded_point_data,1)); // TODO: precision is likely layer specific
+                                    infoWindow.setContent($scope.legend ?
+                                        $scope.legend.formatPointData($scope.gridded_point_data) :
+                                        $filter('number')($scope.gridded_point_data,1));
                                     infoWindow.setPosition(ev.latLng);
                                     infoWindow.open(map);
                                 }

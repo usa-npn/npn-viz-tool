@@ -104,6 +104,15 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.vis-map-services:legendGddUnits",
+      "shortName": "legendGddUnits",
+      "type": "filter",
+      "moduleName": "npn-viz-tool.vis-map-services",
+      "shortDescription": "Formats legend numbers for gdd units.",
+      "keywords": "$filter api filter formats gdd legend legendgddunits npn-viz-tool numbers units vis-map-services"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.vis-map-services:legendSixAnomaly",
       "shortName": "legendSixAnomaly",
       "type": "filter",
