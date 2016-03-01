@@ -1,1 +1,9 @@
-<pre>{{markerData | json}}</pre>
+<div class="map-vis-marker-info-window" ng-if="markerData">
+    <div ng-repeat="md in markerData" ng-init="tag = speciesSelections[$index];" ng-if="md.records.length">
+        <h4><span>{{tag.species | speciesTitle}}, {{tag.phenophase.phenophase_name}}, {{tag.year}} </span>
+                <svg id="map-vis-iw-marker-{{$index}}" uib-tooltip="{{md.legend_data.label}}" tooltip-append-to-body="true" tooltip-placement="top"></svg></h4>
+        <ul class="list-unstyled">
+            <li><label>Observed Day of Onset:</label> {{md.first_yes_doy_avg | number:0}} ({{legend.formatPointData(md.first_yes_doy_avg)}})<span ng-if="md.records.length > 1"> [Average of {{md.records.length}} individuals. Standard Deviation: {{md.first_yes_doy_stdev | number:1}}]</span></li>
+        </ul>
+    </div>
+</div>

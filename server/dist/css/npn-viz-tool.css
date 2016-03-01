@@ -288,6 +288,16 @@ ul.filter-tags.map-vis .filter-tag svg {
   border: none;
 }
 
+.map-vis-marker-info-window svg {
+  border: none;
+}
+.map-vis-marker-info-window .legend-cell {
+  width: 20px;
+  height: 20px;
+  border: 1px solid black;
+  display: inline-block;
+}
+
 .tool-content.layers ul {
   margin-bottom: 50px;
 }

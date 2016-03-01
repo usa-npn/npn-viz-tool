@@ -477,6 +477,7 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
     "                </ui-gmap-google-map>\n" +
     "                <map-vis-legend legend=\"legend\"></map-vis-legend>\n" +
+    "                <map-vis-marker-info-window></map-vis-marker-info-window>\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
     "                <map-vis-layer-control></map-vis-layer-control>\n" +
@@ -489,7 +490,15 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
 
 angular.module("js/mapvis/marker-info-window.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/marker-info-window.html",
-    "<pre>{{markerData | json}}</pre>");
+    "<div class=\"map-vis-marker-info-window\" ng-if=\"markerData\">\n" +
+    "    <div ng-repeat=\"md in markerData\" ng-init=\"tag = speciesSelections[$index];\" ng-if=\"md.records.length\">\n" +
+    "        <h4><span>{{tag.species | speciesTitle}}, {{tag.phenophase.phenophase_name}}, {{tag.year}} </span>\n" +
+    "                <svg id=\"map-vis-iw-marker-{{$index}}\" uib-tooltip=\"{{md.legend_data.label}}\" tooltip-append-to-body=\"true\" tooltip-placement=\"top\"></svg></h4>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li><label>Observed Day of Onset:</label> {{md.first_yes_doy_avg | number:0}} ({{legend.formatPointData(md.first_yes_doy_avg)}})<span ng-if=\"md.records.length > 1\"> [Average of {{md.records.length}} individuals. Standard Deviation: {{md.first_yes_doy_stdev | number:1}}]</span></li>\n" +
+    "        </ul>\n" +
+    "    </div>\n" +
+    "</div>");
 }]);
 
 angular.module("js/mapvis/year-control.html", []).run(["$templateCache", function($templateCache) {

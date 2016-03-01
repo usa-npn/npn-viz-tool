@@ -312,6 +312,17 @@ ul.filter-tags.map-vis {
         }
     }
 }
+.map-vis-marker-info-window {
+    svg {
+        border: none;
+    }
+    .legend-cell {
+        width: 20px;
+        height: 20px;
+        border: 1px solid black;
+        display: inline-block;
+    }
+}
 
 // layers
 .tool-content.layers {

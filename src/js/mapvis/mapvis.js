@@ -456,11 +456,13 @@ angular.module('npn-viz-tool.vis-map',[
          *
          * @param {string} selector The d3/css selector that uniquely identifies the SVG to render the marker path to.
          * @param {int} idx The marker index (0-2 otherwise the function does nothing).
+         * @param {stromg} fillColor The color to fill the icon will (default steelblue)
          */
-        renderMarkerToSvg: function(selector,idx) {
+        renderMarkerToSvg: function(selector,idx,fillColor) {
             if(idx < 0 || idx >= service.PATHS.length) {
                 return; // invalid index, just ignore it.
             }
+            fillColor = fillColor||'steelblue';
             var svg = d3.select(selector);
             svg.selectAll('path').remove();
             svg.attr('viewBox','0 0 22 22')
@@ -469,7 +471,7 @@ angular.module('npn-viz-tool.vis-map',[
             svg.append('path')
                 .attr('d',service.PATHS[idx])
                 //.attr('transform','translate(-16,-32)')
-                .attr('fill','steelblue');
+                .attr('fill',fillColor);
         }
     };
     return service;
@@ -568,6 +570,27 @@ angular.module('npn-viz-tool.vis-map',[
         }
     };
 }])
+.directive('mapVisMarkerInfoWindow',['$log','$timeout','MapVisMarkerService',function($log,$timeout,MapVisMarkerService){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/mapvis/marker-info-window.html',
+        link: function($scope) {
+            $scope.$watch('markerData',function(data) {
+                if(data) {
+                    $log.debug('mapVisMarkerInfoWindow.markerData',data);
+                    // go get station details, etc.
+                    $timeout(function(){
+                        $scope.speciesSelections.forEach(function(o,i){
+                            if(data[i].records.length && data[i].legend_data) {
+                                MapVisMarkerService.renderMarkerToSvg('svg#map-vis-iw-marker-'+i,i,data[i].legend_data.color);
+                            }
+                        });
+                    });
+                }
+            });
+        }
+    };
+}])
 /**
  * @ngdoc controller
  * @name npn-viz-tool.vis-map:MapVisCtrl
@@ -576,13 +599,15 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Controller for the gridded data map visualization dialog.
  */
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','$templateCache','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5',
-    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,$templateCache,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5){
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5',
+    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5){
         var api,
             map,
             infoWindow,
+            /*
             markerInfoWindow,
-            markerMarkup = '<div>'+$templateCache.get('js/mapvis/marker-info-window.html')+'</div>',
+            markerMarkup = '<div><map-vis-marker-info-window></map-vis-marker-info-window></div>',
+            */
             boundsRestrictor = RestrictedBoundsService.getRestrictor('map_vis');
         $scope.modal = $uibModalInstance;
         $scope.wms_map = {
@@ -688,9 +713,11 @@ angular.module('npn-viz-tool.vis-map',[
             if(infoWindow) {
                 infoWindow.close();
             }
+            delete $scope.markerData;
+            /*
             if(markerInfoWindow) {
                 markerInfoWindow.close();
-            }
+            }*/
             $log.debug('selection.layer',layer);
             if($scope.selection.activeLayer) {
                 $log.debug('turning off layer ',$scope.selection.activeLayer.name);
@@ -739,6 +766,7 @@ angular.module('npn-viz-tool.vis-map',[
                 $log.debug('click',m);
                 $scope.$apply(function(){
                     $scope.markerData = m.model.data;
+                    /*
                     if(!markerInfoWindow) {
                         markerInfoWindow = new api.InfoWindow({
                             maxWidth: 500,
@@ -750,7 +778,7 @@ angular.module('npn-viz-tool.vis-map',[
                         markerInfoWindow.setContent(compiled.html());
                         markerInfoWindow.setPosition(m.position);
                         markerInfoWindow.open(m.map);
-                    });
+                    });*/
                 });
             }
         };
@@ -767,10 +795,19 @@ angular.module('npn-viz-tool.vis-map',[
                     marker.markerOpts.icon.strokeColor =  marker.data.reduce(function(sum,o){ return sum+o.records.length; },0) > 1 ? '#00ff00' : '#204d74';
                     marker.markerOpts.title = marker.data.reduce(function(title,o,filter_index){
                         delete o.first_yes_doy_avg;
+                        delete o.first_yes_doy_stdev;
                         delete o.legend_data;
                         if(o.records.length) {
                             // info window code can re-use this information rather than calculating it.
                             o.first_yes_doy_avg = o.records.reduce(function(sum,r){ return sum+r.first_yes_doy; },0)/o.records.length;
+                            if(o.records.length > 1) {
+                                // calculate the standard deviation
+                                o.first_yes_doy_stdev = Math.sqrt(
+                                    o.records.reduce(function(sum,r) {
+                                        return sum+Math.pow((r.first_yes_doy-o.first_yes_doy_avg),2);
+                                    },0)/o.records.length
+                                );
+                            }
                             o.legend_data = $scope.legend.getPointData(o.first_yes_doy_avg)||{
                                 color: offscale_color,
                                 label: 'off scale'

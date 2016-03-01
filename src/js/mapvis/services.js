@@ -64,6 +64,7 @@ angular.module('npn-viz-tool.vis-map-services',[
         JAN_ONE_THIS_YEAR = new Date((new Date()).getFullYear(),0),
         ONE_DAY = (24*60*60*1000);
     return function(doy,fmt,current_year) {
+        doy = Math.round(doy);
         if(doy === 0) {
             doy = 1;
         }
