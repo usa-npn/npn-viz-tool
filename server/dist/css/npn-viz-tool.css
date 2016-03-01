@@ -528,6 +528,7 @@ div[title="Stop drawing"] {
 }
 .vis-dialog.gridded-data .legend {
   width: 100%;
+  height: 65px;
   margin-top: 10px;
   border: none;
 }

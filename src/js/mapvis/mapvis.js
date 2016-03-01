@@ -576,11 +576,13 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Controller for the gridded data map visualization dialog.
  */
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5',
-    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5){
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','$templateCache','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5',
+    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,$templateCache,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5){
         var api,
             map,
             infoWindow,
+            markerInfoWindow,
+            markerMarkup = '<div>'+$templateCache.get('js/mapvis/marker-info-window.html')+'</div>',
             boundsRestrictor = RestrictedBoundsService.getRestrictor('map_vis');
         $scope.modal = $uibModalInstance;
         $scope.wms_map = {
@@ -686,6 +688,9 @@ angular.module('npn-viz-tool.vis-map',[
             if(infoWindow) {
                 infoWindow.close();
             }
+            if(markerInfoWindow) {
+                markerInfoWindow.close();
+            }
             $log.debug('selection.layer',layer);
             if($scope.selection.activeLayer) {
                 $log.debug('turning off layer ',$scope.selection.activeLayer.name);
@@ -697,15 +702,22 @@ angular.module('npn-viz-tool.vis-map',[
             // toggles the map off/on
             $log.debug('fitting new layer ',layer.name);
             $scope.selection.activeLayer = layer.fit().on();
-            if(!$scope.selection.activeLayer.supportsData()) {
-                // moving to a layer that doesn't support data
-                // clear markers if any have been placed on the map.
-                $scope.results.markers = [];
-            }
             boundsRestrictor.setBounds(layer.getBounds());
             delete $scope.legend;
             $scope.selection.activeLayer.getLegend(layer).then(function(legend){
                 $scope.legend = legend;
+                if(!$scope.selection.activeLayer.supportsData()) {
+                    // moving to a layer that doesn't support data
+                    // clear markers if any have been placed on the map.
+                    $scope.results.markers = [];
+                } else {
+                    // the layer we're switching to supports data but will have a different
+                    // color scale/labeling scheme, etc. so we need to update all the markers
+                    // for the new layer.
+                    $scope.results.markers = $scope.results.markers.map(function(marker) {
+                        return marker.restyle();
+                    });
+                }
             });
         });
         $scope.$watch('selection.activeLayer.extent.current',function(v) {
@@ -725,8 +737,89 @@ angular.module('npn-viz-tool.vis-map',[
         $scope.markerEvents = {
             'click': function(m) {
                 $log.debug('click',m);
+                $scope.$apply(function(){
+                    $scope.markerData = m.model.data;
+                    if(!markerInfoWindow) {
+                        markerInfoWindow = new api.InfoWindow({
+                            maxWidth: 500,
+                            content: 'contents'
+                        });
+                    }
+                    var compiled = $compile(markerMarkup)($scope);
+                    $timeout(function(){
+                        markerInfoWindow.setContent(compiled.html());
+                        markerInfoWindow.setPosition(m.position);
+                        markerInfoWindow.open(m.map);
+                    });
+                });
             }
         };
+
+        function GdMarker() {
+            var offscale_color = '#ffffff',
+                marker = {
+                data: $scope.speciesSelections.map(function() { return {records: []}; }),
+                getSiteId: function() {
+                    return marker.site_id;
+                },
+                restyle: function() {
+                    // change border based on if there are more than one individual recorded for a marker.
+                    marker.markerOpts.icon.strokeColor =  marker.data.reduce(function(sum,o){ return sum+o.records.length; },0) > 1 ? '#00ff00' : '#204d74';
+                    marker.markerOpts.title = marker.data.reduce(function(title,o,filter_index){
+                        delete o.first_yes_doy_avg;
+                        delete o.legend_data;
+                        if(o.records.length) {
+                            // info window code can re-use this information rather than calculating it.
+                            o.first_yes_doy_avg = o.records.reduce(function(sum,r){ return sum+r.first_yes_doy; },0)/o.records.length;
+                            o.legend_data = $scope.legend.getPointData(o.first_yes_doy_avg)||{
+                                color: offscale_color,
+                                label: 'off scale'
+                            };
+                            var s = $scope.speciesSelections[filter_index];
+                            o.records.forEach(function(record){
+                                var ldata = $scope.legend.getPointData(record.first_yes_doy);
+                                // info window code can just use this information rather than re-calculating it.
+                                record.legend_data = ldata||{
+                                    color: offscale_color,
+                                    label: 'off scale'
+                                };
+                                if(title !== '') {
+                                    title += ', ';
+                                }
+                                title += s.year;
+                                title += ': ';
+                                title += record.legend_data.label;
+                            });
+                        }
+                        return title;
+                    },'');
+                    // update marker color
+                    marker.markerOpts.icon.fillColor = marker.data[marker.filter_index].legend_data.color;
+                    // update its key
+                    marker.$markerKey = md5.createHash(JSON.stringify(marker));
+                    return marker;
+                },
+                add: function(record,filter_index) {
+                    marker.data[filter_index].records.push(record);
+                    // first record dictates shape, z-index, etc.
+                    if(!marker.markerOpts) {
+                        marker.site_id = record.site_id;
+                        marker.filter_index = filter_index;  // dictates the shape...
+                        marker.latitude = record.latitude;
+                        marker.longitude = record.longitude;
+                        marker.markerOpts = {
+                            zIndex: (365-record.first_yes_doy),
+                            icon: angular.extend(MapVisMarkerService.getBaseIcon(filter_index),{
+                                                fillOpacity: 1.0,
+                                                strokeWeight: 1
+                                            })
+                        };
+                    }
+                    return marker.restyle();
+                }
+            };
+            return marker;
+        }
 
         $scope.plotMarkers = function() {
             $scope.results.markers = [];
@@ -743,66 +836,52 @@ angular.module('npn-viz-tool.vis-map',[
             // arrive markers can be updated more efficiently
             var site2marker = {},
                 summary_promises = $scope.speciesSelections.map(function(s,filter_index){
-                var def = $q.defer(),
-                    params = {
-                        request_src: 'npn-vis-map',
-                        start_date: s.year+'-01-01',
-                        end_date: s.year+'-12-31',
-                        'species_id[0]': s.species.species_id,
-                        'phenophase_id[0]': s.phenophase.phenophase_id
-                    };
-                $log.debug('gathering summary data for ',s,params);
-                ChartService.getSummarizedData(params,function(data){
-                    $log.debug('data has arrived for ',s,data);
-                    // need to consolidate individual data
-                    var individuals = data.reduce(function(map,d){
-                            if(!map[d.individual_id]) {
-                                map[d.individual_id] = [];
+                    var def = $q.defer(),
+                        params = {
+                            request_src: 'npn-vis-map',
+                            start_date: s.year+'-01-01',
+                            end_date: s.year+'-12-31',
+                            'species_id[0]': s.species.species_id,
+                            'phenophase_id[0]': s.phenophase.phenophase_id
+                        };
+                    $log.debug('gathering summary data for ',s,params);
+                    ChartService.getSummarizedData(params,function(data){
+                        $log.debug('data has arrived for ',s,data);
+                        // sometimes there are multiple records per individual
+                        // I.e. two first_yes_doy for a single individual for a single year
+                        // so the data cannot be plotted directly, when this happens we pick
+                        // the first first_yes_doy (chronologically) for a given year so the code below
+                        // organizes records by individual, sorts the records for a given indivual and
+                        // uses only the first as input to a map marker.
+                        var individuals = data.reduce(function(map,d){
+                                if(!map[d.individual_id]) {
+                                    map[d.individual_id] = [];
+                                }
+                                map[d.individual_id].push(d);
+                                return map;
+                            },{}),new_markers = [];
+                        Object.keys(individuals).forEach(function(in_id){
+                            // sort individual arrays ascending on first_yes_doy
+                            individuals[in_id].sort(function(a,b){
+                                return a.first_yes_doy - b.first_yes_doy;
+                            });
+                            // use just the first, ignore the rest (if there are any)
+                            var record = individuals[in_id][0];
+
+                            if(site2marker[record.site_id]) { // update an existing marker
+                                site2marker[record.site_id].add(record,filter_index);
+                            } else { // add a new marker
+                                new_markers.push(site2marker[record.site_id] = (new GdMarker()).add(record,filter_index));
                             }
-                            map[d.individual_id].push(d);
-                            return map;
-                        },{}),new_markers = [];
-                    // sort individual arrays ascending on first_yes_doy
-                    Object.keys(individuals).forEach(function(in_id){
-                        individuals[in_id].sort(function(a,b){
-                            return a.first_yes_doy - b.first_yes_doy;
                         });
-                        var record = individuals[in_id][0],
-                            legend_data = $scope.legend.getPointData(record.first_yes_doy),
-                            marker = angular.extend(record,{
-                                        markerOpts: {
-                                            title: s.year+': '+(legend_data ? legend_data.label : 'Off Scale?'),
-                                            zIndex: (365-record.first_yes_doy), // earlier === higher
-                                            icon: angular.extend(MapVisMarkerService.getBaseIcon(filter_index),{
-                                                fillColor: legend_data ? legend_data.color : '#fff',
-                                                fillOpacity: 1.0,
-                                                strokeColor: '#204d74',
-                                                strokeWeight: 1
-                                            })
-                                        }
-                                    });
-                            if(site2marker[marker.site_id]) {
-                                $log.debug('TODO - a marker already exists for site ',marker.site_id,site2marker[marker.site_id],marker);
-                                site2marker[marker.site_id].markerOpts.title += ', '+marker.markerOpts.title;
-                                site2marker[marker.site_id].markerOpts.icon.strokeColor = '#00ff00'; // green border
-                                site2marker[marker.site_id].$markerKey = md5.createHash(JSON.stringify(site2marker[marker.site_id]));
-                            } else {
-                                marker.$markerKey = md5.createHash(JSON.stringify(marker));
-                                site2marker[marker.site_id] = marker;
-                                new_markers.push(marker);
-                            }
+                        // put the markers on the map as the data arrives appending any new markers
+                        $scope.results.markers = $scope.results.markers.concat(new_markers);
+                        def.resolve();
                     });
-                    $log.debug('individuals',individuals);
-                    // append any new markers
-                    $scope.results.markers = $scope.results.markers.concat(new_markers);
-                    // put the markers on the map as the data arrives.
-                    // MapVisMarkerService.PATHS[i]
-                    def.resolve();
+                    return def.promise;
                 });
-                return def.promise;
-            });
-            $q.all(summary_promises).then(function(data){
-                $log.debug('all summary data has arrived...',data);
+            $q.all(summary_promises).then(function(){
+                $log.debug('all summary data has arrived...');
                 $scope.working = false;
             });
         };
