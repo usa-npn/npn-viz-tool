@@ -239,6 +239,15 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.vis-map:map-vis-marker-info-window",
+      "shortName": "map-vis-marker-info-window",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.vis-map",
+      "shortDescription": "Contents of the InfoWindow when a user clicks on a plotted marker.",
+      "keywords": "api clicks contents directive infowindow marker npn-viz-tool plotted user vis-map"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.vis-map:map-vis-opacity-slider",
       "shortName": "map-vis-opacity-slider",
       "type": "directive",
@@ -271,7 +280,7 @@ NG_DOCS={
       "type": "service",
       "moduleName": "npn-viz-tool.vis-map",
       "shortDescription": "Holds SVG marker paths for shared use between tags and map markers.  Exposes basic",
-      "keywords": "api array base basic build d3 definition exposes function functionality getbaseicon google holds icon identifies idx map marker markers method npn-viz-tool object path paths property render rendering rendermarkertosvg selector service shared svg svgs tags uniquely vis vis-map"
+      "keywords": "api array base basic build color d3 definition exposes fill fillcolor function functionality getbaseicon google holds icon identifies idx map marker markers method npn-viz-tool object path paths property render rendering rendermarkertosvg selector service shared steelblue svg svgs tags uniquely vis vis-map"
     },
     {
       "section": "api",

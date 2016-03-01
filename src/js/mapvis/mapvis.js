@@ -570,25 +570,19 @@ angular.module('npn-viz-tool.vis-map',[
         }
     };
 }])
-.directive('mapVisMarkerInfoWindow',['$log','$timeout','MapVisMarkerService',function($log,$timeout,MapVisMarkerService){
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.vis-map:map-vis-marker-info-window
+ * @module npn-viz-tool.vis-map
+ * @description
+ *
+ * Contents of the InfoWindow when a user clicks on a plotted marker.
+ */
+.directive('mapVisMarkerInfoWindow',[function(){
     return {
         restrict: 'E',
-        templateUrl: 'js/mapvis/marker-info-window.html',
-        link: function($scope) {
-            $scope.$watch('markerData',function(data) {
-                if(data) {
-                    $log.debug('mapVisMarkerInfoWindow.markerData',data);
-                    // go get station details, etc.
-                    $timeout(function(){
-                        $scope.speciesSelections.forEach(function(o,i){
-                            if(data[i].records.length && data[i].legend_data) {
-                                MapVisMarkerService.renderMarkerToSvg('svg#map-vis-iw-marker-'+i,i,data[i].legend_data.color);
-                            }
-                        });
-                    });
-                }
-            });
-        }
+        templateUrl: 'js/mapvis/marker-info-window.html'
     };
 }])
 /**
@@ -599,15 +593,13 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Controller for the gridded data map visualization dialog.
  */
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5',
-    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5){
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','$http','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5',
+    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,$http,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5){
         var api,
             map,
             infoWindow,
-            /*
             markerInfoWindow,
             markerMarkup = '<div><map-vis-marker-info-window></map-vis-marker-info-window></div>',
-            */
             boundsRestrictor = RestrictedBoundsService.getRestrictor('map_vis');
         $scope.modal = $uibModalInstance;
         $scope.wms_map = {
@@ -713,11 +705,10 @@ angular.module('npn-viz-tool.vis-map',[
             if(infoWindow) {
                 infoWindow.close();
             }
-            delete $scope.markerData;
-            /*
             if(markerInfoWindow) {
                 markerInfoWindow.close();
-            }*/
+            }
+            delete $scope.markerModel;
             $log.debug('selection.layer',layer);
             if($scope.selection.activeLayer) {
                 $log.debug('turning off layer ',$scope.selection.activeLayer.name);
@@ -765,23 +756,76 @@ angular.module('npn-viz-tool.vis-map',[
             'click': function(m) {
                 $log.debug('click',m);
                 $scope.$apply(function(){
-                    $scope.markerData = m.model.data;
-                    /*
+                    $scope.markerModel = m.model;
                     if(!markerInfoWindow) {
                         markerInfoWindow = new api.InfoWindow({
                             maxWidth: 500,
-                            content: 'contents'
+                            content: ''
                         });
                     }
-                    var compiled = $compile(markerMarkup)($scope);
-                    $timeout(function(){
-                        markerInfoWindow.setContent(compiled.html());
-                        markerInfoWindow.setPosition(m.position);
-                        markerInfoWindow.open(m.map);
-                    });*/
+                    markerInfoWindow.setContent('<i class="fa fa-circle-o-notch fa-spin"></i>');
+                    markerInfoWindow.setPosition(m.position);
+                    markerInfoWindow.open(m.map);
                 });
             }
         };
+
+        // this $watch correspondes to the marker click event the markerInfoWindow contents
+        // aren't compiled until all the data necessary to render its contents arrive (station/gridded_data)
+        // otherwise the results when showing the InfoWindow are inconsistent and data that arrives -after-
+        // the window opens doesn't get properly bound into the DOM
+        $scope.$watch('markerModel',function(model) {
+            if(model) {
+                var promises = [],station_def,gridded_def;
+                $log.debug('mapVisMarkerInfoWindow.markerModel',model);
+                if(!model.station) {
+                    station_def = $q.defer();
+                    promises.push(station_def.promise);
+                    $http.get('/npn_portal/stations/getStationDetails.json',{params:{ids: model.site_id}}).success(function(info){
+                        model.station = info && info.length ? info[0] : undefined;
+                        station_def.resolve();
+                    });
+                }
+                gridded_def = $q.defer();
+                promises.push(gridded_def.promise);
+                delete model.gridded_legend_data;
+                $scope.selection.activeLayer.getGriddedData(new google.maps.LatLng(model.latitude,model.longitude))
+                    .then(function(tuples){
+                        $log.debug('tuples',tuples);
+                        var point = tuples && tuples.length ? tuples[0] : undefined;
+                        if(typeof(point) === 'undefined' || point === -9999 || isNaN(point)) {
+                            $log.debug('received undefined, -9999 or Nan ignoring');
+                            return;
+                        }
+                        var legend_data = $scope.legend.getPointData(point);
+                        if(!legend_data) {
+                            legend_data = {
+                                label: $scope.legend.formatPointData(point),
+                                color: '#ffffff'
+                            };
+                        }
+                        model.gridded_legend_data = angular.extend({point: point},legend_data);
+                        gridded_def.resolve();
+                    },function() {
+                        // TODO?
+                        $log.error('unable to get gridded data.');
+                        gridded_def.reject();
+                    });
+                $q.all(promises).then(function(){
+                    var compiled = $compile(markerMarkup)($scope);
+                    $timeout(function(){
+                        markerInfoWindow.setContent(compiled.html());
+                        $timeout(function(){
+                            $scope.speciesSelections.forEach(function(o,i){
+                                if(model.data[i].records.length && model.data[i].legend_data) {
+                                    MapVisMarkerService.renderMarkerToSvg('svg#map-vis-iw-marker-'+i,i,model.data[i].legend_data.color);
+                                }
+                            });
+                        },250/*1st time the info-window shows up the svgs must not be there yet*/);
+                    });
+                });
+            }
+        });
 
         function GdMarker() {
             var offscale_color = '#ffffff',

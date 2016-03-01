@@ -1,5 +1,15 @@
-<div class="map-vis-marker-info-window" ng-if="markerData">
-    <div ng-repeat="md in markerData" ng-init="tag = speciesSelections[$index];" ng-if="md.records.length">
+<div class="map-vis-marker-info-window" ng-if="markerModel">
+    <div class="station-info" ng-if="markerModel.station">
+        <h3>{{markerModel.station.site_name}}</h3>
+        <ul class="list-unstyled">
+            <li ng-if="markerModel.station.group_name"><label>Group:</label> {{markerModel.station.group_name}}</li>
+            <li><label>Latitude:</label> {{markerModel.station.latitude}} <label>Longitude:</label> {{markerModel.station.longitude}}</li>
+            <li ng-if="markerModel.gridded_legend_data"><label>Modeled Value:</label> <div class="legend-cell" style="background-color: {{markerModel.gridded_legend_data.color}};">&nbsp;</div> {{markerModel.gridded_legend_data.label}} ({{markerModel.gridded_legend_data.point | number:0}})</li>
+        </ul>
+    </div>
+    <div class="gridded-data" ng-if="markerModel.gridded_legend_data">
+    </div>
+    <div ng-repeat="md in markerModel.data" ng-init="tag = speciesSelections[$index];" ng-if="md.records.length">
         <h4><span>{{tag.species | speciesTitle}}, {{tag.phenophase.phenophase_name}}, {{tag.year}} </span>
                 <svg id="map-vis-iw-marker-{{$index}}" uib-tooltip="{{md.legend_data.label}}" tooltip-append-to-body="true" tooltip-placement="top"></svg></h4>
         <ul class="list-unstyled">

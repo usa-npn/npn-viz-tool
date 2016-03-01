@@ -290,6 +290,8 @@ ul.filter-tags.map-vis .filter-tag svg {
 
 .map-vis-marker-info-window svg {
   border: none;
+  width: 16px;
+  height: 16px;
 }
 .map-vis-marker-info-window .legend-cell {
   width: 20px;

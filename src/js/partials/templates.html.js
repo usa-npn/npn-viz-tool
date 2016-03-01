@@ -477,7 +477,7 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
     "                </ui-gmap-google-map>\n" +
     "                <map-vis-legend legend=\"legend\"></map-vis-legend>\n" +
-    "                <map-vis-marker-info-window></map-vis-marker-info-window>\n" +
+    "                <!--map-vis-marker-info-window></map-vis-marker-info-window-->\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
     "                <map-vis-layer-control></map-vis-layer-control>\n" +
@@ -490,8 +490,18 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
 
 angular.module("js/mapvis/marker-info-window.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/marker-info-window.html",
-    "<div class=\"map-vis-marker-info-window\" ng-if=\"markerData\">\n" +
-    "    <div ng-repeat=\"md in markerData\" ng-init=\"tag = speciesSelections[$index];\" ng-if=\"md.records.length\">\n" +
+    "<div class=\"map-vis-marker-info-window\" ng-if=\"markerModel\">\n" +
+    "    <div class=\"station-info\" ng-if=\"markerModel.station\">\n" +
+    "        <h3>{{markerModel.station.site_name}}</h3>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li ng-if=\"markerModel.station.group_name\"><label>Group:</label> {{markerModel.station.group_name}}</li>\n" +
+    "            <li><label>Latitude:</label> {{markerModel.station.latitude}} <label>Longitude:</label> {{markerModel.station.longitude}}</li>\n" +
+    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Modeled Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.label}} ({{markerModel.gridded_legend_data.point | number:0}})</li>\n" +
+    "        </ul>\n" +
+    "    </div>\n" +
+    "    <div class=\"gridded-data\" ng-if=\"markerModel.gridded_legend_data\">\n" +
+    "    </div>\n" +
+    "    <div ng-repeat=\"md in markerModel.data\" ng-init=\"tag = speciesSelections[$index];\" ng-if=\"md.records.length\">\n" +
     "        <h4><span>{{tag.species | speciesTitle}}, {{tag.phenophase.phenophase_name}}, {{tag.year}} </span>\n" +
     "                <svg id=\"map-vis-iw-marker-{{$index}}\" uib-tooltip=\"{{md.legend_data.label}}\" tooltip-append-to-body=\"true\" tooltip-placement=\"top\"></svg></h4>\n" +
     "        <ul class=\"list-unstyled\">\n" +
