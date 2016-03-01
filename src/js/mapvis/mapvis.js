@@ -78,6 +78,7 @@ angular.module('npn-viz-tool.vis-map',[
             return 31;
         }
         tmp = new Date(date.getTime());
+        tmp.setDate(1);
         tmp.setMonth(tmp.getMonth()+1);
         tmp.setTime(tmp.getTime()-ONE_DAY);
         $log.debug('last day of month '+(month+1)+' is '+tmp);
@@ -91,10 +92,13 @@ angular.module('npn-viz-tool.vis-map',[
         },
         link: function($scope) {
             $scope.months = MONTHS;
-            var currentDate = thirtyYearAvgDayOfYearFilter($scope.layer.extent.current.value,true);
-            $scope.selection = {
-                month: MONTHS[currentDate.getMonth()]
-            };
+            var currentDate;
+            $scope.$watch('layer',function(layer) {
+                currentDate = thirtyYearAvgDayOfYearFilter($scope.layer.extent.current.value,true);
+                $scope.selection = {
+                    month: MONTHS[currentDate.getMonth()]
+                };
+            });
             function dateWatch(date) {
                 $scope.selection.month.setDate(date);
                 // this feels a little hoakey matching on label but...
@@ -104,9 +108,8 @@ angular.module('npn-viz-tool.vis-map',[
                     return current||(v.label === label ? v : undefined);
                 },undefined);
             }
-            $scope.$watch('selection.month',function(date) {
-                var month = $scope.selection.month;
-                $log.debug('doy-control:month '+(month.getMonth()+1));
+            $scope.$watch('selection.month',function(month) {
+                $log.debug('doy-control:month '+(month.getMonth()+1),month);
                 $scope.dates = d3.range(1,getDaysInMonth(month)+1);
                 if(currentDate) {
                     // init
