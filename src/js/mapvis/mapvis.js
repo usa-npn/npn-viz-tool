@@ -610,7 +610,7 @@ angular.module('npn-viz-tool.vis-map',[
             zoom: 3,
             options: {
                 disableDoubleClickZoom: true, // click on an arbitrary point gets gridded data so disable zoom (use controls).
-                scrollwheel: false,
+                scrollwheel: true,
                 streetViewControl: false,
                 panControl: false,
                 zoomControl: true,
@@ -649,7 +649,7 @@ angular.module('npn-viz-tool.vis-map',[
                                     $log.debug('data from legend:',$scope.gridded_point_data,$scope.gridded_point_legend);
                                     html = '<div><div id="griddedPointInfoWindow" class="ng-cloak">';
                                     html += '<div class="gridded-legend-color" style="background-color: {{gridded_point_legend.color}};">&nbsp;</div>';
-                                    html += '<div class="gridded-point-data">{{legend.formatPointData(gridded_point_data)}} ({{gridded_point_data | number:0}})</div>';
+                                    html += '<div class="gridded-point-data">{{legend.formatPointData(gridded_point_data)}}</div>';
                                     //html += '<pre>\n{{gridded_point_data}}\n{{gridded_point_legend}}</pre>';
                                     html += '</div></div>';
                                     compiled = $compile(html)($scope);

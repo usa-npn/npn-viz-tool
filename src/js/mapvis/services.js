@@ -122,7 +122,7 @@ angular.module('npn-viz-tool.vis-map-services',[
             return 'No Difference';
         }
         var lt = n < 0;
-        return numberFilter(Math.abs(n),0)+'\u00B0F '+(lt ? '<' : '>') +' Avg';
+        return numberFilter(Math.abs(n),0)+' GDD Units '+(lt ? '<' : '>') +' Avg';
     };
 }])
 /**
@@ -140,9 +140,6 @@ angular.module('npn-viz-tool.vis-map-services',[
         }
         var lt = n < 0,
             abs = Math.abs(n);
-        if(abs === 20) { // this is very weird but it's in alignment with how the original scale was built.
-            abs = 10;
-        }
         return abs+' Days '+(lt ? 'Early' : 'Late');
     };
 }])

@@ -334,7 +334,8 @@ angular.module("js/mapvis/date-control.html", []).run(["$templateCache", functio
     "        is-open=\"isOpen\"\n" +
     "        min-date=\"minDate\"\n" +
     "        max-date=\"maxDate\"\n" +
-    "        close-text=\"Close\" />\n" +
+    "        close-text=\"Close\"\n" +
+    "        ng-click=\"open()\" />\n" +
     "  <span class=\"input-group-btn\">\n" +
     "    <button type=\"button\" class=\"btn btn-default\" ng-click=\"open()\"><i class=\"glyphicon glyphicon-calendar\"></i></button>\n" +
     "  </span>\n" +
@@ -496,7 +497,7 @@ angular.module("js/mapvis/marker-info-window.html", []).run(["$templateCache", f
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-if=\"markerModel.station.group_name\"><label>Group:</label> {{markerModel.station.group_name}}</li>\n" +
     "            <li><label>Latitude:</label> {{markerModel.station.latitude}} <label>Longitude:</label> {{markerModel.station.longitude}}</li>\n" +
-    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Modeled Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.label}} ({{markerModel.gridded_legend_data.point | number:0}})</li>\n" +
+    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Modeled Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{markerModel.gridded_legend_data.label}})</li>\n" +
     "        </ul>\n" +
     "    </div>\n" +
     "    <div class=\"gridded-data\" ng-if=\"markerModel.gridded_legend_data\">\n" +
