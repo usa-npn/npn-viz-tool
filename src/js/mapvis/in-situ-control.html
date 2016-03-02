@@ -6,7 +6,7 @@
                 ng-options="s as (s | speciesTitle) for s in speciesList"></select>
     </div>
     <div class="form-group" ng-if="selection.species && phenophaseList.length">
-        <label for="selectedPhenophse">Species</label>
+        <label for="selectedPhenophse">Phenophase</label>
         <select id="selectedPhenophse" class="form-control" ng-model="selection.phenophase"
                 ng-options="p as p.phenophase_name for p in phenophaseList"></select>
     </div>

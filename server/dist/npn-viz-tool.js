@@ -5213,7 +5213,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "                ng-options=\"s as (s | speciesTitle) for s in speciesList\"></select>\n" +
     "    </div>\n" +
     "    <div class=\"form-group\" ng-if=\"selection.species && phenophaseList.length\">\n" +
-    "        <label for=\"selectedPhenophse\">Species</label>\n" +
+    "        <label for=\"selectedPhenophse\">Phenophase</label>\n" +
     "        <select id=\"selectedPhenophse\" class=\"form-control\" ng-model=\"selection.phenophase\"\n" +
     "                ng-options=\"p as p.phenophase_name for p in phenophaseList\"></select>\n" +
     "    </div>\n" +
