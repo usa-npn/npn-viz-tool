@@ -96,7 +96,8 @@ angular.module('npn-viz-tool.vis-map',[
             $scope.$watch('layer',function(layer) {
                 currentDate = thirtyYearAvgDayOfYearFilter($scope.layer.extent.current.value,true);
                 $scope.selection = {
-                    month: MONTHS[currentDate.getMonth()]
+                    month: MONTHS[currentDate.getMonth()],
+                    date: currentDate.getDate()
                 };
             });
             function dateWatch(date) {
@@ -112,9 +113,7 @@ angular.module('npn-viz-tool.vis-map',[
                 $log.debug('doy-control:month '+(month.getMonth()+1),month);
                 $scope.dates = d3.range(1,getDaysInMonth(month)+1);
                 if(currentDate) {
-                    // init
-                    $scope.selection.date = currentDate.getDate();
-                    currentDate = undefined;
+                    currentDate = undefined; // ignore layer watch init'ed date
                 } else if($scope.selection.date === 1) {
                     dateWatch(1); // month change without date change, need to force the extent to update.
                 } else {
@@ -792,6 +791,7 @@ angular.module('npn-viz-tool.vis-map',[
         $scope.$watch('selection.activeLayer.extent.current',function(v) {
             if($scope.selection.activeLayer) {
                 $log.debug('layer extent change ',$scope.selection.activeLayer.name,v);
+                noInfoWindows();
                 $scope.selection.activeLayer.off().on();
             }
         });
@@ -846,6 +846,7 @@ angular.module('npn-viz-tool.vis-map',[
                         var point = tuples && tuples.length ? tuples[0] : undefined;
                         if(typeof(point) === 'undefined' || point === -9999 || isNaN(point)) {
                             $log.debug('received undefined, -9999 or Nan ignoring');
+                            gridded_def.resolve();
                             return;
                         }
                         var legend_data = $scope.legend.getPointData(point);
@@ -860,7 +861,7 @@ angular.module('npn-viz-tool.vis-map',[
                     },function() {
                         // TODO?
                         $log.error('unable to get gridded data.');
-                        gridded_def.reject();
+                        gridded_def.resolve();
                     });
                 $q.all(promises).then(function(){
                     var compiled = $compile(markerMarkup)($scope);
@@ -954,6 +955,7 @@ angular.module('npn-viz-tool.vis-map',[
         }
 
         $scope.plotMarkers = function() {
+            noInfoWindows();
             $scope.results.markers = [];
             $scope.working = true;
             // KISS - it may be more efficient to try to decide when to merge requests
