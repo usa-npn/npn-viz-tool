@@ -525,7 +525,40 @@ angular.module('npn-viz-tool.vis-map',[
  * @scope
  * @param {object} layer The currently selected map layer.
  */
-.directive('mapVisInSituControl',['$log','FilterService',function($log,FilterService){
+.directive('mapVisInSituControl',['$log','$q','$http','CacheService','FilterService',function($log,$q,$http,CacheService,FilterService){
+    var IMPLICIT_SPECIES_IDS = ['20','1198','35','36'],
+        IMPLICIT_SPECIES_KEY = 'map-vis-insitu-implicit-species';
+    function mergeImplicitAndUser(implicit_list,user_list) {
+        var user_ids = user_list.map(function(species) {
+            return species.species_id;
+        });
+        implicit_list.forEach(function(s) {
+            if(user_ids.indexOf(s.species_id) === -1) {
+                user_list.push(s);
+            }
+        });
+        return user_list;
+    }
+    function getMergedSpeciesList(user_list) {
+        var def = $q.defer(),
+            implicit_list = CacheService.get(IMPLICIT_SPECIES_KEY);
+        if(implicit_list) {
+            def.resolve(mergeImplicitAndUser(implicit_list,user_list));
+        } else {
+            // unfortunately there's no web service to select multiple species by id
+            // and the getSpeciesById.json service returns slightly different objects
+            // so go get all species and filter out the list to those of interest.
+            $http.get('/npn_portal/species/getSpeciesFilter.json').then(function(response){
+                implicit_list = response.data.filter(function(species){
+                    return IMPLICIT_SPECIES_IDS.indexOf(species.species_id) !== -1;
+                });
+                $log.debug('filtered implicit list of species',implicit_list);
+                CacheService.put(IMPLICIT_SPECIES_KEY,implicit_list,-1);
+                def.resolve(mergeImplicitAndUser(implicit_list,user_list));
+            });
+        }
+        return def.promise;
+    }
     return {
         restrict: 'E',
         templateUrl: 'js/mapvis/in-situ-control.html',
@@ -536,20 +569,31 @@ angular.module('npn-viz-tool.vis-map',[
         },
         link: function($scope) {
             var filter = FilterService.getFilter(),
-                dateArg = filter.getDateArg();
+                dateArg = filter.getDateArg(),
+                hasGeographicArgs = filter.getGeographicArgs().length > 0; // bounds or selected layer features
             $scope.years = d3.range(dateArg.getStartYear(),dateArg.getEndYear()+1);
             $scope.selection = {
                 year: $scope.years[0]
             };
             filter.getSpeciesList().then(function(list){
                 $log.debug('speciesList',list);
-                $scope.speciesList = list;
-                $scope.selection.species = list.length ? list[0] : undefined;
+                if(hasGeographicArgs) {
+                    $log.debug('filter has geographic args, not adding implicit species.');
+                    $scope.speciesList = list;
+                    $scope.selection.species = list.length ? list[0] : undefined;
+                } else {
+                    $log.debug('filter has no geographic args merging in implicit species.');
+                    getMergedSpeciesList(list).then(function(with_implicit){
+                        $log.debug('merged',with_implicit);
+                        $scope.speciesList = with_implicit;
+                        $scope.selection.species = with_implicit.length ? with_implicit[0] : undefined;
+                    });
+                }
             });
             $scope.$watch('selection.species',function(species){
                 $scope.phenophaseList = [];
                 if(species) {
-                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id).then(function(list){
+                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,true/*get no matter what*/).then(function(list){
                         $log.debug('phenophaseList',list);
                         $scope.phenophaseList = list;
                         $scope.selection.phenophase = list.length ? list[0] : undefined;
@@ -692,6 +736,14 @@ angular.module('npn-viz-tool.vis-map',[
         $scope.results = {
             markers: []
         };
+        function noInfoWindows() {
+            if(infoWindow) {
+                infoWindow.close();
+            }
+            if(markerInfoWindow) {
+                markerInfoWindow.close();
+            }
+        }
         $scope.$watch('selection.layerCategory',function(category) {
             $log.debug('layer category change ',category);
             if($scope.selection.activeLayer) {
@@ -699,18 +751,14 @@ angular.module('npn-viz-tool.vis-map',[
                 $scope.selection.activeLayer.off();
                 delete $scope.selection.activeLayer;
                 delete $scope.legend;
+                noInfoWindows();
             }
         });
         $scope.$watch('selection.layer',function(layer) {
             if(!layer) {
                 return;
             }
-            if(infoWindow) {
-                infoWindow.close();
-            }
-            if(markerInfoWindow) {
-                markerInfoWindow.close();
-            }
+            noInfoWindows();
             delete $scope.markerModel;
             $log.debug('selection.layer',layer);
             if($scope.selection.activeLayer) {

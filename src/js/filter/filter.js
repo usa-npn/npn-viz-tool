@@ -553,15 +553,16 @@ angular.module('npn-viz-tool.filter',[
      * that there are network args in the filter and the phenophases are chased.
      *
      * @param  {Number} sid The species id
+     * @param {boolean} force If set to true will get the list even if the species isn't part of this filter.
      * @return {Promise}    A promise that will be resolved with the list.
      */
-    NpnFilter.prototype.getPhenophasesForSpecies = function(sid) {
+    NpnFilter.prototype.getPhenophasesForSpecies = function(sid,force) {
         var speciesArgs = this.getSpeciesArgs(),
             def = $q.defer(),i;
         if(typeof(sid) === 'string') {
             sid = parseInt(sid);
         }
-        if(speciesArgs.length) {
+        if(!force && speciesArgs.length) {
             var found = false;
             for(i = 0; i < speciesArgs.length; i++) {
                 if(speciesArgs[i].getId() === sid) {
