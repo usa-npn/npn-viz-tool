@@ -3589,9 +3589,12 @@ angular.module('npn-viz-tool.vis-map',[
         });
 
         $scope.selection = {};
-        $scope.results = {
-            markers: []
-        };
+        $scope.results = {};
+        function resetMarkers() {
+            $scope.results.markerModels = {};
+            $scope.results.markers = [];
+        }
+        resetMarkers();
         function noInfoWindows() {
             if(infoWindow) {
                 infoWindow.close();
@@ -3634,13 +3637,13 @@ angular.module('npn-viz-tool.vis-map',[
                 if(!$scope.selection.activeLayer.supportsData()) {
                     // moving to a layer that doesn't support data
                     // clear markers if any have been placed on the map.
-                    $scope.results.markers = [];
+                    resetMarkers();
                 } else {
                     // the layer we're switching to supports data but will have a different
                     // color scale/labeling scheme, etc. so we need to update all the markers
                     // for the new layer.
-                    $scope.results.markers = $scope.results.markers.map(function(marker) {
-                        return marker.restyle();
+                    $scope.results.markers = Object.keys($scope.results.markerModels).map(function(site_id){
+                        return $scope.results.markerModels[site_id].restyle().marker();
                     });
                 }
             });
@@ -3664,7 +3667,7 @@ angular.module('npn-viz-tool.vis-map',[
             'click': function(m) {
                 $log.debug('click',m);
                 $scope.$apply(function(){
-                    $scope.markerModel = m.model;
+                    $scope.markerModel = $scope.results.markerModels[m.model.site_id];
                     if(!markerInfoWindow) {
                         markerInfoWindow = new api.InfoWindow({
                             maxWidth: 500,
@@ -3736,84 +3739,93 @@ angular.module('npn-viz-tool.vis-map',[
             }
         });
 
-        function GdMarker() {
+        function GdMarkerModel() {
             var offscale_color = '#ffffff',
                 marker = {
-                data: $scope.speciesSelections.map(function() { return {records: []}; }),
-                getSiteId: function() {
-                    return marker.site_id;
-                },
-                restyle: function() {
-                    // change border based on if there are more than one individual recorded for a marker.
-                    marker.markerOpts.icon.strokeColor =  marker.data.reduce(function(sum,o){ return sum+o.records.length; },0) > 1 ? '#00ff00' : '#204d74';
-                    marker.markerOpts.title = marker.data.reduce(function(title,o,filter_index){
-                        delete o.first_yes_doy_avg;
-                        delete o.first_yes_doy_stdev;
-                        delete o.legend_data;
-                        if(o.records.length) {
-                            // info window code can re-use this information rather than calculating it.
-                            o.first_yes_doy_avg = o.records.reduce(function(sum,r){ return sum+r.first_yes_doy; },0)/o.records.length;
-                            if(o.records.length > 1) {
-                                // calculate the standard deviation
-                                o.first_yes_doy_stdev = Math.sqrt(
-                                    o.records.reduce(function(sum,r) {
-                                        return sum+Math.pow((r.first_yes_doy-o.first_yes_doy_avg),2);
-                                    },0)/o.records.length
-                                );
-                            }
-                            o.legend_data = $scope.legend.getPointData(o.first_yes_doy_avg)||{
-                                color: offscale_color,
-                                label: 'off scale'
-                            };
-                            var s = $scope.speciesSelections[filter_index];
-                            o.records.forEach(function(record){
-                                var ldata = $scope.legend.getPointData(record.first_yes_doy);
-                                // info window code can just use this information rather than re-calculating it.
-                                record.legend_data = ldata||{
+                    data: $scope.speciesSelections.map(function() { return {records: []}; }),
+                    getSiteId: function() {
+                        return marker.site_id;
+                    },
+                    restyle: function() {
+                        // change border based on if there are more than one individual recorded for a marker.
+                        marker.markerOpts.icon.strokeColor =  marker.data.reduce(function(sum,o){ return sum+o.records.length; },0) > 1 ? '#00ff00' : '#204d74';
+                        marker.markerOpts.title = marker.data.reduce(function(title,o,filter_index){
+                            delete o.first_yes_doy_avg;
+                            delete o.first_yes_doy_stdev;
+                            delete o.legend_data;
+                            if(o.records.length) {
+                                // info window code can re-use this information rather than calculating it.
+                                o.first_yes_doy_avg = o.records.reduce(function(sum,r){ return sum+r.first_yes_doy; },0)/o.records.length;
+                                if(o.records.length > 1) {
+                                    // calculate the standard deviation
+                                    o.first_yes_doy_stdev = Math.sqrt(
+                                        o.records.reduce(function(sum,r) {
+                                            return sum+Math.pow((r.first_yes_doy-o.first_yes_doy_avg),2);
+                                        },0)/o.records.length
+                                    );
+                                }
+                                o.legend_data = $scope.legend.getPointData(o.first_yes_doy_avg)||{
                                     color: offscale_color,
                                     label: 'off scale'
                                 };
-                                if(title !== '') {
-                                    title += ', ';
-                                }
-                                title += s.year;
-                                title += ': ';
-                                title += record.legend_data.label;
-                            });
-                        }
-                        return title;
-                    },'');
-                    // update marker color
-                    marker.markerOpts.icon.fillColor = marker.data[marker.filter_index].legend_data.color;
-                    // update its key
-                    marker.$markerKey = md5.createHash(JSON.stringify(marker));
-                    return marker;
-                },
-                add: function(record,filter_index) {
-                    marker.data[filter_index].records.push(record);
-                    // first record dictates shape, z-index, etc.
-                    if(!marker.markerOpts) {
-                        marker.site_id = record.site_id;
-                        marker.filter_index = filter_index;  // dictates the shape...
-                        marker.latitude = record.latitude;
-                        marker.longitude = record.longitude;
-                        marker.markerOpts = {
-                            zIndex: (365-record.first_yes_doy),
-                            icon: angular.extend(MapVisMarkerService.getBaseIcon(filter_index),{
-                                                fillOpacity: 1.0,
-                                                strokeWeight: 1
-                                            })
+                                var s = $scope.speciesSelections[filter_index];
+                                o.records.forEach(function(record){
+                                    var ldata = $scope.legend.getPointData(record.first_yes_doy);
+                                    // info window code can just use this information rather than re-calculating it.
+                                    record.legend_data = ldata||{
+                                        color: offscale_color,
+                                        label: 'off scale'
+                                    };
+                                    if(title !== '') {
+                                        title += ', ';
+                                    }
+                                    title += s.year;
+                                    title += ': ';
+                                    title += record.legend_data.label;
+                                });
+                            }
+                            return title;
+                        },'');
+                        // update marker color
+                        marker.markerOpts.icon.fillColor = marker.data[marker.filter_index].legend_data.color;
+                        // update its key
+                        marker.$markerKey = md5.createHash(JSON.stringify(marker));
+                        return marker;
+                    },
+                    marker: function() { // returns a bare bones, simplified marker object
+                        return {
+                            $markerKey: marker.$markerKey,
+                            site_id: marker.site_id,
+                            latitude: marker.latitude,
+                            longitude: marker.longitude,
+                            markerOpts: marker.markerOpts
                         };
+                    },
+                    add: function(record,filter_index) {
+                        marker.data[filter_index].records.push(record);
+                        // first record dictates shape, z-index, etc.
+                        if(!marker.markerOpts) {
+                            marker.site_id = record.site_id;
+                            marker.filter_index = filter_index;  // dictates the shape...
+                            marker.latitude = record.latitude;
+                            marker.longitude = record.longitude;
+                            marker.markerOpts = {
+                                zIndex: (365-record.first_yes_doy),
+                                icon: angular.extend(MapVisMarkerService.getBaseIcon(filter_index),{
+                                                    fillOpacity: 1.0,
+                                                    strokeWeight: 1
+                                                })
+                            };
+                        }
+                        return marker.restyle();
                     }
-                    return marker.restyle();
-                }
-            };
+                };
             return marker;
         }
 
         $scope.plotMarkers = function() {
             noInfoWindows();
-            $scope.results.markers = [];
+            resetMarkers();
             $scope.working = true;
             // KISS - it may be more efficient to try to decide when to merge requests
             // together but this adds a lot of complexity/fragility so issuing
@@ -3825,7 +3837,7 @@ angular.module('npn-viz-tool.vis-map',[
 
             // keep track of markers based on site so that if multiple species/individiuals exist for a given site
             // arrive markers can be updated more efficiently
-            var site2marker = {},
+            var site2marker = $scope.results.markerModels,
                 summary_promises = $scope.speciesSelections.map(function(s,filter_index){
                     var def = $q.defer(),
                         params = {
@@ -3862,11 +3874,11 @@ angular.module('npn-viz-tool.vis-map',[
                             if(site2marker[record.site_id]) { // update an existing marker
                                 site2marker[record.site_id].add(record,filter_index);
                             } else { // add a new marker
-                                new_markers.push(site2marker[record.site_id] = (new GdMarker()).add(record,filter_index));
+                                new_markers.push(site2marker[record.site_id] = (new GdMarkerModel()).add(record,filter_index));
                             }
                         });
                         // put the markers on the map as the data arrives appending any new markers
-                        $scope.results.markers = $scope.results.markers.concat(new_markers);
+                        $scope.results.markers = $scope.results.markers.concat(new_markers.map(function(m){ return m.marker(); }));
                         def.resolve();
                     });
                     return def.promise;
