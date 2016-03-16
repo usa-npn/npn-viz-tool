@@ -679,8 +679,18 @@ angular.module('npn-viz-tool.vis-map',[
                 zoomControlOptions: {
                     style: google.maps.ZoomControlStyle.SMALL,
                     position: google.maps.ControlPosition.RIGHT_TOP
-                }
+                },
+                styles: [{
+                    featureType: 'poi',
+                    elementType: 'labels',
+                    stylers: [{visibility:'off'}]
+                },{
+                    featureType: 'transit.station',
+                    elementType: 'labels',
+                    stylers: [{visibility:'off'}]
+                }],
             },
+
             events: {
                 click: function(m,ename,args) {
                     var ev = args[0];
