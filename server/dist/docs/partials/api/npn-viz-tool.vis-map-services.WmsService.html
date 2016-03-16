@@ -25,7 +25,8 @@ and <code>name</code> properties.  The layer <code>name</code> contains the mach
 <ul>
   <li><code>legend_label_filter</code> - specifies an angular filter and optional arguments used to translate point data into strings for legends and map info windows.</li>
   <li><code>extent_values_filter</code> - specifies an angualr filter and optional arguments used to filter extent values for layers.</li>
-  <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true if not specified).</li>
+  <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true).</li>
+  <li>code&gt;current_year_only</code> - if <code>supports_data</code> is true (or unspecified) the indicates that a given layer should only support plotting of data for the year of the currently selected extent on it (default false).</li>
 </ul>
 
 <p>If any of the above properties are defined at the category level then all of the category&#39;s layers will inherit the values.

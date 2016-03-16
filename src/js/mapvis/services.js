@@ -217,7 +217,8 @@ angular.module('npn-viz-tool.vis-map-services',[
  * <ul>
  *   <li><code>legend_label_filter</code> - specifies an angular filter and optional arguments used to translate point data into strings for legends and map info windows.</li>
  *   <li><code>extent_values_filter</code> - specifies an angualr filter and optional arguments used to filter extent values for layers.</li>
- *   <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true if not specified).</li>
+ *   <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true).</li>
+ *   <li>code>current_year_only</code> - if <code>supports_data</code> is true (or unspecified) the indicates that a given layer should only support plotting of data for the year of the currently selected extent on it (default false).</li>
  * </ul>
  *
  * If any of the above properties are defined at the category level then all of the category's layers will inherit the values.
@@ -553,11 +554,21 @@ angular.module('npn-viz-tool.vis-map-services',[
              * @ngdoc method
              * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
              * @name  supportsData
-             * @description Indicates whether a given data supports data to be plotted on it or not.
+             * @description Indicates whether a given layer supports data to be plotted on it or not.
              * @returns {boolean} false if the layer doesn't support data plotted on it.
              */
             supportsData: function() {
                 return typeof(layer_def.supports_data) === 'boolean' ? layer_def.supports_data : true; /* by default a layer supports data */
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  currentYearOnly
+             * @description Indicates whether a given layer should constrain what gets plotted on it to the currently selected year.
+             * @returns {boolean} true if plotted data should be restrained.
+             */
+            currentYearOnly: function() {
+                return typeof(layer_def.current_year_only) === 'boolean' ? layer_def.current_year_only : false;
             },
             /**
              * @ngdoc method

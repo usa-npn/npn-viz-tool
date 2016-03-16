@@ -574,6 +574,25 @@ angular.module('npn-viz-tool.vis-map',[
             $scope.selection = {
                 year: $scope.years[0]
             };
+            function checkCurrentYear() {
+                var currentYear;
+                if($scope.layer) {
+                    $scope.disableControl = false;
+                    if($scope.currentYearOnly = $scope.layer.currentYearOnly()) {
+                        // forcibly select just the current year
+                        currentYear = $scope.layer.extent.current.date.getFullYear();
+                        // make sure that year is among those available, otherwise hide the control entirely
+                        if($scope.years.indexOf(currentYear) === -1) {
+                            $scope.disableControl = true;
+                        } else {
+                            $scope.selection.year = currentYear; // UI will disable the control
+                        }
+                    }
+                }
+            }
+            $scope.$watch('layer',checkCurrentYear);
+            $scope.$watch('layer.extent.current',checkCurrentYear);
+
             filter.getSpeciesList().then(function(list){
                 $log.debug('speciesList',list);
                 if(hasGeographicArgs) {
@@ -792,10 +811,23 @@ angular.module('npn-viz-tool.vis-map',[
             });
         });
         $scope.$watch('selection.activeLayer.extent.current',function(v) {
-            if($scope.selection.activeLayer) {
-                $log.debug('layer extent change ',$scope.selection.activeLayer.name,v);
+            var layer,currentYear,updateSelections;
+            if(layer = $scope.selection.activeLayer) {
+                $log.debug('layer extent change ',layer.name,v);
                 noInfoWindows();
-                $scope.selection.activeLayer.off().on();
+                layer.off().on();
+                if(layer.currentYearOnly()) {
+                    currentYear = v.date.getFullYear();
+                    updateSelections = $scope.speciesSelections.filter(function(ss){ return ss.year === currentYear; });
+                    if(updateSelections.length !== $scope.speciesSelections.length) {
+                        // something needs to change.... (keeping the original array reference)
+                        $scope.speciesSelections.splice(0,$scope.speciesSelections.length);
+                        //updateSelections.forEach($scope.speciesSelections.push);
+                        updateSelections.forEach(function(us) { $scope.speciesSelections.push(us); });
+                        // re-visualize
+                        $scope.plotMarkers();
+                    }
+                }
             }
         });
 

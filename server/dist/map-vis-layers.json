@@ -54,6 +54,7 @@
         "legend_label_filter": {
             "name": "legendDoy"
         },
+        "current_year_only": true,
         "layers":[{
                 "title": "Arnold Red Leaf (prism)",
                 "name": "si-x:arnoldred_leaf_prism"
@@ -88,6 +89,7 @@
             "name": "extentDates",
             "args": [null,"today"]
         },
+        "current_year_only": true,
         "layers": [{
                 "title": "Arnold Red Leaf (ncep)",
                 "name": "si-x:arnoldred_leaf_ncep"

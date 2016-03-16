@@ -3431,6 +3431,25 @@ angular.module('npn-viz-tool.vis-map',[
             $scope.selection = {
                 year: $scope.years[0]
             };
+            function checkCurrentYear() {
+                var currentYear;
+                if($scope.layer) {
+                    $scope.disableControl = false;
+                    if($scope.currentYearOnly = $scope.layer.currentYearOnly()) {
+                        // forcibly select just the current year
+                        currentYear = $scope.layer.extent.current.date.getFullYear();
+                        // make sure that year is among those available, otherwise hide the control entirely
+                        if($scope.years.indexOf(currentYear) === -1) {
+                            $scope.disableControl = true;
+                        } else {
+                            $scope.selection.year = currentYear; // UI will disable the control
+                        }
+                    }
+                }
+            }
+            $scope.$watch('layer',checkCurrentYear);
+            $scope.$watch('layer.extent.current',checkCurrentYear);
+
             filter.getSpeciesList().then(function(list){
                 $log.debug('speciesList',list);
                 if(hasGeographicArgs) {
@@ -3649,10 +3668,23 @@ angular.module('npn-viz-tool.vis-map',[
             });
         });
         $scope.$watch('selection.activeLayer.extent.current',function(v) {
-            if($scope.selection.activeLayer) {
-                $log.debug('layer extent change ',$scope.selection.activeLayer.name,v);
+            var layer,currentYear,updateSelections;
+            if(layer = $scope.selection.activeLayer) {
+                $log.debug('layer extent change ',layer.name,v);
                 noInfoWindows();
-                $scope.selection.activeLayer.off().on();
+                layer.off().on();
+                if(layer.currentYearOnly()) {
+                    currentYear = v.date.getFullYear();
+                    updateSelections = $scope.speciesSelections.filter(function(ss){ return ss.year === currentYear; });
+                    if(updateSelections.length !== $scope.speciesSelections.length) {
+                        // something needs to change.... (keeping the original array reference)
+                        $scope.speciesSelections.splice(0,$scope.speciesSelections.length);
+                        //updateSelections.forEach($scope.speciesSelections.push);
+                        updateSelections.forEach(function(us) { $scope.speciesSelections.push(us); });
+                        // re-visualize
+                        $scope.plotMarkers();
+                    }
+                }
             }
         });
 
@@ -4108,7 +4140,8 @@ angular.module('npn-viz-tool.vis-map-services',[
  * <ul>
  *   <li><code>legend_label_filter</code> - specifies an angular filter and optional arguments used to translate point data into strings for legends and map info windows.</li>
  *   <li><code>extent_values_filter</code> - specifies an angualr filter and optional arguments used to filter extent values for layers.</li>
- *   <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true if not specified).</li>
+ *   <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true).</li>
+ *   <li>code>current_year_only</code> - if <code>supports_data</code> is true (or unspecified) the indicates that a given layer should only support plotting of data for the year of the currently selected extent on it (default false).</li>
  * </ul>
  *
  * If any of the above properties are defined at the category level then all of the category's layers will inherit the values.
@@ -4444,11 +4477,21 @@ angular.module('npn-viz-tool.vis-map-services',[
              * @ngdoc method
              * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
              * @name  supportsData
-             * @description Indicates whether a given data supports data to be plotted on it or not.
+             * @description Indicates whether a given layer supports data to be plotted on it or not.
              * @returns {boolean} false if the layer doesn't support data plotted on it.
              */
             supportsData: function() {
                 return typeof(layer_def.supports_data) === 'boolean' ? layer_def.supports_data : true; /* by default a layer supports data */
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  currentYearOnly
+             * @description Indicates whether a given layer should constrain what gets plotted on it to the currently selected year.
+             * @returns {boolean} true if plotted data should be restrained.
+             */
+            currentYearOnly: function() {
+                return typeof(layer_def.current_year_only) === 'boolean' ? layer_def.current_year_only : false;
             },
             /**
              * @ngdoc method
@@ -5220,6 +5263,7 @@ angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function
 angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/in-situ-control.html",
     "<div class=\"in-situ-control\" ng-if=\"layer && layer.supportsData()\">\n" +
+    "    <div class=\"disable-curtain\" ng-if=\"disableControl\"></div>\n" +
     "    <hr />\n" +
     "    <div class=\"form-group\" ng-if=\"speciesList\">\n" +
     "        <label for=\"selectedSpecies\">Species</label>\n" +
@@ -5235,7 +5279,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "        <div class=\"col-xs-9\">\n" +
     "            <div class=\"form-group\" ng-if=\"selection.species && selection.phenophase\">\n" +
     "                <label for=\"selectedYear\">Year</label>\n" +
-    "                <select id=\"selectedYear\" class=\"form-control\" ng-model=\"selection.year\"\n" +
+    "                <select id=\"selectedYear\" class=\"form-control\" ng-model=\"selection.year\" ng-disabled=\"currentYearOnly\"\n" +
     "                        ng-options=\"y as y for y in years\"></select>\n" +
     "            </div>\n" +
     "        </div>\n" +

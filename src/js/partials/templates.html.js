@@ -382,6 +382,7 @@ angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function
 angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/in-situ-control.html",
     "<div class=\"in-situ-control\" ng-if=\"layer && layer.supportsData()\">\n" +
+    "    <div class=\"disable-curtain\" ng-if=\"disableControl\"></div>\n" +
     "    <hr />\n" +
     "    <div class=\"form-group\" ng-if=\"speciesList\">\n" +
     "        <label for=\"selectedSpecies\">Species</label>\n" +
@@ -397,7 +398,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "        <div class=\"col-xs-9\">\n" +
     "            <div class=\"form-group\" ng-if=\"selection.species && selection.phenophase\">\n" +
     "                <label for=\"selectedYear\">Year</label>\n" +
-    "                <select id=\"selectedYear\" class=\"form-control\" ng-model=\"selection.year\"\n" +
+    "                <select id=\"selectedYear\" class=\"form-control\" ng-model=\"selection.year\" ng-disabled=\"currentYearOnly\"\n" +
     "                        ng-options=\"y as y for y in years\"></select>\n" +
     "            </div>\n" +
     "        </div>\n" +
