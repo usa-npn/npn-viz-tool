@@ -15,5 +15,5 @@
         <map-vis-year-control ng-switch-when="year" layer="selection.layer"></map-vis-year-control>
     </div>
     <map-vis-opacity-slider layer="selection.layer"></map-vis-opacity-slider>
-    <p ng-if="selection.layer.abstract">{{selection.layer.abstract}}</p>
+    <p ng-if="selection.layer.$description" ng-bind-html="selection.layer.$description"></p>
 </div>

@@ -27,6 +27,7 @@ and <code>name</code> properties.  The layer <code>name</code> contains the mach
   <li><code>extent_values_filter</code> - specifies an angualr filter and optional arguments used to filter extent values for layers.</li>
   <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true).</li>
   <li>code&gt;current_year_only</code> - if <code>supports_data</code> is true (or unspecified) the indicates that a given layer should only support plotting of data for the year of the currently selected extent on it (default false).</li>
+  <li><code>description</code> - contains a description of a given layer.  this value can also be specified at the top level so that it applies to all layers in all categories (as the default).</li>
 </ul>
 
 <p>If any of the above properties are defined at the category level then all of the category&#39;s layers will inherit the values.
@@ -39,6 +40,7 @@ E.g.
     "geo_server": {
         "url": "//geoserver.usanpn.org/geoserver"
     },
+    "description" : "this is the default layer description.",
     "categories": [
     ...
     ,{

@@ -2,6 +2,7 @@
     "geo_server": {
         "url": "//geoserver-dev.usanpn.org/geoserver"
     },
+    "description" : "<a href=\"https://drive.google.com/open?id=1sYhoqk1fWSyUdT_RrNDv0KSOtThU4uCPXqldqOxG2IM\" target=\"_blank\">Gridded Data Documentation and Access</a>",
     "categories": [{
         "name": "30-year Average AGDD",
         "supports_data": false,

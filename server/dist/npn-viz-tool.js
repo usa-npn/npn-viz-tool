@@ -4146,6 +4146,7 @@ angular.module('npn-viz-tool.vis-map-services',[
  *   <li><code>extent_values_filter</code> - specifies an angualr filter and optional arguments used to filter extent values for layers.</li>
  *   <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true).</li>
  *   <li>code>current_year_only</code> - if <code>supports_data</code> is true (or unspecified) the indicates that a given layer should only support plotting of data for the year of the currently selected extent on it (default false).</li>
+ *   <li><code>description</code> - contains a description of a given layer.  this value can also be specified at the top level so that it applies to all layers in all categories (as the default).</li>
  * </ul>
  *
  * If any of the above properties are defined at the category level then all of the category's layers will inherit the values.
@@ -4159,6 +4160,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     "geo_server": {
         "url": "//geoserver.usanpn.org/geoserver"
     },
+    "description" : "this is the default layer description.",
     "categories": [
     ...
     ,{
@@ -4190,7 +4192,7 @@ angular.module('npn-viz-tool.vis-map-services',[
  * Similarly both layers will use the same <code>extent_values_filter</code> whilch will filter valid extent values as reported
  * by the WMS to only those <em>before</em> "today".
  */
-.service('WmsService',['$log','$q','$http','$httpParamSerializer','$filter','DateExtentUtil','WcsService',function($log,$q,$http,$httpParamSerializer,$filter,DateExtentUtil,WcsService){
+.service('WmsService',['$log','$q','$http','$sce','$httpParamSerializer','$filter','DateExtentUtil','WcsService',function($log,$q,$http,$sce,$httpParamSerializer,$filter,DateExtentUtil,WcsService){
     function setGeoServerUrl(url) {
         GEOSERVER_URL = url;
         WMS_BASE_URL = GEOSERVER_URL+'/wms';
@@ -4222,13 +4224,15 @@ angular.module('npn-viz-tool.vis-map-services',[
              */
             getLayers: function(map) {
                 function mergeLayersIntoConfig() {
-                    var result = angular.copy(wms_layer_config);
+                    var result = angular.copy(wms_layer_config),
+                        base_description = result.description;
                     result.categories.forEach(function(category){
                         // layers can inherit config like filters (if all in common) from
                         // the base category
                         var base_config = angular.copy(category);
                         delete base_config.name;
                         delete base_config.layers;
+                        base_config.description = base_config.description||base_description;
                         category.layers = category.layers.map(function(l){
                             return new WmsMapLayer(map,angular.extend(angular.copy(base_config),wms_layer_defs[l.name],l));
                         });
@@ -4417,6 +4421,9 @@ angular.module('npn-viz-tool.vis-map-services',[
                 layer_def.extent.current = layer_def.extent.values.length ? layer_def.extent.values[layer_def.extent.values.length-1] : undefined;
             }
         }
+        if(layer_def.description) {
+            layer_def.$description = $sce.trustAsHtml(layer_def.description);
+        }
         var wmsArgs = {
             service: 'WMS',
             request: 'GetMap',
@@ -4496,6 +4503,16 @@ angular.module('npn-viz-tool.vis-map-services',[
              */
             currentYearOnly: function() {
                 return typeof(layer_def.current_year_only) === 'boolean' ? layer_def.current_year_only : false;
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @name  getDescription
+             * @description Get the layer description, if any.
+             * @returns {string} The description.
+             */
+            getDescription: function() {
+                return layer_def.description;
             },
             /**
              * @ngdoc method
@@ -5335,7 +5352,7 @@ angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", functi
     "        <map-vis-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></map-vis-year-control>\n" +
     "    </div>\n" +
     "    <map-vis-opacity-slider layer=\"selection.layer\"></map-vis-opacity-slider>\n" +
-    "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
+    "    <p ng-if=\"selection.layer.$description\" ng-bind-html=\"selection.layer.$description\"></p>\n" +
     "</div>");
 }]);
 
