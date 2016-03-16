@@ -834,8 +834,12 @@ angular.module('npn-viz-tool.vis-map',[
         // This is an array of species/phenohpase selections which is passed to other directives
         // to manipulate.
         $scope.speciesSelections = [];
-        $scope.$watchCollection('speciesSelections',function(speciesSelections) {
-            $log.debug('speciesSelections',speciesSelections);
+        $scope.$watchCollection('speciesSelections',function(newValue,oldValue) {
+            $log.debug('speciesSelections',newValue,oldValue);
+            if(oldValue && newValue && oldValue.length > newValue.length && $scope.results.markers.length) {
+                // a filter has been removed and there are actually some markers on the map, re-visualize
+                $scope.plotMarkers();
+            }
         });
 
         $scope.markerEvents = {
