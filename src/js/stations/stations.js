@@ -57,9 +57,11 @@ angular.module('npn-viz-tool.stations',[
                         html += '<label>Visualize Site Data</label>';
                         html += '<ul class="list-unstyled">';
                         ChartService.getVisualizations().forEach(function(vis){
-                            html += '<li>';
-                            html += '<a id="'+vis.controller+'" href="#">'+vis.title+'</a>';
-                            html += '</li>';
+                            if(typeof(vis.singleStation) === 'undefined' || vis.singleStation) {
+                                html += '<li>';
+                                html += '<a id="'+vis.controller+'" href="#">'+vis.title+'</a>';
+                                html += '</li>';
+                            }
                         });
                         html += '</ul></div>';
                         var visLinks = $.parseHTML(html)[0];

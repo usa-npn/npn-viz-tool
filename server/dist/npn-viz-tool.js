@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 0.1.0 - 2016-03-02
+ * Version: 0.1.0 - 2016-03-16
  */
 
 /**
@@ -6223,9 +6223,11 @@ angular.module('npn-viz-tool.stations',[
                         html += '<label>Visualize Site Data</label>';
                         html += '<ul class="list-unstyled">';
                         ChartService.getVisualizations().forEach(function(vis){
-                            html += '<li>';
-                            html += '<a id="'+vis.controller+'" href="#">'+vis.title+'</a>';
-                            html += '</li>';
+                            if(typeof(vis.singleStation) === 'undefined' || vis.singleStation) {
+                                html += '<li>';
+                                html += '<a id="'+vis.controller+'" href="#">'+vis.title+'</a>';
+                                html += '</li>';
+                            }
                         });
                         html += '</ul></div>';
                         var visLinks = $.parseHTML(html)[0];
@@ -6522,7 +6524,8 @@ angular.module('npn-viz-tool.vis',[
             title: 'Gridded Data',
             controller: 'MapVisCtrl',
             template: 'js/mapvis/mapvis.html',
-            description: 'Prelim research...  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac lectus nec augue cursus lacinia. Praesent sit amet eros nisi.'
+            description: 'Prelim research...  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac lectus nec augue cursus lacinia. Praesent sit amet eros nisi.',
+            singleStation: false // doesn't make sense for a single station visualization.
         }],
         visualizeSingleStationId;
     function filterSuspectSummaryData (d){
