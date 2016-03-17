@@ -82,12 +82,12 @@ angular.module('npn-viz-tool.vis-map-services',[
  *
  * @example
  * <pre>
- * $filter('legendGddUnits')(10.0) // 10 GDD Units
+ * $filter('legendGddUnits')(10.0) // 10 GDD
  * </pre>
  */
 .filter('legendGddUnits',['numberFilter',function(numberFilter){
     return function(n) {
-        return numberFilter(n,0)+ ' GDD Units';
+        return numberFilter(n,0)+ ' GDD';
     };
 }])
 /**
@@ -122,7 +122,7 @@ angular.module('npn-viz-tool.vis-map-services',[
             return 'No Difference';
         }
         var lt = n < 0;
-        return numberFilter(Math.abs(n),0)+(includeUnits ? ' GDD Units ' : ' ')+(lt ? '<' : '>') +' Avg';
+        return numberFilter(Math.abs(n),0)+(includeUnits ? ' GDD ' : ' ')+(lt ? '<' : '>') +' Avg';
     };
 }])
 /**
