@@ -46,7 +46,16 @@ angular.module('npn-viz-tool.map',[
                         zoomControlOptions: {
                             style: maps.ZoomControlStyle.SMALL,
                             position: maps.ControlPosition.RIGHT_TOP
-                        }
+                        },
+                        styles: [{
+                            featureType: 'poi',
+                            elementType: 'labels',
+                            stylers: [{visibility:'off'}]
+                        },{
+                            featureType: 'transit.station',
+                            elementType: 'labels',
+                            stylers: [{visibility:'off'}]
+                        }]
                     },
                     events: {
                         center_changed: boundsRestrictor.center_changed

@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 0.1.0 - 2016-03-16
+ * Version: 0.1.0 - 2016-03-17
  */
 
 /**
@@ -2780,7 +2780,16 @@ angular.module('npn-viz-tool.map',[
                         zoomControlOptions: {
                             style: maps.ZoomControlStyle.SMALL,
                             position: maps.ControlPosition.RIGHT_TOP
-                        }
+                        },
+                        styles: [{
+                            featureType: 'poi',
+                            elementType: 'labels',
+                            stylers: [{visibility:'off'}]
+                        },{
+                            featureType: 'transit.station',
+                            elementType: 'labels',
+                            stylers: [{visibility:'off'}]
+                        }]
                     },
                     events: {
                         center_changed: boundsRestrictor.center_changed
@@ -5362,6 +5371,7 @@ angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", functi
     "        <map-vis-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></map-vis-year-control>\n" +
     "    </div>\n" +
     "    <map-vis-opacity-slider layer=\"selection.layer\"></map-vis-opacity-slider>\n" +
+    "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
     "    <p ng-if=\"selection.layer.$description\" ng-bind-html=\"selection.layer.$description\"></p>\n" +
     "</div>");
 }]);
