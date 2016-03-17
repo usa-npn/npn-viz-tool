@@ -287,6 +287,15 @@ angular.module('npn-viz-tool.vis-map',[
                 label_cell(d3.select(cells[0]),data[0].label,'start');
                 label_cell(d3.select(cells[mid_idx]),data[mid_idx].label,'middle');
                 label_cell(d3.select(cells[cells.length-1]),data[data.length-1].label,'end');
+
+                if(legend.ldef.legend_units) {
+                    svg.append('g')
+                       .append('text')
+                       .attr('dx',0)
+                       .attr('dy',75)
+                       .attr('text-anchor','start')
+                       .text(legend.ldef.legend_units);
+                }
             }
             $scope.$watch('legend',redraw);
             $($window).bind('resize',redraw);

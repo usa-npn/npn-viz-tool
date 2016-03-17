@@ -117,12 +117,12 @@ angular.module('npn-viz-tool.vis-map-services',[
  * Formats legend numbers for agdd anomaly layers.
  */
 .filter('legendAgddAnomaly',['numberFilter',function(numberFilter){
-    return function(n) {
+    return function(n,includeUnits) {
         if(n === 0) {
             return 'No Difference';
         }
         var lt = n < 0;
-        return numberFilter(Math.abs(n),0)+' GDD Units '+(lt ? '<' : '>') +' Avg';
+        return numberFilter(Math.abs(n),0)+(includeUnits ? ' GDD Units ' : ' ')+(lt ? '<' : '>') +' Avg';
     };
 }])
 /**
@@ -216,7 +216,9 @@ angular.module('npn-viz-tool.vis-map-services',[
  * Each category or layer can also have the following (optional) properties:
  * <ul>
  *   <li><code>legend_label_filter</code> - specifies an angular filter and optional arguments used to translate point data into strings for legends and map info windows.</li>
+ *   <li><code>gridded_label_filter</code> - specifies an angular filter and optional arguments used to translate point data into strings for point data map info windows (if not specified then <code>legend_label_filter</code> will be used).</li>
  *   <li><code>extent_values_filter</code> - specifies an angualr filter and optional arguments used to filter extent values for layers.</li>
+ *   <li><code>legend_units</code> - specifies a string that should be placed on the legend below the cell labels (units separated from legend labels).</li>
  *   <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true).</li>
  *   <li>code>current_year_only</code> - if <code>supports_data</code> is true (or unspecified) the indicates that a given layer should only support plotting of data for the year of the currently selected extent on it (default false).</li>
  *   <li><code>description</code> - contains a description of a given layer.  this value can also be specified at the top level so that it applies to all layers in all categories (as the default).</li>
@@ -342,18 +344,19 @@ angular.module('npn-viz-tool.vis-map-services',[
      * A legend object associated with a specific map layer.
      */
     function WmsMapLegend(color_map,ldef) {
-        var lformat = ldef.legend_label_filter ?
-                (function(){
-                    var filter = $filter(ldef.legend_label_filter.name);
-                    return function(l,q) {
-                        var args = [q];
-                        if(ldef.legend_label_filter.args) {
-                            args = args.concat(ldef.legend_label_filter.args);
-                        }
-                        return filter.apply(undefined, args);
-                    };
-                })() : angular.identity,
-                entries,data;
+        function get_filter(filter_def) {
+            var filter = $filter(filter_def.name);
+            return function(l,q) {
+                var args = [q];
+                if(filter_def.args) {
+                    args = args.concat(filter_def.args);
+                }
+                return filter.apply(undefined, args);
+            };
+        }
+        var lformat = ldef.legend_label_filter ? get_filter(ldef.legend_label_filter) : angular.identity,
+            gformat = ldef.gridded_label_filter ? get_filter(ldef.gridded_label_filter) : undefined,
+            entries,data;
         entries = color_map.find('ColorMapEntry');
         if(entries.length === 0) {
             entries = color_map.find('sld\\:ColorMapEntry');
@@ -372,6 +375,7 @@ angular.module('npn-viz-tool.vis-map-services',[
         },[]);
         this.ldef = ldef;
         this.lformat = lformat;
+        this.gformat = gformat;
         this.title_data = data[0];
         this.data = data.slice(1);
         this.length = this.data.length;
@@ -445,7 +449,7 @@ angular.module('npn-viz-tool.vis-map-services',[
      * @returns {string} point data formatted.
      */
     WmsMapLegend.prototype.formatPointData = function(q) {
-        return this.lformat(q,q);
+        return (this.gformat||this.lformat)(q,q);
     };
     /**
      * @ngdoc method

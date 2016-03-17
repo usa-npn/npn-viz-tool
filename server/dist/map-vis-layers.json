@@ -37,12 +37,18 @@
         "name": "AGDD Anomaly Map",
         "supports_data": false,
         "legend_label_filter": {
-            "name": "legendAgddAnomaly"
+            "name": "legendAgddAnomaly",
+            "args": [false]
+        },
+        "gridded_label_filter": {
+            "name": "legendAgddAnomaly",
+            "args": [true]
         },
         "extent_values_filter": {
             "name": "extentDates",
             "args": [null,"today"]
         },
+        "legend_units" : "GDD Units",
         "layers":[{
                 "title": "32 GDD Units",
                 "name": "gdd:agdd_anomaly"
