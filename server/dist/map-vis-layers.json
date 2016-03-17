@@ -9,6 +9,7 @@
         "legend_label_filter": {
             "name": "legendGddUnits"
         },
+        "legend_delimiter_every" : 2000,
         "layers":[{
                 "title": "32 GDD Units",
                 "name": "gdd:30yr_avg_agdd"
@@ -26,6 +27,7 @@
             "name": "extentDates",
             "args": [null,"today"]
         },
+        "legend_delimiter_every" : 2000,
         "layers":[{
                 "title": "32 GDD Units",
                 "name": "gdd:agdd"
@@ -48,7 +50,8 @@
             "name": "extentDates",
             "args": [null,"today"]
         },
-        "legend_units" : "GDD Units",
+        "legend_units" : "GDD",
+        "legend_delimiter_every" : 100,
         "layers":[{
                 "title": "32 GDD Units",
                 "name": "gdd:agdd_anomaly"

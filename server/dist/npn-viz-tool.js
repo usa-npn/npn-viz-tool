@@ -3110,31 +3110,71 @@ angular.module('npn-viz-tool.vis-map',[
                     height = parseFloat(svg.style('height').replace('px','')),
                     data = legend.getData(),
                     cell_width = width/data.length,
-                    cell_height = 30;
+                    cell_height = 30,
+                    top_pad = 2;
                 $log.debug('svg dimensions',width,height);
                 $log.debug('legend cell width',cell_width);
 
-                var g = svg.append('g');
-                g.selectAll('g.cell')
+                var g = svg.append('g'),
+                    cell = g.selectAll('g.cell')
                  .data(data)
                  .enter()
                  .append('g')
                  .attr('class','cell')
-                 .attr('transform',function(d,i) { return 'translate('+(i*cell_width)+',0)'; })
+                 .attr('transform',function(d,i) { return 'translate('+(i*cell_width)+','+top_pad+')'; })
                  .append('rect')
                  .attr('height',cell_height)
                  .attr('width',cell_width)
                  .style('stroke','black')
                  .style('stroke-width','1px')
-                 .style('fill',function(d,i) { return d.color; })
-                 .append('title')
+                 .style('fill',function(d,i) { return d.color; });
+
+
+                if(legend.ldef.legend_delimiter_every) {
+                    var every = legend.ldef.legend_delimiter_every,
+                        first_every = false,
+                        running_total = 0,
+                        separators = data.map(function(d,i){
+                            if((i+1) === data.length) {
+                                return true;
+                            }
+                            running_total += (data[i+1].quantity - data[i].quantity);
+                            if(running_total >= every) {
+                                running_total = 0;
+                                return true;
+                            }
+                            return false;
+                        }),
+                        top_bottom = [(cell_width+1),cell_height,(cell_width+1),cell_height].join(','), //{ stroke-dasharray: $w,$h,$w,$h }
+                        top_right_bottom = [((cell_width*2)+cell_height),cell_height].join(','), //{ stroke-dasharray: (($w*2)+$h),$h }
+                        top_left_bottom = [(cell_width+1),cell_height,(cell_width+cell_height+1),0].join(','); ////{ stroke-dasharray: $w,$h,($w+$h),0 }
+
+                    $log.debug('legend_delimiter_every',every);
+                    cell.style('stroke-dasharray',function(d,i){
+                        if(i === 0) {
+                            return separators[i] ? undefined : top_left_bottom;
+                        }
+                        return separators[i] ? top_right_bottom : top_bottom;
+                    })
+                    // top_bottom removes the left/right borders which leaves a little whitespace
+                    // which looks odd so in cases where there is no right border increase a cell's width
+                    // by 1px to cover that gap
+                    .attr('width',function(d,i){
+                        var w = parseFloat(d3.select(this).attr('width'));
+                        if(i === 0) {
+                            return separators[i] ? w : w+1;
+                        }
+                        return separators[i] ? w : w+1;
+                    });
+                }
+                cell.append('title')
                  .text(function(d) { return d.label; });
 
                 var tick_length = 5,
                     tick_padding = 3;
 
                 function label_cell(cell,label,anchor) {
-                    var tick_start = (cell_height+tick_padding);
+                    var tick_start = (top_pad+cell_height+tick_padding);
                     cell.append('line')
                         .attr('x1',(cell_width/2))
                         .attr('y1',tick_start)
@@ -3158,7 +3198,7 @@ angular.module('npn-viz-tool.vis-map',[
                     svg.append('g')
                        .append('text')
                        .attr('dx',0)
-                       .attr('dy',75)
+                       .attr('dy',75+top_pad)
                        .attr('text-anchor','start')
                        .text(legend.ldef.legend_units);
                 }
