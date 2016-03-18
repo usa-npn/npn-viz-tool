@@ -9,12 +9,13 @@
         "legend_label_filter": {
             "name": "legendGddUnits"
         },
+        "legend_units" : "GDD",
         "legend_delimiter_every" : 2000,
         "layers":[{
-                "title": "32 GDD Units",
+                "title": "32 GDD",
                 "name": "gdd:30yr_avg_agdd"
             },{
-                "title": "50 GDD Units",
+                "title": "50 GDD",
                 "name": "gdd:30yr_avg_agdd_50f"
             }]
     },{
@@ -27,12 +28,13 @@
             "name": "extentDates",
             "args": [null,"today"]
         },
+        "legend_units" : "GDD",
         "legend_delimiter_every" : 2000,
         "layers":[{
-                "title": "32 GDD Units",
+                "title": "32 GDD",
                 "name": "gdd:agdd"
             },{
-                "title": "50 GDD Units",
+                "title": "50 GDD",
                 "name": "gdd:agdd_50f"
             }]
     },{
@@ -53,10 +55,10 @@
         "legend_units" : "GDD",
         "legend_delimiter_every" : 100,
         "layers":[{
-                "title": "32 GDD Units",
+                "title": "32 GDD",
                 "name": "gdd:agdd_anomaly"
             },{
-                "title": "50 GDD Units",
+                "title": "50 GDD",
                 "name": "gdd:agdd_anomaly_50f"
             }]
     },{

@@ -300,6 +300,13 @@ angular.module('npn-viz-tool.vis-map',[
                         }
                         return separators[i] ? w : w+1;
                     });
+                    g.selectAll('g.cell').append('line')
+                         .attr('stroke',function(d,i){ return separators[i] ? 'black' : 'none'; })
+                         .attr('stroke-width', 2)
+                         .attr('x1',cell_width-1)
+                         .attr('x2',cell_width-1)
+                         .attr('y1',0)
+                         .attr('y2',cell_height);
                 }
                 cell.append('title')
                  .text(function(d) { return d.label; });
@@ -331,9 +338,9 @@ angular.module('npn-viz-tool.vis-map',[
                 if(legend.ldef.legend_units) {
                     svg.append('g')
                        .append('text')
-                       .attr('dx',0)
+                       .attr('dx',(width/2))
                        .attr('dy',75+top_pad)
-                       .attr('text-anchor','start')
+                       .attr('text-anchor','middle')
                        .text(legend.ldef.legend_units);
                 }
             }
