@@ -7,7 +7,12 @@
         "name": "30-year Average AGDD",
         "supports_data": false,
         "legend_label_filter": {
-            "name": "legendGddUnits"
+            "name": "legendGddUnits",
+            "args": [false]
+        },
+        "gridded_label_filter": {
+            "name": "legendGddUnits",
+            "args": [true]
         },
         "legend_units" : "GDD",
         "legend_delimiter_every" : 2000,
@@ -22,7 +27,12 @@
         "name": "Current Year AGDD",
         "supports_data": false,
         "legend_label_filter": {
-            "name": "legendGddUnits"
+            "name": "legendGddUnits",
+            "args": [false]
+        },
+        "gridded_label_filter": {
+            "name": "legendGddUnits",
+            "args": [true]
         },
         "extent_values_filter": {
             "name": "extentDates",

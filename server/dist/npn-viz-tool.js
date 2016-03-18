@@ -4088,8 +4088,8 @@ angular.module('npn-viz-tool.vis-map-services',[
  * </pre>
  */
 .filter('legendGddUnits',['numberFilter',function(numberFilter){
-    return function(n) {
-        return numberFilter(n,0)+ ' GDD';
+    return function(n,includeUnits) {
+        return numberFilter(n,0)+(includeUnits ? ' GDD' : '');
     };
 }])
 /**
