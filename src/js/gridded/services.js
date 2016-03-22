@@ -1,11 +1,11 @@
 /**
  * @ngdoc overview
- * @name npn-viz-tool.vis-map-services
+ * @name npn-viz-tool.gridded-services
  * @description
  *
  * Service support for gridded data map visualization.
  */
-angular.module('npn-viz-tool.vis-map-services',[
+angular.module('npn-viz-tool.gridded-services',[
 ])
 .service('DateExtentUtil',[function(){
     var FMT_REGEX = /^(\d\d\d\d)-0?(\d+)-0?(\d+)/;
@@ -20,9 +20,349 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
 }])
 /**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:map-vis-opacity-slider
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Dynamically controls the opacity of map tiles.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
+ */
+.directive('griddedOpacitySlider',['$log','$timeout','WmsService',function($log,$timeout,WmsService) {
+    return {
+        restrict: 'E',
+        template: '<div ng-if="layer" class="form-group"><label for="griddedOpacitySlider" style="margin-bottom: 15px;">Opacity</label><input ng-model="selection.opacity" type="text" id="griddedOpacitySlider" slider options="options" /></div>',
+        scope: {
+            layer: '='
+        },
+        link: function($scope) {
+
+            $scope.selection = {
+                opacity: 75
+            };
+            $scope.options = {
+                from: 1,
+                to: 100,
+                step: 1,
+                dimension: ' %'
+            };
+            function updateOpacity() {
+                if($scope.layer) {
+                    $scope.layer.googleLayer.setOpacity($scope.selection.opacity/100.0);
+                }
+            }
+            $scope.$watch('layer.extent.current',updateOpacity);
+            $scope.$watch('selection.opacity',updateOpacity);
+            $scope.$watch('layer',updateOpacity);
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:map-vis-doy-control
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * control for day of year extents.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
+ */
+.directive('griddedDoyControl',['$log','thirtyYearAvgDayOfYearFilter',function($log,thirtyYearAvgDayOfYearFilter){
+    var BASE_YEAR = thirtyYearAvgDayOfYearFilter(1,true).getFullYear(),
+        ONE_DAY = (24*60*60*1000),
+        MONTHS = d3.range(0,12).map(function(m) { return new Date(BASE_YEAR,m); });
+    function getDaysInMonth(date) {
+        var month = date.getMonth(),
+            tmp;
+        if(month === 11) {
+            return 31;
+        }
+        tmp = new Date(date.getTime());
+        tmp.setDate(1);
+        tmp.setMonth(tmp.getMonth()+1);
+        tmp.setTime(tmp.getTime()-ONE_DAY);
+        $log.debug('last day of month '+(month+1)+' is '+tmp);
+        return tmp.getDate();
+    }
+    return {
+        restrict: 'E',
+        templateUrl: 'js/gridded/doy-control.html',
+        scope: {
+            layer: '='
+        },
+        link: function($scope) {
+            $scope.months = MONTHS;
+            var currentDate;
+            $scope.$watch('layer',function(layer) {
+                currentDate = thirtyYearAvgDayOfYearFilter($scope.layer.extent.current.value,true);
+                $scope.selection = {
+                    month: MONTHS[currentDate.getMonth()],
+                    date: currentDate.getDate()
+                };
+            });
+            function dateWatch(date) {
+                $scope.selection.month.setDate(date);
+                // this feels a little hoakey matching on label but...
+                var label = thirtyYearAvgDayOfYearFilter($scope.selection.month);
+                $log.debug('doy-control:date '+label);
+                $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,v){
+                    return current||(v.label === label ? v : undefined);
+                },undefined);
+            }
+            $scope.$watch('selection.month',function(month) {
+                $log.debug('doy-control:month '+(month.getMonth()+1),month);
+                $scope.dates = d3.range(1,getDaysInMonth(month)+1);
+                if(currentDate) {
+                    currentDate = undefined; // ignore layer watch init'ed date
+                } else if($scope.selection.date === 1) {
+                    dateWatch(1); // month change without date change, need to force the extent to update.
+                } else {
+                    $scope.selection.date = 1;
+                }
+            });
+            $scope.$watch('selection.date',dateWatch);
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:map-vis-year-control
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Control for year extents.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
+ */
+.directive('griddedYearControl',['$log',function($log){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/gridded/year-control.html',
+        scope: {
+            layer: '='
+        },
+        link: function($scope) {
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:map-vis-date-control
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Control for date extents.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
+ */
+.directive('griddedDateControl',['$log','dateFilter',function($log,dateFilter){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/gridded/date-control.html',
+        scope: {
+            layer: '='
+        },
+        link: function($scope) {
+            // TODO - hide the today/clear buttons
+            $scope.selection = $scope.layer.extent.current.date;
+            $scope.minDate = $scope.layer.extent.values[0].date;
+            $scope.maxDate = $scope.layer.extent.values[$scope.layer.extent.values.length-1].date;
+            $log.debug('minDate',$scope.minDate);
+            $log.debug('maxDate',$scope.maxDate);
+            $scope.open = function() {
+                $scope.isOpen = true;
+            };
+            $scope.$watch('selection',function(date) {
+                $log.debug('selection',date);
+                var fmt = 'longDate',
+                    formattedDate = dateFilter(date,fmt);
+                $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,value){
+                    return current||(formattedDate === dateFilter(value.date,fmt) ? value : undefined);
+                },undefined);
+            });
+        }
+    };
+}])
+
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:map-vis-layer-control
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Directive to control categorized selection of WMS layers.  This directive
+ * shares the parent scope.
+ */
+.directive('griddedLayerControl',['$log',function($log){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/gridded/layer-control.html',
+        link: function($scope) {
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:map-vis-legend
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Directive to dynamically display an interactive legend for a seleted map layer.
+ *
+ * @scope
+ * @param {object} legend The legend of the currently selected layer.
+ */
+.directive('griddedLegend',['$log','$window',function($log,$window){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/gridded/legend.html',
+        scope: {
+            legend: '='
+        },
+        link: function($scope,$element) {
+            function redraw() {
+                var legend = $scope.legend,
+                    svg = d3.select('.legend');
+
+                svg.selectAll('g').remove(); // clean slate
+                if(!legend) {
+                    return;
+                }
+                $log.debug('legend.title',legend.getTitle());
+                $log.debug('legend.length',legend.length);
+                $log.debug('legend.colors',legend.getColors());
+                $log.debug('legend.quantities',legend.getQuantities());
+                $log.debug('legend.labels',legend.getLabels());
+                $log.debug('legend.original_labels',legend.getOriginalLabels());
+
+                var width = parseFloat(svg.style('width').replace('px','')),
+                    height = parseFloat(svg.style('height').replace('px','')),
+                    data = legend.getData(),
+                    cell_width = width/data.length,
+                    cell_height = 30,
+                    top_pad = 2;
+                $log.debug('svg dimensions',width,height);
+                $log.debug('legend cell width',cell_width);
+
+                var g = svg.append('g'),
+                    cell = g.selectAll('g.cell')
+                 .data(data)
+                 .enter()
+                 .append('g')
+                 .attr('class','cell')
+                 .attr('transform',function(d,i) { return 'translate('+(i*cell_width)+','+top_pad+')'; })
+                 .append('rect')
+                 .attr('height',cell_height)
+                 .attr('width',cell_width)
+                 .style('stroke','black')
+                 .style('stroke-width','1px')
+                 .style('fill',function(d,i) { return d.color; });
+
+
+                if(legend.ldef.legend_delimiter_every) {
+                    var every = legend.ldef.legend_delimiter_every,
+                        first_every = false,
+                        running_total = 0,
+                        separators = data.map(function(d,i){
+                            if((i+1) === data.length) {
+                                return true;
+                            }
+                            running_total += (data[i+1].quantity - data[i].quantity);
+                            if(running_total >= every) {
+                                running_total = 0;
+                                return true;
+                            }
+                            return false;
+                        }),
+                        top_bottom = [(cell_width+1),cell_height,(cell_width+1),cell_height].join(','), //{ stroke-dasharray: $w,$h,$w,$h }
+                        top_right_bottom = [((cell_width*2)+cell_height),cell_height].join(','), //{ stroke-dasharray: (($w*2)+$h),$h }
+                        top_left_bottom = [(cell_width+1),cell_height,(cell_width+cell_height+1),0].join(','); ////{ stroke-dasharray: $w,$h,($w+$h),0 }
+
+                    $log.debug('legend_delimiter_every',every);
+                    cell.style('stroke-dasharray',function(d,i){
+                        if(i === 0) {
+                            return separators[i] ? undefined : top_left_bottom;
+                        }
+                        return separators[i] ? top_right_bottom : top_bottom;
+                    })
+                    // top_bottom removes the left/right borders which leaves a little whitespace
+                    // which looks odd so in cases where there is no right border increase a cell's width
+                    // by 1px to cover that gap
+                    .attr('width',function(d,i){
+                        var w = parseFloat(d3.select(this).attr('width'));
+                        if(i === 0) {
+                            return separators[i] ? w : w+1;
+                        }
+                        return separators[i] ? w : w+1;
+                    });
+                    g.selectAll('g.cell').append('line')
+                         .attr('stroke',function(d,i){ return separators[i] ? 'black' : 'none'; })
+                         .attr('stroke-width', 2)
+                         .attr('x1',cell_width-1)
+                         .attr('x2',cell_width-1)
+                         .attr('y1',0)
+                         .attr('y2',cell_height);
+                }
+                cell.append('title')
+                 .text(function(d) { return d.label; });
+
+                var tick_length = 5,
+                    tick_padding = 3;
+
+                function label_cell(cell,label,anchor) {
+                    var tick_start = (top_pad+cell_height+tick_padding);
+                    cell.append('line')
+                        .attr('x1',(cell_width/2))
+                        .attr('y1',tick_start)
+                        .attr('x2',(cell_width/2))
+                        .attr('y2',tick_start+tick_length)
+                        .attr('stroke','black')
+                        .attr('stroke-width','1');
+                    cell.append('text')
+                        .attr('dx',(cell_width/2))
+                        .attr('dy','3.8em'/*cell_height+tick_length+(2*tick_padding)*/) // need to know line height of text
+                        .style('text-anchor',anchor)
+                        .text(label);
+                }
+                var cells = g.selectAll('g.cell')[0],
+                    mid_idx = Math.floor(cells.length/2);
+                label_cell(d3.select(cells[0]),data[0].label,'start');
+                label_cell(d3.select(cells[mid_idx]),data[mid_idx].label,'middle');
+                label_cell(d3.select(cells[cells.length-1]),data[data.length-1].label,'end');
+
+                if(legend.ldef.legend_units) {
+                    svg.append('g')
+                       .append('text')
+                       .attr('dx',(width/2))
+                       .attr('dy',75+top_pad)
+                       .attr('text-anchor','middle')
+                       .text(legend.ldef.legend_units);
+                }
+            }
+            $scope.$watch('legend',redraw);
+            $($window).bind('resize',redraw);
+            $scope.$on('$destroy',function(){
+                $log.debug('legend removing resize handler');
+                $($window).unbind('resize',redraw);
+            });
+        }
+    };
+}])
+/**
  * @ngdoc filter
- * @name npn-viz-tool.vis-map-services:thirtyYearAvgDayOfYear
- * @module npn-viz-tool.vis-map-services
+ * @name npn-viz-tool.gridded-services:thirtyYearAvgDayOfYear
+ * @module npn-viz-tool.gridded-services
  * @description
  *
  * Filter that translates a doy value (number) into date text of 'Month day'
@@ -43,8 +383,8 @@ angular.module('npn-viz-tool.vis-map-services',[
 }])
 /**
  * @ngdoc filter
- * @name npn-viz-tool.vis-map-services:legendDoy
- * @module npn-viz-tool.vis-map-services
+ * @name npn-viz-tool.gridded-services:legendDoy
+ * @module npn-viz-tool.gridded-services
  * @description
  *
  * Simplified version of thirtyYearAvgDayOfYear that simply takes a number day of year
@@ -74,8 +414,8 @@ angular.module('npn-viz-tool.vis-map-services',[
 }])
 /**
  * @ngdoc filter
- * @name npn-viz-tool.vis-map-services:legendGddUnits
- * @module npn-viz-tool.vis-map-services
+ * @name npn-viz-tool.gridded-services:legendGddUnits
+ * @module npn-viz-tool.gridded-services
  * @description
  *
  * Formats legend numbers for gdd units.
@@ -92,8 +432,8 @@ angular.module('npn-viz-tool.vis-map-services',[
 }])
 /**
  * @ngdoc filter
- * @name npn-viz-tool.vis-map-services:legendDegrees
- * @module npn-viz-tool.vis-map-services
+ * @name npn-viz-tool.gridded-services:legendDegrees
+ * @module npn-viz-tool.gridded-services
  * @description
  *
  * Formats legend numbers in degrees, assumes F if no unit supplied.
@@ -110,8 +450,8 @@ angular.module('npn-viz-tool.vis-map-services',[
 }])
 /**
  * @ngdoc filter
- * @name npn-viz-tool.vis-map-services:legendAgddAnomaly
- * @module npn-viz-tool.vis-map-services
+ * @name npn-viz-tool.gridded-services:legendAgddAnomaly
+ * @module npn-viz-tool.gridded-services
  * @description
  *
  * Formats legend numbers for agdd anomaly layers.
@@ -127,8 +467,8 @@ angular.module('npn-viz-tool.vis-map-services',[
 }])
 /**
  * @ngdoc filter
- * @name npn-viz-tool.vis-map-services:legendSixAnomaly
- * @module npn-viz-tool.vis-map-services
+ * @name npn-viz-tool.gridded-services:legendSixAnomaly
+ * @module npn-viz-tool.gridded-services
  * @description
  *
  * Formats legend numbers for spring index anomaly layers
@@ -145,8 +485,8 @@ angular.module('npn-viz-tool.vis-map-services',[
 }])
 /**
  * @ngdoc filter
- * @name npn-viz-tool.vis-map-services:extentDates
- * @module npn-viz-tool.vis-map-services
+ * @name npn-viz-tool.gridded-services:extentDates
+ * @module npn-viz-tool.gridded-services
  * @description
  *
  * Filters an array of extent dates relative to days.
@@ -189,8 +529,8 @@ angular.module('npn-viz-tool.vis-map-services',[
 }])
 /**
  * @ngdoc service
- * @name npn-viz-tool.vis-map-services:WmsService
- * @module npn-viz-tool.vis-map-services
+ * @name npn-viz-tool.gridded-services:WmsService
+ * @module npn-viz-tool.gridded-services
  * @description
  *
  * Interacts with the NPN geoserver WMS instance to supply map layer data.
@@ -287,14 +627,14 @@ angular.module('npn-viz-tool.vis-map-services',[
             baseUrl: WMS_BASE_URL,
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WmsService
+             * @methodOf npn-viz-tool.gridded-services:WmsService
              * @name  getLayers
              * @description
              *
              * Get the layers supported by the WMS service (work in progress, list will be a categorized subset eventually).
              *
              * @param {google.maps.Map} map The base map the fetched layers will be added to.
-             * @return {promise} A promise that will be resolved with the layers, or rejected.  The layers will be instances of {@link npn-viz-tool.vis-map-services:WmsMapLayer}
+             * @return {promise} A promise that will be resolved with the layers, or rejected.  The layers will be instances of {@link npn-viz-tool.gridded-services:WmsMapLayer}
              *                   and merged into the in categories as defined by <code>map-vis-layers.json</code>.
              */
             getLayers: function(map) {
@@ -337,8 +677,8 @@ angular.module('npn-viz-tool.vis-map-services',[
 
     /**
      * @ngdoc object
-     * @name npn-viz-tool.vis-map-services:WmsMapLegend
-     * @module  npn-viz-tool.vis-map-services
+     * @name npn-viz-tool.gridded-services:WmsMapLegend
+     * @module  npn-viz-tool.gridded-services
      * @description
      *
      * A legend object associated with a specific map layer.
@@ -382,7 +722,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     }
     /**
      * @ngdoc method
-     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
      * @name  getData
      * @description Get the raw legend cell data.
      * @returns {Array} The cell data.
@@ -392,7 +732,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
     /**
      * @ngdoc method
-     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
      * @name  getTitle
      * @description Get the legend title (from the original zero-index cell)
      * @returns {string} The legend title.
@@ -402,7 +742,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
     /**
      * @ngdoc method
-     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
      * @name  getColors
      * @description Get the colors for the cells.
      * @returns {Array} Array of string hex colors.
@@ -412,7 +752,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
     /**
      * @ngdoc method
-     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
      * @name  getQuantities
      * @description Get numberic quantities for the cells.
      * @returns {Array} Array of numbers.
@@ -422,7 +762,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
     /**
      * @ngdoc method
-     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
      * @name  getLabels
      * @description Get cell labels (translated).
      * @returns {Array} Array of strings.
@@ -432,7 +772,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
     /**
      * @ngdoc method
-     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
      * @name  getOriginalLabels
      * @description Get cell labels (originals).
      * @returns {Array} Array of strings.
@@ -442,7 +782,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
     /**
      * @ngdoc method
-     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
      * @name  formatPointData
      * @description Translate point data for the associated layer into text.
      * @param {number} q The point data to format.
@@ -453,7 +793,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     };
     /**
      * @ngdoc method
-     * @methodOf npn-viz-tool.vis-map-services:WmsMapLegend
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
      * @name  getPointData
      * @description Get the legend cell data for a given point.
      * @param {number} q The point data to get the associated legend cell for.
@@ -475,8 +815,8 @@ angular.module('npn-viz-tool.vis-map-services',[
 
     /**
      * @ngdoc object
-     * @name npn-viz-tool.vis-map-services:WmsMapLayer
-     * @module  npn-viz-tool.vis-map-services
+     * @name npn-viz-tool.gridded-services:WmsMapLayer
+     * @module  npn-viz-tool.gridded-services
      * @description
      *
      * A map layer object associated with a specific google map.
@@ -534,14 +874,14 @@ angular.module('npn-viz-tool.vis-map-services',[
         l = angular.extend({},layer_def,{
             /**
              * @ngdoc property
-             * @propertyOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @propertyOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  googleLayer
              * @description The underlying google layer (google.maps.ImageMapType)
              */
             googleLayer: googleLayer,
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  getMap
              * @description Get the google map instance this layer is associated with.
              * @returns {google.maps.Map} The map instance.
@@ -551,7 +891,7 @@ angular.module('npn-viz-tool.vis-map-services',[
             },
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  getBounds
              * @description Get the bounds for this layer.
              * @returns {google.maps.LatLngBounds} The layer's bounds.
@@ -563,7 +903,7 @@ angular.module('npn-viz-tool.vis-map-services',[
             },
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  supportsData
              * @description Indicates whether a given layer supports data to be plotted on it or not.
              * @returns {boolean} false if the layer doesn't support data plotted on it.
@@ -573,7 +913,7 @@ angular.module('npn-viz-tool.vis-map-services',[
             },
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  currentYearOnly
              * @description Indicates whether a given layer should constrain what gets plotted on it to the currently selected year.
              * @returns {boolean} true if plotted data should be restrained.
@@ -583,7 +923,7 @@ angular.module('npn-viz-tool.vis-map-services',[
             },
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  getDescription
              * @description Get the layer description, if any.
              * @returns {string} The description.
@@ -593,10 +933,10 @@ angular.module('npn-viz-tool.vis-map-services',[
             },
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  fit
              * @description Fit the map to this layers defined bounds.
-             * @returns {npn-viz-tool.vis-map-services:WmsMapLayer} this map layer instance.
+             * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
              */
             fit: function() {
                 var bounds = l.getBounds();
@@ -607,10 +947,10 @@ angular.module('npn-viz-tool.vis-map-services',[
             },
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  on
              * @description Put this layer on the map.
-             * @returns {npn-viz-tool.vis-map-services:WmsMapLayer} this map layer instance.
+             * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
              */
             on: function() {
                 map.overlayMapTypes.push(googleLayer);
@@ -618,10 +958,10 @@ angular.module('npn-viz-tool.vis-map-services',[
             },
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  off
              * @description Take this layer off the map.
-             * @returns {npn-viz-tool.vis-map-services:WmsMapLayer} this map layer instance.
+             * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
              */
             off: function() {
                 if(map.overlayMapTypes.length) {
@@ -631,10 +971,10 @@ angular.module('npn-viz-tool.vis-map-services',[
             },
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  getLegend
              * @description Get the legend associated with this layer.
-             * @returns {promise} A promise that will be resolve with the legend when it arrives ({@link npn-viz-tool.vis-map-services:WmsMapLegend}) .
+             * @returns {promise} A promise that will be resolve with the legend when it arrives ({@link npn-viz-tool.gridded-services:WmsMapLegend}) .
              */
             getLegend: function() {
                 var def = $q.defer();
@@ -667,7 +1007,7 @@ angular.module('npn-viz-tool.vis-map-services',[
             },
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WmsMapLayer
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  getGriddedData
              * @description
              *
@@ -873,15 +1213,15 @@ angular.module('npn-viz-tool.vis-map-services',[
 }])
 /**
  * @ngdoc service
- * @name npn-viz-tool.vis-map-services:WcsService
- * @module npn-viz-tool.vis-map-services
+ * @name npn-viz-tool.gridded-services:WcsService
+ * @module npn-viz-tool.gridded-services
  * @description
  *
  * Interacts with the NPN geoserver WCS instance to supply underlying gridded data.  Loading of this service
  * extends the protypes of Number and the google.maps.LatLng class.
  *
  * <strong>Important:</strong> There should be no need to import and interact with this service directly.  Indivdual
- * layers ({@link npn-viz-tool.vis-map-services:WmsMapLayer#methods_getgriddeddata}) expose an instance based method for fetching gridded data specific to those layers which should be used instead (they
+ * layers ({@link npn-viz-tool.gridded-services:WmsMapLayer#methods_getgriddeddata}) expose an instance based method for fetching gridded data specific to those layers which should be used instead (they
  * call through to this service).
  */
 .service('WcsService',['$log','$q','$http','uiGmapGoogleMapApi',function($log,$q,$http,uiGmapGoogleMapApi){
@@ -921,7 +1261,7 @@ angular.module('npn-viz-tool.vis-map-services',[
     var service = {
             /**
              * @ngdoc method
-             * @methodOf npn-viz-tool.vis-map-services:WcsService
+             * @methodOf npn-viz-tool.gridded-services:WcsService
              * @name  getGriddedData
              * @description
              *

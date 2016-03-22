@@ -9,6 +9,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.share',
     'npn-viz-tool.export',
     'npn-viz-tool.help',
+    'npn-viz-tool.gridded',
     'uiGmapgoogle-maps'
 ])
 .directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','FilterService','HelpService',
