@@ -52,11 +52,12 @@ angular.module('npn-viz-tool.gridded',[
  *
  * Gridded layers toolbar content.
  */
-.directive('griddedControl',['$log','$rootScope','uiGmapGoogleMapApi','uiGmapIsReady','WmsService','GriddedLegendScope',function($log,$rootScope,uiGmapGoogleMapApi,uiGmapIsReady,WmsService,GriddedLegendScope){
+.directive('griddedControl',['$log','$rootScope','uiGmapGoogleMapApi','uiGmapIsReady','WmsService','GriddedLegendScope','GriddedInfoWindowHandler',function($log,$rootScope,uiGmapGoogleMapApi,uiGmapIsReady,WmsService,GriddedLegendScope,GriddedInfoWindowHandler){
     return {
         restrict: 'E',
         templateUrl: 'js/gridded/gridded-control.html',
         link: function($scope) {
+            var griddedIwHandler;
             $scope.selection = {};
             $scope.actions = {
                 reset: function() {
@@ -71,6 +72,10 @@ angular.module('npn-viz-tool.gridded',[
                 api = maps;
                 uiGmapIsReady.promise(1).then(function(instances){
                     map = instances[0].map;
+                    griddedIwHandler = new GriddedInfoWindowHandler(map);
+                    map.addListener('click',function(e){
+                        griddedIwHandler.open(e.latLng,$scope.selection.activeLayer,$scope.legend);
+                    });
                     WmsService.getLayers(map).then(function(layers){
                         $log.debug('layers',layers);
                         $scope.layers = layers;
@@ -80,7 +85,9 @@ angular.module('npn-viz-tool.gridded',[
                 });
             });
             function noInfoWindows() {
-                // TODO
+                if(griddedIwHandler) {
+                    griddedIwHandler.close();
+                }
             }
             $scope.$watch('selection.layerCategory',function(category) {
                 $log.debug('layer category change ',category);

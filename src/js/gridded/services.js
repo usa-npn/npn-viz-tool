@@ -20,6 +20,97 @@ angular.module('npn-viz-tool.gridded-services',[
     };
 }])
 /**
+ * @ngdoc object
+ * @name npn-viz-tool.gridded-services:GriddedInfoWindowHandler
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Injectable class that can be used to produce InfoWindows for a specific map given LatLng, Layer and Legend objects.
+ */
+.factory('GriddedInfoWindowHandler',['$log','$timeout','$compile','$rootScope',function($log,$timeout,$compile,$rootScope){
+    function GriddedInfoWindowHandler(map) {
+        this.map = map;
+    }
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.gridded-services:GriddedInfoWindowHandler
+     * @name  open
+     * @description
+     *
+     * Open an InfoWindow containing gridded point data if all that's necessary is supplied.
+     * This function can be called lazily without checking references, it will do nothing if any
+     * of the required input is missing (all parameters).
+     *
+     * @param {google.maps.LatLng} latLng The LatLng where the InfoWindow should be opened.
+     * @param {npn-viz-tool.gridded-services:WmsMapLayer} layer The layer the gridded data should come from.
+     * @param {npn-viz-tool.gridded-services:WmsMapLegend} legnend The legend associated with the layer that can be used for format gridded response data.
+     */
+    GriddedInfoWindowHandler.prototype.open = function(latLng,layer,legend) {
+        var map = this.map,infoWindow;
+        if(latLng && layer && legend) {
+            if(!this.infoWindow) {
+                this.infoWindow = new google.maps.InfoWindow({
+                    maxWidth: 200,
+                    content: 'contents'
+                });
+            }
+            infoWindow = this.infoWindow;
+            layer.getGriddedData(latLng)
+                .then(function(tuples){
+                    $log.debug('tuples',tuples);
+                    var html,compiled,
+                        point = tuples && tuples.length ? tuples[0] : undefined,
+                        $scope = $rootScope.$new();
+
+                    if(point === -9999 || isNaN(point)) {
+                        $log.debug('received -9999 or Nan ignoring');
+                        return;
+                    }
+                    $scope.gridded_point_data = point;
+                    if(typeof($scope.gridded_point_data) === 'undefined') {
+                        return;
+                    }
+                    $scope.legend = legend;
+                    $scope.gridded_point_legend = legend.getPointData($scope.gridded_point_data);
+                    if($scope.gridded_point_legend){
+                        $log.debug('data from legend:',$scope.gridded_point_data,$scope.gridded_point_legend);
+                        html = '<div><div id="griddedPointInfoWindow" class="ng-cloak">';
+                        html += '<div class="gridded-legend-color" style="background-color: {{gridded_point_legend.color}};">&nbsp;</div>';
+                        html += '<div class="gridded-point-data">{{legend.formatPointData(gridded_point_data)}}</div>';
+                        //html += '<pre>\n{{gridded_point_data}}\n{{gridded_point_legend}}</pre>';
+                        html += '</div></div>';
+                        compiled = $compile(html)($scope);
+                        $timeout(function(){
+                            infoWindow.setContent(compiled.html());
+                            infoWindow.setPosition(latLng);
+                            infoWindow.open(map);
+                        });
+                    } else {
+                        infoWindow.setContent(legend.formatPointData($scope.gridded_point_data));
+                        infoWindow.setPosition(latLng);
+                        infoWindow.open(map);
+                    }
+                },function() {
+                    $log.error('unable to get gridded data.');
+                });
+        }
+    };
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.gridded-services:GriddedInfoWindowHandler
+     * @name  close
+     * @description
+     *
+     * Closes any currently open InfoWindow.
+     */
+    GriddedInfoWindowHandler.prototype.close = function() {
+        if(this.infoWindow) {
+            this.infoWindow.close();
+        }
+    };
+    return GriddedInfoWindowHandler;
+}])
+/**
  * @ngdoc directive
  * @restrict E
  * @name npn-viz-tool.gridded-services:map-vis-opacity-slider

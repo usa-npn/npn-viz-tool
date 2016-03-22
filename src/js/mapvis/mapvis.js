@@ -375,11 +375,11 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Controller for the gridded data map visualization dialog.
  */
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','$http','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5',
-    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,$http,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5){
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','$http','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5','GriddedInfoWindowHandler',
+    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,$http,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5,GriddedInfoWindowHandler){
         var api,
             map,
-            infoWindow,
+            griddedIwHandler,
             markerInfoWindow,
             markerMarkup = '<div><map-vis-marker-info-window></map-vis-marker-info-window></div>',
             boundsRestrictor = RestrictedBoundsService.getRestrictor('map_vis');
@@ -412,53 +412,8 @@ angular.module('npn-viz-tool.vis-map',[
                 click: function(m,ename,args) {
                     var ev = args[0];
                     $log.debug('click',ev);
-                    if($scope.selection.activeLayer) {
-                        $scope.selection.activeLayer.getGriddedData(ev.latLng)
-                            .then(function(tuples){
-                                var html,compiled,point;
-                                $log.debug('tuples',tuples);
-                                $scope.gridded_point_data = undefined;
-                                point = tuples && tuples.length ? tuples[0] : undefined;
-                                if(point === -9999 || isNaN(point)) {
-                                    $log.debug('received -9999 or Nan ignoring');
-                                    return;
-                                }
-                                $scope.gridded_point_data = point;
-                                if(typeof($scope.gridded_point_data) === 'undefined') {
-                                    return;
-                                }
-                                if(!infoWindow) {
-                                    infoWindow = new api.InfoWindow({
-                                        maxWidth: 200,
-                                        content: 'contents'
-                                    });
-                                }
-                                $scope.gridded_point_legend = $scope.legend ? $scope.legend.getPointData($scope.gridded_point_data) : undefined;
-                                if($scope.gridded_point_legend){
-                                    $log.debug('data from legend:',$scope.gridded_point_data,$scope.gridded_point_legend);
-                                    html = '<div><div id="griddedPointInfoWindow" class="ng-cloak">';
-                                    html += '<div class="gridded-legend-color" style="background-color: {{gridded_point_legend.color}};">&nbsp;</div>';
-                                    html += '<div class="gridded-point-data">{{legend.formatPointData(gridded_point_data)}}</div>';
-                                    //html += '<pre>\n{{gridded_point_data}}\n{{gridded_point_legend}}</pre>';
-                                    html += '</div></div>';
-                                    compiled = $compile(html)($scope);
-                                    $timeout(function(){
-                                        infoWindow.setContent(compiled.html());
-                                        infoWindow.setPosition(ev.latLng);
-                                        infoWindow.open(map);
-                                    });
-                                } else {
-                                    infoWindow.setContent($scope.legend ?
-                                        $scope.legend.formatPointData($scope.gridded_point_data) :
-                                        $filter('number')($scope.gridded_point_data,1));
-                                    infoWindow.setPosition(ev.latLng);
-                                    infoWindow.open(map);
-                                }
-
-                            },function() {
-                                // TODO?
-                                $log.error('unable to get gridded data.');
-                            });
+                    if(griddedIwHandler) {
+                        griddedIwHandler.open(ev.latLng,$scope.selection.activeLayer,$scope.legend);
                     }
                 },
                 center_changed: boundsRestrictor.center_changed
@@ -468,6 +423,7 @@ angular.module('npn-viz-tool.vis-map',[
             api = maps;
             uiGmapIsReady.promise(2).then(function(instances){
                 map = instances[1].map;
+                griddedIwHandler = new GriddedInfoWindowHandler(map);
                 WmsService.getLayers(map).then(function(layers){
                     $log.debug('layers',layers);
                     $scope.layers = layers;
@@ -485,8 +441,8 @@ angular.module('npn-viz-tool.vis-map',[
         }
         resetMarkers();
         function noInfoWindows() {
-            if(infoWindow) {
-                infoWindow.close();
+            if(griddedIwHandler) {
+                griddedIwHandler.close();
             }
             if(markerInfoWindow) {
                 markerInfoWindow.close();

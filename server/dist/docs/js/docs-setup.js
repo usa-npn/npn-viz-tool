@@ -86,6 +86,15 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.gridded-services:GriddedInfoWindowHandler",
+      "shortName": "GriddedInfoWindowHandler",
+      "type": "object",
+      "moduleName": "npn-viz-tool.gridded-services",
+      "shortDescription": "Injectable class that can be used to produce InfoWindows for a specific map given LatLng, Layer and Legend objects.",
+      "keywords": "api associated called checking class close closes currently data format function gridded gridded-services infowindow infowindows injectable input latlng layer lazily legend legnend map maps method missing npn-viz-tool object objects open opened parameters point produce references required response specific supplied"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.gridded-services:legendAgddAnomaly",
       "shortName": "legendAgddAnomaly",
       "type": "filter",
