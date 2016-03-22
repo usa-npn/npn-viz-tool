@@ -41,6 +41,24 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.cache",
+      "shortName": "npn-viz-tool.cache",
+      "type": "overview",
+      "moduleName": "npn-viz-tool.cache",
+      "shortDescription": "Caching functionality.",
+      "keywords": "api cache caching functionality npn-viz-tool overview"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.cache:CacheService",
+      "shortName": "CacheService",
+      "type": "service",
+      "moduleName": "npn-viz-tool.cache",
+      "shortDescription": "Simple service that can be used to store content for a period of time to avoid needing",
+      "keywords": "api argument avoid based cache cached content contents debug default drop dump exists expire expired fetch generate generates hash javascript key keyfromobject live log long method milliseconds minutes needing negative npn-viz-tool null obj object optional period place purposes remained return server service simple specifies store time ttl unique valid won"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.gridded",
       "shortName": "npn-viz-tool.gridded",
       "type": "overview",

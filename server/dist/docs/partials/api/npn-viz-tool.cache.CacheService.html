@@ -1,0 +1,36 @@
+<h1><code ng:non-bindable="">CacheService</code>
+<div><span class="hint">service in module <code ng:non-bindable="">npn-viz-tool</code>
+</span>
+</div>
+</h1>
+<div><h2 id="description">Description</h2>
+<div class="description"><div class="npn-viz-tool-cache-page npn-viz-tool-cache-cacheservice-page"><p>Simple service that can be used to store content for a period of time to avoid needing
+to return to the server for it.</p>
+</div></div>
+<div class="member method"><h2 id="methods">Methods</h2>
+<ul class="methods"><li><h3 id="methods_dump">dump()</h3>
+<div class="dump"><div class="dump-page"><p>Dump the contents of the cache the log (for debug purposes).</p>
+</div></div>
+</li>
+<li><h3 id="methods_get">get(key)</h3>
+<div class="get"><div class="get-page"><p>Fetch an object from the cache.</p>
+</div><h5 id="methods_get_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>key</td><td><a href="" class="label type-hint type-hint-string">string</a></td><td><div class="get-page"><p>The cache key of the object to fetch.</p>
+</div></td></tr></tbody></table><h5 id="methods_get_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="get-page"><p>The object in the cache if still valid or null if not found or expired.</p>
+</div></td></tr></table></div>
+</li>
+<li><h3 id="methods_keyfromobject">keyFromObject(obj)</h3>
+<div class="keyfromobject"><div class="keyfromobject-page"><p>Generates a unique key (md5 hash) based on an object that can be used as a cache key.</p>
+</div><h5 id="methods_keyfromobject_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>obj</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="keyfromobject-page"><p>A JavaScript object to generate a key from.</p>
+</div></td></tr></tbody></table><h5 id="methods_keyfromobject_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-string">string</a></td><td><div class="keyfromobject-page"><p>A unique key that can be used to cache/retrieve something from the cache.</p>
+</div></td></tr></table></div>
+</li>
+<li><h3 id="methods_put">put(key, obj, ttl)</h3>
+<div class="put"><div class="put-page"><p>Place an object in the cache.  The default time to live for an object in the cache is 5 minutes.</p>
+</div><h5 id="methods_put_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>key</td><td><a href="" class="label type-hint type-hint-string">string</a></td><td><div class="put-page"><p>The cache key to store the object under.</p>
+</div></td></tr><tr><td>obj</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="put-page"><p>The object to cache.  If null will drop the key from the cache if it exists.</p>
+</div></td></tr><tr><td>ttl</td><td><a href="" class="label type-hint type-hint-int">int</a></td><td><div class="put-page"><p>Optional argument that specifies how long in milliseconds the object should remained cached.  A negative value means the object won&#39;t expire.</p>
+</div></td></tr></tbody></table></div>
+</li>
+</ul>
+</div>
+</div>

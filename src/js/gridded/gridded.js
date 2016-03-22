@@ -17,7 +17,7 @@ angular.module('npn-viz-tool.gridded',[
  *
  * Gridded layers toolbar content.
  */
-.directive('griddedControl',['$log','uiGmapGoogleMapApi','uiGmapIsReady','WmsService',function($log,uiGmapGoogleMapApi,uiGmapIsReady,WmsService){
+.directive('griddedControl',['$log','$rootScope','uiGmapGoogleMapApi','uiGmapIsReady','WmsService',function($log,$rootScope,uiGmapGoogleMapApi,uiGmapIsReady,WmsService){
     return {
         restrict: 'E',
         templateUrl: 'js/gridded/gridded-control.html',
@@ -50,10 +50,12 @@ angular.module('npn-viz-tool.gridded',[
                 $log.debug('layer category change ',category);
                 if($scope.selection.activeLayer) {
                     $log.debug('turning off layer ',$scope.selection.activeLayer.name);
+                    var layer = $scope.selection.activeLayer;
                     $scope.selection.activeLayer.off();
                     delete $scope.selection.activeLayer;
                     delete $scope.legend;
                     noInfoWindows();
+                    $rootScope.$broadcast('gridded-layer-off',{layer:layer});
                 }
             });
             $scope.$watch('selection.layer',function(layer) {
@@ -77,6 +79,7 @@ angular.module('npn-viz-tool.gridded',[
                 $scope.selection.activeLayer.getLegend(layer).then(function(legend){
                     $scope.legend = legend;
                 });
+                $rootScope.$broadcast('gridded-layer-on',{layer:$scope.selection.activeLayer});
             });
             $scope.$watch('selection.activeLayer.extent.current',function(v) {
                 var layer;

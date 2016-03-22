@@ -169,23 +169,65 @@ angular.module('npn-viz-tool.bounds',[
         }]
     };
 }]);
+/**
+ * @ngdoc overview
+ * @name npn-viz-tool.cache
+ * @description
+ *
+ * Caching functionality.
+ */
 angular.module('npn-viz-tool.vis-cache',[
     'angular-md5'
 ])
 /**
- * CacheService
- * Supports a generic place where code can put data that shouldn't be fetched from the
- * server repeatedly, default time to live on data is 5 minutes.
- **/
+ * @ngdoc service
+ * @name npn-viz-tool.cache:CacheService
+ * @module npn-viz-tool.cache
+ * @description
+ *
+ * Simple service that can be used to store content for a period of time to avoid needing
+ * to return to the server for it.
+ */
 .factory('CacheService',['$log','$timeout','md5',function($log,$timeout,md5){
     var cache = [];
     var service = {
+      /**
+       * @ngdoc method
+       * @methodOf npn-viz-tool.cache:CacheService
+       * @name  keyFromObject
+       * @description
+       *
+       * Generates a unique key (md5 hash) based on an object that can be used as a cache key.
+       *
+       * @param {object} obj A JavaScript object to generate a key from.
+       * @return {string} A unique key that can be used to cache/retrieve something from the cache.
+       */
       keyFromObject : function(obj) {
         return md5.createHash(JSON.stringify(obj));
       },
+      /**
+       * @ngdoc method
+       * @methodOf npn-viz-tool.cache:CacheService
+       * @name  dump
+       * @description
+       *
+       * Dump the contents of the cache the log (for debug purposes).
+       */
       dump : function() {
         $log.debug('cache',cache);
       },
+      /**
+       * @ngdoc method
+       * @methodOf npn-viz-tool.cache:CacheService
+       * @name  put
+       * @description
+       *
+       * Place an object in the cache.  The default time to live for an object in the cache is 5 minutes.
+       *
+       * @param {string} key The cache key to store the object under.
+       * @param {object} obj The object to cache.  If null will drop the key from the cache if it exists.
+       * @param {int} ttl Optional argument that specifies how long in milliseconds the object should remained cached.  A negative value means the object won't expire.
+       */
       put : function(key,obj) {
         if ( key == null ) {
           return;
@@ -214,6 +256,17 @@ angular.module('npn-viz-tool.vis-cache',[
             },ttl);
         }
       },
+      /**
+       * @ngdoc method
+       * @methodOf npn-viz-tool.cache:CacheService
+       * @name  get
+       * @description
+       *
+       * Fetch an object from the cache.
+       *
+       * @param {string} key The cache key of the object to fetch.
+       * @returns {object} The object in the cache if still valid or null if not found or expired.
+       */
       get : function(key) {
         var obj = cache[key];
         if ( obj == null ) {
@@ -2301,7 +2354,7 @@ angular.module('npn-viz-tool.gridded',[
  *
  * Gridded layers toolbar content.
  */
-.directive('griddedControl',['$log','uiGmapGoogleMapApi','uiGmapIsReady','WmsService',function($log,uiGmapGoogleMapApi,uiGmapIsReady,WmsService){
+.directive('griddedControl',['$log','$rootScope','uiGmapGoogleMapApi','uiGmapIsReady','WmsService',function($log,$rootScope,uiGmapGoogleMapApi,uiGmapIsReady,WmsService){
     return {
         restrict: 'E',
         templateUrl: 'js/gridded/gridded-control.html',
@@ -2334,10 +2387,12 @@ angular.module('npn-viz-tool.gridded',[
                 $log.debug('layer category change ',category);
                 if($scope.selection.activeLayer) {
                     $log.debug('turning off layer ',$scope.selection.activeLayer.name);
+                    var layer = $scope.selection.activeLayer;
                     $scope.selection.activeLayer.off();
                     delete $scope.selection.activeLayer;
                     delete $scope.legend;
                     noInfoWindows();
+                    $rootScope.$broadcast('gridded-layer-off',{layer:layer});
                 }
             });
             $scope.$watch('selection.layer',function(layer) {
@@ -2361,6 +2416,7 @@ angular.module('npn-viz-tool.gridded',[
                 $scope.selection.activeLayer.getLegend(layer).then(function(legend){
                     $scope.legend = legend;
                 });
+                $rootScope.$broadcast('gridded-layer-on',{layer:$scope.selection.activeLayer});
             });
             $scope.$watch('selection.activeLayer.extent.current',function(v) {
                 var layer;
@@ -4236,6 +4292,12 @@ angular.module('npn-viz-tool.map',[
                     stationViewOff();
                 }
             });*/
+            $scope.$on('gridded-layer-on',stationViewOff);
+            $scope.$on('gridded-layer-off',function() {
+                if(FilterService.isFilterEmpty()) {
+                    stationViewOn();
+                }
+            });
             $scope.$on('filter-phase1-start',stationViewOff);
             $scope.$on('filter-reset',stationViewOn);
             $scope.reset = function() {
@@ -6414,6 +6476,7 @@ angular.module('npn-viz-tool.share',[
 }]);
 angular.module('npn-viz-tool.stations',[
     'npn-viz-tool.filter',
+    'npn-viz-tool.vis-cache',
     'npn-viz-tool.cluster',
     'npn-viz-tool.settings',
     'npn-viz-tool.layers',
@@ -6504,8 +6567,8 @@ angular.module('npn-viz-tool.stations',[
     };
     return service;
 }])
-.directive('npnStations',['$http','$log','$timeout','LayerService','SettingsService','StationService','ClusterService',
-    function($http,$log,$timeout,LayerService,SettingsService,StationService,ClusterService){
+.directive('npnStations',['$http','$log','$timeout','LayerService','SettingsService','StationService','ClusterService','CacheService',
+    function($http,$log,$timeout,LayerService,SettingsService,StationService,ClusterService,CacheService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="regions.markers" idKey="\'name\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" isLabel="true"></ui-gmap-markers><ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" events="markerEvents" clusterOptions="clusterOptions"></ui-gmap-markers>',
@@ -6539,8 +6602,17 @@ angular.module('npn-viz-tool.stations',[
                 markers: []
             };
             $scope.markerEvents = StationService.getMarkerEvents();
-            var eventListeners = [];
-            $http.get('/npn_portal/stations/getStationCountByState.json').success(function(counts){
+            var eventListeners = [],
+                stationCounts = CacheService.get('stations-counts-by-state');
+            if(stationCounts) {
+                handleCounts(stationCounts);
+            } else {
+                $http.get('/npn_portal/stations/getStationCountByState.json').success(function(counts){
+                    CacheService.put('stations-counts-by-state',counts);
+                    handleCounts(counts);
+                });
+            }
+            function handleCounts(counts){
                 var countMap = counts.reduce(function(map,c){
                     map[c.state] = c;
                     c.number_stations = parseInt(c.number_stations);
@@ -6657,7 +6729,7 @@ angular.module('npn-viz-tool.stations',[
                         }));
                     });
                 });
-            });
+            }
             // may or may not be a good idea considering if other elements replace
             // map layers
             $scope.$on('$destroy',function(){
