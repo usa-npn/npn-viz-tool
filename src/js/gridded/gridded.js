@@ -124,49 +124,65 @@ angular.module('npn-viz-tool.gridded',[
             };
             $scope.$on('filter-reset',$scope.actions.reset);
             var api,
-                map;
-            uiGmapGoogleMapApi.then(function(maps){
-                api = maps;
-                uiGmapIsReady.promise(1).then(function(instances){
-                    map = instances[0].map;
-                    griddedIwHandler = new GriddedInfoWindowHandler(map);
-                    map.addListener('click',function(e){
-                        griddedIwHandler.open(e.latLng,$scope.selection.activeLayer,$scope.legend);
-                    });
-                    WmsService.getLayers(map).then(function(layers){
-                        $log.debug('layers',layers);
-                        $scope.layers = layers;
-                        var sharingUrlArgs = GriddedControlService.getSharingUrlArgs(),lname,ext,c,l;
-                        if(sharingUrlArgs) {
-                            $log.debug('arguments from shared url',sharingUrlArgs);
-                            lname = sharingUrlArgs[0];
-                            ext = sharingUrlArgs[1];
-                            l = layers.categories.reduce(function(found,cat){
-                                if(!found){
-                                    found = cat.layers.reduce(function(f,ly){
-                                            return f||(ly.name === lname ? ly : undefined);
-                                        },undefined);
-                                    if(found) {
-                                        c = cat;
+                map,
+                initCalled;
+            function init() {
+                if(initCalled) {
+                    return;
+                }
+                initCalled = true;
+                uiGmapGoogleMapApi.then(function(maps){
+                    api = maps;
+                    uiGmapIsReady.promise(1).then(function(instances){
+                        map = instances[0].map;
+                        griddedIwHandler = new GriddedInfoWindowHandler(map);
+                        map.addListener('click',function(e){
+                            griddedIwHandler.open(e.latLng,$scope.selection.activeLayer,$scope.legend);
+                        });
+                        WmsService.getLayers(map).then(function(layers){
+                            $log.debug('layers',layers);
+                            $scope.layers = layers;
+                            var sharingUrlArgs = GriddedControlService.getSharingUrlArgs(),lname,ext,c,l;
+                            if(sharingUrlArgs) {
+                                $log.debug('arguments from shared url',sharingUrlArgs);
+                                lname = sharingUrlArgs[0];
+                                ext = sharingUrlArgs[1];
+                                l = layers.categories.reduce(function(found,cat){
+                                    if(!found){
+                                        found = cat.layers.reduce(function(f,ly){
+                                                return f||(ly.name === lname ? ly : undefined);
+                                            },undefined);
+                                        if(found) {
+                                            c = cat;
+                                        }
                                     }
+                                    return found;
+                                },undefined);
+                                if(l) {
+                                    l.extent.current = l.extent.values.reduce(function(found,extent){
+                                                            return found||(extent.value === ext ? extent : undefined);
+                                                        },undefined)||l.extent.current;
+                                    $scope.selection.layerCategory = c;
+                                    $scope.selection.layer = l;
+                                } else {
+                                    $log.warn('unable to find gridded layer named '+lname);
                                 }
-                                return found;
-                            },undefined);
-                            if(l) {
-                                l.extent.current = l.extent.values.reduce(function(found,extent){
-                                                        return found||(extent.value === ext ? extent : undefined);
-                                                    },undefined)||l.extent.current;
-                                $scope.selection.layerCategory = c;
-                                $scope.selection.layer = l;
-                            } else {
-                                $log.warn('unable to find gridded layer named '+lname);
                             }
-                        }
-                    },function(){
-                        $log.error('unable to get map layers?');
+                        },function(){
+                            $log.error('unable to get map layers?');
+                        });
                     });
                 });
-            });
+            }
+            if(GriddedControlService.getSharingUrlArgs()) {
+                init();
+            } else {
+                $scope.$on('tool-open',function(event,data){
+                    if(data.tool.id === 'gridded') {
+                        init();
+                    }
+                });
+            }
             function noInfoWindows() {
                 if(griddedIwHandler) {
                     griddedIwHandler.close();
