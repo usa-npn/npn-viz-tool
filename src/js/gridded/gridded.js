@@ -29,6 +29,7 @@ angular.module('npn-viz-tool.gridded',[
                     delete $scope.selection.layer;
                 }
             };
+            $scope.$on('filter-reset',$scope.actions.reset);
             var api,
                 map;
             uiGmapGoogleMapApi.then(function(maps){
