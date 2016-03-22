@@ -227,12 +227,14 @@ angular.module('npn-viz-tool.gridded-services',[
         restrict: 'E',
         templateUrl: 'js/gridded/legend.html',
         scope: {
+            legendId: '@',
             legend: '='
         },
         link: function($scope,$element) {
+            var svgElement = $element.find('svg')[0];
             function redraw() {
                 var legend = $scope.legend,
-                    svg = d3.select('.legend');
+                    svg = d3.select(svgElement);
 
                 svg.selectAll('g').remove(); // clean slate
                 if(!legend) {

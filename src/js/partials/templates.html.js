@@ -342,7 +342,7 @@ angular.module("js/gridded/layer-control.html", []).run(["$templateCache", funct
 
 angular.module("js/gridded/legend.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/gridded/legend.html",
-    "<svg class=\"legend\"></svg>");
+    "<svg class=\"gridded-legend\"></svg>");
 }]);
 
 angular.module("js/gridded/year-control.html", []).run(["$templateCache", function($templateCache) {
@@ -390,6 +390,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "<export-control></export-control>\n" +
     "<filter-tags></filter-tags>\n" +
     "<choropleth-info></choropleth-info>\n" +
+    "<gridded-legend-main></gridded-legend-main>\n" +
     "\n" +
     "<toolbar>\n" +
     "    <tool id=\"filter\" icon=\"fa-search\" title=\"Filter\">\n" +
@@ -398,11 +399,11 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Layers\">\n" +
     "        <layer-control></layer-control>\n" +
     "    </tool>\n" +
-    "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
-    "        <vis-control></vis-control>\n" +
-    "    </tool>\n" +
     "    <tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">\n" +
     "        <gridded-control></gridded-control>\n" +
+    "    </tool>\n" +
+    "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
+    "        <vis-control></vis-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
     "        <settings-control></settings-control>\n" +

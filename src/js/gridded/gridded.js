@@ -9,6 +9,41 @@ angular.module('npn-viz-tool.gridded',[
     'npn-viz-tool.gridded-services'
 ])
 /**
+ * @ngdoc service
+ * @name npn-viz-tool.gridded:GriddedLegendScope
+ * @module npn-viz-tool.gridded
+ * @description
+ *
+ * This is not truly a service but just an empty object that can be shared between the gridded-control
+ * and gridded-legend-main directives.  These two directives are not placed hierarchically with respect to
+ * one another.  This object simply acts as an intermediary where the legend object can be referenced.
+ */
+.service('GriddedLegendScope',[function(){
+    return {};
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded:gridded-legend-main
+ * @module npn-viz-tool.gridded
+ * @description
+ *
+ * Gridded legend for the main map which communicates with the gridded toolbar to display a legend for
+ * any currently selected gridded layer.
+ *
+ * @scope
+ */
+.directive('griddedLegendMain',['GriddedLegendScope',function(GriddedLegendScope){
+    return {
+        restrict: 'E',
+        template: '<div id="griddedLegendMain" ng-style="{display: shared.legend ? \'inherit\' : \'none\'}"><gridded-legend legend="shared.legend"></gridded-legend></div>',
+        scope: {},
+        link: function($scope) {
+            $scope.shared = GriddedLegendScope;
+        }
+    };
+}])
+/**
  * @ngdoc directive
  * @restrict E
  * @name npn-viz-tool.gridded:gridded-control
@@ -17,7 +52,7 @@ angular.module('npn-viz-tool.gridded',[
  *
  * Gridded layers toolbar content.
  */
-.directive('griddedControl',['$log','$rootScope','uiGmapGoogleMapApi','uiGmapIsReady','WmsService',function($log,$rootScope,uiGmapGoogleMapApi,uiGmapIsReady,WmsService){
+.directive('griddedControl',['$log','$rootScope','uiGmapGoogleMapApi','uiGmapIsReady','WmsService','GriddedLegendScope',function($log,$rootScope,uiGmapGoogleMapApi,uiGmapIsReady,WmsService,GriddedLegendScope){
     return {
         restrict: 'E',
         templateUrl: 'js/gridded/gridded-control.html',
@@ -55,6 +90,7 @@ angular.module('npn-viz-tool.gridded',[
                     $scope.selection.activeLayer.off();
                     delete $scope.selection.activeLayer;
                     delete $scope.legend;
+                    delete GriddedLegendScope.legend;
                     noInfoWindows();
                     $rootScope.$broadcast('gridded-layer-off',{layer:layer});
                 }
@@ -78,7 +114,7 @@ angular.module('npn-viz-tool.gridded',[
                 //boundsRestrictor.setBounds(layer.getBounds());
                 delete $scope.legend;
                 $scope.selection.activeLayer.getLegend(layer).then(function(legend){
-                    $scope.legend = legend;
+                    GriddedLegendScope.legend = $scope.legend = legend;
                 });
                 $rootScope.$broadcast('gridded-layer-on',{layer:$scope.selection.activeLayer});
             });

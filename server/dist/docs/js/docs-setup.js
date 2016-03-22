@@ -239,6 +239,24 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.gridded:gridded-legend-main",
+      "shortName": "gridded-legend-main",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.gridded",
+      "shortDescription": "Gridded legend for the main map which communicates with the gridded toolbar to display a legend for",
+      "keywords": "api communicates currently directive display gridded layer legend main map npn-viz-tool selected toolbar"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.gridded:GriddedLegendScope",
+      "shortName": "GriddedLegendScope",
+      "type": "service",
+      "moduleName": "npn-viz-tool.gridded",
+      "shortDescription": "This is not truly a service but just an empty object that can be shared between the gridded-control",
+      "keywords": "acts api directives empty gridded gridded-control gridded-legend-main hierarchically intermediary legend npn-viz-tool object referenced respect service shared simply"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.vis",
       "shortName": "npn-viz-tool.vis",
       "type": "overview",
