@@ -570,4 +570,8 @@ div[title="Stop drawing"] {
   margin-left: 10px;
 }
 
+.gridded-layer-control .reset-layer {
+  font-size: 1.2em;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */

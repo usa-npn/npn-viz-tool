@@ -41,6 +41,15 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.gridded",
+      "shortName": "npn-viz-tool.gridded",
+      "type": "overview",
+      "moduleName": "npn-viz-tool.gridded",
+      "shortDescription": "Base module for controlling gridded map layers.",
+      "keywords": "api base controlling gridded layers map module npn-viz-tool overview"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.gridded-services",
       "shortName": "npn-viz-tool.gridded-services",
       "type": "overview",
@@ -200,6 +209,15 @@ NG_DOCS={
       "moduleName": "npn-viz-tool.gridded-services",
       "shortDescription": "Interacts with the NPN geoserver WMS instance to supply map layer data.",
       "keywords": "addition agdd angualr angular api applied applies args arguments array associated base behavior boolean capabilities categories categorized category cell code configuration configure current currently data default define defined defines definition description displaying document driven eventually exposed exposes extent extent_values_filter extentdates false fetched filter format formatting gdd geo geo_server geoserver getlayers gridded gridded-services indicates indicating individual info inherit instance instances interact interacts involved json labels layer layers legend legend_label_filter legenddegrees legends level list location machine map maps merged method minimum names npn npn-viz-tool numbers object objects optional org organization organize over-ride plotting point points progress promise properties property re-organized rejected report reported resolved retrived selected separated server service single specifies string strings subset supply support supported supports supports_data title today top translate true ui unspecified url usanpn valid values visualization wcs whilch windows wms year"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.gridded:gridded-control",
+      "shortName": "gridded-control",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.gridded",
+      "shortDescription": "Gridded layers toolbar content.",
+      "keywords": "api content directive gridded layers npn-viz-tool toolbar"
     },
     {
       "section": "api",

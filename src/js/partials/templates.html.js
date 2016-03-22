@@ -317,9 +317,12 @@ angular.module("js/gridded/layer-control.html", []).run(["$templateCache", funct
   $templateCache.put("js/gridded/layer-control.html",
     "<div ng-if=\"layers\" class=\"gridded-layer-control\">\n" +
     "    <div class=\"form-group\">\n" +
+    "        <a ng-if=\"actions.reset && selection.layer\" class=\"reset-layer pull-right\" ng-click=\"actions.reset()\"\n" +
+    "            uib-popover=\"Reset\" popover-placement=\"right\" popover-append-to-body=\"true\" popover-trigger=\"mouseenter\" popover-delay=\"500\"><i class=\"fa fa-times-circle\"></i></a>\n" +
     "        <label for=\"selectedCategory\">Category</label>\n" +
     "        <select id=\"selectedCategory\" class=\"form-control\" ng-model=\"selection.layerCategory\"\n" +
     "                ng-options=\"cat as cat.name for cat in layers.categories\"></select>\n" +
+    "\n" +
     "    </div>\n" +
     "    <div class=\"form-group\" ng-if=\"selection.layerCategory\">\n" +
     "        <label for=\"selectedLayer\">Layer</label>\n" +

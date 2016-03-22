@@ -2282,15 +2282,37 @@ angular.module('npn-viz-tool.filters',[
         return input;
     };
 });
+/**
+ * @ngdoc overview
+ * @name npn-viz-tool.gridded
+ * @description
+ *
+ * Base module for controlling gridded map layers.
+ */
 angular.module('npn-viz-tool.gridded',[
     'npn-viz-tool.gridded-services'
 ])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded:gridded-control
+ * @module npn-viz-tool.gridded
+ * @description
+ *
+ * Gridded layers toolbar content.
+ */
 .directive('griddedControl',['$log','uiGmapGoogleMapApi','uiGmapIsReady','WmsService',function($log,uiGmapGoogleMapApi,uiGmapIsReady,WmsService){
     return {
         restrict: 'E',
         templateUrl: 'js/gridded/gridded-control.html',
         link: function($scope) {
             $scope.selection = {};
+            $scope.actions = {
+                reset: function() {
+                    delete $scope.selection.layerCategory;
+                    delete $scope.selection.layer;
+                }
+            };
             var api,
                 map;
             uiGmapGoogleMapApi.then(function(maps){
@@ -5368,9 +5390,12 @@ angular.module("js/gridded/layer-control.html", []).run(["$templateCache", funct
   $templateCache.put("js/gridded/layer-control.html",
     "<div ng-if=\"layers\" class=\"gridded-layer-control\">\n" +
     "    <div class=\"form-group\">\n" +
+    "        <a ng-if=\"actions.reset && selection.layer\" class=\"reset-layer pull-right\" ng-click=\"actions.reset()\"\n" +
+    "            uib-popover=\"Reset\" popover-placement=\"right\" popover-append-to-body=\"true\" popover-trigger=\"mouseenter\" popover-delay=\"500\"><i class=\"fa fa-times-circle\"></i></a>\n" +
     "        <label for=\"selectedCategory\">Category</label>\n" +
     "        <select id=\"selectedCategory\" class=\"form-control\" ng-model=\"selection.layerCategory\"\n" +
     "                ng-options=\"cat as cat.name for cat in layers.categories\"></select>\n" +
+    "\n" +
     "    </div>\n" +
     "    <div class=\"form-group\" ng-if=\"selection.layerCategory\">\n" +
     "        <label for=\"selectedLayer\">Layer</label>\n" +

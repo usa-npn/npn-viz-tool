@@ -1,12 +1,34 @@
+/**
+ * @ngdoc overview
+ * @name npn-viz-tool.gridded
+ * @description
+ *
+ * Base module for controlling gridded map layers.
+ */
 angular.module('npn-viz-tool.gridded',[
     'npn-viz-tool.gridded-services'
 ])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded:gridded-control
+ * @module npn-viz-tool.gridded
+ * @description
+ *
+ * Gridded layers toolbar content.
+ */
 .directive('griddedControl',['$log','uiGmapGoogleMapApi','uiGmapIsReady','WmsService',function($log,uiGmapGoogleMapApi,uiGmapIsReady,WmsService){
     return {
         restrict: 'E',
         templateUrl: 'js/gridded/gridded-control.html',
         link: function($scope) {
             $scope.selection = {};
+            $scope.actions = {
+                reset: function() {
+                    delete $scope.selection.layerCategory;
+                    delete $scope.selection.layer;
+                }
+            };
             var api,
                 map;
             uiGmapGoogleMapApi.then(function(maps){
