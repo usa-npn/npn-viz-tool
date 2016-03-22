@@ -5633,7 +5633,7 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "                    <map-vis-geo-layer></map-vis-geo-layer>\n" +
     "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
     "                </ui-gmap-google-map>\n" +
-    "                <map-vis-legend legend=\"legend\"></map-vis-legend>\n" +
+    "                <gridded-legend legend=\"legend\"></gridded-legend>\n" +
     "                <!--map-vis-marker-info-window></map-vis-marker-info-window-->\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
