@@ -257,12 +257,12 @@ NG_DOCS={
     },
     {
       "section": "api",
-      "id": "npn-viz-tool.gridded:GriddedLegendScope",
-      "shortName": "GriddedLegendScope",
+      "id": "npn-viz-tool.gridded:GriddedControlService",
+      "shortName": "GriddedControlService",
       "type": "service",
       "moduleName": "npn-viz-tool.gridded",
-      "shortDescription": "This is not truly a service but just an empty object that can be shared between the gridded-control",
-      "keywords": "acts api directives empty gridded gridded-control gridded-legend-main hierarchically intermediary legend npn-viz-tool object referenced respect service shared simply"
+      "shortDescription": "This is simply an empty object that can be shared between the gridded-control, gridded-legend-main",
+      "keywords": "active acts addsharingurlargs api args array build control current currently directives empty expose extent getlayer getlegend getsharingurlargs gridded gridded-control gridded-legend-main gridded-services hierarchically intermediary layer legend method npn-viz-tool object parameters params populates pulls referenced respect service share shared sharing simply strings undefined url"
     },
     {
       "section": "api",

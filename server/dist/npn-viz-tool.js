@@ -2347,16 +2347,73 @@ angular.module('npn-viz-tool.gridded',[
 ])
 /**
  * @ngdoc service
- * @name npn-viz-tool.gridded:GriddedLegendScope
+ * @name npn-viz-tool.gridded:GriddedControlService
  * @module npn-viz-tool.gridded
  * @description
  *
- * This is not truly a service but just an empty object that can be shared between the gridded-control
- * and gridded-legend-main directives.  These two directives are not placed hierarchically with respect to
- * one another.  This object simply acts as an intermediary where the legend object can be referenced.
+ * This is simply an empty object that can be shared between the gridded-control, gridded-legend-main
+ * directives and the sharing control to expose currently the active layer/legend (if any).
+ *
+ * The gridded-control and gridded-legend-main directives are not placed hierarchically with respect to
+ * one another so this object acts as an intermediary where the legend object can be referenced.
  */
-.service('GriddedLegendScope',[function(){
-    return {};
+.service('GriddedControlService',['$location',function($location){
+    var service = {
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.gridded:GriddedControlService
+         * @name  getLegend
+         * @description
+         *
+         * Gets the currently active legend, if any.
+         *
+         * @return {npn-viz-tool.gridded-services:WmsMapLegend} The legend, if one is active.
+         */
+        getLegend: function() { return service.legend; },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.gridded:GriddedControlService
+         * @name  getLayer
+         * @description
+         *
+         * Gets the currently active layer, if any.
+         *
+         * @return {npn-viz-tool.gridded-services:WmsMapLayer} The layer, if one is active.
+         */
+        getLayer: function() { return service.layer; },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.gridded:GriddedControlService
+         * @name  addSharingUrlArgs
+         * @description
+         *
+         * Populates any necessary sharing URL parameters for the share control.
+         *
+         * @param {object} params The params object that will be used to build a shared URL.
+         */
+        addSharingUrlArgs: function(params) {
+            if(service.layer) {
+                params['gl'] = service.layer.name+'/'+service.layer.extent.current.value;
+            }
+        },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.gridded:GriddedControlService
+         * @name  getSharingUrlArgs
+         * @description
+         *
+         * Pulls any sharing URL args from the current URL.
+         *
+         * @returns {Array} An array of strings or undefined.  Index 0 is the layer name and index 1 is the current extent value.
+         */
+        getSharingUrlArgs: function() {
+            var gl = $location.search()['gl'];
+            if(gl) {
+                return gl.split(/\//);
+            }
+        }
+    };
+    return service;
 }])
 /**
  * @ngdoc directive
@@ -2370,13 +2427,13 @@ angular.module('npn-viz-tool.gridded',[
  *
  * @scope
  */
-.directive('griddedLegendMain',['GriddedLegendScope',function(GriddedLegendScope){
+.directive('griddedLegendMain',['GriddedControlService',function(GriddedControlService){
     return {
         restrict: 'E',
         template: '<div id="griddedLegendMain" ng-style="{display: shared.legend ? \'inherit\' : \'none\'}"><gridded-legend legend="shared.legend"></gridded-legend></div>',
         scope: {},
         link: function($scope) {
-            $scope.shared = GriddedLegendScope;
+            $scope.shared = GriddedControlService;
         }
     };
 }])
@@ -2389,7 +2446,7 @@ angular.module('npn-viz-tool.gridded',[
  *
  * Gridded layers toolbar content.
  */
-.directive('griddedControl',['$log','$rootScope','uiGmapGoogleMapApi','uiGmapIsReady','WmsService','GriddedLegendScope','GriddedInfoWindowHandler',function($log,$rootScope,uiGmapGoogleMapApi,uiGmapIsReady,WmsService,GriddedLegendScope,GriddedInfoWindowHandler){
+.directive('griddedControl',['$log','$rootScope','uiGmapGoogleMapApi','uiGmapIsReady','WmsService','GriddedControlService','GriddedInfoWindowHandler',function($log,$rootScope,uiGmapGoogleMapApi,uiGmapIsReady,WmsService,GriddedControlService,GriddedInfoWindowHandler){
     return {
         restrict: 'E',
         templateUrl: 'js/gridded/gridded-control.html',
@@ -2416,6 +2473,32 @@ angular.module('npn-viz-tool.gridded',[
                     WmsService.getLayers(map).then(function(layers){
                         $log.debug('layers',layers);
                         $scope.layers = layers;
+                        var sharingUrlArgs = GriddedControlService.getSharingUrlArgs(),lname,ext,c,l;
+                        if(sharingUrlArgs) {
+                            $log.debug('arguments from shared url',sharingUrlArgs);
+                            lname = sharingUrlArgs[0];
+                            ext = sharingUrlArgs[1];
+                            l = layers.categories.reduce(function(found,cat){
+                                if(!found){
+                                    found = cat.layers.reduce(function(f,ly){
+                                            return f||(ly.name === lname ? ly : undefined);
+                                        },undefined);
+                                    if(found) {
+                                        c = cat;
+                                    }
+                                }
+                                return found;
+                            },undefined);
+                            if(l) {
+                                l.extent.current = l.extent.values.reduce(function(found,extent){
+                                                        return found||(extent.value === ext ? extent : undefined);
+                                                    },undefined)||l.extent.current;
+                                $scope.selection.layerCategory = c;
+                                $scope.selection.layer = l;
+                            } else {
+                                $log.warn('unable to find gridded layer named '+lname);
+                            }
+                        }
                     },function(){
                         $log.error('unable to get map layers?');
                     });
@@ -2434,7 +2517,8 @@ angular.module('npn-viz-tool.gridded',[
                     $scope.selection.activeLayer.off();
                     delete $scope.selection.activeLayer;
                     delete $scope.legend;
-                    delete GriddedLegendScope.legend;
+                    delete GriddedControlService.legend;
+                    delete GriddedControlService.layer;
                     noInfoWindows();
                     $rootScope.$broadcast('gridded-layer-off',{layer:layer});
                 }
@@ -2454,11 +2538,11 @@ angular.module('npn-viz-tool.gridded',[
                 // the selection.activeLayer.extent.current watch firing which
                 // toggles the map off/on
                 $log.debug('fitting new layer ',layer.name);
-                $scope.selection.activeLayer = layer.fit().on();
+                GriddedControlService.layer = $scope.selection.activeLayer = layer.fit().on();
                 //boundsRestrictor.setBounds(layer.getBounds());
                 delete $scope.legend;
                 $scope.selection.activeLayer.getLegend(layer).then(function(legend){
-                    GriddedLegendScope.legend = $scope.legend = legend;
+                    GriddedControlService.legend = $scope.legend = legend;
                 });
                 $rootScope.$broadcast('gridded-layer-on',{layer:$scope.selection.activeLayer});
             });
@@ -6435,6 +6519,7 @@ angular.module('npn-viz-tool.settings',[
 angular.module('npn-viz-tool.share',[
     'npn-viz-tool.filter',
     'npn-viz-tool.layers',
+    'npn-viz-tool.gridded',
     'npn-viz-tool.settings',
     'uiGmapgoogle-maps'
 ])
@@ -6443,8 +6528,8 @@ angular.module('npn-viz-tool.share',[
  * because upon instantiation it examines the current URL query args and uses its contents to
  * populate the filter, etc.
  */
-.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','$location','$log','SettingsService',
-    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,$location,$log,SettingsService){
+.directive('shareControl',['uiGmapIsReady','FilterService','LayerService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','$location','$log','SettingsService','GriddedControlService',
+    function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,$location,$log,SettingsService,GriddedControlService){
     return {
         restrict: 'E',
         template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
@@ -6554,6 +6639,7 @@ angular.module('npn-viz-tool.share',[
                         params['b'] += ';'+b.toString();
                     }
                 });
+                GriddedControlService.addSharingUrlArgs(params);
                 if(q != -1) {
                     absUrl = absUrl.substring(0,q);
                 }
