@@ -354,7 +354,7 @@ angular.module('npn-viz-tool.layers',[
                         };
                     if(feature.getProperty('$FILTER')) {
                         style.fillColor = '#800000';
-                        style.fillOpacity = 0.5;
+                        style.fillOpacity = 0.25;
                     }
                     return style;
                 })

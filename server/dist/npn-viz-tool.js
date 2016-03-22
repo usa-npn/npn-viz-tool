@@ -1104,7 +1104,7 @@ angular.module('npn-viz-tool.filter',[
         strokeColor: '#fff',
         strokeWeight: 1,
         fillColor: '#000080',
-        fillOpacity: 0.5,
+        fillOpacity: 0.25,
         visible: true,
         zIndex: 1
     };
@@ -4132,7 +4132,7 @@ angular.module('npn-viz-tool.layers',[
                         };
                     if(feature.getProperty('$FILTER')) {
                         style.fillColor = '#800000';
-                        style.fillOpacity = 0.5;
+                        style.fillOpacity = 0.25;
                     }
                     return style;
                 })
