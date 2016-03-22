@@ -2284,7 +2284,73 @@ angular.module('npn-viz-tool.filters',[
 });
 angular.module('npn-viz-tool.gridded',[
     'npn-viz-tool.gridded-services'
-]);
+])
+.directive('griddedControl',['$log','uiGmapGoogleMapApi','uiGmapIsReady','WmsService',function($log,uiGmapGoogleMapApi,uiGmapIsReady,WmsService){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/gridded/gridded-control.html',
+        link: function($scope) {
+            $scope.selection = {};
+            var api,
+                map;
+            uiGmapGoogleMapApi.then(function(maps){
+                api = maps;
+                uiGmapIsReady.promise(1).then(function(instances){
+                    map = instances[0].map;
+                    WmsService.getLayers(map).then(function(layers){
+                        $log.debug('layers',layers);
+                        $scope.layers = layers;
+                    },function(){
+                        $log.error('unable to get map layers?');
+                    });
+                });
+            });
+            function noInfoWindows() {
+                // TODO
+            }
+            $scope.$watch('selection.layerCategory',function(category) {
+                $log.debug('layer category change ',category);
+                if($scope.selection.activeLayer) {
+                    $log.debug('turning off layer ',$scope.selection.activeLayer.name);
+                    $scope.selection.activeLayer.off();
+                    delete $scope.selection.activeLayer;
+                    delete $scope.legend;
+                    noInfoWindows();
+                }
+            });
+            $scope.$watch('selection.layer',function(layer) {
+                if(!layer) {
+                    return;
+                }
+                noInfoWindows();
+                $log.debug('selection.layer',layer);
+                if($scope.selection.activeLayer) {
+                    $log.debug('turning off layer ',$scope.selection.activeLayer.name);
+                    $scope.selection.activeLayer.off();
+                }
+                // looks odd that we're not turning the layer on here
+                // but updating the activeLayer reference will also result in
+                // the selection.activeLayer.extent.current watch firing which
+                // toggles the map off/on
+                $log.debug('fitting new layer ',layer.name);
+                $scope.selection.activeLayer = layer.fit().on();
+                //boundsRestrictor.setBounds(layer.getBounds());
+                delete $scope.legend;
+                $scope.selection.activeLayer.getLegend(layer).then(function(legend){
+                    $scope.legend = legend;
+                });
+            });
+            $scope.$watch('selection.activeLayer.extent.current',function(v) {
+                var layer;
+                if(layer = $scope.selection.activeLayer) {
+                    $log.debug('layer extent change ',layer.name,v);
+                    noInfoWindows();
+                    layer.off().on();
+                }
+            });
+        }
+    };
+}]);
 /**
  * @ngdoc overview
  * @name npn-viz-tool.gridded-services
@@ -2479,7 +2545,6 @@ angular.module('npn-viz-tool.gridded-services',[
         }
     };
 }])
-
 /**
  * @ngdoc directive
  * @restrict E
@@ -4984,7 +5049,7 @@ angular.module('npn-viz-tool.vis-map',[
             });
         };
 }]);
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/gridded/date-control.html', 'js/gridded/doy-control.html', 'js/gridded/layer-control.html', 'js/gridded/legend.html', 'js/gridded/year-control.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/filter-tags.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/mapvis.html', 'js/mapvis/marker-info-window.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/gridded/date-control.html', 'js/gridded/doy-control.html', 'js/gridded/gridded-control.html', 'js/gridded/layer-control.html', 'js/gridded/legend.html', 'js/gridded/year-control.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/filter-tags.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/mapvis.html', 'js/mapvis/marker-info-window.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -5294,6 +5359,11 @@ angular.module("js/gridded/doy-control.html", []).run(["$templateCache", functio
     "</div>");
 }]);
 
+angular.module("js/gridded/gridded-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/gridded/gridded-control.html",
+    "<gridded-layer-control></gridded-layer-control>");
+}]);
+
 angular.module("js/gridded/layer-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/gridded/layer-control.html",
     "<div ng-if=\"layers\" class=\"gridded-layer-control\">\n" +
@@ -5378,6 +5448,9 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    </tool>\n" +
     "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
     "        <vis-control></vis-control>\n" +
+    "    </tool>\n" +
+    "    <tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">\n" +
+    "        <gridded-control></gridded-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
     "        <settings-control></settings-control>\n" +

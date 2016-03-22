@@ -192,7 +192,6 @@ angular.module('npn-viz-tool.gridded-services',[
         }
     };
 }])
-
 /**
  * @ngdoc directive
  * @restrict E
