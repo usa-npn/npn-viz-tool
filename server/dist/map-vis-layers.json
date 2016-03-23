@@ -4,7 +4,7 @@
     },
     "description" : "<a href=\"https://drive.google.com/open?id=1sYhoqk1fWSyUdT_RrNDv0KSOtThU4uCPXqldqOxG2IM\" target=\"_blank\">Gridded Data Documentation and Access</a>",
     "categories": [{
-        "name": "30-year Average AGDD",
+        "name": "Temperature Accumulations, Daily 30-year Average",
         "supports_data": false,
         "legend_label_filter": {
             "name": "legendGddUnits",
@@ -24,7 +24,7 @@
                 "name": "gdd:30yr_avg_agdd_50f"
             }]
     },{
-        "name": "Current Year AGDD",
+        "name": "Temperature Accumulations, Daily Contemporary",
         "supports_data": false,
         "legend_label_filter": {
             "name": "legendGddUnits",
@@ -48,7 +48,7 @@
                 "name": "gdd:agdd_50f"
             }]
     },{
-        "name": "AGDD Anomaly Map",
+        "name": "Temperature Accumulationsm, Daily Anomaly",
         "supports_data": false,
         "legend_label_filter": {
             "name": "legendAgddAnomaly",
@@ -72,7 +72,7 @@
                 "name": "gdd:agdd_anomaly_50f"
             }]
     },{
-        "name": "Spring Index, Annual Map",
+        "name": "Spring Index, Historical Annual",
         "legend_label_filter": {
             "name": "legendDoy"
         },
@@ -103,7 +103,7 @@
                 "name": "si-x:zabelli_bloom_prism"
             }]
     },{
-        "name": "Spring Index, Current Year",
+        "name": "Spring Index, Daily Contemporary",
         "legend_label_filter": {
             "name": "legendDoy"
         },
@@ -138,7 +138,7 @@
                 "name": "si-x:zabelli_leaf_ncep"
             }]
     },{
-        "name": "Spring Index, Anomaly",
+        "name": "Spring Index, Daily Anomaly",
         "supports_data": false,
         "legend_label_filter": {
             "name": "legendSixAnomaly"

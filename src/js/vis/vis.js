@@ -50,7 +50,7 @@ angular.module('npn-viz-tool.vis',[
             title: 'Gridded Data',
             controller: 'MapVisCtrl',
             template: 'js/mapvis/mapvis.html',
-            description: 'Prelim research...  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac lectus nec augue cursus lacinia. Praesent sit amet eros nisi.',
+            description: 'This visualization maps ground-based observations against USA-NPN gridded data products, including Accumulated Growing Degree Days and Spring Index models.',
             singleStation: false // doesn't make sense for a single station visualization.
         }],
         visualizeSingleStationId;
