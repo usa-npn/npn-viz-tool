@@ -563,6 +563,22 @@ angular.module('npn-viz-tool.gridded-services',[
 }])
 /**
  * @ngdoc filter
+ * @name npn-viz-tool.gridded-services:agddDefaultToday
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Selects a default extent value for a doy layer of "today" (if found among the possibilities).
+ */
+.filter('agddDefaultToday',['dateFilter',function(dateFilter){
+    var todayLabel = dateFilter(new Date(),'MMMM d');
+    return function(values) {
+        return values.reduce(function(dflt,v){
+            return dflt||(v.label == todayLabel ? v : undefined);
+        },undefined);
+    };
+}])
+/**
+ * @ngdoc filter
  * @name npn-viz-tool.gridded-services:legendSixAnomaly
  * @module npn-viz-tool.gridded-services
  * @description
@@ -654,6 +670,7 @@ angular.module('npn-viz-tool.gridded-services',[
  *   <li><code>legend_label_filter</code> - specifies an angular filter and optional arguments used to translate point data into strings for legends and map info windows.</li>
  *   <li><code>gridded_label_filter</code> - specifies an angular filter and optional arguments used to translate point data into strings for point data map info windows (if not specified then <code>legend_label_filter</code> will be used).</li>
  *   <li><code>extent_values_filter</code> - specifies an angualr filter and optional arguments used to filter extent values for layers.</li>
+ *   <li><code>extent_default_filter</code> - specifies anangular filter and optional arguments used to select a default value.  (if not specified the default provided by the server will be used).</li>
  *   <li><code>legend_units</code> - specifies a string that should be placed on the legend below the cell labels (units separated from legend labels).</li>
  *   <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true).</li>
  *   <li>code>current_year_only</code> - if <code>supports_data</code> is true (or unspecified) the indicates that a given layer should only support plotting of data for the year of the currently selected extent on it (default false).</li>
@@ -919,7 +936,7 @@ angular.module('npn-viz-tool.gridded-services',[
      */
     function WmsMapLayer(map,layer_def) {
         if(layer_def.extent_values_filter) {
-            $log.debug('layer '+layer_def.name+' has an extent values filter, processing',layer_def.extent_values_filter);
+            $log.debug('layer '+layer_def.name+' has an extent_values_filter, processing',layer_def.extent_values_filter);
             var valuesFilter = $filter(layer_def.extent_values_filter.name),
                 extentValues = layer_def.extent.values.map(function(e){ return e.value; }),
                 filterArgs = [extentValues].concat(layer_def.extent_values_filter.args||[]),
@@ -933,6 +950,13 @@ angular.module('npn-viz-tool.gridded-services',[
                 $log.debug('current extent value has become invalid, replacing with last option');
                 layer_def.extent.current = layer_def.extent.values.length ? layer_def.extent.values[layer_def.extent.values.length-1] : undefined;
             }
+        }
+        if(layer_def.extent_default_filter) {
+            $log.debug('layer '+layer_def.name+' has an extent_default_filter, processing', layer_def.extent_default_filter);
+            var defaultFilter = $filter(layer_def.extent_default_filter.name),
+                defaultFilterArgs = [layer_def.extent.values].concat(layer_def.extent_default_filter.values||[]);
+            layer_def.extent.current = defaultFilter.apply(undefined,defaultFilterArgs)||layer_def.extent.current;
+            $log.debug('resulting default value',layer_def.extent.current);
         }
         if(layer_def.description) {
             layer_def.$description = $sce.trustAsHtml(layer_def.description);

@@ -14,6 +14,9 @@
             "name": "legendGddUnits",
             "args": [true]
         },
+        "extent_default_filter": {
+            "name": "agddDefaultToday"
+        },
         "legend_units" : "GDD",
         "legend_delimiter_every" : 2000,
         "layers":[{

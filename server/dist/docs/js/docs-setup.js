@@ -77,6 +77,15 @@ NG_DOCS={
     },
     {
       "section": "api",
+      "id": "npn-viz-tool.gridded-services:agddDefaultToday",
+      "shortName": "agddDefaultToday",
+      "type": "filter",
+      "moduleName": "npn-viz-tool.gridded-services",
+      "shortDescription": "Selects a default extent value for a doy layer of &quot;today&quot; (if found among the possibilities).",
+      "keywords": "api default doy extent filter gridded-services layer npn-viz-tool possibilities selects today"
+    },
+    {
+      "section": "api",
       "id": "npn-viz-tool.gridded-services:extentDates",
       "shortName": "extentDates",
       "type": "filter",
@@ -217,7 +226,7 @@ NG_DOCS={
       "type": "object",
       "moduleName": "npn-viz-tool.gridded-services",
       "shortDescription": "A map layer object associated with a specific google map.",
-      "keywords": "api array arrives associated bounds constrain currently currentyearonly data defined description doesn false fetch fit getbounds getdescription getgriddeddata getlegend getmap google googlelayer gridded gridded-services imagemaptype indicates instance latlng latlngbounds layer layers legend location map maps method npn-viz-tool numbers object plotted point promise property rejected resolve resolved restrained selected specific support supports supportsdata true underlying year"
+      "keywords": "api array arrives associated bounds constrain currently currentyearonly data defined description doesn false fetch fit getabstract getbounds getgriddeddata getlegend getmap gettitle google googlelayer gridded gridded-services imagemaptype indicates instance latlng latlngbounds layer layers legend location map maps method npn-viz-tool numbers object plotted point promise property rejected resolve resolved restrained selected server specific support supports supportsdata title true underlying year"
     },
     {
       "section": "api",
@@ -235,7 +244,7 @@ NG_DOCS={
       "type": "service",
       "moduleName": "npn-viz-tool.gridded-services",
       "shortDescription": "Interacts with the NPN geoserver WMS instance to supply map layer data.",
-      "keywords": "addition agdd angualr angular api applied applies args arguments array associated base behavior boolean capabilities categories categorized category cell code configuration configure current currently data default define defined defines definition description displaying document driven eventually exposed exposes extent extent_values_filter extentdates false fetched filter format formatting gdd geo geo_server geoserver getlayers gridded gridded-services indicates indicating individual info inherit instance instances interact interacts involved json labels layer layers legend legend_label_filter legenddegrees legends level list location machine map maps merged method minimum names npn npn-viz-tool numbers object objects optional org organization organize over-ride plotting point points progress promise properties property re-organized rejected report reported resolved retrived selected separated server service single specifies string strings subset supply support supported supports supports_data title today top translate true ui unspecified url usanpn valid values visualization wcs whilch windows wms year"
+      "keywords": "addition agdd anangular angualr angular api applied applies args arguments array associated base behavior boolean capabilities categories categorized category cell code configuration configure current currently data default define defined defines definition description displaying document driven eventually exposed exposes extent extent_values_filter extentdates false fetched filter format formatting gdd geo geo_server geoserver getlayers gridded gridded-services indicates indicating individual info inherit instance instances interact interacts involved json labels layer layers legend legend_label_filter legenddegrees legends level list location machine map maps merged method minimum names npn npn-viz-tool numbers object objects optional org organization organize over-ride plotting point points progress promise properties property provided re-organized rejected report reported resolved retrived select selected separated server service single specifies string strings subset supply support supported supports supports_data title today top translate true ui unspecified url usanpn valid values visualization wcs whilch windows wms year"
     },
     {
       "section": "api",
