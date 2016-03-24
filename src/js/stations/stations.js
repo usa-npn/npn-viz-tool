@@ -1,5 +1,6 @@
 angular.module('npn-viz-tool.stations',[
     'npn-viz-tool.filter',
+    'npn-viz-tool.vis-cache',
     'npn-viz-tool.cluster',
     'npn-viz-tool.settings',
     'npn-viz-tool.layers',
@@ -90,8 +91,8 @@ angular.module('npn-viz-tool.stations',[
     };
     return service;
 }])
-.directive('npnStations',['$http','$log','$timeout','LayerService','SettingsService','StationService','ClusterService',
-    function($http,$log,$timeout,LayerService,SettingsService,StationService,ClusterService){
+.directive('npnStations',['$http','$log','$timeout','LayerService','SettingsService','StationService','ClusterService','CacheService',
+    function($http,$log,$timeout,LayerService,SettingsService,StationService,ClusterService,CacheService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="regions.markers" idKey="\'name\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" isLabel="true"></ui-gmap-markers><ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" events="markerEvents" clusterOptions="clusterOptions"></ui-gmap-markers>',
@@ -125,8 +126,17 @@ angular.module('npn-viz-tool.stations',[
                 markers: []
             };
             $scope.markerEvents = StationService.getMarkerEvents();
-            var eventListeners = [];
-            $http.get('/npn_portal/stations/getStationCountByState.json').success(function(counts){
+            var eventListeners = [],
+                stationCounts = CacheService.get('stations-counts-by-state');
+            if(stationCounts) {
+                handleCounts(stationCounts);
+            } else {
+                $http.get('/npn_portal/stations/getStationCountByState.json').success(function(counts){
+                    CacheService.put('stations-counts-by-state',counts);
+                    handleCounts(counts);
+                });
+            }
+            function handleCounts(counts){
                 var countMap = counts.reduce(function(map,c){
                     map[c.state] = c;
                     c.number_stations = parseInt(c.number_stations);
@@ -243,7 +253,7 @@ angular.module('npn-viz-tool.stations',[
                         }));
                     });
                 });
-            });
+            }
             // may or may not be a good idea considering if other elements replace
             // map layers
             $scope.$on('$destroy',function(){

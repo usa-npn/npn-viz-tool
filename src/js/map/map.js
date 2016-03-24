@@ -9,6 +9,7 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.share',
     'npn-viz-tool.export',
     'npn-viz-tool.help',
+    'npn-viz-tool.gridded',
     'uiGmapgoogle-maps'
 ])
 .directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','FilterService','HelpService',
@@ -92,6 +93,12 @@ angular.module('npn-viz-tool.map',[
                     stationViewOff();
                 }
             });*/
+            $scope.$on('gridded-layer-on',stationViewOff);
+            $scope.$on('gridded-layer-off',function() {
+                if(FilterService.isFilterEmpty()) {
+                    stationViewOn();
+                }
+            });
             $scope.$on('filter-phase1-start',stationViewOff);
             $scope.$on('filter-reset',stationViewOn);
             $scope.reset = function() {

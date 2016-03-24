@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/date-control.html', 'js/mapvis/doy-control.html', 'js/mapvis/filter-tags.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/layer-control.html', 'js/mapvis/legend.html', 'js/mapvis/mapvis.html', 'js/mapvis/marker-info-window.html', 'js/mapvis/year-control.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/gridded/date-control.html', 'js/gridded/doy-control.html', 'js/gridded/gridded-control.html', 'js/gridded/layer-control.html', 'js/gridded/legend.html', 'js/gridded/year-control.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/filter-tags.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/mapvis.html', 'js/mapvis/marker-info-window.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -270,6 +270,89 @@ angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", fun
     "</div>");
 }]);
 
+angular.module("js/gridded/date-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/gridded/date-control.html",
+    "<label>Date</label>\n" +
+    "<p class=\"input-group\">\n" +
+    "  <input type=\"text\" class=\"form-control\"\n" +
+    "        uib-datepicker-popup=\"longDate\"\n" +
+    "        ng-model=\"selection\"\n" +
+    "        is-open=\"isOpen\"\n" +
+    "        min-date=\"minDate\"\n" +
+    "        max-date=\"maxDate\"\n" +
+    "        close-text=\"Close\"\n" +
+    "        ng-click=\"open()\" />\n" +
+    "  <span class=\"input-group-btn\">\n" +
+    "    <button type=\"button\" class=\"btn btn-default\" ng-click=\"open()\"><i class=\"glyphicon glyphicon-calendar\"></i></button>\n" +
+    "  </span>\n" +
+    "</p>");
+}]);
+
+angular.module("js/gridded/doy-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/gridded/doy-control.html",
+    "<label>Day of Year</label>\n" +
+    "<div class=\"form-inline\" style=\"margin-bottom: 15px;\">\n" +
+    "    <div class=\"form-group\">\n" +
+    "        <label for=\"selectedMonth\" class=\"sr-only\">Month</label>\n" +
+    "        <select id=\"selectedMonth\" class=\"form-control\" ng-model=\"selection.month\"\n" +
+    "                ng-options=\"m as (m | date:'MMMM') for m in months\"></select>\n" +
+    "    </div>\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.month\">\n" +
+    "        <label for=\"selectedDate\" class=\"sr-only\">Day</label>\n" +
+    "        <select id=\"selectedDate\" class=\"form-control\" ng-model=\"selection.date\"\n" +
+    "                ng-options=\"d for d in dates\"></select>\n" +
+    "    </div>\n" +
+    "    <div class=\"form-group\">\n" +
+    "        <input class=\"form-control\" style=\"width: 50px; cursor: default;\" type=\"text\" value=\"{{layer.extent.current.value | number:0}}\" disabled />\n" +
+    "    </div>\n" +
+    "</div>");
+}]);
+
+angular.module("js/gridded/gridded-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/gridded/gridded-control.html",
+    "<gridded-layer-control></gridded-layer-control>");
+}]);
+
+angular.module("js/gridded/layer-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/gridded/layer-control.html",
+    "<div ng-if=\"layers\" class=\"gridded-layer-control\">\n" +
+    "    <div class=\"form-group\">\n" +
+    "        <a ng-if=\"actions.reset && selection.layer\" class=\"reset-layer pull-right\" ng-click=\"actions.reset()\"\n" +
+    "            uib-popover=\"Reset\" popover-placement=\"right\" popover-append-to-body=\"true\" popover-trigger=\"mouseenter\" popover-delay=\"500\"><i class=\"fa fa-times-circle\"></i></a>\n" +
+    "        <label for=\"selectedCategory\">Category</label>\n" +
+    "        <select id=\"selectedCategory\" class=\"form-control\" ng-model=\"selection.layerCategory\"\n" +
+    "                ng-options=\"cat as cat.name for cat in layers.categories\"></select>\n" +
+    "\n" +
+    "    </div>\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.layerCategory\">\n" +
+    "        <label for=\"selectedLayer\">Layer</label>\n" +
+    "        <select id=\"selectedLayer\" class=\"form-control\" ng-model=\"selection.layer\"\n" +
+    "                ng-options=\"l as (l.style.title + ' - ' + l.title) for l in selection.layerCategory.layers\"></select>\n" +
+    "    </div>\n" +
+    "    <div class=\"extent-control\" ng-if=\"selection.layer.extent\" ng-switch=\"selection.layer.extent.type\">\n" +
+    "        <gridded-doy-control ng-switch-when=\"doy\" layer=\"selection.layer\"></gridded-doy-control>\n" +
+    "        <gridded-date-control ng-switch-when=\"date\" layer=\"selection.layer\"></gridded-date-control>\n" +
+    "        <gridded-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></gridded-year-control>\n" +
+    "    </div>\n" +
+    "    <gridded-opacity-slider layer=\"selection.layer\"></gridded-opacity-slider>\n" +
+    "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
+    "    <p ng-if=\"selection.layer.$description\" ng-bind-html=\"selection.layer.$description\"></p>\n" +
+    "</div>");
+}]);
+
+angular.module("js/gridded/legend.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/gridded/legend.html",
+    "<svg class=\"gridded-legend\"></svg>");
+}]);
+
+angular.module("js/gridded/year-control.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/gridded/year-control.html",
+    "<div class=\"form-group\" ng-if=\"layer.extent\">\n" +
+    "    <label for=\"selectedExtent\">Year</label>\n" +
+    "    <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"layer.extent.current\" ng-options=\"v as v.label for v in layer.extent.values\"></select>\n" +
+    "</div>");
+}]);
+
 angular.module("js/layers/layerControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/layers/layerControl.html",
     "<p class=\"empty-filter-notes\" ng-if=\"isFilterEmpty()\">\n" +
@@ -307,6 +390,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "<export-control></export-control>\n" +
     "<filter-tags></filter-tags>\n" +
     "<choropleth-info></choropleth-info>\n" +
+    "<gridded-legend-main></gridded-legend-main>\n" +
     "\n" +
     "<toolbar>\n" +
     "    <tool id=\"filter\" icon=\"fa-search\" title=\"Filter\">\n" +
@@ -315,6 +399,9 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Layers\">\n" +
     "        <layer-control></layer-control>\n" +
     "    </tool>\n" +
+    "    <tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">\n" +
+    "        <gridded-control></gridded-control>\n" +
+    "    </tool>\n" +
     "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
     "        <vis-control></vis-control>\n" +
     "    </tool>\n" +
@@ -322,44 +409,6 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "        <settings-control></settings-control>\n" +
     "    </tool>\n" +
     "</toolbar>");
-}]);
-
-angular.module("js/mapvis/date-control.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("js/mapvis/date-control.html",
-    "<label>Date</label>\n" +
-    "<p class=\"input-group\">\n" +
-    "  <input type=\"text\" class=\"form-control\"\n" +
-    "        uib-datepicker-popup=\"longDate\"\n" +
-    "        ng-model=\"selection\"\n" +
-    "        is-open=\"isOpen\"\n" +
-    "        min-date=\"minDate\"\n" +
-    "        max-date=\"maxDate\"\n" +
-    "        close-text=\"Close\"\n" +
-    "        ng-click=\"open()\" />\n" +
-    "  <span class=\"input-group-btn\">\n" +
-    "    <button type=\"button\" class=\"btn btn-default\" ng-click=\"open()\"><i class=\"glyphicon glyphicon-calendar\"></i></button>\n" +
-    "  </span>\n" +
-    "</p>");
-}]);
-
-angular.module("js/mapvis/doy-control.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("js/mapvis/doy-control.html",
-    "<label>Day of Year</label>\n" +
-    "<div class=\"form-inline\" style=\"margin-bottom: 15px;\">\n" +
-    "    <div class=\"form-group\">\n" +
-    "        <label for=\"selectedMonth\" class=\"sr-only\">Month</label>\n" +
-    "        <select id=\"selectedMonth\" class=\"form-control\" ng-model=\"selection.month\"\n" +
-    "                ng-options=\"m as (m | date:'MMMM') for m in months\"></select>\n" +
-    "    </div>\n" +
-    "    <div class=\"form-group\" ng-if=\"selection.month\">\n" +
-    "        <label for=\"selectedDate\" class=\"sr-only\">Day</label>\n" +
-    "        <select id=\"selectedDate\" class=\"form-control\" ng-model=\"selection.date\"\n" +
-    "                ng-options=\"d for d in dates\"></select>\n" +
-    "    </div>\n" +
-    "    <div class=\"form-group\">\n" +
-    "        <input class=\"form-control\" style=\"width: 50px; cursor: default;\" type=\"text\" value=\"{{layer.extent.current.value | number:0}}\" disabled />\n" +
-    "    </div>\n" +
-    "</div>");
 }]);
 
 angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function($templateCache) {
@@ -431,35 +480,6 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "</div>");
 }]);
 
-angular.module("js/mapvis/layer-control.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("js/mapvis/layer-control.html",
-    "<div ng-if=\"layers\" class=\"map-vis-layer-control\">\n" +
-    "    <div class=\"form-group\">\n" +
-    "        <label for=\"selectedCategory\">Category</label>\n" +
-    "        <select id=\"selectedCategory\" class=\"form-control\" ng-model=\"selection.layerCategory\"\n" +
-    "                ng-options=\"cat as cat.name for cat in layers.categories\"></select>\n" +
-    "    </div>\n" +
-    "    <div class=\"form-group\" ng-if=\"selection.layerCategory\">\n" +
-    "        <label for=\"selectedLayer\">Layer</label>\n" +
-    "        <select id=\"selectedLayer\" class=\"form-control\" ng-model=\"selection.layer\"\n" +
-    "                ng-options=\"l as (l.style.title + ' - ' + l.title) for l in selection.layerCategory.layers\"></select>\n" +
-    "    </div>\n" +
-    "    <div class=\"extent-control\" ng-if=\"selection.layer.extent\" ng-switch=\"selection.layer.extent.type\">\n" +
-    "        <map-vis-doy-control ng-switch-when=\"doy\" layer=\"selection.layer\"></map-vis-doy-control>\n" +
-    "        <map-vis-date-control ng-switch-when=\"date\" layer=\"selection.layer\"></map-vis-date-control>\n" +
-    "        <map-vis-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></map-vis-year-control>\n" +
-    "    </div>\n" +
-    "    <map-vis-opacity-slider layer=\"selection.layer\"></map-vis-opacity-slider>\n" +
-    "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
-    "    <p ng-if=\"selection.layer.$description\" ng-bind-html=\"selection.layer.$description\"></p>\n" +
-    "</div>");
-}]);
-
-angular.module("js/mapvis/legend.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("js/mapvis/legend.html",
-    "<svg class=\"legend\"></svg>");
-}]);
-
 angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/mapvis.html",
     "<vis-dialog title=\"Gridded Data\" modal=\"modal\">\n" +
@@ -479,11 +499,11 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "                    <map-vis-geo-layer></map-vis-geo-layer>\n" +
     "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
     "                </ui-gmap-google-map>\n" +
-    "                <map-vis-legend legend=\"legend\"></map-vis-legend>\n" +
+    "                <gridded-legend legend=\"legend\"></gridded-legend>\n" +
     "                <!--map-vis-marker-info-window></map-vis-marker-info-window-->\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
-    "                <map-vis-layer-control></map-vis-layer-control>\n" +
+    "                <gridded-layer-control></gridded-layer-control>\n" +
     "                <map-vis-in-situ-control layer=\"selection.layer\" map-vis-filter=\"speciesSelections\" map-vis-plot=\"plotMarkers()\"></map-vis-in-situ-control>\n" +
     "            </div>\n" +
     "        </div>\n" +
@@ -511,14 +531,6 @@ angular.module("js/mapvis/marker-info-window.html", []).run(["$templateCache", f
     "            <li><label>Observed Day of Onset:</label> {{md.first_yes_doy_avg | number:0}} ({{legend.formatPointData(md.first_yes_doy_avg)}})<span ng-if=\"md.records.length > 1\"> [Average of {{md.records.length}} individuals. Standard Deviation: {{md.first_yes_doy_stdev | number:1}}]</span></li>\n" +
     "        </ul>\n" +
     "    </div>\n" +
-    "</div>");
-}]);
-
-angular.module("js/mapvis/year-control.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("js/mapvis/year-control.html",
-    "<div class=\"form-group\" ng-if=\"layer.extent\">\n" +
-    "    <label for=\"selectedExtent\">Year</label>\n" +
-    "    <select id=\"selectedExtent\" class=\"form-control\" ng-model=\"layer.extent.current\" ng-options=\"v as v.label for v in layer.extent.values\"></select>\n" +
     "</div>");
 }]);
 

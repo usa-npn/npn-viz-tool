@@ -13,7 +13,7 @@ describe('mapvis/services.js', function () {
     }
 
     beforeEach(function(){
-        module('npn-viz-tool.vis-map-services');
+        module('npn-viz-tool.gridded-services');
     });
 
     // the filter deals with more things like yesterday/tomorrow and exact dates

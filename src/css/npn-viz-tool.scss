@@ -574,6 +574,22 @@ $pulse-count: 60;
     color: #e5c100;
 }
 
+#griddedLegendMain {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 60%;
+    padding:8px;
+    border: 1px solid #aaa;
+    background-color: rgba(255,255,255,0.5);
+    border-radius: 5px;
+    .gridded-legend {
+        width: 100%;
+        height: 85px;
+        border: none;
+    }
+}
+
 .vis-dialog.gridded-data {
     .angular-google-map-container {
         position: inherit;
@@ -582,7 +598,7 @@ $pulse-count: 60;
         @include rounded(5px);
         border: 1px solid #aaa;
     }
-    .legend {
+    .gridded-legend {
         width: 100%;
         height: 85px;
         margin-top: 10px;
@@ -614,5 +630,11 @@ $pulse-count: 60;
     .gridded-point-data {
         display: inline-block;
         margin-left: 10px;
+    }
+}
+
+.gridded-layer-control {
+    .reset-layer {
+        font-size: 1.2em;
     }
 }

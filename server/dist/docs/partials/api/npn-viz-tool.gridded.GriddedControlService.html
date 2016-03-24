@@ -1,0 +1,35 @@
+<h1><code ng:non-bindable="">GriddedControlService</code>
+<div><span class="hint">service in module <code ng:non-bindable="">npn-viz-tool</code>
+</span>
+</div>
+</h1>
+<div><h2 id="description">Description</h2>
+<div class="description"><div class="npn-viz-tool-gridded-page npn-viz-tool-gridded-griddedcontrolservice-page"><p>This is simply an empty object that can be shared between the gridded-control, gridded-legend-main
+directives and the sharing control to expose currently the active layer/legend (if any).</p>
+<p>The gridded-control and gridded-legend-main directives are not placed hierarchically with respect to
+one another so this object acts as an intermediary where the legend object can be referenced.</p>
+</div></div>
+<div class="member method"><h2 id="methods">Methods</h2>
+<ul class="methods"><li><h3 id="methods_addsharingurlargs">addSharingUrlArgs(params)</h3>
+<div class="addsharingurlargs"><div class="addsharingurlargs-page"><p>Populates any necessary sharing URL parameters for the share control.</p>
+</div><h5 id="methods_addsharingurlargs_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>params</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="addsharingurlargs-page"><p>The params object that will be used to build a shared URL.</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_getlayer">getLayer()</h3>
+<div class="getlayer"><div class="getlayer-page"><p>Gets the currently active layer, if any.</p>
+</div><h5 id="methods_getlayer_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-npn-viz-tool">npn-viz-tool.gridded-services:WmsMapLayer</a></td><td><div class="getlayer-page"><p>The layer, if one is active.</p>
+</div></td></tr></table></div>
+</li>
+<li><h3 id="methods_getlegend">getLegend()</h3>
+<div class="getlegend"><div class="getlegend-page"><p>Gets the currently active legend, if any.</p>
+</div><h5 id="methods_getlegend_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-npn-viz-tool">npn-viz-tool.gridded-services:WmsMapLegend</a></td><td><div class="getlegend-page"><p>The legend, if one is active.</p>
+</div></td></tr></table></div>
+</li>
+<li><h3 id="methods_getsharingurlargs">getSharingUrlArgs()</h3>
+<div class="getsharingurlargs"><div class="getsharingurlargs-page"><p>Pulls any sharing URL args from the current URL.</p>
+</div><h5 id="methods_getsharingurlargs_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-array">Array</a></td><td><div class="getsharingurlargs-page"><p>An array of strings or undefined.  Index 0 is the layer name and index 1 is the current extent value.</p>
+</div></td></tr></table></div>
+</li>
+</ul>
+</div>
+</div>

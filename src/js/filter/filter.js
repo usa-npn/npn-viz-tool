@@ -353,7 +353,7 @@ angular.module('npn-viz-tool.filter',[
         strokeColor: '#fff',
         strokeWeight: 1,
         fillColor: '#000080',
-        fillOpacity: 0.5,
+        fillOpacity: 0.25,
         visible: true,
         zIndex: 1
     };
