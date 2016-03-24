@@ -1016,12 +1016,22 @@ angular.module('npn-viz-tool.gridded-services',[
             /**
              * @ngdoc method
              * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
-             * @name  getDescription
-             * @description Get the layer description, if any.
+             * @name  getTitle
+             * @description Get the layer title, if any.
+             * @returns {string} The title.
+             */
+            getTitle: function() {
+                return l.title ? l.title.replace(/^(.*)\s+-\s+(.*)$/,'$2') : undefined;
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
+             * @name  getAbstract
+             * @description Get the layer description (abstract from the server), if any.
              * @returns {string} The description.
              */
-            getDescription: function() {
-                return layer_def.description;
+            getAbstract: function() {
+                return l.abstract ? l.abstract.replace(/\s*developer notes.*$/i,'') : undefined;
             },
             /**
              * @ngdoc method

@@ -10,7 +10,7 @@
     <div class="form-group" ng-if="selection.layerCategory">
         <label for="selectedLayer">Layer</label>
         <select id="selectedLayer" class="form-control" ng-model="selection.layer"
-                ng-options="l as (l.style.title + ' - ' + l.title) for l in selection.layerCategory.layers"></select>
+                ng-options="l as l.getTitle() for l in selection.layerCategory.layers"></select>
     </div>
     <div class="extent-control" ng-if="selection.layer.extent" ng-switch="selection.layer.extent.type">
         <gridded-doy-control ng-switch-when="doy" layer="selection.layer"></gridded-doy-control>
@@ -18,6 +18,6 @@
         <gridded-year-control ng-switch-when="year" layer="selection.layer"></gridded-year-control>
     </div>
     <gridded-opacity-slider layer="selection.layer"></gridded-opacity-slider>
-    <p ng-if="selection.layer.abstract">{{selection.layer.abstract}}</p>
+    <p ng-if="selection.layer.abstract">{{selection.layer.getAbstract()}}</p>
     <p ng-if="selection.layer.$description" ng-bind-html="selection.layer.$description"></p>
 </div>

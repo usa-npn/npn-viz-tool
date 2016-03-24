@@ -327,7 +327,7 @@ angular.module("js/gridded/layer-control.html", []).run(["$templateCache", funct
     "    <div class=\"form-group\" ng-if=\"selection.layerCategory\">\n" +
     "        <label for=\"selectedLayer\">Layer</label>\n" +
     "        <select id=\"selectedLayer\" class=\"form-control\" ng-model=\"selection.layer\"\n" +
-    "                ng-options=\"l as (l.style.title + ' - ' + l.title) for l in selection.layerCategory.layers\"></select>\n" +
+    "                ng-options=\"l as l.getTitle() for l in selection.layerCategory.layers\"></select>\n" +
     "    </div>\n" +
     "    <div class=\"extent-control\" ng-if=\"selection.layer.extent\" ng-switch=\"selection.layer.extent.type\">\n" +
     "        <gridded-doy-control ng-switch-when=\"doy\" layer=\"selection.layer\"></gridded-doy-control>\n" +
@@ -335,7 +335,7 @@ angular.module("js/gridded/layer-control.html", []).run(["$templateCache", funct
     "        <gridded-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></gridded-year-control>\n" +
     "    </div>\n" +
     "    <gridded-opacity-slider layer=\"selection.layer\"></gridded-opacity-slider>\n" +
-    "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.abstract}}</p>\n" +
+    "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.getAbstract()}}</p>\n" +
     "    <p ng-if=\"selection.layer.$description\" ng-bind-html=\"selection.layer.$description\"></p>\n" +
     "</div>");
 }]);

@@ -17,10 +17,8 @@
         "legend_units" : "GDD",
         "legend_delimiter_every" : 2000,
         "layers":[{
-                "title": "32 GDD",
                 "name": "gdd:30yr_avg_agdd"
             },{
-                "title": "50 GDD",
                 "name": "gdd:30yr_avg_agdd_50f"
             }]
     },{
@@ -41,10 +39,8 @@
         "legend_units" : "GDD",
         "legend_delimiter_every" : 2000,
         "layers":[{
-                "title": "32 GDD",
                 "name": "gdd:agdd"
             },{
-                "title": "50 GDD",
                 "name": "gdd:agdd_50f"
             }]
     },{
@@ -65,10 +61,8 @@
         "legend_units" : "GDD",
         "legend_delimiter_every" : 100,
         "layers":[{
-                "title": "32 GDD",
                 "name": "gdd:agdd_anomaly"
             },{
-                "title": "50 GDD",
                 "name": "gdd:agdd_anomaly_50f"
             }]
     },{
@@ -78,28 +72,20 @@
         },
         "current_year_only": true,
         "layers":[{
-                "title": "Arnold Red Leaf (prism)",
                 "name": "si-x:arnoldred_leaf_prism"
             },{
-                "title": "Arnold Red Bloom (prism)",
                 "name": "si-x:arnoldred_bloom_prism"
             },{
-                "title": "Average Bloom (prism)",
                 "name": "si-x:average_bloom_prism"
             },{
-                "title": "Average Leaf (prism)",
                 "name": "si-x:average_leaf_prism"
             },{
-                "title": "Lilac Leaf (prism)",
                 "name": "si-x:lilac_leaf_prism"
             },{
-                "title": "Lilac Bloom (prism)",
                 "name": "si-x:lilac_bloom_prism"
             },{
-                "title": "Zabelli Leaf (prism)",
                 "name": "si-x:zabelli_leaf_prism"
             },{
-                "title": "Zabelli Bloom (prism)",
                 "name": "si-x:zabelli_bloom_prism"
             }]
     },{
@@ -113,28 +99,20 @@
         },
         "current_year_only": true,
         "layers": [{
-                "title": "Arnold Red Leaf (ncep)",
                 "name": "si-x:arnoldred_leaf_ncep"
             },{
-                "title": "Arnold Red Bloom (ncep)",
                 "name": "si-x:arnoldred_bloom_ncep"
             },{
-                "title": "Average Bloom (ncep)",
                 "name": "si-x:average_bloom_ncep"
             },{
-                "title": "Average Leaf (ncep)",
                 "name": "si-x:average_leaf_ncep"
             },{
-                "title": "Lilac Leaf (ncep)",
                 "name": "si-x:lilac_leaf_ncep"
             },{
-                "title": "Lilac Bloom (ncep)",
                 "name": "si-x:lilac_bloom_ncep"
             },{
-                "title": "Zabelli Bloom (ncep)",
                 "name": "si-x:zabelli_bloom_ncep"
             },{
-                "title": "Zabelli Leaf (ncep)",
                 "name": "si-x:zabelli_leaf_ncep"
             }]
     },{
@@ -148,10 +126,8 @@
             "args": [null,"today"]
         },
         "layers": [{
-                "title": "Leaf Anomaly",
                 "name": "si-x:leaf_anomaly"
             },{
-                "title": "Bloom Anomaly",
                 "name": "si-x:bloom_anomaly"
             }]
     },{
@@ -160,10 +136,8 @@
             "name": "legendDoy"
         },
         "layers": [{
-                "title": "30 Year Average Six Leaf",
                 "name": "si-x:30yr_avg_six_leaf"
             },{
-                "title": "30 Year Average Six Bloom",
                 "name": "si-x:30yr_avg_six_bloom"
             }]
     }]
