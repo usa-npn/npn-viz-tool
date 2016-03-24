@@ -1123,7 +1123,7 @@ angular.module('npn-viz-tool.gridded-services',[
              * @return {promise} A promise that will be resolved with an array of numbers, or rejected.
              */
             getGriddedData: function(latLng) {
-                return WcsService.getGriddedData(GEOSERVER_URL,this,latLng,4/*should gridSize change based on the layer?*/);
+                return WcsService.getGriddedData(GEOSERVER_URL,this,latLng,5/*should gridSize change based on the layer?*/);
             }
         });
         return l;
