@@ -2839,11 +2839,15 @@ angular.module('npn-viz-tool.gridded-services',[
         },
         link: function($scope) {
             // TODO - hide the today/clear buttons
-            $scope.selection = $scope.layer.extent.current.date;
-            $scope.minDate = $scope.layer.extent.values[0].date;
-            $scope.maxDate = $scope.layer.extent.values[$scope.layer.extent.values.length-1].date;
-            $log.debug('minDate',$scope.minDate);
-            $log.debug('maxDate',$scope.maxDate);
+            $scope.$watch('layer',function(layer) {
+                if(layer) {
+                    $scope.selection = layer.extent.current.date;
+                    $scope.minDate = layer.extent.values[0].date;
+                    $scope.maxDate = layer.extent.values[layer.extent.values.length-1].date;
+                    $log.debug('minDate',$scope.minDate);
+                    $log.debug('maxDate',$scope.maxDate);
+                }
+            });
             $scope.open = function() {
                 $scope.isOpen = true;
             };
@@ -5857,7 +5861,7 @@ angular.module("js/mapvis/marker-info-window.html", []).run(["$templateCache", f
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-if=\"markerModel.station.group_name\"><label>Group:</label> {{markerModel.station.group_name}}</li>\n" +
     "            <li><label>Latitude:</label> {{markerModel.station.latitude}} <label>Longitude:</label> {{markerModel.station.longitude}}</li>\n" +
-    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Modeled Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{markerModel.gridded_legend_data.label}})</li>\n" +
+    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Modeled Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{legend.formatPointData(markerModel.gridded_legend_data.point)}})</li>\n" +
     "        </ul>\n" +
     "    </div>\n" +
     "    <div class=\"gridded-data\" ng-if=\"markerModel.gridded_legend_data\">\n" +

@@ -4,7 +4,7 @@
         <ul class="list-unstyled">
             <li ng-if="markerModel.station.group_name"><label>Group:</label> {{markerModel.station.group_name}}</li>
             <li><label>Latitude:</label> {{markerModel.station.latitude}} <label>Longitude:</label> {{markerModel.station.longitude}}</li>
-            <li ng-if="markerModel.gridded_legend_data"><label>Modeled Value:</label> <div class="legend-cell" style="background-color: {{markerModel.gridded_legend_data.color}};">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{markerModel.gridded_legend_data.label}})</li>
+            <li ng-if="markerModel.gridded_legend_data"><label>Modeled Value:</label> <div class="legend-cell" style="background-color: {{markerModel.gridded_legend_data.color}};">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{legend.formatPointData(markerModel.gridded_legend_data.point)}})</li>
         </ul>
     </div>
     <div class="gridded-data" ng-if="markerModel.gridded_legend_data">
