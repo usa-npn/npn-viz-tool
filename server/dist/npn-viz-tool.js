@@ -3600,7 +3600,7 @@ angular.module('npn-viz-tool.gridded-services',[
              * @returns {string} The title.
              */
             getTitle: function() {
-                return l.title ? l.title.replace(/^(.*)\s+-\s+(.*)$/,'$2') : undefined;
+                return l.title ? l.title.replace(/^(.*?)\s+-\s+(.*)$/,'$2') : undefined;
             },
             /**
              * @ngdoc method
