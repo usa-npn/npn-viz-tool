@@ -1,6 +1,6 @@
 {
   "name": "USANPN-Visualization-Tool",
-  "version": "0.1.0",
+  "version": "1.0.0-beta",
   "description": "USANPN-Visualization-Tool web app.",
   "author": "Paul Adams <paul@djcase.com>",
   "private": true,
