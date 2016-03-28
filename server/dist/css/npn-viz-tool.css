@@ -531,7 +531,7 @@ div[title="Stop drawing"] {
 #griddedLegendMain {
   position: absolute;
   bottom: 20px;
-  left: 20px;
+  right: 5px;
   width: 60%;
   padding: 8px;
   border: 1px solid #aaa;

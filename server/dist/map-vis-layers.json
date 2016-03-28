@@ -2,7 +2,7 @@
     "geo_server": {
         "url": "//geoserver-dev.usanpn.org/geoserver"
     },
-    "description" : "<a href=\"https://drive.google.com/open?id=1sYhoqk1fWSyUdT_RrNDv0KSOtThU4uCPXqldqOxG2IM\" target=\"_blank\">Gridded Data Documentation and Access</a>",
+    "description" : "<a href=\"https://www.usanpn.org/data/spring\" target=\"_blank\">More Info on Gridded Data Products</a>",
     "categories": [{
         "name": "Temperature Accumulations, Daily 30-year Average",
         "supports_data": false,
@@ -17,7 +17,7 @@
         "extent_default_filter": {
             "name": "agddDefaultToday"
         },
-        "legend_units" : "GDD",
+        "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 2000,
         "layers":[{
                 "name": "gdd:30yr_avg_agdd"
@@ -39,7 +39,7 @@
             "name": "extentDates",
             "args": [null,"today"]
         },
-        "legend_units" : "GDD",
+        "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 2000,
         "layers":[{
                 "name": "gdd:agdd"
@@ -47,7 +47,7 @@
                 "name": "gdd:agdd_50f"
             }]
     },{
-        "name": "Temperature Accumulationsm, Daily Anomaly",
+        "name": "Temperature Accumulations, Daily Anomaly",
         "supports_data": false,
         "legend_label_filter": {
             "name": "legendAgddAnomaly",
@@ -61,7 +61,7 @@
             "name": "extentDates",
             "args": [null,"today"]
         },
-        "legend_units" : "GDD",
+        "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 100,
         "layers":[{
                 "name": "gdd:agdd_anomaly"
@@ -75,13 +75,13 @@
         },
         "current_year_only": true,
         "layers":[{
+				"name": "si-x:average_leaf_prism"				  
+            },{
+				"name": "si-x:average_bloom_prism"                
+            },{
                 "name": "si-x:arnoldred_leaf_prism"
             },{
                 "name": "si-x:arnoldred_bloom_prism"
-            },{
-                "name": "si-x:average_bloom_prism"
-            },{
-                "name": "si-x:average_leaf_prism"
             },{
                 "name": "si-x:lilac_leaf_prism"
             },{
@@ -102,21 +102,21 @@
         },
         "current_year_only": true,
         "layers": [{
+				"name": "si-x:average_leaf_ncep"                
+            },{
+				"name": "si-x:average_bloom_ncep"                
+            },{
                 "name": "si-x:arnoldred_leaf_ncep"
             },{
                 "name": "si-x:arnoldred_bloom_ncep"
-            },{
-                "name": "si-x:average_bloom_ncep"
-            },{
-                "name": "si-x:average_leaf_ncep"
             },{
                 "name": "si-x:lilac_leaf_ncep"
             },{
                 "name": "si-x:lilac_bloom_ncep"
             },{
-                "name": "si-x:zabelli_bloom_ncep"
-            },{
                 "name": "si-x:zabelli_leaf_ncep"
+            },{
+                "name": "si-x:zabelli_bloom_ncep"
             }]
     },{
         "name": "Spring Index, Daily Anomaly",

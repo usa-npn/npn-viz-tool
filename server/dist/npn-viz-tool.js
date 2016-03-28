@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0-beta - 2016-03-24
+ * Version: 1.0.0-beta - 2016-03-28
  */
 
 /**
@@ -7075,7 +7075,7 @@ angular.module('npn-viz-tool.vis',[
             template: 'js/calendar/calendar.html',
             description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
         },{
-            title: 'Gridded Data',
+            title: 'Ground Observations',
             controller: 'MapVisCtrl',
             template: 'js/mapvis/mapvis.html',
             description: 'This visualization maps ground-based observations against USA-NPN gridded data products, including Accumulated Growing Degree Days and Spring Index models.',
