@@ -4281,7 +4281,7 @@ angular.module('npn-viz-tool.layers',[
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
         controller: function($scope) {
-            $scope.isFilterEmpty = FilterService.isFilterEmpty;
+            $scope.hasSufficientCriteria = FilterService.hasSufficientCriteria;
             var eventListeners = [],
                 lastFeature;
 
@@ -4365,7 +4365,6 @@ angular.module('npn-viz-tool.layers',[
                     restyleAndRefilter();
                 }
             }
-
 
             $scope.$watch('layerOnMap.layer',function(newLayer,oldLayer){
                 if($scope.layerOnMap.skipLoad) {
@@ -4576,9 +4575,8 @@ angular.module('npn-viz-tool.map',[
             $scope.$on('filter-phase1-start',stationViewOff);
             $scope.$on('filter-reset',stationViewOn);
             $scope.reset = function() {
-                if(!$scope.stationView) {
-                    FilterService.resetFilter();
-                } else {
+                FilterService.resetFilter();
+                if($scope.stationView) {
                     $scope.stationView = false;
                     $timeout(stationViewOn,500);
                 }
@@ -5721,11 +5719,11 @@ angular.module("js/gridded/year-control.html", []).run(["$templateCache", functi
 
 angular.module("js/layers/layerControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/layers/layerControl.html",
-    "<p class=\"empty-filter-notes\" ng-if=\"isFilterEmpty()\">\n" +
+    "<p class=\"empty-filter-notes\" ng-if=\"!hasSufficientCriteria()\">\n" +
     "    Before adding a layer to the map you must create and execute a filter.\n" +
     "    A map layer will allow you to filter sites based on the geographic boundaries it defines.\n" +
     "</p>\n" +
-    "<ul class=\"list-unstyled\" ng-if=\"!isFilterEmpty()\">\n" +
+    "<ul class=\"list-unstyled\" ng-if=\"hasSufficientCriteria()\">\n" +
     "    <li><label ng-class=\"{'selected-layer': layerOnMap.layer === 'none'}\"><a href ng-click=\"layerOnMap.layer='none'\">None</a></label>\n" +
     "        <!--input type=\"radio\" id=\"layer-none\" ng-model=\"layerOnMap.layer\" value=\"none\"/> <label for=\"layer-none\">None</label-->\n" +
     "    </li>\n" +

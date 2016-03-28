@@ -182,7 +182,7 @@ module.exports = function(grunt){
             color: true,
             autoWatch: false,
             singleRun: false,
-            reportSlowerThan: 200,
+            reportSlowerThan: 1000,
             preprocessors: { // coverage config
               'src/js/*.js': ['coverage'],
               'src/js/*/*.js': ['coverage'],
@@ -191,7 +191,8 @@ module.exports = function(grunt){
           watch: {
             reporters: ['dots','coverage'],
             singleRun: false,
-            background: true
+            background: true,
+            reportSlowerThan: 1000,
           },
           continuous: {
             reporters: ['dots','coverage'],

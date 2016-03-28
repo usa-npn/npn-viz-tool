@@ -228,7 +228,7 @@ angular.module('npn-viz-tool.layers',[
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
         controller: function($scope) {
-            $scope.isFilterEmpty = FilterService.isFilterEmpty;
+            $scope.hasSufficientCriteria = FilterService.hasSufficientCriteria;
             var eventListeners = [],
                 lastFeature;
 
@@ -312,7 +312,6 @@ angular.module('npn-viz-tool.layers',[
                     restyleAndRefilter();
                 }
             }
-
 
             $scope.$watch('layerOnMap.layer',function(newLayer,oldLayer){
                 if($scope.layerOnMap.skipLoad) {

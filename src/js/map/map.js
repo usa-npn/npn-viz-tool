@@ -102,9 +102,8 @@ angular.module('npn-viz-tool.map',[
             $scope.$on('filter-phase1-start',stationViewOff);
             $scope.$on('filter-reset',stationViewOn);
             $scope.reset = function() {
-                if(!$scope.stationView) {
-                    FilterService.resetFilter();
-                } else {
+                FilterService.resetFilter();
+                if($scope.stationView) {
                     $scope.stationView = false;
                     $timeout(stationViewOn,500);
                 }

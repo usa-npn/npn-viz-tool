@@ -1,8 +1,8 @@
-<p class="empty-filter-notes" ng-if="isFilterEmpty()">
+<p class="empty-filter-notes" ng-if="!hasSufficientCriteria()">
     Before adding a layer to the map you must create and execute a filter.
     A map layer will allow you to filter sites based on the geographic boundaries it defines.
 </p>
-<ul class="list-unstyled" ng-if="!isFilterEmpty()">
+<ul class="list-unstyled" ng-if="hasSufficientCriteria()">
     <li><label ng-class="{'selected-layer': layerOnMap.layer === 'none'}"><a href ng-click="layerOnMap.layer='none'">None</a></label>
         <!--input type="radio" id="layer-none" ng-model="layerOnMap.layer" value="none"/> <label for="layer-none">None</label-->
     </li>
