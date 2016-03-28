@@ -47,7 +47,7 @@ angular.module('npn-viz-tool.vis',[
             template: 'js/calendar/calendar.html',
             description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
         },{
-            title: 'Ground Observations',
+            title: 'Point and Grid Data',
             controller: 'MapVisCtrl',
             template: 'js/mapvis/mapvis.html',
             description: 'This visualization maps ground-based observations against USA-NPN gridded data products, including Accumulated Growing Degree Days and Spring Index models.',
