@@ -44,7 +44,7 @@ angular.module('npn-viz-tool.vis-calendar',[
     $scope.$watch('selection.species',function(){
         $scope.phenophaseList = [];
         if($scope.selection.species) {
-            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id, $scope.selection.year).then(function(list){
+            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
                 $log.debug('phenophaseList',list);
 
                 if(list.length) {
@@ -62,7 +62,7 @@ angular.module('npn-viz-tool.vis-calendar',[
     $scope.$watch('selection.year',function(){
         $scope.phenophaseList = [];
         if($scope.selection.species) {
-            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id, $scope.selection.year, true).then(function(list){
+            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id,true).then(function(list){
                 $log.debug('phenophaseList',list);
                 if(list.length) {
                     list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});

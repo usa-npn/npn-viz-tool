@@ -325,34 +325,21 @@ angular.module('npn-viz-tool.vis-map',[
                     });
                 }
             });
-            $scope.$watch('selection.species',function(species){
-                $scope.phenophaseList = [];
-                if(species) {
-				
-                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,$scope.selection.year, true/*get no matter what*/).then(function(list){
+            function phenophaseListUpdate() {
+                var species = $scope.selection.species,
+                    year = $scope.selection.year;
+                if(species && year) {
+                    $scope.phenophaseList = [];
+                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,true/*get no matter what*/,[year]).then(function(list){
                         $log.debug('phenophaseList',list);
                         $scope.phenophaseList = list;
                         $scope.selection.phenophase = list.length ? list[0] : undefined;
                     });
-					
-		
                 }
-            });
-			
-            $scope.$watch('selection.year',function(year){
-                $scope.phenophaseList = [];
-				var species = $scope.selection.species;
-                if(species) {
-				
-                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,year, true/*get no matter what*/).then(function(list){
-                        $log.debug('phenophaseList',list);
-                        $scope.phenophaseList = list;
-                        $scope.selection.phenophase = list.length ? list[0] : undefined;
-                    });
-					
-		
-                }
-            });			
+            }
+            $scope.$watch('selection.species',phenophaseListUpdate);
+            $scope.$watch('selection.year',phenophaseListUpdate);
+
             $scope.validSelection = function() {
                 var s = $scope.selection;
                 if(s.species && s.phenophase && s.year) {

@@ -27,7 +27,6 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "    </div>\n" +
     "</form>\n" +
-    "\n" +
     "<div class=\"panel panel-default main-vis-panel\" >\n" +
     "    <div class=\"panel-body\">\n" +
     "        <center ng-if=\"error_message\"><p class=\"text-danger\">{{error_message}}</p></center>\n" +
@@ -442,7 +441,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "        <select id=\"selectedSpecies\" class=\"form-control\" ng-model=\"selection.species\"\n" +
     "                ng-options=\"s as (s | speciesTitle) for s in speciesList\"></select>\n" +
     "    </div>\n" +
-    "    <div class=\"form-group\" ng-if=\"selection.species && phenophaseList.length\">\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.species\">\n" +
     "        <label for=\"selectedPhenophse\">Phenophase</label>\n" +
     "        <select id=\"selectedPhenophse\" class=\"form-control\" ng-model=\"selection.phenophase\"\n" +
     "                ng-options=\"p as p.phenophase_name for p in phenophaseList\"></select>\n" +

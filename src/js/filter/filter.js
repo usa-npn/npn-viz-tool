@@ -100,7 +100,7 @@ angular.module('npn-viz-tool.filter',[
     };
     NetworkFilterArg.prototype.getName = function() {
         return this.arg.network_name;
-    };	
+    };
     NetworkFilterArg.prototype.toExportParam = function() {
         return this.getId();
     };
@@ -390,8 +390,8 @@ angular.module('npn-viz-tool.filter',[
     };
     return BoundsFilterArg;
 }])
-.factory('NpnFilter',[ '$q','$http','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','CacheService',
-    function($q,$http,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,CacheService){
+.factory('NpnFilter',[ '$q','$log','$http','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','CacheService',
+    function($q,$log,$http,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,CacheService){
     function getValues(map) {
         var vals = [],key;
         for(key in map) {
@@ -547,6 +547,63 @@ angular.module('npn-viz-tool.filter',[
         }
         return def.promise;
     };
+    function removeRedundantPhenophases(list) {
+        var seen = [];
+        return list.filter(function(pp){
+            if(seen[pp.phenophase_id]) {
+                return false;
+            }
+            seen[pp.phenophase_id] = pp;
+            return true;
+        });
+    }
+    function mergeRedundantPhenophaseLists(lists) {
+        return removeRedundantPhenophases(
+            lists.reduce(function(arr,l){
+                return arr.concat(l);
+            },[]));
+    }
+    function getPhenophasesForDate(sid,date) {
+        var def = $q.defer(),
+            params = {
+                date: date,
+                species_id: sid
+            },
+            cacheKey = CacheService.keyFromObject(params),
+            cached = CacheService.get(cacheKey);
+        if(cached) {
+            def.resolve(cached);
+        } else {
+            $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
+                params: params
+            }).success(function(phases) {
+                var list = removeRedundantPhenophases(phases[0].phenophases);
+                CacheService.put(cacheKey,list);
+                def.resolve(list);
+
+            },def.reject);
+        }
+        return def.promise;
+    }
+    function getPhenophasesForYear(sid,year) {
+        var def = $q.defer();
+        $q.all([getPhenophasesForDate(sid,year+'-01-01'),getPhenophasesForDate(sid,year+'-12-31')]).then(function(results) {
+            $log.debug('getPhenophasesForYear.results',results);
+            def.resolve(mergeRedundantPhenophaseLists(results));
+        });
+        return def.promise;
+    }
+    function getPhenophasesForYears(sid,years) {
+        var def = $q.defer(),
+            year_promises = years.map(function(year) {
+                return getPhenophasesForYear(sid,year);
+            });
+        $q.all(year_promises).then(function(results) {
+            $log.debug('getPhenophasesForYears.results',results);
+            def.resolve(mergeRedundantPhenophaseLists(results));
+        });
+        return def.promise;
+    }
     /**
      * Fetches a list of phenophase objects that correspond to this filter.  If the filter has
      * species args in it then the sid must match one of the filter's species otherwise it's assumed
@@ -554,86 +611,33 @@ angular.module('npn-viz-tool.filter',[
      *
      * @param  {Number} sid The species id
      * @param {boolean} force If set to true will get the list even if the species isn't part of this filter.
+     * @param {Array} years The list of years to get valid phenophases for.
      * @return {Promise}    A promise that will be resolved with the list.
      */
-    NpnFilter.prototype.getPhenophasesForSpecies = function(sid,year,force) {
+    NpnFilter.prototype.getPhenophasesForSpecies = function(sid,force,years) {
         var speciesArgs = this.getSpeciesArgs(),
+            dateArg = this.getDateArg(),
             def = $q.defer(),i;
         if(typeof(sid) === 'string') {
             sid = parseInt(sid);
         }
         if(!force && speciesArgs.length) {
-console.log('Doing this thing');			
             var found = false;
             for(i = 0; i < speciesArgs.length; i++) {
-                if(speciesArgs[i].getId() === sid) {				
+                if(speciesArgs[i].getId() === sid) {
                     def.resolve(speciesArgs[i].getPhenophaseList());
                     found = true;
                     break;
                 }
             }
             if(!found) {
-console.log('Dunno');				
                 def.resolve([]);
             }
         } else {
-		
-            var params = { date: year, species_id: sid },
-            cacheKey = CacheService.keyFromObject(params),
-            list = CacheService.get(cacheKey);
-			
-            if(list && list.length) {
-console.log('Found in Cache');				
+            years = years||d3.range(dateArg.getStartYear(),dateArg.getEndYear()+1);
+            getPhenophasesForYears(sid,years).then(function(list) {
                 def.resolve(list);
-            } else {
-				var seen = {};
-					
-					params['date'] = year + '-01-01';
-
-					// not part of the filter go get it
-					// this is a bit of cut/paste from SpeciesFilterArg could maybe be consolidated?
-					$http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
-						params: params
-					}).success(function(phases) {
-console.log("Calling first http request");					
-console.log(seen);
-						var filtered = phases[0].phenophases.filter(function(pp){ // the call returns redundant data so filter it out.
-							if(seen[pp.phenophase_id]) {
-								return false;
-							}
-							seen[pp.phenophase_id] = pp;
-							return true;
-						});
-console.log(filtered);						
-						CacheService.push(cacheKey,filtered);
-						def.resolve(filtered);
-						
-						params['date'] = year + '-12-31';
-						$http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
-							params: params
-						}).success(function(phases) {
-console.log("Calling second http request");				
-console.log(seen);
-							var filtered = phases[0].phenophases.filter(function(pp){ // the call returns redundant data so filter it out.
-								if(seen[pp.phenophase_id]) {
-									return false;
-								}
-								seen[pp.phenophase_id] = pp;
-								return true;
-							});
-console.log(filtered);							
-							CacheService.push(cacheKey,filtered);
-							def.resolve(filtered);
-
-							
-
-						});						
-
-						
-
-					});	
-				
-            }
+            });
         }
         return def.promise;
     };
