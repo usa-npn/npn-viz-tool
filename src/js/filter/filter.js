@@ -556,47 +556,83 @@ angular.module('npn-viz-tool.filter',[
      * @param {boolean} force If set to true will get the list even if the species isn't part of this filter.
      * @return {Promise}    A promise that will be resolved with the list.
      */
-    NpnFilter.prototype.getPhenophasesForSpecies = function(sid,force) {
+    NpnFilter.prototype.getPhenophasesForSpecies = function(sid,year,force) {
         var speciesArgs = this.getSpeciesArgs(),
             def = $q.defer(),i;
         if(typeof(sid) === 'string') {
             sid = parseInt(sid);
         }
         if(!force && speciesArgs.length) {
+console.log('Doing this thing');			
             var found = false;
             for(i = 0; i < speciesArgs.length; i++) {
-                if(speciesArgs[i].getId() === sid) {
+                if(speciesArgs[i].getId() === sid) {				
                     def.resolve(speciesArgs[i].getPhenophaseList());
                     found = true;
                     break;
                 }
             }
             if(!found) {
+console.log('Dunno');				
                 def.resolve([]);
             }
         } else {
-            var params = { return_all: true, species_id: sid },
-                cacheKey = CacheService.keyFromObject(params),
-                list = CacheService.get(cacheKey);
+		
+            var params = { date: year, species_id: sid },
+            cacheKey = CacheService.keyFromObject(params),
+            list = CacheService.get(cacheKey);
+			
             if(list && list.length) {
+console.log('Found in Cache');				
                 def.resolve(list);
             } else {
-                // not part of the filter go get it
-                // this is a bit of cut/paste from SpeciesFilterArg could maybe be consolidated?
-                $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
-                    params: params
-                }).success(function(phases) {
-                    var seen = {},
-                        filtered = phases[0].phenophases.filter(function(pp){ // the call returns redundant data so filter it out.
-                        if(seen[pp.phenophase_id]) {
-                            return false;
-                        }
-                        seen[pp.phenophase_id] = pp;
-                        return true;
-                    });
-                    CacheService.put(cacheKey,filtered);
-                    def.resolve(filtered);
-                });
+				var seen = {};
+					
+					params['date'] = year + '-01-01';
+
+					// not part of the filter go get it
+					// this is a bit of cut/paste from SpeciesFilterArg could maybe be consolidated?
+					$http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
+						params: params
+					}).success(function(phases) {
+console.log("Calling first http request");					
+console.log(seen);
+						var filtered = phases[0].phenophases.filter(function(pp){ // the call returns redundant data so filter it out.
+							if(seen[pp.phenophase_id]) {
+								return false;
+							}
+							seen[pp.phenophase_id] = pp;
+							return true;
+						});
+console.log(filtered);						
+						CacheService.push(cacheKey,filtered);
+						def.resolve(filtered);
+						
+						params['date'] = year + '-12-31';
+						$http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
+							params: params
+						}).success(function(phases) {
+console.log("Calling second http request");				
+console.log(seen);
+							var filtered = phases[0].phenophases.filter(function(pp){ // the call returns redundant data so filter it out.
+								if(seen[pp.phenophase_id]) {
+									return false;
+								}
+								seen[pp.phenophase_id] = pp;
+								return true;
+							});
+console.log(filtered);							
+							CacheService.push(cacheKey,filtered);
+							def.resolve(filtered);
+
+							
+
+						});						
+
+						
+
+					});	
+				
             }
         }
         return def.promise;

@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0-beta - 2016-03-28
+ * Version: 1.0.0-beta - 2016-04-11
  */
 
 /**
@@ -256,6 +256,27 @@ angular.module('npn-viz-tool.vis-cache',[
             },ttl);
         }
       },
+	  
+	  
+      push : function(key,obj) {
+        if ( key == null ) {
+          return;
+        }
+        if ( obj == null ) {
+          $log.debug( 'removing cached object \''+key+'\'', cache[key]);
+          // probably should slice to shrink cache array but...
+          cache[key] = null;
+          return;
+        }
+		
+		if(cache[key] && cache[key].length){
+			Array.prototype.push.apply(cache[key], obj);			
+		}else{
+			this.put(key,obj);
+		}
+
+      },	  
+	  
       /**
        * @ngdoc method
        * @methodOf npn-viz-tool.cache:CacheService
@@ -330,7 +351,25 @@ angular.module('npn-viz-tool.vis-calendar',[
     $scope.$watch('selection.species',function(){
         $scope.phenophaseList = [];
         if($scope.selection.species) {
-            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
+            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id, $scope.selection.year).then(function(list){
+                $log.debug('phenophaseList',list);
+
+                if(list.length) {
+                    list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
+
+                }
+				
+                $scope.phenophaseList = list;
+                if(list.length) {
+                    $scope.selection.phenophase = list[0];
+                }
+            });
+        }
+    });
+    $scope.$watch('selection.year',function(){
+        $scope.phenophaseList = [];
+        if($scope.selection.species) {
+            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id, $scope.selection.year, true).then(function(list){
                 $log.debug('phenophaseList',list);
                 if(list.length) {
                     list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
@@ -341,7 +380,8 @@ angular.module('npn-viz-tool.vis-calendar',[
                 }
             });
         }
-    });
+    });	
+	
     function advanceColor() {
         if($scope.selection.color < $scope.colors.length) {
             $scope.selection.color++;
@@ -1307,47 +1347,83 @@ angular.module('npn-viz-tool.filter',[
      * @param {boolean} force If set to true will get the list even if the species isn't part of this filter.
      * @return {Promise}    A promise that will be resolved with the list.
      */
-    NpnFilter.prototype.getPhenophasesForSpecies = function(sid,force) {
+    NpnFilter.prototype.getPhenophasesForSpecies = function(sid,year,force) {
         var speciesArgs = this.getSpeciesArgs(),
             def = $q.defer(),i;
         if(typeof(sid) === 'string') {
             sid = parseInt(sid);
         }
         if(!force && speciesArgs.length) {
+console.log('Doing this thing');			
             var found = false;
             for(i = 0; i < speciesArgs.length; i++) {
-                if(speciesArgs[i].getId() === sid) {
+                if(speciesArgs[i].getId() === sid) {				
                     def.resolve(speciesArgs[i].getPhenophaseList());
                     found = true;
                     break;
                 }
             }
             if(!found) {
+console.log('Dunno');				
                 def.resolve([]);
             }
         } else {
-            var params = { return_all: true, species_id: sid },
-                cacheKey = CacheService.keyFromObject(params),
-                list = CacheService.get(cacheKey);
+		
+            var params = { date: year, species_id: sid },
+            cacheKey = CacheService.keyFromObject(params),
+            list = CacheService.get(cacheKey);
+			
             if(list && list.length) {
+console.log('Found in Cache');				
                 def.resolve(list);
             } else {
-                // not part of the filter go get it
-                // this is a bit of cut/paste from SpeciesFilterArg could maybe be consolidated?
-                $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
-                    params: params
-                }).success(function(phases) {
-                    var seen = {},
-                        filtered = phases[0].phenophases.filter(function(pp){ // the call returns redundant data so filter it out.
-                        if(seen[pp.phenophase_id]) {
-                            return false;
-                        }
-                        seen[pp.phenophase_id] = pp;
-                        return true;
-                    });
-                    CacheService.put(cacheKey,filtered);
-                    def.resolve(filtered);
-                });
+				var seen = {};
+					
+					params['date'] = year + '-01-01';
+
+					// not part of the filter go get it
+					// this is a bit of cut/paste from SpeciesFilterArg could maybe be consolidated?
+					$http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
+						params: params
+					}).success(function(phases) {
+console.log("Calling first http request");					
+console.log(seen);
+						var filtered = phases[0].phenophases.filter(function(pp){ // the call returns redundant data so filter it out.
+							if(seen[pp.phenophase_id]) {
+								return false;
+							}
+							seen[pp.phenophase_id] = pp;
+							return true;
+						});
+console.log(filtered);						
+						CacheService.push(cacheKey,filtered);
+						def.resolve(filtered);
+						
+						params['date'] = year + '-12-31';
+						$http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
+							params: params
+						}).success(function(phases) {
+console.log("Calling second http request");				
+console.log(seen);
+							var filtered = phases[0].phenophases.filter(function(pp){ // the call returns redundant data so filter it out.
+								if(seen[pp.phenophase_id]) {
+									return false;
+								}
+								seen[pp.phenophase_id] = pp;
+								return true;
+							});
+console.log(filtered);							
+							CacheService.push(cacheKey,filtered);
+							def.resolve(filtered);
+
+							
+
+						});						
+
+						
+
+					});	
+				
             }
         }
         return def.promise;
@@ -2563,12 +2639,19 @@ angular.module('npn-viz-tool.gridded',[
                 $rootScope.$broadcast('gridded-layer-on',{layer:$scope.selection.activeLayer});
             });
             $scope.$watch('selection.activeLayer.extent.current',function(v) {
+
                 var layer;
+				
                 if(layer = $scope.selection.activeLayer) {
                     $log.debug('layer extent change ',layer.name,v);
                     noInfoWindows();
-                    layer.off().on();
+					
+					layer.off().on();
+					
+
                 }
+
+				
             });
         }
     };
@@ -2858,6 +2941,7 @@ angular.module('npn-viz-tool.gridded-services',[
                 $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,value){
                     return current||(formattedDate === dateFilter(value.date,fmt) ? value : undefined);
                 },undefined);
+				
             });
         }
     };
@@ -3020,9 +3104,16 @@ angular.module('npn-viz-tool.gridded-services',[
                        .attr('text-anchor','middle')
                        .text(legend.ldef.legend_units);
                 }
+				
+				svg.append('g').append('text').attr('dx',5)
+                       .attr('dy',100+top_pad)
+					   .attr('font-size', '18px')
+                       .attr('text-anchor','right').text(legend.ldef.title + ', ' + legend.ldef.extent.current.label);
             }
             $scope.$watch('legend',redraw);
+
             $($window).bind('resize',redraw);
+			$scope.$watch('legend.layer.extent.current',redraw);
             $scope.$on('$destroy',function(){
                 $log.debug('legend removing resize handler');
                 $($window).unbind('resize',redraw);
@@ -3408,6 +3499,21 @@ angular.module('npn-viz-tool.gridded-services',[
         this.data = data.slice(1);
         this.length = this.data.length;
     }
+	
+
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
+     * @name  setLayer
+     * @description Set the current layer associated with this legend.
+     * @param {object} layer The new layer to associate with this legend.
+     * @returns {object} This legend object.
+     */
+     WmsMapLegend.prototype.setLayer = function(layer) {
+     this.layer = layer;
+             return this;
+     };	
+	
     /**
      * @ngdoc method
      * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
@@ -3428,6 +3534,7 @@ angular.module('npn-viz-tool.gridded-services',[
     WmsMapLegend.prototype.getTitle = function() {
         return this.title_data.label;
     };
+
     /**
      * @ngdoc method
      * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
@@ -3682,9 +3789,12 @@ angular.module('npn-viz-tool.gridded-services',[
              * @returns {promise} A promise that will be resolve with the legend when it arrives ({@link npn-viz-tool.gridded-services:WmsMapLegend}) .
              */
             getLegend: function() {
-                var def = $q.defer();
+				var self = this,
+                 def = $q.defer();
+				 
                 if(legends.hasOwnProperty(layer_def.name)) {
                     def.resolve(legends[layer_def.name]);
+					def.resolve(legends[layer_def.name].setLayer(self));
                 } else {
                     //http://geoserver.usanpn.org/geoserver/wms?request=GetStyles&layers=gdd%3A30yr_avg_agdd&service=wms&version=1.1.1
                     $http.get(WMS_BASE_URL,{
@@ -3706,8 +3816,10 @@ angular.module('npn-viz-tool.gridded-services',[
                         // as is the case for si-x:leaf_anomaly
                         legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def) : undefined;
                         def.resolve(legends[layer_def.name]);
+						def.resolve(legends[layer_def.name].setLayer(self));
                     },def.reject);
                 }
+				
                 return def.promise;
             },
             /**
@@ -4939,13 +5051,31 @@ angular.module('npn-viz-tool.vis-map',[
             $scope.$watch('selection.species',function(species){
                 $scope.phenophaseList = [];
                 if(species) {
-                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,true/*get no matter what*/).then(function(list){
+				
+                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,$scope.selection.year, true/*get no matter what*/).then(function(list){
                         $log.debug('phenophaseList',list);
                         $scope.phenophaseList = list;
                         $scope.selection.phenophase = list.length ? list[0] : undefined;
                     });
+					
+		
                 }
             });
+			
+            $scope.$watch('selection.year',function(year){
+                $scope.phenophaseList = [];
+				var species = $scope.selection.species;
+                if(species) {
+				
+                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,year, true/*get no matter what*/).then(function(list){
+                        $log.debug('phenophaseList',list);
+                        $scope.phenophaseList = list;
+                        $scope.selection.phenophase = list.length ? list[0] : undefined;
+                    });
+					
+		
+                }
+            });			
             $scope.validSelection = function() {
                 var s = $scope.selection;
                 if(s.species && s.phenophase && s.year) {
@@ -5674,6 +5804,7 @@ angular.module("js/gridded/doy-control.html", []).run(["$templateCache", functio
 
 angular.module("js/gridded/gridded-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/gridded/gridded-control.html",
+    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps are available to see spatial and temporal trends in temperature and phenology across the United States. Use the controls below to select a gridded data product to view on the map.</p>\n" +
     "<gridded-layer-control></gridded-layer-control>");
 }]);
 
@@ -5720,8 +5851,8 @@ angular.module("js/gridded/year-control.html", []).run(["$templateCache", functi
 angular.module("js/layers/layerControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/layers/layerControl.html",
     "<p class=\"empty-filter-notes\" ng-if=\"!hasSufficientCriteria()\">\n" +
-    "    Before adding a layer to the map you must create and execute a filter.\n" +
-    "    A map layer will allow you to filter sites based on the geographic boundaries it defines.\n" +
+    "    Before adding a boundary layer to the map you must create and execute a filter.\n" +
+    "    A boundary layer will allow you to filter sites based on the geographic area it defines.\n" +
     "</p>\n" +
     "<ul class=\"list-unstyled\" ng-if=\"hasSufficientCriteria()\">\n" +
     "    <li><label ng-class=\"{'selected-layer': layerOnMap.layer === 'none'}\"><a href ng-click=\"layerOnMap.layer='none'\">None</a></label>\n" +
@@ -5760,11 +5891,8 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <tool id=\"filter\" icon=\"fa-search\" title=\"Filter\">\n" +
     "        <filter-control></filter-control>\n" +
     "    </tool>\n" +
-    "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Layers\">\n" +
+    "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Boundary Layers\">\n" +
     "        <layer-control></layer-control>\n" +
-    "    </tool>\n" +
-    "    <tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">\n" +
-    "        <gridded-control></gridded-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
     "        <vis-control></vis-control>\n" +
@@ -5772,7 +5900,12 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
     "        <settings-control></settings-control>\n" +
     "    </tool>\n" +
-    "</toolbar>");
+    "	<tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">		\n" +
+    "		<gridded-control></gridded-control>\n" +
+    "	</tool>	\n" +
+    "</toolbar>\n" +
+    "\n" +
+    "");
 }]);
 
 angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function($templateCache) {
@@ -5797,6 +5930,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "<div class=\"in-situ-control\" ng-if=\"layer && layer.supportsData()\">\n" +
     "    <div class=\"disable-curtain\" ng-if=\"disableControl\"></div>\n" +
     "    <hr />\n" +
+    "	<h4>Plot Observed Onset</h4>\n" +
     "    <div class=\"form-group\" ng-if=\"speciesList\">\n" +
     "        <label for=\"selectedSpecies\">Species</label>\n" +
     "        <select id=\"selectedSpecies\" class=\"form-control\" ng-model=\"selection.species\"\n" +
@@ -5846,7 +5980,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
 
 angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/mapvis.html",
-    "<vis-dialog title=\"Gridded Data\" modal=\"modal\">\n" +
+    "<vis-dialog title=\"Phenology Observations and Gridded Data\" modal=\"modal\">\n" +
     "    <div class=\"container-fluid\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +

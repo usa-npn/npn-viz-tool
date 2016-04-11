@@ -283,6 +283,7 @@ angular.module('npn-viz-tool.gridded-services',[
                 $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,value){
                     return current||(formattedDate === dateFilter(value.date,fmt) ? value : undefined);
                 },undefined);
+				
             });
         }
     };
@@ -445,9 +446,16 @@ angular.module('npn-viz-tool.gridded-services',[
                        .attr('text-anchor','middle')
                        .text(legend.ldef.legend_units);
                 }
+				
+				svg.append('g').append('text').attr('dx',5)
+                       .attr('dy',100+top_pad)
+					   .attr('font-size', '18px')
+                       .attr('text-anchor','right').text(legend.ldef.title + ', ' + legend.ldef.extent.current.label);
             }
             $scope.$watch('legend',redraw);
+
             $($window).bind('resize',redraw);
+			$scope.$watch('legend.layer.extent.current',redraw);
             $scope.$on('$destroy',function(){
                 $log.debug('legend removing resize handler');
                 $($window).unbind('resize',redraw);
@@ -833,6 +841,21 @@ angular.module('npn-viz-tool.gridded-services',[
         this.data = data.slice(1);
         this.length = this.data.length;
     }
+	
+
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
+     * @name  setLayer
+     * @description Set the current layer associated with this legend.
+     * @param {object} layer The new layer to associate with this legend.
+     * @returns {object} This legend object.
+     */
+     WmsMapLegend.prototype.setLayer = function(layer) {
+     this.layer = layer;
+             return this;
+     };	
+	
     /**
      * @ngdoc method
      * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
@@ -853,6 +876,7 @@ angular.module('npn-viz-tool.gridded-services',[
     WmsMapLegend.prototype.getTitle = function() {
         return this.title_data.label;
     };
+
     /**
      * @ngdoc method
      * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
@@ -1107,9 +1131,12 @@ angular.module('npn-viz-tool.gridded-services',[
              * @returns {promise} A promise that will be resolve with the legend when it arrives ({@link npn-viz-tool.gridded-services:WmsMapLegend}) .
              */
             getLegend: function() {
-                var def = $q.defer();
+				var self = this,
+                 def = $q.defer();
+				 
                 if(legends.hasOwnProperty(layer_def.name)) {
                     def.resolve(legends[layer_def.name]);
+					def.resolve(legends[layer_def.name].setLayer(self));
                 } else {
                     //http://geoserver.usanpn.org/geoserver/wms?request=GetStyles&layers=gdd%3A30yr_avg_agdd&service=wms&version=1.1.1
                     $http.get(WMS_BASE_URL,{
@@ -1131,8 +1158,10 @@ angular.module('npn-viz-tool.gridded-services',[
                         // as is the case for si-x:leaf_anomaly
                         legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def) : undefined;
                         def.resolve(legends[layer_def.name]);
+						def.resolve(legends[layer_def.name].setLayer(self));
                     },def.reject);
                 }
+				
                 return def.promise;
             },
             /**

@@ -328,13 +328,31 @@ angular.module('npn-viz-tool.vis-map',[
             $scope.$watch('selection.species',function(species){
                 $scope.phenophaseList = [];
                 if(species) {
-                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,true/*get no matter what*/).then(function(list){
+				
+                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,$scope.selection.year, true/*get no matter what*/).then(function(list){
                         $log.debug('phenophaseList',list);
                         $scope.phenophaseList = list;
                         $scope.selection.phenophase = list.length ? list[0] : undefined;
                     });
+					
+		
                 }
             });
+			
+            $scope.$watch('selection.year',function(year){
+                $scope.phenophaseList = [];
+				var species = $scope.selection.species;
+                if(species) {
+				
+                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,year, true/*get no matter what*/).then(function(list){
+                        $log.debug('phenophaseList',list);
+                        $scope.phenophaseList = list;
+                        $scope.selection.phenophase = list.length ? list[0] : undefined;
+                    });
+					
+		
+                }
+            });			
             $scope.validSelection = function() {
                 var s = $scope.selection;
                 if(s.species && s.phenophase && s.year) {

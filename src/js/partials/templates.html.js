@@ -310,6 +310,7 @@ angular.module("js/gridded/doy-control.html", []).run(["$templateCache", functio
 
 angular.module("js/gridded/gridded-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/gridded/gridded-control.html",
+    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps are available to see spatial and temporal trends in temperature and phenology across the United States. Use the controls below to select a gridded data product to view on the map.</p>\n" +
     "<gridded-layer-control></gridded-layer-control>");
 }]);
 
@@ -356,8 +357,8 @@ angular.module("js/gridded/year-control.html", []).run(["$templateCache", functi
 angular.module("js/layers/layerControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/layers/layerControl.html",
     "<p class=\"empty-filter-notes\" ng-if=\"!hasSufficientCriteria()\">\n" +
-    "    Before adding a layer to the map you must create and execute a filter.\n" +
-    "    A map layer will allow you to filter sites based on the geographic boundaries it defines.\n" +
+    "    Before adding a boundary layer to the map you must create and execute a filter.\n" +
+    "    A boundary layer will allow you to filter sites based on the geographic area it defines.\n" +
     "</p>\n" +
     "<ul class=\"list-unstyled\" ng-if=\"hasSufficientCriteria()\">\n" +
     "    <li><label ng-class=\"{'selected-layer': layerOnMap.layer === 'none'}\"><a href ng-click=\"layerOnMap.layer='none'\">None</a></label>\n" +
@@ -396,11 +397,8 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <tool id=\"filter\" icon=\"fa-search\" title=\"Filter\">\n" +
     "        <filter-control></filter-control>\n" +
     "    </tool>\n" +
-    "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Layers\">\n" +
+    "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Boundary Layers\">\n" +
     "        <layer-control></layer-control>\n" +
-    "    </tool>\n" +
-    "    <tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">\n" +
-    "        <gridded-control></gridded-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
     "        <vis-control></vis-control>\n" +
@@ -408,7 +406,12 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
     "        <settings-control></settings-control>\n" +
     "    </tool>\n" +
-    "</toolbar>");
+    "	<tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">		\n" +
+    "		<gridded-control></gridded-control>\n" +
+    "	</tool>	\n" +
+    "</toolbar>\n" +
+    "\n" +
+    "");
 }]);
 
 angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function($templateCache) {
@@ -433,6 +436,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "<div class=\"in-situ-control\" ng-if=\"layer && layer.supportsData()\">\n" +
     "    <div class=\"disable-curtain\" ng-if=\"disableControl\"></div>\n" +
     "    <hr />\n" +
+    "	<h4>Plot Observed Onset</h4>\n" +
     "    <div class=\"form-group\" ng-if=\"speciesList\">\n" +
     "        <label for=\"selectedSpecies\">Species</label>\n" +
     "        <select id=\"selectedSpecies\" class=\"form-control\" ng-model=\"selection.species\"\n" +
@@ -482,7 +486,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
 
 angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/mapvis.html",
-    "<vis-dialog title=\"Gridded Data\" modal=\"modal\">\n" +
+    "<vis-dialog title=\"Phenology Observations and Gridded Data\" modal=\"modal\">\n" +
     "    <div class=\"container-fluid\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +

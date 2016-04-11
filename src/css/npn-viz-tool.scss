@@ -142,6 +142,10 @@ $tool-content-overlap: 40px;
 
             @include tb-transition();
         }
+		
+		li:last-child{
+			margin-top:57px;
+		}
     }
     .toolbar-content {
         width: $tb-content-width;
@@ -585,12 +589,12 @@ $pulse-count: 60;
     border-radius: 5px;
     .gridded-legend {
         width: 100%;
-        height: 85px;
+        height: 110px;
         border: none;
     }
 }
 
-.vis-dialog.gridded-data {
+.vis-dialog.phenology-observations-and-gridded-data {
     .angular-google-map-container {
         position: inherit;
         width:100%;

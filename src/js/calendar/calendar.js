@@ -44,7 +44,25 @@ angular.module('npn-viz-tool.vis-calendar',[
     $scope.$watch('selection.species',function(){
         $scope.phenophaseList = [];
         if($scope.selection.species) {
-            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
+            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id, $scope.selection.year).then(function(list){
+                $log.debug('phenophaseList',list);
+
+                if(list.length) {
+                    list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
+
+                }
+				
+                $scope.phenophaseList = list;
+                if(list.length) {
+                    $scope.selection.phenophase = list[0];
+                }
+            });
+        }
+    });
+    $scope.$watch('selection.year',function(){
+        $scope.phenophaseList = [];
+        if($scope.selection.species) {
+            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id, $scope.selection.year, true).then(function(list){
                 $log.debug('phenophaseList',list);
                 if(list.length) {
                     list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
@@ -55,7 +73,8 @@ angular.module('npn-viz-tool.vis-calendar',[
                 }
             });
         }
-    });
+    });	
+	
     function advanceColor() {
         if($scope.selection.color < $scope.colors.length) {
             $scope.selection.color++;
