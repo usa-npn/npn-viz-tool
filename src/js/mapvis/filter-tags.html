@@ -1,4 +1,12 @@
 <ul class="filter-tags map-vis list-inline pull-right">
+	<li ng-if="mapVisFilter.length">
+        <div class="btn-group filter-tag">
+            <a class="btn btn-default">
+                <span>Multiple Species Present</span>
+                <img src='mult-species-legend.png' />
+            </a>
+        </div>		
+	</li>
     <li ng-repeat="tag in mapVisFilter">
         <div class="btn-group filter-tag">
             <a class="btn btn-default">

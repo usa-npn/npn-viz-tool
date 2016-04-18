@@ -571,13 +571,14 @@ angular.module('npn-viz-tool.filter',[
             },
             cacheKey = CacheService.keyFromObject(params),
             cached = CacheService.get(cacheKey);
-        if(cached) {
+		if(cached) {
             def.resolve(cached);
         } else {
             $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
                 params: params
             }).success(function(phases) {
-                var list = removeRedundantPhenophases(phases[0].phenophases);
+				var list = phases[0].phenophases;
+                list = removeRedundantPhenophases(list);
                 CacheService.put(cacheKey,list);
                 def.resolve(list);
 
@@ -587,7 +588,7 @@ angular.module('npn-viz-tool.filter',[
     }
     function getPhenophasesForYear(sid,year) {
         var def = $q.defer();
-        $q.all([getPhenophasesForDate(sid,year+'-01-01'),getPhenophasesForDate(sid,year+'-12-31')]).then(function(results) {
+        $q.all([getPhenophasesForDate(sid,year+'-12-31'),getPhenophasesForDate(sid,year+'-01-01')]).then(function(results) {
             $log.debug('getPhenophasesForYear.results',results);
             def.resolve(mergeRedundantPhenophaseLists(results));
         });

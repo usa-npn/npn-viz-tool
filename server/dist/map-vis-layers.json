@@ -25,7 +25,7 @@
                 "name": "gdd:30yr_avg_agdd_50f"
             }]
     },{
-        "name": "Temperature Accumulations, Daily Contemporary",
+        "name": "Temperature Accumulations, Current Day",
         "supports_data": false,
         "legend_label_filter": {
             "name": "legendGddUnits",
@@ -92,7 +92,7 @@
                 "name": "si-x:zabelli_bloom_prism"
             }]
     },{
-        "name": "Spring Index, Daily Contemporary",
+        "name": "Spring Indicies, Current Year",
         "legend_label_filter": {
             "name": "legendDoy"
         },

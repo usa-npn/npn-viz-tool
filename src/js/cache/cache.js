@@ -86,26 +86,6 @@ angular.module('npn-viz-tool.vis-cache',[
         }
       },
 	  
-	  
-      push : function(key,obj) {
-        if ( key == null ) {
-          return;
-        }
-        if ( obj == null ) {
-          $log.debug( 'removing cached object \''+key+'\'', cache[key]);
-          // probably should slice to shrink cache array but...
-          cache[key] = null;
-          return;
-        }
-		
-		if(cache[key] && cache[key].length){
-			Array.prototype.push.apply(cache[key], obj);			
-		}else{
-			this.put(key,obj);
-		}
-
-      },	  
-	  
       /**
        * @ngdoc method
        * @methodOf npn-viz-tool.cache:CacheService

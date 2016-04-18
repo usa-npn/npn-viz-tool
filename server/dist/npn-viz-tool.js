@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0-beta - 2016-04-11
+ * Version: 1.0.0-beta - 2016-04-18
  */
 
 /**
@@ -257,26 +257,6 @@ angular.module('npn-viz-tool.vis-cache',[
         }
       },
 	  
-	  
-      push : function(key,obj) {
-        if ( key == null ) {
-          return;
-        }
-        if ( obj == null ) {
-          $log.debug( 'removing cached object \''+key+'\'', cache[key]);
-          // probably should slice to shrink cache array but...
-          cache[key] = null;
-          return;
-        }
-		
-		if(cache[key] && cache[key].length){
-			Array.prototype.push.apply(cache[key], obj);			
-		}else{
-			this.put(key,obj);
-		}
-
-      },	  
-	  
       /**
        * @ngdoc method
        * @methodOf npn-viz-tool.cache:CacheService
@@ -348,39 +328,35 @@ angular.module('npn-viz-tool.vis-calendar',[
             $scope.selection.species = list[0];
         }
     });
-    $scope.$watch('selection.species',function(){
-        $scope.phenophaseList = [];
-        if($scope.selection.species) {
-            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
-                $log.debug('phenophaseList',list);
+	
+	function phenophaseListUpdate() {
+		$log.debug('Calling phenophase list update');
+		$scope.phenophaseList = [];
+		var species = $scope.selection.species.species_id,
+			year = $scope.selection.year;
 
-                if(list.length) {
-                    list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
+		if(species && year) {
+			$scope.phenophaseList = [];
+			FilterService.getFilter().getPhenophasesForSpecies(species,true,[year]).then(function(list){
+				$log.debug('phenophaseList',list);
+				if(list.length) {
+					list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
+					
+					$scope.selection.phenophase = list.length ? list[0] : undefined;
 
-                }
+				}				
 				
-                $scope.phenophaseList = list;
-                if(list.length) {
-                    $scope.selection.phenophase = list[0];
-                }
-            });
-        }
-    });
-    $scope.$watch('selection.year',function(){
-        $scope.phenophaseList = [];
-        if($scope.selection.species) {
-            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id,true).then(function(list){
-                $log.debug('phenophaseList',list);
-                if(list.length) {
-                    list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
-                }
-                $scope.phenophaseList = list;
-                if(list.length) {
-                    $scope.selection.phenophase = list[0];
-                }
-            });
-        }
-    });	
+				$scope.phenophaseList = list;							
+				
+			});
+			
+			
+			
+		}
+	}	
+	
+    $scope.$watch('selection.species',phenophaseListUpdate);
+    $scope.$watch('selection.year',phenophaseListUpdate);
 	
     function advanceColor() {
         if($scope.selection.color < $scope.colors.length) {
@@ -1362,13 +1338,14 @@ angular.module('npn-viz-tool.filter',[
             },
             cacheKey = CacheService.keyFromObject(params),
             cached = CacheService.get(cacheKey);
-        if(cached) {
+		if(cached) {
             def.resolve(cached);
         } else {
             $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
                 params: params
             }).success(function(phases) {
-                var list = removeRedundantPhenophases(phases[0].phenophases);
+				var list = phases[0].phenophases;
+                list = removeRedundantPhenophases(list);
                 CacheService.put(cacheKey,list);
                 def.resolve(list);
 
@@ -1378,7 +1355,7 @@ angular.module('npn-viz-tool.filter',[
     }
     function getPhenophasesForYear(sid,year) {
         var def = $q.defer();
-        $q.all([getPhenophasesForDate(sid,year+'-01-01'),getPhenophasesForDate(sid,year+'-12-31')]).then(function(results) {
+        $q.all([getPhenophasesForDate(sid,year+'-12-31'),getPhenophasesForDate(sid,year+'-01-01')]).then(function(results) {
             $log.debug('getPhenophasesForYear.results',results);
             def.resolve(mergeRedundantPhenophaseLists(results));
         });
@@ -5794,7 +5771,7 @@ angular.module("js/gridded/doy-control.html", []).run(["$templateCache", functio
 
 angular.module("js/gridded/gridded-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/gridded/gridded-control.html",
-    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps are available to see spatial and temporal trends in temperature and phenology across the United States. Use the controls below to select a gridded data product to view on the map.</p>\n" +
+    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps display spatial and temporal trends in temperature and phenology across the United States. Use the controls below to select a gridded data product to view on the map.</p>\n" +
     "<gridded-layer-control></gridded-layer-control>");
 }]);
 
@@ -5901,6 +5878,14 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
 angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/filter-tags.html",
     "<ul class=\"filter-tags map-vis list-inline pull-right\">\n" +
+    "	<li ng-if=\"mapVisFilter.length\">\n" +
+    "        <div class=\"btn-group filter-tag\">\n" +
+    "            <a class=\"btn btn-default\">\n" +
+    "                <span>Multiple Species Present</span>\n" +
+    "                <img src='mult-species-legend.png' />\n" +
+    "            </a>\n" +
+    "        </div>		\n" +
+    "	</li>\n" +
     "    <li ng-repeat=\"tag in mapVisFilter\">\n" +
     "        <div class=\"btn-group filter-tag\">\n" +
     "            <a class=\"btn btn-default\">\n" +
@@ -7197,7 +7182,7 @@ angular.module('npn-viz-tool.vis',[
             template: 'js/calendar/calendar.html',
             description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
         },{
-            title: 'Point and Grid Data',
+            title: 'Phenology Observations and Gridded Data',
             controller: 'MapVisCtrl',
             template: 'js/mapvis/mapvis.html',
             description: 'This visualization maps ground-based observations against USA-NPN gridded data products, including Accumulated Growing Degree Days and Spring Index models.',

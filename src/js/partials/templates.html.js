@@ -309,7 +309,7 @@ angular.module("js/gridded/doy-control.html", []).run(["$templateCache", functio
 
 angular.module("js/gridded/gridded-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/gridded/gridded-control.html",
-    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps are available to see spatial and temporal trends in temperature and phenology across the United States. Use the controls below to select a gridded data product to view on the map.</p>\n" +
+    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps display spatial and temporal trends in temperature and phenology across the United States. Use the controls below to select a gridded data product to view on the map.</p>\n" +
     "<gridded-layer-control></gridded-layer-control>");
 }]);
 
@@ -416,6 +416,14 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
 angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/filter-tags.html",
     "<ul class=\"filter-tags map-vis list-inline pull-right\">\n" +
+    "	<li ng-if=\"mapVisFilter.length\">\n" +
+    "        <div class=\"btn-group filter-tag\">\n" +
+    "            <a class=\"btn btn-default\">\n" +
+    "                <span>Multiple Species Present</span>\n" +
+    "                <img src='mult-species-legend.png' />\n" +
+    "            </a>\n" +
+    "        </div>		\n" +
+    "	</li>\n" +
     "    <li ng-repeat=\"tag in mapVisFilter\">\n" +
     "        <div class=\"btn-group filter-tag\">\n" +
     "            <a class=\"btn btn-default\">\n" +

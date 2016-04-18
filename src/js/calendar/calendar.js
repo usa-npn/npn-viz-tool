@@ -41,39 +41,35 @@ angular.module('npn-viz-tool.vis-calendar',[
             $scope.selection.species = list[0];
         }
     });
-    $scope.$watch('selection.species',function(){
-        $scope.phenophaseList = [];
-        if($scope.selection.species) {
-            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
-                $log.debug('phenophaseList',list);
+	
+	function phenophaseListUpdate() {
+		$log.debug('Calling phenophase list update');
+		$scope.phenophaseList = [];
+		var species = $scope.selection.species.species_id,
+			year = $scope.selection.year;
 
-                if(list.length) {
-                    list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
+		if(species && year) {
+			$scope.phenophaseList = [];
+			FilterService.getFilter().getPhenophasesForSpecies(species,true,[year]).then(function(list){
+				$log.debug('phenophaseList',list);
+				if(list.length) {
+					list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
+					
+					$scope.selection.phenophase = list.length ? list[0] : undefined;
 
-                }
+				}				
 				
-                $scope.phenophaseList = list;
-                if(list.length) {
-                    $scope.selection.phenophase = list[0];
-                }
-            });
-        }
-    });
-    $scope.$watch('selection.year',function(){
-        $scope.phenophaseList = [];
-        if($scope.selection.species) {
-            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id,true).then(function(list){
-                $log.debug('phenophaseList',list);
-                if(list.length) {
-                    list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
-                }
-                $scope.phenophaseList = list;
-                if(list.length) {
-                    $scope.selection.phenophase = list[0];
-                }
-            });
-        }
-    });	
+				$scope.phenophaseList = list;							
+				
+			});
+			
+			
+			
+		}
+	}	
+	
+    $scope.$watch('selection.species',phenophaseListUpdate);
+    $scope.$watch('selection.year',phenophaseListUpdate);
 	
     function advanceColor() {
         if($scope.selection.color < $scope.colors.length) {
