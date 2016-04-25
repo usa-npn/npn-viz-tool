@@ -1,4 +1,3 @@
-//This is a test.
 angular.module('npn-viz-tool.settings',[
     'npn-viz-tool.filters'
 ])
