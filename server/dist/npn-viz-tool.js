@@ -5881,7 +5881,7 @@ angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function
     "	<li ng-if=\"mapVisFilter.length\">\n" +
     "        <div class=\"btn-group filter-tag\">\n" +
     "            <a class=\"btn btn-default\">\n" +
-    "                <span>Multiple Species Present</span>\n" +
+    "                <span>Multiple Observations Reported at this Location</span>\n" +
     "                <img src='mult-species-legend.png' />\n" +
     "            </a>\n" +
     "        </div>		\n" +
