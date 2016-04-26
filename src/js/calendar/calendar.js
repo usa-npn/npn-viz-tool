@@ -113,11 +113,7 @@ angular.module('npn-viz-tool.vis-calendar',[
                 return false;
             }
         }
-        for(i = 0; i < $scope.toPlot.length; i++) {
-            if(next.color === $scope.toPlot[i].color) {
-                return false;
-            }
-        }
+
         return true;
     };
     $scope.addToPlot = function() {
