@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0-beta - 2016-04-21
+ * Version: 1.0.0-beta - 2016-04-26
  */
 
 /**

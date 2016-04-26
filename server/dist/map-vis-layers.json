@@ -69,7 +69,7 @@
                 "name": "gdd:agdd_anomaly_50f"
             }]
     },{
-        "name": "Spring Index, Historical Annual",
+        "name": "Spring Indices, Historical Annual",
         "legend_label_filter": {
             "name": "legendDoy"
         },
@@ -92,7 +92,7 @@
                 "name": "si-x:zabelli_bloom_prism"
             }]
     },{
-        "name": "Spring Indicies, Current Year",
+        "name": "Spring Indices, Current Year",
         "legend_label_filter": {
             "name": "legendDoy"
         },
@@ -119,7 +119,7 @@
                 "name": "si-x:zabelli_bloom_ncep"
             }]
     },{
-        "name": "Spring Index, Daily Anomaly",
+        "name": "Spring Indices, Daily Anomaly",
         "supports_data": false,
         "legend_label_filter": {
             "name": "legendSixAnomaly"
@@ -134,7 +134,7 @@
                 "name": "si-x:bloom_anomaly"
             }]
     },{
-        "name": "Spring Index, 30-Year Average",
+        "name": "Spring Indices, 30-Year Average",
         "legend_label_filter": {
             "name": "legendDoy"
         },

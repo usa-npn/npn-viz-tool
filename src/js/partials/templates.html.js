@@ -1,4 +1,4 @@
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/gridded/date-control.html', 'js/gridded/doy-control.html', 'js/gridded/gridded-control.html', 'js/gridded/layer-control.html', 'js/gridded/legend.html', 'js/gridded/year-control.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/filter-tags.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/mapvis.html', 'js/mapvis/marker-info-window.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/gridded/date-control.html', 'js/gridded/doy-control.html', 'js/gridded/gridded-control.html', 'js/gridded/layer-control.html', 'js/gridded/legend.html', 'js/gridded/year-control.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/filter-tags - Copy.html', 'js/mapvis/filter-tags.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/mapvis.html', 'js/mapvis/marker-info-window.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -411,6 +411,31 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "</toolbar>\n" +
     "\n" +
     "");
+}]);
+
+angular.module("js/mapvis/filter-tags - Copy.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/mapvis/filter-tags - Copy.html",
+    "<ul class=\"filter-tags map-vis list-inline pull-right\">\n" +
+    "	<li ng-if=\"mapVisFilter.length\">\n" +
+    "        <div class=\"btn-group filter-tag\">\n" +
+    "            <a class=\"btn btn-default\">\n" +
+    "                <span>Multiple Species Present</span>\n" +
+    "                <img src='mult-species-legend.png' />\n" +
+    "            </a>\n" +
+    "        </div>		\n" +
+    "	</li>\n" +
+    "    <li ng-repeat=\"tag in mapVisFilter\">\n" +
+    "        <div class=\"btn-group filter-tag\">\n" +
+    "            <a class=\"btn btn-default\">\n" +
+    "                <span>{{tag.species | speciesTitle}}, {{tag.phenophase.phenophase_name}}, {{tag.year}} </span>\n" +
+    "                <svg id=\"map-vis-marker-{{$index}}\"></svg>\n" +
+    "            </a>\n" +
+    "            <a class=\"btn btn-default\" ng-click=\"removeFromFilter($index)\">\n" +
+    "                <i class=\"fa fa-times-circle-o\"></i>\n" +
+    "            </a>\n" +
+    "        </div>\n" +
+    "    </li>\n" +
+    "</ul>");
 }]);
 
 angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function($templateCache) {
