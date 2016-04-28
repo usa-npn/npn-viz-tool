@@ -534,6 +534,7 @@ angular.module('npn-viz-tool.vis-map',[
             'click': function(m) {
                 $log.debug('click',m);
                 $scope.$apply(function(){
+                    var sameAsPreviousMarker = ($scope.markerModel === $scope.results.markerModels[m.model.site_id]);
                     $scope.markerModel = $scope.results.markerModels[m.model.site_id];
                     if(!markerInfoWindow) {
                         markerInfoWindow = new api.InfoWindow({
@@ -541,7 +542,9 @@ angular.module('npn-viz-tool.vis-map',[
                             content: ''
                         });
                     }
-                    markerInfoWindow.setContent('<i class="fa fa-circle-o-notch fa-spin"></i>');
+                    if(!sameAsPreviousMarker) {
+                        markerInfoWindow.setContent('<i class="fa fa-circle-o-notch fa-spin"></i>');
+                    }
                     markerInfoWindow.setPosition(m.position);
                     markerInfoWindow.open(m.map);
                 });
