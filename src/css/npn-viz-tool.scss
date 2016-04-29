@@ -589,12 +589,18 @@ $pulse-count: 60;
     border-radius: 5px;
     .gridded-legend {
         width: 100%;
-        height: 110px;
+        height: 125px;
         border: none;
     }
 }
 
-.vis-dialog.phenology-observations-and-gridded-data {
+.citation-text{
+	font-size:11px;
+	font-style:italic;
+	padding-top:2px;
+}
+
+.vis-dialog.phenology-maps {
     .angular-google-map-container {
         position: inherit;
         width:100%;
@@ -621,7 +627,7 @@ $pulse-count: 60;
             opacity: 0.2;
             border-radius: 5px;
         }
-    }
+    }	
 }
 
 #griddedPointInfoWindow {

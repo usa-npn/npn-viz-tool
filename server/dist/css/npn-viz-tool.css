@@ -543,11 +543,17 @@ div[title="Stop drawing"] {
 }
 #griddedLegendMain .gridded-legend {
   width: 100%;
-  height: 110px;
+  height: 125px;
   border: none;
 }
 
-.vis-dialog.phenology-observations-and-gridded-data .angular-google-map-container {
+.citation-text {
+  font-size: 11px;
+  font-style: italic;
+  padding-top: 2px;
+}
+
+.vis-dialog.phenology-maps .angular-google-map-container {
   position: inherit;
   width: 100%;
   height: 500px;
@@ -557,16 +563,16 @@ div[title="Stop drawing"] {
   border-radius: 5px;
   border: 1px solid #aaa;
 }
-.vis-dialog.phenology-observations-and-gridded-data .gridded-legend {
+.vis-dialog.phenology-maps .gridded-legend {
   width: 100%;
   height: 85px;
   margin-top: 10px;
   border: none;
 }
-.vis-dialog.phenology-observations-and-gridded-data .in-situ-control {
+.vis-dialog.phenology-maps .in-situ-control {
   position: relative;
 }
-.vis-dialog.phenology-observations-and-gridded-data .in-situ-control .disable-curtain {
+.vis-dialog.phenology-maps .in-situ-control .disable-curtain {
   position: absolute;
   z-index: 3000;
   top: 0px;

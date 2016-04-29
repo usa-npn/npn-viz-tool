@@ -9,7 +9,7 @@ angular.module('npn-viz-tool.vis-calendar',[
     var response, // raw response from the server
         data, // processed data from the server
         dateArg = FilterService.getFilter().getDateArg(),
-        sizing = ChartService.getSizeInfo({top: 20, right: 35, bottom: 35, left: 35}),
+        sizing = ChartService.getSizeInfo({top: 20, right: 35, bottom: 45, left: 35}),
         chart,
         d3_month_fmt = d3.time.format('%B'),
         x = d3.scale.ordinal().rangeBands([0,sizing.width]).domain(d3.range(1,366)),
@@ -204,6 +204,12 @@ angular.module('npn-viz-tool.vis-calendar',[
           // hide y axis
           chart.selectAll('g .y.axis path')
             .style('display','none');
+			
+		  svg.append('g').append('text').attr('dx',5)
+			   .attr('dy',sizing.height + 61)
+			   .attr('font-size', '11px')
+			   .attr('font-style','italic')
+			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');			
 
           commonChartUpdates();
     },500);

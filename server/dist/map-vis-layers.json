@@ -2,7 +2,7 @@
     "geo_server": {
         "url": "//geoserver-dev.usanpn.org/geoserver"
     },
-    "description" : "<a href=\"https://www.usanpn.org/data/spring\" target=\"_blank\">More Info on Gridded Data Products</a>",
+    "description" : "",
     "categories": [{
         "name": "Temperature Accumulations, Daily 30-year Average",
         "supports_data": false,

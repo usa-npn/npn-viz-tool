@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0-beta - 2016-04-26
+ * Version: 1.0.0-beta - 2016-04-29
  */
 
 /**
@@ -296,7 +296,7 @@ angular.module('npn-viz-tool.vis-calendar',[
     var response, // raw response from the server
         data, // processed data from the server
         dateArg = FilterService.getFilter().getDateArg(),
-        sizing = ChartService.getSizeInfo({top: 20, right: 35, bottom: 35, left: 35}),
+        sizing = ChartService.getSizeInfo({top: 20, right: 35, bottom: 45, left: 35}),
         chart,
         d3_month_fmt = d3.time.format('%B'),
         x = d3.scale.ordinal().rangeBands([0,sizing.width]).domain(d3.range(1,366)),
@@ -491,6 +491,12 @@ angular.module('npn-viz-tool.vis-calendar',[
           // hide y axis
           chart.selectAll('g .y.axis path')
             .style('display','none');
+			
+		  svg.append('g').append('text').attr('dx',5)
+			   .attr('dy',sizing.height + 61)
+			   .attr('font-size', '11px')
+			   .attr('font-style','italic')
+			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');			
 
           commonChartUpdates();
     },500);
@@ -3086,6 +3092,12 @@ angular.module('npn-viz-tool.gridded-services',[
                        .attr('dy',100+top_pad)
 					   .attr('font-size', '18px')
                        .attr('text-anchor','right').text(legend.ldef.title + ', ' + legend.ldef.extent.current.label);
+					   
+				svg.append('g').append('text').attr('dx',5)
+                       .attr('dy',118+top_pad)
+					   .attr('font-size', '11px')
+                       .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
+					   
             }
             $scope.$watch('legend',redraw);
 
@@ -3166,7 +3178,7 @@ angular.module('npn-viz-tool.gridded-services',[
  */
 .filter('legendGddUnits',['numberFilter',function(numberFilter){
     return function(n,includeUnits) {
-        return numberFilter(n,0)+(includeUnits ? ' GDD' : '');
+        return numberFilter(n,0)+(includeUnits ? ' AGDD' : '');
     };
 }])
 /**
@@ -3201,7 +3213,7 @@ angular.module('npn-viz-tool.gridded-services',[
             return 'No Difference';
         }
         var lt = n < 0;
-        return numberFilter(Math.abs(n),0)+(includeUnits ? ' GDD ' : ' ')+(lt ? '<' : '>') +' Avg';
+        return numberFilter(Math.abs(n),0)+(includeUnits ? ' AGDD ' : ' ')+(lt ? '<' : '>') +' Avg';
     };
 }])
 /**
@@ -5234,6 +5246,7 @@ angular.module('npn-viz-tool.vis-map',[
             'click': function(m) {
                 $log.debug('click',m);
                 $scope.$apply(function(){
+                    var sameAsPreviousMarker = ($scope.markerModel === $scope.results.markerModels[m.model.site_id]);
                     $scope.markerModel = $scope.results.markerModels[m.model.site_id];
                     if(!markerInfoWindow) {
                         markerInfoWindow = new api.InfoWindow({
@@ -5241,7 +5254,9 @@ angular.module('npn-viz-tool.vis-map',[
                             content: ''
                         });
                     }
-                    markerInfoWindow.setContent('<i class="fa fa-circle-o-notch fa-spin"></i>');
+                    if(!sameAsPreviousMarker) {
+                        markerInfoWindow.setContent('<i class="fa fa-circle-o-notch fa-spin"></i>');
+                    }
                     markerInfoWindow.setPosition(m.position);
                     markerInfoWindow.open(m.map);
                 });
@@ -5512,6 +5527,9 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            </div>\n" +
     "        </div>\n" +
     "        </center>\n" +
+    "		<!--\n" +
+    "		<p class = 'citation-text'>USA National Phenology Network, www.usanpn.org</p>\n" +
+    "		-->\n" +
     "        <ul class=\"list-inline calendar-chart-controls\" ng-if=\"data\" style=\"float: right;\">\n" +
     "            <li>Label Size\n" +
     "                <a href class=\"btn btn-default btn-xs\" ng-click=\"decrFontSize()\"><i class=\"fa fa-minus\"></i></a>\n" +
@@ -5767,7 +5785,8 @@ angular.module("js/gridded/doy-control.html", []).run(["$templateCache", functio
 
 angular.module("js/gridded/gridded-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/gridded/gridded-control.html",
-    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps display spatial and temporal trends in temperature and phenology across the United States. Use the controls below to select a gridded data product to view on the map.</p>\n" +
+    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps display spatial and temporal patterns in temperature and phenology across the United States. Use the controls below to select a gridded layer to view on the map.</p>\n" +
+    "<p><a href=\"https://www.usanpn.org/data/spring\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
     "<gridded-layer-control></gridded-layer-control>");
 }]);
 
@@ -5901,7 +5920,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "<div class=\"in-situ-control\" ng-if=\"layer && layer.supportsData()\">\n" +
     "    <div class=\"disable-curtain\" ng-if=\"disableControl\"></div>\n" +
     "    <hr />\n" +
-    "	<h4>Plot Observed Onset</h4>\n" +
+    "	<h4>Plot Observed Onset</h4>	\n" +
     "    <div class=\"form-group\" ng-if=\"speciesList\">\n" +
     "        <label for=\"selectedSpecies\">Species</label>\n" +
     "        <select id=\"selectedSpecies\" class=\"form-control\" ng-model=\"selection.species\"\n" +
@@ -5951,7 +5970,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
 
 angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/mapvis.html",
-    "<vis-dialog title=\"Phenology Observations and Gridded Data\" modal=\"modal\">\n" +
+    "<vis-dialog title=\"Phenology Maps\" modal=\"modal\">\n" +
     "    <div class=\"container-fluid\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +
@@ -5968,10 +5987,13 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "                    <map-vis-geo-layer></map-vis-geo-layer>\n" +
     "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
     "                </ui-gmap-google-map>\n" +
+    "				<p class = 'citation-text'>USA National Phenology Network, www.usanpn.org</p>\n" +
     "                <gridded-legend legend=\"legend\"></gridded-legend>\n" +
     "                <!--map-vis-marker-info-window></map-vis-marker-info-window-->\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
+    "				<h4>Select Gridded Layer</h4>\n" +
+    "				<p><a href=\"https://www.usanpn.org/data/spring\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
     "                <gridded-layer-control></gridded-layer-control>\n" +
     "                <map-vis-in-situ-control layer=\"selection.layer\" map-vis-filter=\"speciesSelections\" map-vis-plot=\"plotMarkers()\"></map-vis-in-situ-control>\n" +
     "            </div>\n" +
@@ -5988,7 +6010,7 @@ angular.module("js/mapvis/marker-info-window.html", []).run(["$templateCache", f
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-if=\"markerModel.station.group_name\"><label>Group:</label> {{markerModel.station.group_name}}</li>\n" +
     "            <li><label>Latitude:</label> {{markerModel.station.latitude}} <label>Longitude:</label> {{markerModel.station.longitude}}</li>\n" +
-    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Modeled Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{legend.formatPointData(markerModel.gridded_legend_data.point)}})</li>\n" +
+    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Gridded Layer Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{legend.formatPointData(markerModel.gridded_legend_data.point)}})</li>\n" +
     "        </ul>\n" +
     "    </div>\n" +
     "    <div class=\"gridded-data\" ng-if=\"markerModel.gridded_legend_data\">\n" +
@@ -6199,7 +6221,7 @@ angular.module('npn-viz-tool.vis-scatter',[
 
         {key:'daylength',label:'Day Length (s)'},
         {key:'acc_prcp',label:'Accumulated Precip (mm)'},
-        {key:'gdd',label:'GDD'}
+        {key:'gdd',label:'AGDD'}
         ];
 
     var defaultAxisFmt = d3.format('d');
@@ -6382,6 +6404,12 @@ angular.module('npn-viz-tool.vis-scatter',[
             .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
             .style('text-anchor', 'middle')
             .text('Onset DOY');
+			
+		  svg.append('g').append('text').attr('dx',5)
+			   .attr('dy',sizing.height + 136)
+			   .attr('font-size', '11px')
+			   .attr('font-style','italic')
+			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');			
 
         commonChartUpdates();
 
@@ -7168,20 +7196,20 @@ angular.module('npn-viz-tool.vis',[
             height: HEIGHT
         },
         VISUALIZATIONS = [{
-            title: 'Scatter Plot',
+            title: 'Scatter Plots',
             controller: 'ScatterVisCtrl',
             template: 'js/scatter/scatter.html',
             description: 'This visualization plots selected geographic or climactic variables against estimated onset dates for individuals for up to three species/phenophase pairs.'
         },{
-            title: 'Calendar',
+            title: 'Calendars',
             controller: 'CalendarVisCtrl',
             template: 'js/calendar/calendar.html',
             description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
         },{
-            title: 'Phenology Observations and Gridded Data',
+            title: 'Maps',
             controller: 'MapVisCtrl',
             template: 'js/mapvis/mapvis.html',
-            description: 'This visualization maps ground-based observations against USA-NPN gridded data products, including Accumulated Growing Degree Days and Spring Index models.',
+            description: 'This visualization maps ground-based observations against USA-NPN phenology maps, including Accumulated Growing Degree Days and Spring Index models.',
             singleStation: false // doesn't make sense for a single station visualization.
         }],
         visualizeSingleStationId;

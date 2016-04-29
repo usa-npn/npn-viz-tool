@@ -451,6 +451,12 @@ angular.module('npn-viz-tool.gridded-services',[
                        .attr('dy',100+top_pad)
 					   .attr('font-size', '18px')
                        .attr('text-anchor','right').text(legend.ldef.title + ', ' + legend.ldef.extent.current.label);
+					   
+				svg.append('g').append('text').attr('dx',5)
+                       .attr('dy',118+top_pad)
+					   .attr('font-size', '11px')
+                       .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
+					   
             }
             $scope.$watch('legend',redraw);
 
@@ -531,7 +537,7 @@ angular.module('npn-viz-tool.gridded-services',[
  */
 .filter('legendGddUnits',['numberFilter',function(numberFilter){
     return function(n,includeUnits) {
-        return numberFilter(n,0)+(includeUnits ? ' GDD' : '');
+        return numberFilter(n,0)+(includeUnits ? ' AGDD' : '');
     };
 }])
 /**
@@ -566,7 +572,7 @@ angular.module('npn-viz-tool.gridded-services',[
             return 'No Difference';
         }
         var lt = n < 0;
-        return numberFilter(Math.abs(n),0)+(includeUnits ? ' GDD ' : ' ')+(lt ? '<' : '>') +' Avg';
+        return numberFilter(Math.abs(n),0)+(includeUnits ? ' AGDD ' : ' ')+(lt ? '<' : '>') +' Avg';
     };
 }])
 /**

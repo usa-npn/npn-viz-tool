@@ -54,6 +54,9 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            </div>\n" +
     "        </div>\n" +
     "        </center>\n" +
+    "		<!--\n" +
+    "		<p class = 'citation-text'>USA National Phenology Network, www.usanpn.org</p>\n" +
+    "		-->\n" +
     "        <ul class=\"list-inline calendar-chart-controls\" ng-if=\"data\" style=\"float: right;\">\n" +
     "            <li>Label Size\n" +
     "                <a href class=\"btn btn-default btn-xs\" ng-click=\"decrFontSize()\"><i class=\"fa fa-minus\"></i></a>\n" +
@@ -309,7 +312,8 @@ angular.module("js/gridded/doy-control.html", []).run(["$templateCache", functio
 
 angular.module("js/gridded/gridded-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/gridded/gridded-control.html",
-    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps display spatial and temporal trends in temperature and phenology across the United States. Use the controls below to select a gridded data product to view on the map.</p>\n" +
+    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps display spatial and temporal patterns in temperature and phenology across the United States. Use the controls below to select a gridded layer to view on the map.</p>\n" +
+    "<p><a href=\"https://www.usanpn.org/data/spring\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
     "<gridded-layer-control></gridded-layer-control>");
 }]);
 
@@ -443,7 +447,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "<div class=\"in-situ-control\" ng-if=\"layer && layer.supportsData()\">\n" +
     "    <div class=\"disable-curtain\" ng-if=\"disableControl\"></div>\n" +
     "    <hr />\n" +
-    "	<h4>Plot Observed Onset</h4>\n" +
+    "	<h4>Plot Observed Onset</h4>	\n" +
     "    <div class=\"form-group\" ng-if=\"speciesList\">\n" +
     "        <label for=\"selectedSpecies\">Species</label>\n" +
     "        <select id=\"selectedSpecies\" class=\"form-control\" ng-model=\"selection.species\"\n" +
@@ -493,7 +497,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
 
 angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/mapvis.html",
-    "<vis-dialog title=\"Phenology Observations and Gridded Data\" modal=\"modal\">\n" +
+    "<vis-dialog title=\"Phenology Maps\" modal=\"modal\">\n" +
     "    <div class=\"container-fluid\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +
@@ -510,10 +514,13 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "                    <map-vis-geo-layer></map-vis-geo-layer>\n" +
     "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
     "                </ui-gmap-google-map>\n" +
+    "				<p class = 'citation-text'>USA National Phenology Network, www.usanpn.org</p>\n" +
     "                <gridded-legend legend=\"legend\"></gridded-legend>\n" +
     "                <!--map-vis-marker-info-window></map-vis-marker-info-window-->\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
+    "				<h4>Select Gridded Layer</h4>\n" +
+    "				<p><a href=\"https://www.usanpn.org/data/spring\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
     "                <gridded-layer-control></gridded-layer-control>\n" +
     "                <map-vis-in-situ-control layer=\"selection.layer\" map-vis-filter=\"speciesSelections\" map-vis-plot=\"plotMarkers()\"></map-vis-in-situ-control>\n" +
     "            </div>\n" +
@@ -530,7 +537,7 @@ angular.module("js/mapvis/marker-info-window.html", []).run(["$templateCache", f
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-if=\"markerModel.station.group_name\"><label>Group:</label> {{markerModel.station.group_name}}</li>\n" +
     "            <li><label>Latitude:</label> {{markerModel.station.latitude}} <label>Longitude:</label> {{markerModel.station.longitude}}</li>\n" +
-    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Modeled Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{legend.formatPointData(markerModel.gridded_legend_data.point)}})</li>\n" +
+    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Gridded Layer Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{legend.formatPointData(markerModel.gridded_legend_data.point)}})</li>\n" +
     "        </ul>\n" +
     "    </div>\n" +
     "    <div class=\"gridded-data\" ng-if=\"markerModel.gridded_legend_data\">\n" +
