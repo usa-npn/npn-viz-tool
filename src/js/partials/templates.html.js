@@ -312,8 +312,8 @@ angular.module("js/gridded/doy-control.html", []).run(["$templateCache", functio
 
 angular.module("js/gridded/gridded-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/gridded/gridded-control.html",
-    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps display spatial and temporal patterns in temperature and phenology across the United States. Use the controls below to select a gridded layer to view on the map.</p>\n" +
-    "<p><a href=\"https://www.usanpn.org/data/spring\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
+    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps display spatial and temporal patterns in temperature and predicted phenology across the United States. Use the controls below to select a gridded layer to view on the map.</p>\n" +
+    "<p><a href=\"https://www.usanpn.org/data/phenology_maps\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
     "<gridded-layer-control></gridded-layer-control>");
 }]);
 
@@ -492,6 +492,9 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "                    popover-append-to-body=\"true\">Plot data</button>\n" +
     "        </div>\n" +
     "    </div>\n" +
+    "</div>\n" +
+    "<div class=\"in-situ-control\" ng-if=\"layer && !layer.supportsData()\">\n" +
+    "	<p style='font-style:italic;font-size:11px'>Note: To plot in-situ phenology data against phenology maps, please select one of the following Gridded Layer categories: \"Spring Indices, Historical Annual\", \"Spring Indices, Current Year\" or \"Spring Indices, Daily 30-year Average\".</p>\n" +
     "</div>");
 }]);
 
@@ -520,7 +523,7 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
     "				<h4>Select Gridded Layer</h4>\n" +
-    "				<p><a href=\"https://www.usanpn.org/data/spring\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
+    "				<p><a href=\"https://www.usanpn.org/data/phenology_maps\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
     "                <gridded-layer-control></gridded-layer-control>\n" +
     "                <map-vis-in-situ-control layer=\"selection.layer\" map-vis-filter=\"speciesSelections\" map-vis-plot=\"plotMarkers()\"></map-vis-in-situ-control>\n" +
     "            </div>\n" +
