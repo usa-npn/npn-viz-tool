@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0-beta - 2016-05-02
+ * Version: 1.0.0-beta - 2016-05-03
  */
 
 /**
@@ -5967,7 +5967,7 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "    </div>\n" +
     "</div>\n" +
     "<div class=\"in-situ-control\" ng-if=\"layer && !layer.supportsData()\">\n" +
-    "	<p style='font-style:italic;font-size:11px'>Note: To plot in-situ phenology data against phenology maps, please select one of the following Gridded Layer categories: \"Spring Indices, Historical Annual\", \"Spring Indices, Current Year\" or \"Spring Indices, Daily 30-year Average\".</p>\n" +
+    "	<p style='font-style:italic;font-size:11px'>Note: To plot Nature’s Notebook phenology observations against phenology maps, please select one of the following Gridded Layer categories: \"Spring Indices, Historical Annual\", \"Spring Indices, Current Year\" or \"Spring Indices, Daily 30-year Average\".</p>\n" +
     "</div>");
 }]);
 
