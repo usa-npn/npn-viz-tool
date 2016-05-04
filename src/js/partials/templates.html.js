@@ -27,7 +27,6 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "    </div>\n" +
     "</form>\n" +
-    "\n" +
     "<div class=\"panel panel-default main-vis-panel\" >\n" +
     "    <div class=\"panel-body\">\n" +
     "        <center ng-if=\"error_message\"><p class=\"text-danger\">{{error_message}}</p></center>\n" +
@@ -55,6 +54,9 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            </div>\n" +
     "        </div>\n" +
     "        </center>\n" +
+    "		<!--\n" +
+    "		<p class = 'citation-text'>USA National Phenology Network, www.usanpn.org</p>\n" +
+    "		-->\n" +
     "        <ul class=\"list-inline calendar-chart-controls\" ng-if=\"data\" style=\"float: right;\">\n" +
     "            <li>Label Size\n" +
     "                <a href class=\"btn btn-default btn-xs\" ng-click=\"decrFontSize()\"><i class=\"fa fa-minus\"></i></a>\n" +
@@ -310,6 +312,8 @@ angular.module("js/gridded/doy-control.html", []).run(["$templateCache", functio
 
 angular.module("js/gridded/gridded-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/gridded/gridded-control.html",
+    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps display spatial and temporal patterns in temperature and predicted phenology across the United States. Use the controls below to select a gridded layer to view on the map.</p>\n" +
+    "<p><a href=\"https://www.usanpn.org/data/phenology_maps\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
     "<gridded-layer-control></gridded-layer-control>");
 }]);
 
@@ -356,8 +360,8 @@ angular.module("js/gridded/year-control.html", []).run(["$templateCache", functi
 angular.module("js/layers/layerControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/layers/layerControl.html",
     "<p class=\"empty-filter-notes\" ng-if=\"!hasSufficientCriteria()\">\n" +
-    "    Before adding a layer to the map you must create and execute a filter.\n" +
-    "    A map layer will allow you to filter sites based on the geographic boundaries it defines.\n" +
+    "    Before adding a boundary layer to the map you must create and execute a filter.\n" +
+    "    A boundary layer will allow you to filter sites based on the geographic area it defines.\n" +
     "</p>\n" +
     "<ul class=\"list-unstyled\" ng-if=\"hasSufficientCriteria()\">\n" +
     "    <li><label ng-class=\"{'selected-layer': layerOnMap.layer === 'none'}\"><a href ng-click=\"layerOnMap.layer='none'\">None</a></label>\n" +
@@ -396,11 +400,8 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <tool id=\"filter\" icon=\"fa-search\" title=\"Filter\">\n" +
     "        <filter-control></filter-control>\n" +
     "    </tool>\n" +
-    "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Layers\">\n" +
+    "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Boundary Layers\">\n" +
     "        <layer-control></layer-control>\n" +
-    "    </tool>\n" +
-    "    <tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">\n" +
-    "        <gridded-control></gridded-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
     "        <vis-control></vis-control>\n" +
@@ -408,12 +409,25 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
     "        <settings-control></settings-control>\n" +
     "    </tool>\n" +
-    "</toolbar>");
+    "	<tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">		\n" +
+    "		<gridded-control></gridded-control>\n" +
+    "	</tool>	\n" +
+    "</toolbar>\n" +
+    "\n" +
+    "");
 }]);
 
 angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/filter-tags.html",
     "<ul class=\"filter-tags map-vis list-inline pull-right\">\n" +
+    "	<li ng-if=\"mapVisFilter.length\">\n" +
+    "        <div class=\"btn-group filter-tag\">\n" +
+    "            <a class=\"btn btn-default\">\n" +
+    "                <span>Multiple Observations Reported at this Location</span>\n" +
+    "                <img src='mult-species-legend.png' />\n" +
+    "            </a>\n" +
+    "        </div>		\n" +
+    "	</li>\n" +
     "    <li ng-repeat=\"tag in mapVisFilter\">\n" +
     "        <div class=\"btn-group filter-tag\">\n" +
     "            <a class=\"btn btn-default\">\n" +
@@ -433,12 +447,13 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "<div class=\"in-situ-control\" ng-if=\"layer && layer.supportsData()\">\n" +
     "    <div class=\"disable-curtain\" ng-if=\"disableControl\"></div>\n" +
     "    <hr />\n" +
+    "	<h4>Plot Observed Onset</h4>	\n" +
     "    <div class=\"form-group\" ng-if=\"speciesList\">\n" +
     "        <label for=\"selectedSpecies\">Species</label>\n" +
     "        <select id=\"selectedSpecies\" class=\"form-control\" ng-model=\"selection.species\"\n" +
     "                ng-options=\"s as (s | speciesTitle) for s in speciesList\"></select>\n" +
     "    </div>\n" +
-    "    <div class=\"form-group\" ng-if=\"selection.species && phenophaseList.length\">\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.species\">\n" +
     "        <label for=\"selectedPhenophse\">Phenophase</label>\n" +
     "        <select id=\"selectedPhenophse\" class=\"form-control\" ng-model=\"selection.phenophase\"\n" +
     "                ng-options=\"p as p.phenophase_name for p in phenophaseList\"></select>\n" +
@@ -477,12 +492,15 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "                    popover-append-to-body=\"true\">Plot data</button>\n" +
     "        </div>\n" +
     "    </div>\n" +
+    "</div>\n" +
+    "<div class=\"in-situ-control\" ng-if=\"layer && !layer.supportsData()\">\n" +
+    "	<p style='font-style:italic;font-size:11px'>Note: To plot Nature’s Notebook phenology observations against phenology maps, please select one of the following Gridded Layer categories: \"Spring Indices, Historical Annual\", \"Spring Indices, Current Year\" or \"Spring Indices, Daily 30-year Average\".</p>\n" +
     "</div>");
 }]);
 
 angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/mapvis.html",
-    "<vis-dialog title=\"Gridded Data\" modal=\"modal\">\n" +
+    "<vis-dialog title=\"Phenology Maps\" modal=\"modal\">\n" +
     "    <div class=\"container-fluid\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +
@@ -499,10 +517,13 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "                    <map-vis-geo-layer></map-vis-geo-layer>\n" +
     "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
     "                </ui-gmap-google-map>\n" +
+    "				<p class = 'citation-text'>USA National Phenology Network, www.usanpn.org</p>\n" +
     "                <gridded-legend legend=\"legend\"></gridded-legend>\n" +
     "                <!--map-vis-marker-info-window></map-vis-marker-info-window-->\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
+    "				<h4>Select Gridded Layer</h4>\n" +
+    "				<p><a href=\"https://www.usanpn.org/data/phenology_maps\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
     "                <gridded-layer-control></gridded-layer-control>\n" +
     "                <map-vis-in-situ-control layer=\"selection.layer\" map-vis-filter=\"speciesSelections\" map-vis-plot=\"plotMarkers()\"></map-vis-in-situ-control>\n" +
     "            </div>\n" +
@@ -519,7 +540,7 @@ angular.module("js/mapvis/marker-info-window.html", []).run(["$templateCache", f
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-if=\"markerModel.station.group_name\"><label>Group:</label> {{markerModel.station.group_name}}</li>\n" +
     "            <li><label>Latitude:</label> {{markerModel.station.latitude}} <label>Longitude:</label> {{markerModel.station.longitude}}</li>\n" +
-    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Modeled Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{legend.formatPointData(markerModel.gridded_legend_data.point)}})</li>\n" +
+    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Gridded Layer Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{legend.formatPointData(markerModel.gridded_legend_data.point)}})</li>\n" +
     "        </ul>\n" +
     "    </div>\n" +
     "    <div class=\"gridded-data\" ng-if=\"markerModel.gridded_legend_data\">\n" +
@@ -650,7 +671,7 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "<div class=\"toolbar\">\n" +
     "  <ul class=\"tools-list\">\n" +
     "    <li ng-repeat=\"t in tools\" ng-class=\"{open: t.selected}\"\n" +
-    "        popover-placement=\"right\" uib-popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\"\n" +
+    "        popover-placement=\"right\" uib-popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\" popover-append-to-body=\"true\"\n" +
     "        ng-click=\"select(t)\">\n" +
     "      <i id=\"toolbar-icon-{{t.id}}\" class=\"toolbar-icon fa {{t.icon}}\"></i>\n" +
     "    </li>\n" +

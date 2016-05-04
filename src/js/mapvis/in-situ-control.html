@@ -1,12 +1,13 @@
 <div class="in-situ-control" ng-if="layer && layer.supportsData()">
     <div class="disable-curtain" ng-if="disableControl"></div>
     <hr />
+	<h4>Plot Observed Onset</h4>	
     <div class="form-group" ng-if="speciesList">
         <label for="selectedSpecies">Species</label>
         <select id="selectedSpecies" class="form-control" ng-model="selection.species"
                 ng-options="s as (s | speciesTitle) for s in speciesList"></select>
     </div>
-    <div class="form-group" ng-if="selection.species && phenophaseList.length">
+    <div class="form-group" ng-if="selection.species">
         <label for="selectedPhenophse">Phenophase</label>
         <select id="selectedPhenophse" class="form-control" ng-model="selection.phenophase"
                 ng-options="p as p.phenophase_name for p in phenophaseList"></select>
@@ -45,4 +46,7 @@
                     popover-append-to-body="true">Plot data</button>
         </div>
     </div>
+</div>
+<div class="in-situ-control" ng-if="layer && !layer.supportsData()">
+	<p style='font-style:italic;font-size:11px'>Note: To plot Nature’s Notebook phenology observations against phenology maps, please select one of the following Gridded Layer categories: "Spring Indices, Historical Annual", "Spring Indices, Current Year" or "Spring Indices, Daily 30-year Average".</p>
 </div>

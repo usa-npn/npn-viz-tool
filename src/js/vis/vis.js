@@ -37,20 +37,20 @@ angular.module('npn-viz-tool.vis',[
             height: HEIGHT
         },
         VISUALIZATIONS = [{
-            title: 'Scatter Plot',
+            title: 'Scatter Plots',
             controller: 'ScatterVisCtrl',
             template: 'js/scatter/scatter.html',
             description: 'This visualization plots selected geographic or climactic variables against estimated onset dates for individuals for up to three species/phenophase pairs.'
         },{
-            title: 'Calendar',
+            title: 'Calendars',
             controller: 'CalendarVisCtrl',
             template: 'js/calendar/calendar.html',
             description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
         },{
-            title: 'Point and Grid Data',
+            title: 'Maps',
             controller: 'MapVisCtrl',
             template: 'js/mapvis/mapvis.html',
-            description: 'This visualization maps ground-based observations against USA-NPN gridded data products, including Accumulated Growing Degree Days and Spring Index models.',
+            description: 'This visualization maps ground-based observations against USA-NPN phenology maps, including Accumulated Growing Degree Days and Spring Index models.',
             singleStation: false // doesn't make sense for a single station visualization.
         }],
         visualizeSingleStationId;

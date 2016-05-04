@@ -226,12 +226,19 @@ angular.module('npn-viz-tool.gridded',[
                 $rootScope.$broadcast('gridded-layer-on',{layer:$scope.selection.activeLayer});
             });
             $scope.$watch('selection.activeLayer.extent.current',function(v) {
+
                 var layer;
+				
                 if(layer = $scope.selection.activeLayer) {
                     $log.debug('layer extent change ',layer.name,v);
                     noInfoWindows();
-                    layer.off().on();
+					
+					layer.off().on();
+					
+
                 }
+
+				
             });
         }
     };

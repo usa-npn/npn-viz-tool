@@ -9,7 +9,7 @@ angular.module('npn-viz-tool.vis-calendar',[
     var response, // raw response from the server
         data, // processed data from the server
         dateArg = FilterService.getFilter().getDateArg(),
-        sizing = ChartService.getSizeInfo({top: 20, right: 35, bottom: 35, left: 35}),
+        sizing = ChartService.getSizeInfo({top: 20, right: 35, bottom: 45, left: 35}),
         chart,
         d3_month_fmt = d3.time.format('%B'),
         x = d3.scale.ordinal().rangeBands([0,sizing.width]).domain(d3.range(1,366)),
@@ -41,21 +41,36 @@ angular.module('npn-viz-tool.vis-calendar',[
             $scope.selection.species = list[0];
         }
     });
-    $scope.$watch('selection.species',function(){
-        $scope.phenophaseList = [];
-        if($scope.selection.species) {
-            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
-                $log.debug('phenophaseList',list);
-                if(list.length) {
-                    list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
-                }
-                $scope.phenophaseList = list;
-                if(list.length) {
-                    $scope.selection.phenophase = list[0];
-                }
-            });
-        }
-    });
+	
+	function phenophaseListUpdate() {
+		$log.debug('Calling phenophase list update');
+		$scope.phenophaseList = [];
+		var species = $scope.selection.species.species_id,
+			year = $scope.selection.year;
+
+		if(species && year) {
+			$scope.phenophaseList = [];
+			FilterService.getFilter().getPhenophasesForSpecies(species,true,[year]).then(function(list){
+				$log.debug('phenophaseList',list);
+				if(list.length) {
+					list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
+					
+					$scope.selection.phenophase = list.length ? list[0] : undefined;
+
+				}				
+				
+				$scope.phenophaseList = list;							
+				
+			});
+			
+			
+			
+		}
+	}	
+	
+    $scope.$watch('selection.species',phenophaseListUpdate);
+    $scope.$watch('selection.year',phenophaseListUpdate);
+	
     function advanceColor() {
         if($scope.selection.color < $scope.colors.length) {
             $scope.selection.color++;
@@ -98,11 +113,7 @@ angular.module('npn-viz-tool.vis-calendar',[
                 return false;
             }
         }
-        for(i = 0; i < $scope.toPlot.length; i++) {
-            if(next.color === $scope.toPlot[i].color) {
-                return false;
-            }
-        }
+
         return true;
     };
     $scope.addToPlot = function() {
@@ -193,6 +204,12 @@ angular.module('npn-viz-tool.vis-calendar',[
           // hide y axis
           chart.selectAll('g .y.axis path')
             .style('display','none');
+			
+		  svg.append('g').append('text').attr('dx',5)
+			   .attr('dy',sizing.height + 61)
+			   .attr('font-size', '11px')
+			   .attr('font-style','italic')
+			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');			
 
           commonChartUpdates();
     },500);

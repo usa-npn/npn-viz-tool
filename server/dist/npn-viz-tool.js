@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0-beta - 2016-03-28
+ * Version: 1.0.0 - 2016-05-04
  */
 
 /**
@@ -256,6 +256,7 @@ angular.module('npn-viz-tool.vis-cache',[
             },ttl);
         }
       },
+	  
       /**
        * @ngdoc method
        * @methodOf npn-viz-tool.cache:CacheService
@@ -295,7 +296,7 @@ angular.module('npn-viz-tool.vis-calendar',[
     var response, // raw response from the server
         data, // processed data from the server
         dateArg = FilterService.getFilter().getDateArg(),
-        sizing = ChartService.getSizeInfo({top: 20, right: 35, bottom: 35, left: 35}),
+        sizing = ChartService.getSizeInfo({top: 20, right: 35, bottom: 45, left: 35}),
         chart,
         d3_month_fmt = d3.time.format('%B'),
         x = d3.scale.ordinal().rangeBands([0,sizing.width]).domain(d3.range(1,366)),
@@ -327,21 +328,36 @@ angular.module('npn-viz-tool.vis-calendar',[
             $scope.selection.species = list[0];
         }
     });
-    $scope.$watch('selection.species',function(){
-        $scope.phenophaseList = [];
-        if($scope.selection.species) {
-            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
-                $log.debug('phenophaseList',list);
-                if(list.length) {
-                    list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
-                }
-                $scope.phenophaseList = list;
-                if(list.length) {
-                    $scope.selection.phenophase = list[0];
-                }
-            });
-        }
-    });
+	
+	function phenophaseListUpdate() {
+		$log.debug('Calling phenophase list update');
+		$scope.phenophaseList = [];
+		var species = $scope.selection.species.species_id,
+			year = $scope.selection.year;
+
+		if(species && year) {
+			$scope.phenophaseList = [];
+			FilterService.getFilter().getPhenophasesForSpecies(species,true,[year]).then(function(list){
+				$log.debug('phenophaseList',list);
+				if(list.length) {
+					list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
+					
+					$scope.selection.phenophase = list.length ? list[0] : undefined;
+
+				}				
+				
+				$scope.phenophaseList = list;							
+				
+			});
+			
+			
+			
+		}
+	}	
+	
+    $scope.$watch('selection.species',phenophaseListUpdate);
+    $scope.$watch('selection.year',phenophaseListUpdate);
+	
     function advanceColor() {
         if($scope.selection.color < $scope.colors.length) {
             $scope.selection.color++;
@@ -384,11 +400,7 @@ angular.module('npn-viz-tool.vis-calendar',[
                 return false;
             }
         }
-        for(i = 0; i < $scope.toPlot.length; i++) {
-            if(next.color === $scope.toPlot[i].color) {
-                return false;
-            }
-        }
+
         return true;
     };
     $scope.addToPlot = function() {
@@ -479,6 +491,12 @@ angular.module('npn-viz-tool.vis-calendar',[
           // hide y axis
           chart.selectAll('g .y.axis path')
             .style('display','none');
+			
+		  svg.append('g').append('text').attr('dx',5)
+			   .attr('dy',sizing.height + 61)
+			   .attr('font-size', '11px')
+			   .attr('font-style','italic')
+			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');			
 
           commonChartUpdates();
     },500);
@@ -851,7 +869,7 @@ angular.module('npn-viz-tool.filter',[
     };
     NetworkFilterArg.prototype.getName = function() {
         return this.arg.network_name;
-    };	
+    };
     NetworkFilterArg.prototype.toExportParam = function() {
         return this.getId();
     };
@@ -1141,8 +1159,8 @@ angular.module('npn-viz-tool.filter',[
     };
     return BoundsFilterArg;
 }])
-.factory('NpnFilter',[ '$q','$http','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','CacheService',
-    function($q,$http,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,CacheService){
+.factory('NpnFilter',[ '$q','$log','$http','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','CacheService',
+    function($q,$log,$http,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,CacheService){
     function getValues(map) {
         var vals = [],key;
         for(key in map) {
@@ -1298,6 +1316,64 @@ angular.module('npn-viz-tool.filter',[
         }
         return def.promise;
     };
+    function removeRedundantPhenophases(list) {
+        var seen = [];
+        return list.filter(function(pp){
+            if(seen[pp.phenophase_id]) {
+                return false;
+            }
+            seen[pp.phenophase_id] = pp;
+            return true;
+        });
+    }
+    function mergeRedundantPhenophaseLists(lists) {
+        return removeRedundantPhenophases(
+            lists.reduce(function(arr,l){
+                return arr.concat(l);
+            },[]));
+    }
+    function getPhenophasesForDate(sid,date) {
+        var def = $q.defer(),
+            params = {
+                date: date,
+                species_id: sid
+            },
+            cacheKey = CacheService.keyFromObject(params),
+            cached = CacheService.get(cacheKey);
+		if(cached) {
+            def.resolve(cached);
+        } else {
+            $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
+                params: params
+            }).success(function(phases) {
+				var list = phases[0].phenophases;
+                list = removeRedundantPhenophases(list);
+                CacheService.put(cacheKey,list);
+                def.resolve(list);
+
+            },def.reject);
+        }
+        return def.promise;
+    }
+    function getPhenophasesForYear(sid,year) {
+        var def = $q.defer();
+        $q.all([getPhenophasesForDate(sid,year+'-12-31'),getPhenophasesForDate(sid,year+'-01-01')]).then(function(results) {
+            $log.debug('getPhenophasesForYear.results',results);
+            def.resolve(mergeRedundantPhenophaseLists(results));
+        });
+        return def.promise;
+    }
+    function getPhenophasesForYears(sid,years) {
+        var def = $q.defer(),
+            year_promises = years.map(function(year) {
+                return getPhenophasesForYear(sid,year);
+            });
+        $q.all(year_promises).then(function(results) {
+            $log.debug('getPhenophasesForYears.results',results);
+            def.resolve(mergeRedundantPhenophaseLists(results));
+        });
+        return def.promise;
+    }
     /**
      * Fetches a list of phenophase objects that correspond to this filter.  If the filter has
      * species args in it then the sid must match one of the filter's species otherwise it's assumed
@@ -1305,10 +1381,12 @@ angular.module('npn-viz-tool.filter',[
      *
      * @param  {Number} sid The species id
      * @param {boolean} force If set to true will get the list even if the species isn't part of this filter.
+     * @param {Array} years The list of years to get valid phenophases for.
      * @return {Promise}    A promise that will be resolved with the list.
      */
-    NpnFilter.prototype.getPhenophasesForSpecies = function(sid,force) {
+    NpnFilter.prototype.getPhenophasesForSpecies = function(sid,force,years) {
         var speciesArgs = this.getSpeciesArgs(),
+            dateArg = this.getDateArg(),
             def = $q.defer(),i;
         if(typeof(sid) === 'string') {
             sid = parseInt(sid);
@@ -1326,29 +1404,10 @@ angular.module('npn-viz-tool.filter',[
                 def.resolve([]);
             }
         } else {
-            var params = { return_all: true, species_id: sid },
-                cacheKey = CacheService.keyFromObject(params),
-                list = CacheService.get(cacheKey);
-            if(list && list.length) {
+            years = years||d3.range(dateArg.getStartYear(),dateArg.getEndYear()+1);
+            getPhenophasesForYears(sid,years).then(function(list) {
                 def.resolve(list);
-            } else {
-                // not part of the filter go get it
-                // this is a bit of cut/paste from SpeciesFilterArg could maybe be consolidated?
-                $http.get('/npn_portal/phenophases/getPhenophasesForSpecies.json',{
-                    params: params
-                }).success(function(phases) {
-                    var seen = {},
-                        filtered = phases[0].phenophases.filter(function(pp){ // the call returns redundant data so filter it out.
-                        if(seen[pp.phenophase_id]) {
-                            return false;
-                        }
-                        seen[pp.phenophase_id] = pp;
-                        return true;
-                    });
-                    CacheService.put(cacheKey,filtered);
-                    def.resolve(filtered);
-                });
-            }
+            });
         }
         return def.promise;
     };
@@ -2563,12 +2622,19 @@ angular.module('npn-viz-tool.gridded',[
                 $rootScope.$broadcast('gridded-layer-on',{layer:$scope.selection.activeLayer});
             });
             $scope.$watch('selection.activeLayer.extent.current',function(v) {
+
                 var layer;
+				
                 if(layer = $scope.selection.activeLayer) {
                     $log.debug('layer extent change ',layer.name,v);
                     noInfoWindows();
-                    layer.off().on();
+					
+					layer.off().on();
+					
+
                 }
+
+				
             });
         }
     };
@@ -2858,6 +2924,7 @@ angular.module('npn-viz-tool.gridded-services',[
                 $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,value){
                     return current||(formattedDate === dateFilter(value.date,fmt) ? value : undefined);
                 },undefined);
+				
             });
         }
     };
@@ -3020,9 +3087,22 @@ angular.module('npn-viz-tool.gridded-services',[
                        .attr('text-anchor','middle')
                        .text(legend.ldef.legend_units);
                 }
+				
+				svg.append('g').append('text').attr('dx',5)
+                       .attr('dy',100+top_pad)
+					   .attr('font-size', '18px')
+                       .attr('text-anchor','right').text(legend.ldef.title + ', ' + legend.ldef.extent.current.label);
+					   
+				svg.append('g').append('text').attr('dx',5)
+                       .attr('dy',118+top_pad)
+					   .attr('font-size', '11px')
+                       .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
+					   
             }
             $scope.$watch('legend',redraw);
+
             $($window).bind('resize',redraw);
+			$scope.$watch('legend.layer.extent.current',redraw);
             $scope.$on('$destroy',function(){
                 $log.debug('legend removing resize handler');
                 $($window).unbind('resize',redraw);
@@ -3098,7 +3178,7 @@ angular.module('npn-viz-tool.gridded-services',[
  */
 .filter('legendGddUnits',['numberFilter',function(numberFilter){
     return function(n,includeUnits) {
-        return numberFilter(n,0)+(includeUnits ? ' GDD' : '');
+        return numberFilter(n,0)+(includeUnits ? ' AGDD' : '');
     };
 }])
 /**
@@ -3133,7 +3213,7 @@ angular.module('npn-viz-tool.gridded-services',[
             return 'No Difference';
         }
         var lt = n < 0;
-        return numberFilter(Math.abs(n),0)+(includeUnits ? ' GDD ' : ' ')+(lt ? '<' : '>') +' Avg';
+        return numberFilter(Math.abs(n),0)+(includeUnits ? ' AGDD ' : ' ')+(lt ? '<' : '>') +' Avg';
     };
 }])
 /**
@@ -3408,6 +3488,21 @@ angular.module('npn-viz-tool.gridded-services',[
         this.data = data.slice(1);
         this.length = this.data.length;
     }
+	
+
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
+     * @name  setLayer
+     * @description Set the current layer associated with this legend.
+     * @param {object} layer The new layer to associate with this legend.
+     * @returns {object} This legend object.
+     */
+     WmsMapLegend.prototype.setLayer = function(layer) {
+     this.layer = layer;
+             return this;
+     };	
+	
     /**
      * @ngdoc method
      * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
@@ -3428,6 +3523,7 @@ angular.module('npn-viz-tool.gridded-services',[
     WmsMapLegend.prototype.getTitle = function() {
         return this.title_data.label;
     };
+
     /**
      * @ngdoc method
      * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
@@ -3682,9 +3778,12 @@ angular.module('npn-viz-tool.gridded-services',[
              * @returns {promise} A promise that will be resolve with the legend when it arrives ({@link npn-viz-tool.gridded-services:WmsMapLegend}) .
              */
             getLegend: function() {
-                var def = $q.defer();
+				var self = this,
+                 def = $q.defer();
+				 
                 if(legends.hasOwnProperty(layer_def.name)) {
                     def.resolve(legends[layer_def.name]);
+					def.resolve(legends[layer_def.name].setLayer(self));
                 } else {
                     //http://geoserver.usanpn.org/geoserver/wms?request=GetStyles&layers=gdd%3A30yr_avg_agdd&service=wms&version=1.1.1
                     $http.get(WMS_BASE_URL,{
@@ -3706,8 +3805,10 @@ angular.module('npn-viz-tool.gridded-services',[
                         // as is the case for si-x:leaf_anomaly
                         legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def) : undefined;
                         def.resolve(legends[layer_def.name]);
+						def.resolve(legends[layer_def.name].setLayer(self));
                     },def.reject);
                 }
+				
                 return def.promise;
             },
             /**
@@ -4936,16 +5037,21 @@ angular.module('npn-viz-tool.vis-map',[
                     });
                 }
             });
-            $scope.$watch('selection.species',function(species){
-                $scope.phenophaseList = [];
-                if(species) {
-                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,true/*get no matter what*/).then(function(list){
+            function phenophaseListUpdate() {
+                var species = $scope.selection.species,
+                    year = $scope.selection.year;
+                if(species && year) {
+                    $scope.phenophaseList = [];
+                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,true/*get no matter what*/,[year]).then(function(list){
                         $log.debug('phenophaseList',list);
                         $scope.phenophaseList = list;
                         $scope.selection.phenophase = list.length ? list[0] : undefined;
                     });
                 }
-            });
+            }
+            $scope.$watch('selection.species',phenophaseListUpdate);
+            $scope.$watch('selection.year',phenophaseListUpdate);
+
             $scope.validSelection = function() {
                 var s = $scope.selection;
                 if(s.species && s.phenophase && s.year) {
@@ -5140,6 +5246,7 @@ angular.module('npn-viz-tool.vis-map',[
             'click': function(m) {
                 $log.debug('click',m);
                 $scope.$apply(function(){
+                    var sameAsPreviousMarker = ($scope.markerModel === $scope.results.markerModels[m.model.site_id]);
                     $scope.markerModel = $scope.results.markerModels[m.model.site_id];
                     if(!markerInfoWindow) {
                         markerInfoWindow = new api.InfoWindow({
@@ -5147,7 +5254,9 @@ angular.module('npn-viz-tool.vis-map',[
                             content: ''
                         });
                     }
-                    markerInfoWindow.setContent('<i class="fa fa-circle-o-notch fa-spin"></i>');
+                    if(!sameAsPreviousMarker) {
+                        markerInfoWindow.setContent('<i class="fa fa-circle-o-notch fa-spin"></i>');
+                    }
                     markerInfoWindow.setPosition(m.position);
                     markerInfoWindow.open(m.map);
                 });
@@ -5391,7 +5500,6 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "        <button class=\"btn btn-default\" ng-click=\"addToPlot()\" ng-disabled=\"!canAddToPlot()\"><i class=\"fa fa-plus\"></i></button>\n" +
     "    </div>\n" +
     "</form>\n" +
-    "\n" +
     "<div class=\"panel panel-default main-vis-panel\" >\n" +
     "    <div class=\"panel-body\">\n" +
     "        <center ng-if=\"error_message\"><p class=\"text-danger\">{{error_message}}</p></center>\n" +
@@ -5419,6 +5527,9 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "            </div>\n" +
     "        </div>\n" +
     "        </center>\n" +
+    "		<!--\n" +
+    "		<p class = 'citation-text'>USA National Phenology Network, www.usanpn.org</p>\n" +
+    "		-->\n" +
     "        <ul class=\"list-inline calendar-chart-controls\" ng-if=\"data\" style=\"float: right;\">\n" +
     "            <li>Label Size\n" +
     "                <a href class=\"btn btn-default btn-xs\" ng-click=\"decrFontSize()\"><i class=\"fa fa-minus\"></i></a>\n" +
@@ -5674,6 +5785,8 @@ angular.module("js/gridded/doy-control.html", []).run(["$templateCache", functio
 
 angular.module("js/gridded/gridded-control.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/gridded/gridded-control.html",
+    "<p class=\"empty-filter-notes\">Spring Index and Accumulated Growing Degree Day (AGDD) maps display spatial and temporal patterns in temperature and predicted phenology across the United States. Use the controls below to select a gridded layer to view on the map.</p>\n" +
+    "<p><a href=\"https://www.usanpn.org/data/phenology_maps\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
     "<gridded-layer-control></gridded-layer-control>");
 }]);
 
@@ -5720,8 +5833,8 @@ angular.module("js/gridded/year-control.html", []).run(["$templateCache", functi
 angular.module("js/layers/layerControl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/layers/layerControl.html",
     "<p class=\"empty-filter-notes\" ng-if=\"!hasSufficientCriteria()\">\n" +
-    "    Before adding a layer to the map you must create and execute a filter.\n" +
-    "    A map layer will allow you to filter sites based on the geographic boundaries it defines.\n" +
+    "    Before adding a boundary layer to the map you must create and execute a filter.\n" +
+    "    A boundary layer will allow you to filter sites based on the geographic area it defines.\n" +
     "</p>\n" +
     "<ul class=\"list-unstyled\" ng-if=\"hasSufficientCriteria()\">\n" +
     "    <li><label ng-class=\"{'selected-layer': layerOnMap.layer === 'none'}\"><a href ng-click=\"layerOnMap.layer='none'\">None</a></label>\n" +
@@ -5760,11 +5873,8 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <tool id=\"filter\" icon=\"fa-search\" title=\"Filter\">\n" +
     "        <filter-control></filter-control>\n" +
     "    </tool>\n" +
-    "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Layers\">\n" +
+    "    <tool id=\"layers\" icon=\"fa-bars\" title=\"Boundary Layers\">\n" +
     "        <layer-control></layer-control>\n" +
-    "    </tool>\n" +
-    "    <tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">\n" +
-    "        <gridded-control></gridded-control>\n" +
     "    </tool>\n" +
     "    <tool id=\"visualizations\" icon=\"fa-bar-chart\" title=\"Visualizations\">\n" +
     "        <vis-control></vis-control>\n" +
@@ -5772,12 +5882,25 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
     "        <settings-control></settings-control>\n" +
     "    </tool>\n" +
-    "</toolbar>");
+    "	<tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">		\n" +
+    "		<gridded-control></gridded-control>\n" +
+    "	</tool>	\n" +
+    "</toolbar>\n" +
+    "\n" +
+    "");
 }]);
 
 angular.module("js/mapvis/filter-tags.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/filter-tags.html",
     "<ul class=\"filter-tags map-vis list-inline pull-right\">\n" +
+    "	<li ng-if=\"mapVisFilter.length\">\n" +
+    "        <div class=\"btn-group filter-tag\">\n" +
+    "            <a class=\"btn btn-default\">\n" +
+    "                <span>Multiple Observations Reported at this Location</span>\n" +
+    "                <img src='mult-species-legend.png' />\n" +
+    "            </a>\n" +
+    "        </div>		\n" +
+    "	</li>\n" +
     "    <li ng-repeat=\"tag in mapVisFilter\">\n" +
     "        <div class=\"btn-group filter-tag\">\n" +
     "            <a class=\"btn btn-default\">\n" +
@@ -5797,12 +5920,13 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "<div class=\"in-situ-control\" ng-if=\"layer && layer.supportsData()\">\n" +
     "    <div class=\"disable-curtain\" ng-if=\"disableControl\"></div>\n" +
     "    <hr />\n" +
+    "	<h4>Plot Observed Onset</h4>	\n" +
     "    <div class=\"form-group\" ng-if=\"speciesList\">\n" +
     "        <label for=\"selectedSpecies\">Species</label>\n" +
     "        <select id=\"selectedSpecies\" class=\"form-control\" ng-model=\"selection.species\"\n" +
     "                ng-options=\"s as (s | speciesTitle) for s in speciesList\"></select>\n" +
     "    </div>\n" +
-    "    <div class=\"form-group\" ng-if=\"selection.species && phenophaseList.length\">\n" +
+    "    <div class=\"form-group\" ng-if=\"selection.species\">\n" +
     "        <label for=\"selectedPhenophse\">Phenophase</label>\n" +
     "        <select id=\"selectedPhenophse\" class=\"form-control\" ng-model=\"selection.phenophase\"\n" +
     "                ng-options=\"p as p.phenophase_name for p in phenophaseList\"></select>\n" +
@@ -5841,12 +5965,15 @@ angular.module("js/mapvis/in-situ-control.html", []).run(["$templateCache", func
     "                    popover-append-to-body=\"true\">Plot data</button>\n" +
     "        </div>\n" +
     "    </div>\n" +
+    "</div>\n" +
+    "<div class=\"in-situ-control\" ng-if=\"layer && !layer.supportsData()\">\n" +
+    "	<p style='font-style:italic;font-size:11px'>Note: To plot Nature’s Notebook phenology observations against phenology maps, please select one of the following Gridded Layer categories: \"Spring Indices, Historical Annual\", \"Spring Indices, Current Year\" or \"Spring Indices, Daily 30-year Average\".</p>\n" +
     "</div>");
 }]);
 
 angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/mapvis/mapvis.html",
-    "<vis-dialog title=\"Gridded Data\" modal=\"modal\">\n" +
+    "<vis-dialog title=\"Phenology Maps\" modal=\"modal\">\n" +
     "    <div class=\"container-fluid\">\n" +
     "        <div class=\"row\">\n" +
     "            <div class=\"col-xs-8\">\n" +
@@ -5863,10 +5990,13 @@ angular.module("js/mapvis/mapvis.html", []).run(["$templateCache", function($tem
     "                    <map-vis-geo-layer></map-vis-geo-layer>\n" +
     "                    <map-vis-bounds-layer></map-vis-bounds-layer>\n" +
     "                </ui-gmap-google-map>\n" +
+    "				<p class = 'citation-text'>USA National Phenology Network, www.usanpn.org</p>\n" +
     "                <gridded-legend legend=\"legend\"></gridded-legend>\n" +
     "                <!--map-vis-marker-info-window></map-vis-marker-info-window-->\n" +
     "            </div>\n" +
     "            <div class=\"col-xs-4\">\n" +
+    "				<h4>Select Gridded Layer</h4>\n" +
+    "				<p><a href=\"https://www.usanpn.org/data/phenology_maps\" target=\"_blank\">More Info on Phenology Maps</a></p>\n" +
     "                <gridded-layer-control></gridded-layer-control>\n" +
     "                <map-vis-in-situ-control layer=\"selection.layer\" map-vis-filter=\"speciesSelections\" map-vis-plot=\"plotMarkers()\"></map-vis-in-situ-control>\n" +
     "            </div>\n" +
@@ -5883,7 +6013,7 @@ angular.module("js/mapvis/marker-info-window.html", []).run(["$templateCache", f
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-if=\"markerModel.station.group_name\"><label>Group:</label> {{markerModel.station.group_name}}</li>\n" +
     "            <li><label>Latitude:</label> {{markerModel.station.latitude}} <label>Longitude:</label> {{markerModel.station.longitude}}</li>\n" +
-    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Modeled Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{legend.formatPointData(markerModel.gridded_legend_data.point)}})</li>\n" +
+    "            <li ng-if=\"markerModel.gridded_legend_data\"><label>Gridded Layer Value:</label> <div class=\"legend-cell\" style=\"background-color: {{markerModel.gridded_legend_data.color}};\">&nbsp;</div> {{markerModel.gridded_legend_data.point | number:0}} ({{legend.formatPointData(markerModel.gridded_legend_data.point)}})</li>\n" +
     "        </ul>\n" +
     "    </div>\n" +
     "    <div class=\"gridded-data\" ng-if=\"markerModel.gridded_legend_data\">\n" +
@@ -6014,7 +6144,7 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "<div class=\"toolbar\">\n" +
     "  <ul class=\"tools-list\">\n" +
     "    <li ng-repeat=\"t in tools\" ng-class=\"{open: t.selected}\"\n" +
-    "        popover-placement=\"right\" uib-popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\"\n" +
+    "        popover-placement=\"right\" uib-popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\" popover-append-to-body=\"true\"\n" +
     "        ng-click=\"select(t)\">\n" +
     "      <i id=\"toolbar-icon-{{t.id}}\" class=\"toolbar-icon fa {{t.icon}}\"></i>\n" +
     "    </li>\n" +
@@ -6094,7 +6224,7 @@ angular.module('npn-viz-tool.vis-scatter',[
 
         {key:'daylength',label:'Day Length (s)'},
         {key:'acc_prcp',label:'Accumulated Precip (mm)'},
-        {key:'gdd',label:'GDD'}
+        {key:'gdd',label:'AGDD'}
         ];
 
     var defaultAxisFmt = d3.format('d');
@@ -6277,6 +6407,12 @@ angular.module('npn-viz-tool.vis-scatter',[
             .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
             .style('text-anchor', 'middle')
             .text('Onset DOY');
+			
+		  svg.append('g').append('text').attr('dx',5)
+			   .attr('dy',sizing.height + 136)
+			   .attr('font-size', '11px')
+			   .attr('font-style','italic')
+			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');			
 
         commonChartUpdates();
 
@@ -7063,20 +7199,20 @@ angular.module('npn-viz-tool.vis',[
             height: HEIGHT
         },
         VISUALIZATIONS = [{
-            title: 'Scatter Plot',
+            title: 'Scatter Plots',
             controller: 'ScatterVisCtrl',
             template: 'js/scatter/scatter.html',
             description: 'This visualization plots selected geographic or climactic variables against estimated onset dates for individuals for up to three species/phenophase pairs.'
         },{
-            title: 'Calendar',
+            title: 'Calendars',
             controller: 'CalendarVisCtrl',
             template: 'js/calendar/calendar.html',
             description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
         },{
-            title: 'Point and Grid Data',
+            title: 'Maps',
             controller: 'MapVisCtrl',
             template: 'js/mapvis/mapvis.html',
-            description: 'This visualization maps ground-based observations against USA-NPN gridded data products, including Accumulated Growing Degree Days and Spring Index models.',
+            description: 'This visualization maps ground-based observations against USA-NPN phenology maps, including Accumulated Growing Degree Days and Spring Index models.',
             singleStation: false // doesn't make sense for a single station visualization.
         }],
         visualizeSingleStationId;

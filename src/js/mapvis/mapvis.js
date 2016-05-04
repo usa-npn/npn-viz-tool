@@ -325,16 +325,21 @@ angular.module('npn-viz-tool.vis-map',[
                     });
                 }
             });
-            $scope.$watch('selection.species',function(species){
-                $scope.phenophaseList = [];
-                if(species) {
-                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,true/*get no matter what*/).then(function(list){
+            function phenophaseListUpdate() {
+                var species = $scope.selection.species,
+                    year = $scope.selection.year;
+                if(species && year) {
+                    $scope.phenophaseList = [];
+                    FilterService.getFilter().getPhenophasesForSpecies(species.species_id,true/*get no matter what*/,[year]).then(function(list){
                         $log.debug('phenophaseList',list);
                         $scope.phenophaseList = list;
                         $scope.selection.phenophase = list.length ? list[0] : undefined;
                     });
                 }
-            });
+            }
+            $scope.$watch('selection.species',phenophaseListUpdate);
+            $scope.$watch('selection.year',phenophaseListUpdate);
+
             $scope.validSelection = function() {
                 var s = $scope.selection;
                 if(s.species && s.phenophase && s.year) {
@@ -529,6 +534,7 @@ angular.module('npn-viz-tool.vis-map',[
             'click': function(m) {
                 $log.debug('click',m);
                 $scope.$apply(function(){
+                    var sameAsPreviousMarker = ($scope.markerModel === $scope.results.markerModels[m.model.site_id]);
                     $scope.markerModel = $scope.results.markerModels[m.model.site_id];
                     if(!markerInfoWindow) {
                         markerInfoWindow = new api.InfoWindow({
@@ -536,7 +542,9 @@ angular.module('npn-viz-tool.vis-map',[
                             content: ''
                         });
                     }
-                    markerInfoWindow.setContent('<i class="fa fa-circle-o-notch fa-spin"></i>');
+                    if(!sameAsPreviousMarker) {
+                        markerInfoWindow.setContent('<i class="fa fa-circle-o-notch fa-spin"></i>');
+                    }
                     markerInfoWindow.setPosition(m.position);
                     markerInfoWindow.open(m.map);
                 });

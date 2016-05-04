@@ -35,7 +35,7 @@ angular.module('npn-viz-tool.vis-scatter',[
 
         {key:'daylength',label:'Day Length (s)'},
         {key:'acc_prcp',label:'Accumulated Precip (mm)'},
-        {key:'gdd',label:'GDD'}
+        {key:'gdd',label:'AGDD'}
         ];
 
     var defaultAxisFmt = d3.format('d');
@@ -218,6 +218,12 @@ angular.module('npn-viz-tool.vis-scatter',[
             .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
             .style('text-anchor', 'middle')
             .text('Onset DOY');
+			
+		  svg.append('g').append('text').attr('dx',5)
+			   .attr('dy',sizing.height + 136)
+			   .attr('font-size', '11px')
+			   .attr('font-style','italic')
+			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');			
 
         commonChartUpdates();
 

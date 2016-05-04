@@ -23,7 +23,6 @@
         <button class="btn btn-default" ng-click="addToPlot()" ng-disabled="!canAddToPlot()"><i class="fa fa-plus"></i></button>
     </div>
 </form>
-
 <div class="panel panel-default main-vis-panel" >
     <div class="panel-body">
         <center ng-if="error_message"><p class="text-danger">{{error_message}}</p></center>
@@ -51,6 +50,9 @@
             </div>
         </div>
         </center>
+		<!--
+		<p class = 'citation-text'>USA National Phenology Network, www.usanpn.org</p>
+		-->
         <ul class="list-inline calendar-chart-controls" ng-if="data" style="float: right;">
             <li>Label Size
                 <a href class="btn btn-default btn-xs" ng-click="decrFontSize()"><i class="fa fa-minus"></i></a>
