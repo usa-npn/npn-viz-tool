@@ -6704,6 +6704,7 @@ angular.module('npn-viz-tool.settings',[
         }
     };
 }]);
+
 angular.module('npn-viz-tool.share',[
     'npn-viz-tool.filter',
     'npn-viz-tool.layers',
