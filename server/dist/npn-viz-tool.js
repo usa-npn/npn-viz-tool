@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2016-05-04
+ * Version: 1.0.0 - 2016-05-12
  */
 
 /**
@@ -6144,7 +6144,7 @@ angular.module("js/toolbar/toolbar.html", []).run(["$templateCache", function($t
     "<div class=\"toolbar\">\n" +
     "  <ul class=\"tools-list\">\n" +
     "    <li ng-repeat=\"t in tools\" ng-class=\"{open: t.selected}\"\n" +
-    "        popover-placement=\"right\" uib-popover=\"{{t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\" popover-append-to-body=\"true\"\n" +
+    "        popover-placement=\"right\" uib-popover=\"{{(t.selected) ? 'Click to Collapse Menu' : t.title}}\" popover-trigger=\"mouseenter\" popover-popup-delay=\"1000\" popover-append-to-body=\"true\"\n" +
     "        ng-click=\"select(t)\">\n" +
     "      <i id=\"toolbar-icon-{{t.id}}\" class=\"toolbar-icon fa {{t.icon}}\"></i>\n" +
     "    </li>\n" +
