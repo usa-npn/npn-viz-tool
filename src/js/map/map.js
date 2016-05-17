@@ -12,8 +12,8 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.gridded',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','FilterService','HelpService',
-    function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,FilterService,HelpService){
+.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','FilterService','GriddedControlService','HelpService',
+    function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,FilterService,GriddedControlService,HelpService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
@@ -67,7 +67,7 @@ angular.module('npn-viz-tool.map',[
                     // this is a little leaky, the map knows which args the "share" control cares about...
                     // date is the minimum requirement for filtering.
                     var qargs = $location.search(),
-                        qArgFilter = qargs['d'] && (qargs['s'] || qargs['n']);
+                        qArgFilter = qargs['gl'] || (qargs['d'] && (qargs['s'] || qargs['n']));
                     if(!qArgFilter) {
                         stationViewOn();
                     }
@@ -95,7 +95,7 @@ angular.module('npn-viz-tool.map',[
             });*/
             $scope.$on('gridded-layer-on',stationViewOff);
             $scope.$on('gridded-layer-off',function() {
-                if(FilterService.isFilterEmpty()) {
+                if(FilterService.isFilterEmpty() && !GriddedControlService.layer) {
                     stationViewOn();
                 }
             });

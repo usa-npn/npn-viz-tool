@@ -14,7 +14,7 @@ angular.module('npn-viz-tool.share',[
     function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,$location,$log,SettingsService,GriddedControlService){
     return {
         restrict: 'E',
-        template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
+        template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria() && !gridSelected()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
         scope: {},
         controller: function($scope){
             FilterService.pause();
@@ -81,6 +81,10 @@ angular.module('npn-viz-tool.share',[
                     FilterService.resume();
                 }
             });
+			
+			$scope.gridSelected = function() {
+                return GriddedControlService.layer;
+            };
 
             $scope.getFilter = FilterService.getFilter;
             $scope.share = function() {
@@ -88,39 +92,43 @@ angular.module('npn-viz-tool.share',[
                     $scope.url = null;
                     return;
                 }
-                var filter = FilterService.getFilter(),
-                    params = {},
-                    absUrl = $location.absUrl(),
-                    q = absUrl.indexOf('?');
-                params['d'] = filter.getDateArg().toString();
-                filter.getSpeciesArgs().forEach(function(s){
-                    if(!params['s']) {
-                        params['s'] = s.toString();
-                    } else {
-                        params['s'] += ';'+s.toString();
-                    }
-                });
-                filter.getNetworkArgs().forEach(function(n){
-                    if(!params['n']) {
-                        params['n'] = n.toString();
-                    } else {
-                        params['n'] += ';'+n.toString();
-                    }
-                });
-                filter.getGeoArgs().forEach(function(g){
-                    if(!params['g']) {
-                        params['g'] = g.toString();
-                    } else {
-                        params['g'] += ';'+g.toString();
-                    }
-                });
-                filter.getBoundsArgs().forEach(function(b){
-                    if(!params['b']) {
-                        params['b'] = b.toString();
-                    } else {
-                        params['b'] += ';'+b.toString();
-                    }
-                });
+				var params = {},
+					absUrl = $location.absUrl(),
+					q = absUrl.indexOf('?');				
+				if(!FilterService.isFilterEmpty()){
+					
+					var filter = FilterService.getFilter();
+					
+					params['d'] = filter.getDateArg().toString();
+					filter.getSpeciesArgs().forEach(function(s){
+						if(!params['s']) {
+							params['s'] = s.toString();
+						} else {
+							params['s'] += ';'+s.toString();
+						}
+					});
+					filter.getNetworkArgs().forEach(function(n){
+						if(!params['n']) {
+							params['n'] = n.toString();
+						} else {
+							params['n'] += ';'+n.toString();
+						}
+					});
+					filter.getGeoArgs().forEach(function(g){
+						if(!params['g']) {
+							params['g'] = g.toString();
+						} else {
+							params['g'] += ';'+g.toString();
+						}
+					});
+					filter.getBoundsArgs().forEach(function(b){
+						if(!params['b']) {
+							params['b'] = b.toString();
+						} else {
+							params['b'] += ';'+b.toString();
+						}
+					});
+				}
                 GriddedControlService.addSharingUrlArgs(params);
                 if(q != -1) {
                     absUrl = absUrl.substring(0,q);

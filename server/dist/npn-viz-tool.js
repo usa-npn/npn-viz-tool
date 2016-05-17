@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2016-05-12
+ * Version: 1.0.0 - 2016-05-17
  */
 
 /**
@@ -4586,8 +4586,8 @@ angular.module('npn-viz-tool.map',[
     'npn-viz-tool.gridded',
     'uiGmapgoogle-maps'
 ])
-.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','FilterService','HelpService',
-    function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,FilterService,HelpService){
+.directive('npnVizMap',['$location','$timeout','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','FilterService','GriddedControlService','HelpService',
+    function($location,$timeout,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,FilterService,GriddedControlService,HelpService){
     return {
         restrict: 'E',
         templateUrl: 'js/map/map.html',
@@ -4641,7 +4641,7 @@ angular.module('npn-viz-tool.map',[
                     // this is a little leaky, the map knows which args the "share" control cares about...
                     // date is the minimum requirement for filtering.
                     var qargs = $location.search(),
-                        qArgFilter = qargs['d'] && (qargs['s'] || qargs['n']);
+                        qArgFilter = qargs['gl'] || (qargs['d'] && (qargs['s'] || qargs['n']));
                     if(!qArgFilter) {
                         stationViewOn();
                     }
@@ -4669,7 +4669,7 @@ angular.module('npn-viz-tool.map',[
             });*/
             $scope.$on('gridded-layer-on',stationViewOff);
             $scope.$on('gridded-layer-off',function() {
-                if(FilterService.isFilterEmpty()) {
+                if(FilterService.isFilterEmpty() && !GriddedControlService.layer) {
                     stationViewOn();
                 }
             });
@@ -6721,7 +6721,7 @@ angular.module('npn-viz-tool.share',[
     function(uiGmapIsReady,FilterService,LayerService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,$location,$log,SettingsService,GriddedControlService){
     return {
         restrict: 'E',
-        template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
+        template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria() && !gridSelected()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
         scope: {},
         controller: function($scope){
             FilterService.pause();
@@ -6788,47 +6788,59 @@ angular.module('npn-viz-tool.share',[
                     FilterService.resume();
                 }
             });
+			
+			$scope.gridSelected = function() {
+                return GriddedControlService.layer;
+            };
 
             $scope.getFilter = FilterService.getFilter;
             $scope.share = function() {
+
                 if($scope.url) {
                     $scope.url = null;
                     return;
                 }
-                var filter = FilterService.getFilter(),
-                    params = {},
-                    absUrl = $location.absUrl(),
-                    q = absUrl.indexOf('?');
-                params['d'] = filter.getDateArg().toString();
-                filter.getSpeciesArgs().forEach(function(s){
-                    if(!params['s']) {
-                        params['s'] = s.toString();
-                    } else {
-                        params['s'] += ';'+s.toString();
-                    }
-                });
-                filter.getNetworkArgs().forEach(function(n){
-                    if(!params['n']) {
-                        params['n'] = n.toString();
-                    } else {
-                        params['n'] += ';'+n.toString();
-                    }
-                });
-                filter.getGeoArgs().forEach(function(g){
-                    if(!params['g']) {
-                        params['g'] = g.toString();
-                    } else {
-                        params['g'] += ';'+g.toString();
-                    }
-                });
-                filter.getBoundsArgs().forEach(function(b){
-                    if(!params['b']) {
-                        params['b'] = b.toString();
-                    } else {
-                        params['b'] += ';'+b.toString();
-                    }
-                });
+
+				var params = {},
+					absUrl = $location.absUrl(),
+					q = absUrl.indexOf('?');				
+				if(!FilterService.isFilterEmpty()){
+					
+					var filter = FilterService.getFilter();
+					
+					params['d'] = filter.getDateArg().toString();
+					filter.getSpeciesArgs().forEach(function(s){
+						if(!params['s']) {
+							params['s'] = s.toString();
+						} else {
+							params['s'] += ';'+s.toString();
+						}
+					});
+					filter.getNetworkArgs().forEach(function(n){
+						if(!params['n']) {
+							params['n'] = n.toString();
+						} else {
+							params['n'] += ';'+n.toString();
+						}
+					});
+					filter.getGeoArgs().forEach(function(g){
+						if(!params['g']) {
+							params['g'] = g.toString();
+						} else {
+							params['g'] += ';'+g.toString();
+						}
+					});
+					filter.getBoundsArgs().forEach(function(b){
+						if(!params['b']) {
+							params['b'] = b.toString();
+						} else {
+							params['b'] += ';'+b.toString();
+						}
+					});
+				}
+
                 GriddedControlService.addSharingUrlArgs(params);
+
                 if(q != -1) {
                     absUrl = absUrl.substring(0,q);
                 }
