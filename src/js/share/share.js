@@ -88,10 +88,12 @@ angular.module('npn-viz-tool.share',[
 
             $scope.getFilter = FilterService.getFilter;
             $scope.share = function() {
+
                 if($scope.url) {
                     $scope.url = null;
                     return;
                 }
+
 				var params = {},
 					absUrl = $location.absUrl(),
 					q = absUrl.indexOf('?');				
@@ -129,7 +131,9 @@ angular.module('npn-viz-tool.share',[
 						}
 					});
 				}
+
                 GriddedControlService.addSharingUrlArgs(params);
+
                 if(q != -1) {
                     absUrl = absUrl.substring(0,q);
                 }
