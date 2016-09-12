@@ -63,8 +63,15 @@ angular.module('npn-viz-tool.filter',[
     };
     DateFilterArg.prototype.toExportParam = function() {
         return {
-            start: this.arg.start_date,
-            end: this.arg.end_date
+            startDate: this.arg.start_date + '-01-01',
+            endDate: this.arg.end_date + '-01-01',
+            startYear: this.arg.start_date,
+            startMonth: 'January',
+            startDay: 1,
+            endYear: this.arg.end_date,
+            endMonth: 'January',
+            endDay: 1,
+            rangeType: 'Calendar'
         };
     };
     DateFilterArg.prototype.toString = function() {

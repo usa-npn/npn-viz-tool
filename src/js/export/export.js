@@ -9,19 +9,18 @@ angular.module('npn-viz-tool.export',[
             $scope.getFilteredMarkers = FilterService.getFilteredMarkers;
             $scope.exportData = function() {
                 var filter = FilterService.getFilter();
-                var params = {
-                    date: filter.getDateArg().toExportParam()
-                };
+                var params = filter.getDateArg().toExportParam();
+                params.downloadType = 'selectable';
                 if(filter.getSpeciesArgs().length) {
                     params.species = [];
                     filter.getSpeciesArgs().forEach(function(s){
-                        params.species.push(s.toExportParam());
+                        params.species.push(s.getId());
                     });
                 }
                 if(filter.getNetworkArgs().length) {
-                    params.networks = [];
+                    params.partnerGroups = [];
                     filter.getNetworkArgs().forEach(function(n){
-                        params.networks.push(n.toExportParam());
+                        params.partnerGroups.push(n.getId());
                     });
                 }
                 if(filter.getGeographicArgs().length) {
@@ -31,12 +30,32 @@ angular.module('npn-viz-tool.export',[
                     });
                 }
                 $log.debug('export.params',params);
+                var serverUrl = '';
+                var popServerUrl = '';
+                if(location.hostname.includes('local')) {
+                    serverUrl = location.protocol + '//' + location.hostname;
+                    popServerUrl = serverUrl;
+                }
+                else if(location.hostname.includes('dev')) {
+                    serverUrl = '//data-dev.usanpn.org';
+                    popServerUrl = 'http://www-dev.usanpn.org';
+                }
+                else {
+                    serverUrl = '//data.usanpn.org';
+                    popServerUrl = 'http://www.usanpn.org';
+                }
                 $http({
                     method: 'POST',
-                    url: '/ddt/observations/setSearchParams',
-                    data: params
-                }).success(function(){
-                    $window.open('/results/visualization/data');
+                    url: popServerUrl + ':3002/pop/search',
+                    data: {'searchJson': params}
+                }).then(function(result){
+                    if(location.hostname.includes('local')) {
+                        $window.open(serverUrl + ':8080?search='+result.data.saved_search_hash);
+                    }
+                    else {
+                        console.log(serverUrl + '/observations?search='+result.data.saved_search_hash);
+                        $window.open(serverUrl + '/observations?search='+result.data.saved_search_hash);
+                    }
                 });
             };
         }]

@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2016-05-17
+ * Version: 1.0.0 - 2016-09-12
  */
 
 /**
@@ -734,19 +734,18 @@ angular.module('npn-viz-tool.export',[
             $scope.getFilteredMarkers = FilterService.getFilteredMarkers;
             $scope.exportData = function() {
                 var filter = FilterService.getFilter();
-                var params = {
-                    date: filter.getDateArg().toExportParam()
-                };
+                var params = filter.getDateArg().toExportParam();
+                params.downloadType = 'selectable';
                 if(filter.getSpeciesArgs().length) {
                     params.species = [];
                     filter.getSpeciesArgs().forEach(function(s){
-                        params.species.push(s.toExportParam());
+                        params.species.push(s.getId());
                     });
                 }
                 if(filter.getNetworkArgs().length) {
-                    params.networks = [];
+                    params.partnerGroups = [];
                     filter.getNetworkArgs().forEach(function(n){
-                        params.networks.push(n.toExportParam());
+                        params.partnerGroups.push(n.getId());
                     });
                 }
                 if(filter.getGeographicArgs().length) {
@@ -756,12 +755,32 @@ angular.module('npn-viz-tool.export',[
                     });
                 }
                 $log.debug('export.params',params);
+                var serverUrl = '';
+                var popServerUrl = '';
+                if(location.hostname.includes('local')) {
+                    serverUrl = location.protocol + '//' + location.hostname;
+                    popServerUrl = serverUrl;
+                }
+                else if(location.hostname.includes('dev')) {
+                    serverUrl = '//data-dev.usanpn.org';
+                    popServerUrl = 'http://www-dev.usanpn.org';
+                }
+                else {
+                    serverUrl = '//data.usanpn.org';
+                    popServerUrl = 'http://www.usanpn.org';
+                }
                 $http({
                     method: 'POST',
-                    url: '/ddt/observations/setSearchParams',
-                    data: params
-                }).success(function(){
-                    $window.open('/results/visualization/data');
+                    url: popServerUrl + ':3002/pop/search',
+                    data: {'searchJson': params}
+                }).then(function(result){
+                    if(location.hostname.includes('local')) {
+                        $window.open(serverUrl + ':8080?search='+result.data.saved_search_hash);
+                    }
+                    else {
+                        console.log(serverUrl + '/observations?search='+result.data.saved_search_hash);
+                        $window.open(serverUrl + '/observations?search='+result.data.saved_search_hash);
+                    }
                 });
             };
         }]
@@ -832,8 +851,15 @@ angular.module('npn-viz-tool.filter',[
     };
     DateFilterArg.prototype.toExportParam = function() {
         return {
-            start: this.arg.start_date,
-            end: this.arg.end_date
+            startDate: this.arg.start_date + '-01-01',
+            endDate: this.arg.end_date + '-01-01',
+            startYear: this.arg.start_date,
+            startMonth: 'January',
+            startDay: 1,
+            endYear: this.arg.end_date,
+            endMonth: 'January',
+            endDay: 1,
+            rangeType: 'Calendar'
         };
     };
     DateFilterArg.prototype.toString = function() {
@@ -3632,6 +3658,7 @@ angular.module('npn-viz-tool.gridded-services',[
         if(layer_def.description) {
             layer_def.$description = $sce.trustAsHtml(layer_def.description);
         }
+        var boxSize = 256;
         var wmsArgs = {
             service: 'WMS',
             request: 'GetMap',
@@ -3640,16 +3667,16 @@ angular.module('npn-viz-tool.gridded-services',[
             styles: '',
             format: 'image/png',
             transparent: true,
-            height: 256,
-            width: 256,
+            height: boxSize,
+            width: boxSize,
             srs: 'EPSG:3857' // 'EPSG:4326'
         },
         googleLayer = new google.maps.ImageMapType({
             getTileUrl: function (coord, zoom) {
                 var proj = map.getProjection(),
                     zfactor = Math.pow(2, zoom),
-                    top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256.0 / zfactor, coord.y * 256.0 / zfactor)),
-                    bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256.0 / zfactor, (coord.y + 1) * 256.0 / zfactor)),
+                    top = proj.fromPointToLatLng(new google.maps.Point(coord.x * boxSize / zfactor, coord.y * boxSize / zfactor)),
+                    bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * boxSize / zfactor, (coord.y + 1) * boxSize / zfactor)),
                     ctop = srsConversion(top),
                     cbot = srsConversion(bot),
                     base = {};
@@ -3658,7 +3685,7 @@ angular.module('npn-viz-tool.gridded-services',[
                 }
                 return WMS_BASE_URL+'?'+$httpParamSerializer(angular.extend(base,wmsArgs,{bbox: [ctop.lng,cbot.lat,cbot.lng,ctop.lat].join(',')}));
             },
-            tileSize: new google.maps.Size(256, 256),
+            tileSize: new google.maps.Size(boxSize, boxSize),
             isPng: true,
             name: (layer_def.title||layer_def.name)
         }),
@@ -3823,7 +3850,7 @@ angular.module('npn-viz-tool.gridded-services',[
              * @return {promise} A promise that will be resolved with an array of numbers, or rejected.
              */
             getGriddedData: function(latLng) {
-                return WcsService.getGriddedData(GEOSERVER_URL,this,latLng,5/*should gridSize change based on the layer?*/);
+                return WcsService.getGriddedData(GEOSERVER_URL,this,latLng,1/*should gridSize change based on the layer?*/);
             }
         });
         return l;
