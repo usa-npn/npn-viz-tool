@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2016-09-12
+ * Version: 1.0.0 - 2016-09-13
  */
 
 /**
@@ -763,11 +763,11 @@ angular.module('npn-viz-tool.export',[
                 }
                 else if(location.hostname.includes('dev')) {
                     serverUrl = '//data-dev.usanpn.org';
-                    popServerUrl = 'http://www-dev.usanpn.org';
+                    popServerUrl = 'http://data-dev.usanpn.org';
                 }
                 else {
                     serverUrl = '//data.usanpn.org';
-                    popServerUrl = 'http://www.usanpn.org';
+                    popServerUrl = 'http://data.usanpn.org';
                 }
                 $http({
                     method: 'POST',
