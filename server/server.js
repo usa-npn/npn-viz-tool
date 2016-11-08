@@ -8,7 +8,7 @@ var express = require('express'),
     proxy_cache_ttl = 3600000,
     argv = require('minimist')(process.argv.slice(2)),
     port = Number(argv.port||8000),
-    npn_host = 'www-dev.usanpn.org';
+    npn_host = 'www.usanpn.org';
 
 // validate port
 if(isNaN(port) || port < 0 || port > 65535) {

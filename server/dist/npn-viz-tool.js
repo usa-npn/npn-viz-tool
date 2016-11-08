@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2016-09-13
+ * Version: 1.0.0 - 2016-11-08
  */
 
 /**
@@ -736,6 +736,7 @@ angular.module('npn-viz-tool.export',[
                 var filter = FilterService.getFilter();
                 var params = filter.getDateArg().toExportParam();
                 params.downloadType = 'selectable';
+                params.searchSource = 'visualization-tool';
                 if(filter.getSpeciesArgs().length) {
                     params.species = [];
                     filter.getSpeciesArgs().forEach(function(s){

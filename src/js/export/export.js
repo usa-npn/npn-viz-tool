@@ -11,6 +11,7 @@ angular.module('npn-viz-tool.export',[
                 var filter = FilterService.getFilter();
                 var params = filter.getDateArg().toExportParam();
                 params.downloadType = 'selectable';
+                params.searchSource = 'visualization-tool';
                 if(filter.getSpeciesArgs().length) {
                     params.species = [];
                     filter.getSpeciesArgs().forEach(function(s){
