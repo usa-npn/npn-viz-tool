@@ -19,7 +19,7 @@ angular.module('npn-viz-tool.stations',[
             //m.info.setContent('<div class="station-details"><i class="fa fa-circle-o-notch fa-spin"></i></div>');
             //m.info.open(m.map,m);
             $log.debug('Fetching info for station '+m.model.station_id);
-            $http.get('/npn_portal/stations/getStationDetails.json',{params:{ids: m.model.station_id}}).success(function(info){
+            $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/stations/getStationDetails.json',{params:{ids: m.model.station_id}}).success(function(info){
                 function litem(label,value) {
                     return value && value !== '' ?
                      '<li><label>'+label+':</label> '+value+'</li>' : '';
@@ -131,7 +131,7 @@ angular.module('npn-viz-tool.stations',[
             if(stationCounts) {
                 handleCounts(stationCounts);
             } else {
-                $http.get('/npn_portal/stations/getStationCountByState.json').success(function(counts){
+                $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/stations/getStationCountByState.json').success(function(counts){
                     CacheService.put('stations-counts-by-state',counts);
                     handleCounts(counts);
                 });
@@ -223,7 +223,7 @@ angular.module('npn-viz-tool.stations',[
                                         waitTime = 500; // give more time for map tiles to load
                                     }
                                     $timeout(function(){
-                                        $http.get('/npn_portal/stations/getAllStations.json',
+                                        $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/stations/getAllStations.json',
                                                     {params:{state_code:state}})
                                             .success(function(data){
                                                 data.forEach(function(d){

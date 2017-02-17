@@ -264,7 +264,7 @@ angular.module('npn-viz-tool.vis-map',[
             // unfortunately there's no web service to select multiple species by id
             // and the getSpeciesById.json service returns slightly different objects
             // so go get all species and filter out the list to those of interest.
-            $http.get('/npn_portal/species/getSpeciesFilter.json').then(function(response){
+            $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/species/getSpeciesFilter.json').then(function(response){
                 implicit_list = response.data.filter(function(species){
                     return IMPLICIT_SPECIES_IDS.indexOf(species.species_id) !== -1;
                 });
@@ -562,7 +562,7 @@ angular.module('npn-viz-tool.vis-map',[
                 if(!model.station) {
                     station_def = $q.defer();
                     promises.push(station_def.promise);
-                    $http.get('/npn_portal/stations/getStationDetails.json',{params:{ids: model.site_id}}).success(function(info){
+                    $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/stations/getStationDetails.json',{params:{ids: model.site_id}}).success(function(info){
                         model.station = info && info.length ? info[0] : undefined;
                         station_def.resolve();
                     });
