@@ -45,6 +45,10 @@
                 "name": "gdd:agdd"
             },{
                 "name": "gdd:agdd_50f"
+            },{
+                "name": "gdd:agdd_alaska"
+            },{
+                "name": "gdd:agdd_alaska_50f"
             }]
     },{
         "name": "Temperature Accumulations, Daily Anomaly",
@@ -117,6 +121,22 @@
                 "name": "si-x:zabelli_leaf_ncep"
             },{
                 "name": "si-x:zabelli_bloom_ncep"
+            },{
+                "name": "si-x:average_leaf_ncep_alaska"
+            },{
+                "name": "si-x:average_bloom_ncep_alaska"
+            },{
+                "name": "si-x:arnoldred_leaf_ncep_alaska"
+            },{
+                "name": "si-x:arnoldred_bloom_ncep_alaska"
+            },{
+                "name": "si-x:lilac_leaf_ncep_alaska"
+            },{
+                "name": "si-x:lilac_bloom_ncep_alaska"
+            },{
+                "name": "si-x:zabelli_leaf_ncep_alaska"
+            },{
+                "name": "si-x:zabelli_bloom_ncep_alaska"
             }]
     },{
         "name": "Spring Indices, Daily Anomaly",
