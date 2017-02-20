@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2017-02-17
+ * Version: 1.0.0 - 2017-02-20
  */
 
 /**
@@ -3900,7 +3900,8 @@ angular.module('npn-viz-tool.gridded-services',[
         var l = $(layer);
         var o = {
             name: l.find('Name').first().text(),
-            title: l.find('Title').first().text(),
+            // redmine #761
+            title: l.find('Title').first().text().replace(/\((.+?)\)/g, ''),
             abstract: l.find('Abstract').first().text(),
             bbox: parseBoundingBox(l.find('EX_GeographicBoundingBox').first()),
             style: parseStyle(l.find('Style').first()),
@@ -3915,7 +3916,8 @@ angular.module('npn-viz-tool.gridded-services',[
         var s = $(style);
         return {
             name: s.find('Name').first().text(),
-            title: s.find('Title').first().text(),
+            // redmine #761
+            title: s.find('Title').first().text().replace(/\((.+?)\)/g, ''),
             legend: s.find('OnlineResource').attr('xlink:href') // not very specific...
         };
     }
