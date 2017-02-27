@@ -47,7 +47,7 @@
                 "name": "gdd:agdd_50f"
             }]
     },{
-        "name": "Temperature Accumulations, Current Day - Alaska",
+        "name": "Temperature Accumulations, Current Day, Alaska",
         "supports_data": false,
         "legend_label_filter": {
             "name": "legendGddUnits",
@@ -141,7 +141,7 @@
                 "name": "si-x:zabelli_bloom_ncep"
             }]
     },{
-        "name": "Spring Indices, Current Year - Alaska",
+        "name": "Spring Indices, Current Year, Alaska",
         "legend_label_filter": {
             "name": "legendDoy"
         },
