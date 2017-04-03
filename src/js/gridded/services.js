@@ -168,7 +168,7 @@ angular.module('npn-viz-tool.gridded-services',[
     return {
         restrict: 'E',
         template: '<div ng-if="legend" class="form-group">'+
-        '<label for="griddedRangeSlider" style="margin-bottom: 15px;">AGDD Range</label>'+
+        '<label for="griddedRangeSlider" style="margin-bottom: 15px;">Range</label>'+
         '<rzslider rz-slider-model="selection.min" rz-slider-high="selection.max" rz-slider-options="options"></rzslider>'+
         '</div>',
         scope: {
@@ -197,6 +197,9 @@ angular.module('npn-viz-tool.gridded-services',[
                                 return data[n].label;
                             },
                             getTickColor: function(n) {
+                                return data[n].color;
+                            },
+                            getPointerColor: function(n) {
                                 return data[n].color;
                             }
                         };
