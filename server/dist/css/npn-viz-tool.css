@@ -262,11 +262,17 @@ ul.filter-tags .filter-tag a:first-of-type {
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;
 }
-ul.filter-tags .filter-tag .phenophase-list {
+ul.filter-tags .filter-tag .phenophase-list,
+ul.filter-tags .filter-tag .network-dd {
   padding: 5px;
 }
-ul.filter-tags .filter-tag .phenophase-list li {
+ul.filter-tags .filter-tag .phenophase-list li,
+ul.filter-tags .filter-tag .network-dd li {
   font-size: .9em;
+}
+ul.filter-tags .filter-tag .phenophase-list li > label,
+ul.filter-tags .filter-tag .network-dd li > label {
+  font-weight: normal;
 }
 ul.filter-tags .filter-tag .popover-content {
   color: #666;

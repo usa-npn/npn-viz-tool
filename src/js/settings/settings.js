@@ -44,6 +44,11 @@ angular.module('npn-viz-tool.settings',[
             name: 'filter-lqd-summary',
             q: 'flqdf',
             value: true
+        },
+        onlyYesData: {
+            name: 'only-yes-data',
+            q: 'oyd',
+            value: false
         }
     };
     return {

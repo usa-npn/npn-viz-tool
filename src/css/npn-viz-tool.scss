@@ -142,7 +142,7 @@ $tool-content-overlap: 40px;
 
             @include tb-transition();
         }
-		
+
 		li:last-child{
 			margin-top:57px;
 		}
@@ -285,10 +285,14 @@ ul.filter-tags {
             border-top-right-radius: 0px;
             border-bottom-right-radius: 0px;
         }
-        .phenophase-list {
+        .phenophase-list,
+        .network-dd {
             padding: 5px;
             li {
                 font-size: .9em;
+                >label {
+                    font-weight: normal;
+                }
             }
         }
         .popover-content {
@@ -627,7 +631,7 @@ $pulse-count: 60;
             opacity: 0.2;
             border-radius: 5px;
         }
-    }	
+    }
 }
 
 #griddedPointInfoWindow {
