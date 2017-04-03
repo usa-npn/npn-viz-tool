@@ -102,7 +102,7 @@ body {
   border-top-right-radius: 15px;
   border-bottom-right-radius: 15px;
   padding: 10px 13px 10px 50px;
-  display: inline-grid;
+  display: list-item;
   width: 25px;
   font-size: 1.75em;
   position: relative;

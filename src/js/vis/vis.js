@@ -202,7 +202,7 @@ angular.module('npn-viz-tool.vis',[
         getSummarizedData: function(params,success) {
             $http({
                 method: 'POST',
-                url: '/npn_portal/observations/getSummarizedData.json',
+                url: window.location.origin.replace('data', 'www') + '/npn_portal/observations/getSummarizedData.json',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
@@ -229,7 +229,7 @@ angular.module('npn-viz-tool.vis',[
         getObservationDates: function(params,success) {
             $http({
                 method: 'POST',
-                url: '/npn_portal/observations/getObservationDates.json',
+                url: window.location.origin.replace('data', 'www') + '/npn_portal/observations/getObservationDates.json',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
