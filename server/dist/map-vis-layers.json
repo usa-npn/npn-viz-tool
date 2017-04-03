@@ -35,10 +35,6 @@
             "name": "legendGddUnits",
             "args": [true]
         },
-        "extent_values_filter": {
-            "name": "extentDates",
-            "args": [null,"today"]
-        },
         "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 2000,
         "layers":[{
@@ -57,10 +53,6 @@
             "name": "legendAgddAnomaly",
             "args": [true]
         },
-        "extent_values_filter": {
-            "name": "extentDates",
-            "args": [null,"today"]
-        },
         "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 100,
         "layers":[{
@@ -75,9 +67,9 @@
         },
         "current_year_only": true,
         "layers":[{
-				"name": "si-x:average_leaf_prism"				  
+				"name": "si-x:average_leaf_prism"
             },{
-				"name": "si-x:average_bloom_prism"                
+				"name": "si-x:average_bloom_prism"
             },{
                 "name": "si-x:arnoldred_leaf_prism"
             },{
@@ -96,15 +88,11 @@
         "legend_label_filter": {
             "name": "legendDoy"
         },
-        "extent_values_filter": {
-            "name": "extentDates",
-            "args": [null,"today"]
-        },
         "current_year_only": true,
         "layers": [{
-				"name": "si-x:average_leaf_ncep"                
+				"name": "si-x:average_leaf_ncep"
             },{
-				"name": "si-x:average_bloom_ncep"                
+				"name": "si-x:average_bloom_ncep"
             },{
                 "name": "si-x:arnoldred_leaf_ncep"
             },{
@@ -123,10 +111,6 @@
         "supports_data": false,
         "legend_label_filter": {
             "name": "legendSixAnomaly"
-        },
-        "extent_values_filter": {
-            "name": "extentDates",
-            "args": [null,"today"]
         },
         "layers": [{
                 "name": "si-x:leaf_anomaly"
