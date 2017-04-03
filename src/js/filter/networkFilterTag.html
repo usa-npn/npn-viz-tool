@@ -1,10 +1,16 @@
-<div class="btn-group filter-tag date">
-    <a class="btn btn-default">
-        {{arg.arg.network_name}} 
+<div class="btn-group filter-tag date" ng-class="{open: status.isopen}">
+    <a class="btn btn-default" ng-click="status.isopen = !status.isopen">
+        {{arg.arg.network_name}}
         <span class="badge"
               popover-placement="bottom" popover-popup-delay="500" popover-append-to-body="true"
               popover-trigger="mouseenter" uib-popover="{{badgeTooltip}}">{{arg.counts | speciesBadge:badgeFormat}}</span>
+        <span class="caret"></span>
     </a>
+    <ul class="dropdown-menu network-dd" role="menu">
+        <li class="inline">
+            <label for="ydo-{{arg.arg.network_id}}"><input id="ydo-{{arg.arg.network_id}}" type="checkbox" ng-model="arg.ydo"/> Yes Data Only</label>
+        </li>
+    </ul>
     <a class="btn btn-default" ng-click="removeFromFilter(arg)">
         <i class="fa fa-times-circle-o"></i>
     </a>

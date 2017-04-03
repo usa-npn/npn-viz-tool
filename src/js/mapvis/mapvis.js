@@ -12,7 +12,7 @@ angular.module('npn-viz-tool.vis-map',[
     'npn-viz-tool.settings',
     'npn-viz-tool.gridded',
     'ui.bootstrap',
-    'angularAwesomeSlider'
+    'rzModule',
 ])
 /**
  * @ngdoc directive

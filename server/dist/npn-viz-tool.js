@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2017-03-20
+ * Version: 1.0.0 - 2017-04-03
  */
 
 /**
@@ -879,7 +879,7 @@ angular.module('npn-viz-tool.filter',[
     };
     return DateFilterArg;
 }])
-.factory('NetworkFilterArg',['$http','$rootScope','$log','FilterArg','SpeciesFilterArg',function($http,$rootScope,$log,FilterArg,SpeciesFilterArg){
+.factory('NetworkFilterArg',['$http','$rootScope','$log','FilterArg','SpeciesFilterArg','SettingsService',function($http,$rootScope,$log,FilterArg,SpeciesFilterArg,SettingsService){
     /**
      * Constructs a NetworkFilterArg.  TODO over-ride $filter??
      *
@@ -892,6 +892,8 @@ angular.module('npn-viz-tool.filter',[
             observation: '?'
         };
         this.stations = [];
+        this.ydo = arguments.length > 1 ? arguments[1] : SettingsService.getSettingValue('onlyYesData');
+        $log.debug('NetworkFilterArg',this.arg,this.ydo);
         var self = this;
         $rootScope.$broadcast('network-filter-ready',{filter:self});
     };
@@ -904,15 +906,13 @@ angular.module('npn-viz-tool.filter',[
     NetworkFilterArg.prototype.toExportParam = function() {
         return this.getId();
     };
-    NetworkFilterArg.prototype.toString = function() {
-        return this.arg.network_id;
-    };
     NetworkFilterArg.prototype.resetCounts = function(c) {
         this.counts.station = this.counts.observation = c;
         this.stations = [];
     };
-    NetworkFilterArg.prototype.updateCounts = function(station,species) {
-        var id = this.getId(),pid;
+    NetworkFilterArg.prototype.updateCounts = function(station,species,networkOnly) {
+        var id = this.getId(),pid,n,
+            counts = 0;
         if(station.networks.indexOf(id) !== -1) {
             // station is IN this network
             if(this.stations.indexOf(station.station_id) === -1) {
@@ -922,13 +922,29 @@ angular.module('npn-viz-tool.filter',[
             }
             // TODO, how to know which phenophases to add to counts??
             for(pid in species) {
-                if(species[pid].$match) { // matched some species/phenophase filter
-                    this.counts.observation += SpeciesFilterArg.countObservationsForPhenophase(species[pid]);
+                if(species[pid].$match || networkOnly) { // matched some species/phenophase filter
+                    n = SpeciesFilterArg.countObservationsForPhenophase.call(this,species[pid]);
+                    if(networkOnly) {
+                        station.observationCount += n;
+                    }
+                    this.counts.observation += n;
+                    counts += n;
                 }
             }
         }
+        return counts;
+    };
+    NetworkFilterArg.prototype.toString = function() {
+        var s = this.arg.network_id;
+        if(this.ydo) {
+            s += ':1';
+        }
+        return s;
     };
     NetworkFilterArg.fromString = function(s) {
+        var parts = s.split(':'),
+            net_id = parts.length > 1 ? parts[0] : s,
+            ydo = parts.length === 2 ? parts[1] === '1' : undefined;
         // TODO can I just fetch a SINGLE network??  the network_id parameter of
         // getPartnerNetworks.json doesn't appear to work.
         return $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/networks/getPartnerNetworks.json',{
@@ -939,8 +955,8 @@ angular.module('npn-viz-tool.filter',[
         }).then(function(response){
             var nets = response.data;
             for(var i = 0; nets && i  < nets.length; i++) {
-                if(s === nets[i].network_id) {
-                    return new NetworkFilterArg(nets[i]);
+                if(net_id == nets[i].network_id) {
+                    return ydo ? new NetworkFilterArg(nets[i],ydo) : new NetworkFilterArg(nets[i]);
                 }
             }
             $log.warn('NO NETWORK FOUND WITH ID '+s);
@@ -948,7 +964,7 @@ angular.module('npn-viz-tool.filter',[
     };
     return NetworkFilterArg;
 }])
-.factory('SpeciesFilterArg',['$http','$rootScope','$log','FilterArg',function($http,$rootScope,$log,FilterArg){
+.factory('SpeciesFilterArg',['$http','$rootScope','$log','FilterArg','SettingsService',function($http,$rootScope,$log,FilterArg,SettingsService){
     /**
      * Constructs a SpeciesFilterArg.  This type of arg spans both side of the wire.  It's id is used as input
      * to web services and its $filter method deals with post-processing phenophase filtering.  It exposes additional
@@ -966,6 +982,8 @@ angular.module('npn-viz-tool.filter',[
         if(selectedPhenoIds && selectedPhenoIds != '*') {
             this.phenophaseSelections = selectedPhenoIds.split(',');
         }
+        this.ydo = arguments.length > 2 ? arguments[2] : SettingsService.getSettingValue('onlyYesData');
+        $log.debug('SpeciesFilterArg:',species,this.phenophaseSelections,this.ydo);
         var self = this;
         $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/phenophases/getPhenophasesForSpecies.json',{ // cache ??
                 params: {
@@ -990,16 +1008,22 @@ angular.module('npn-viz-tool.filter',[
                 $rootScope.$broadcast('species-filter-ready',{filter:self});
             });
     };
+    // IMPORTANT: this function is "static" (not on the prototype) and yet
+    // makes use of this, shared invocations make use of call/apply to set
+    // the "this" object which may be a SpeciesFilterArg or a NetworkFilterArg
     SpeciesFilterArg.countObservationsForPhenophase = function(phenophase) {
-        var n = 0;
+        var self = this||{},
+            n = 0;
         if(phenophase.y) {
             n += phenophase.y;
         }
-        if(phenophase.n) {
-            n += phenophase.n;
-        }
-        if(phenophase.q) {
-            n += phenophase.q;
+        if(!self.ydo) {
+            if(phenophase.n) {
+                n += phenophase.n;
+            }
+            if(phenophase.q) {
+                n += phenophase.q;
+            }
         }
         return n;
     };
@@ -1023,7 +1047,7 @@ angular.module('npn-viz-tool.filter',[
                     $log.error('phenophase_id: ' + pid + ' not found for species: ' + self.arg.species_id);
                     return false;
                 }
-                var oCount = SpeciesFilterArg.countObservationsForPhenophase(species[pid]);
+                var oCount = SpeciesFilterArg.countObservationsForPhenophase.call(self,species[pid]);
                 self.phenophasesMap[pid].count += oCount;
                 // LEAKY this $match is something that the NetworkFilterArg uses to decide which
                 // observations to include in its counts
@@ -1064,12 +1088,16 @@ angular.module('npn-viz-tool.filter',[
                 s += (i>0?',':'')+pp.phenophase_id;
             });
         }
+        if(this.ydo) {
+            s += ':1';
+        }
         return s;
     };
     SpeciesFilterArg.fromString = function(s) {
-        var colon = s.indexOf(':'),
-            sid = s.substring(0,colon),
-            ppids = s.substring(colon+1);
+        var parts = s.split(':'),
+            sid = parts[0],
+            ppids = parts[1],
+            ydo = parts.length === 3 ? parts[2] === '1' : undefined;
         return $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/species/getSpeciesById.json',{
             params: {
                 species_id: sid
@@ -1077,7 +1105,8 @@ angular.module('npn-viz-tool.filter',[
         }).then(function(response){
             // odd that this ws call doesn't return the species_id...
             response.data['species_id'] = sid;
-            return new SpeciesFilterArg(response.data,ppids);
+            return ydo ?
+                new SpeciesFilterArg(response.data,ppids,ydo) : new SpeciesFilterArg(response.data,ppids);
         });
     };
     return SpeciesFilterArg;
@@ -1629,10 +1658,14 @@ angular.module('npn-viz-tool.filter',[
             networkArgs = filter.getNetworkArgs(),
             speciesTitle = $filter('speciesTitle'),
             speciesTitleFormat = SettingsService.getSettingValue('tagSpeciesTitle'),
-            updateNetworkCounts = function(station,species) {
+            updateNetworkCounts = function(station,species,networkOnly) {
+                var n;
                 if(networkArgs.length) {
                     angular.forEach(networkArgs,function(networkArg){
-                        networkArg.updateCounts(station,species);
+                        n = networkArg.updateCounts(station,species,networkOnly);
+                        if(networkOnly) {
+                            observationCount += n;
+                        }
                     });
                 }
             },
@@ -1668,14 +1701,15 @@ angular.module('npn-viz-tool.filter',[
                     } else if(!speciesFilter) {
                         // if we're here it means we have network filters but not species filters
                         // just update observation counts and hold onto all markers
+                        /*
                         for(pid in station.species[sid]) {
                             station.species[sid][pid].$match = true; // potentially LEAKY but attribute shared by Species/NetworkFilterArg
                             n = SpeciesFilterArg.countObservationsForPhenophase(station.species[sid][pid]);
                             station.observationCount += n;
                             observationCount += n;
-                        }
+                        }*/
                         keeps++;
-                        updateNetworkCounts(station,station.species[sid]);
+                        updateNetworkCounts(station,station.species[sid],true);
                     }
                 }
                 // look through the hitMap and see if there were multiple hits for multiple species
@@ -2119,6 +2153,13 @@ angular.module('npn-viz-tool.filter',[
                 $scope.badgeFormat = data.value;
                 $scope.badgeTooltip = SettingsService.getSettingValueLabel('tagBadgeFormat');
             });
+            $scope.$on('setting-update-onlyYesData',function(event,data) {
+                if(data.value !== $scope.arg.ydo) {
+                    $scope.arg.ydo = data.value;
+                    // this can change the phase2 results
+                    $rootScope.$broadcast('filter-rerun-phase2',{});
+                }
+            });
             $scope.$on('filter-phase2-start',function(event,data) {
                 $scope.arg.resetCounts(0);
             });
@@ -2136,16 +2177,24 @@ angular.module('npn-viz-tool.filter',[
             // keep track of selected phenophases during open/close of the list
             // if on close something changed ask that the currently filtered data
             // be re-filtered.
-            var saved_pheno_state;
+            var saved_pheno_state,saved_ydo;
             $scope.$watch('status.isopen',function() {
                 if($scope.status.isopen) {
                     saved_pheno_state = $scope.arg.phenophases.map(function(pp) { return pp.selected; });
+                    saved_ydo = $scope.arg.ydo;
                 } else if (saved_pheno_state) {
+                    var somethingChanged = false;
                     for(var i = 0; i < saved_pheno_state.length; i++) {
                         if(saved_pheno_state[i] != $scope.arg.phenophases[i].selected) {
-                            $rootScope.$broadcast('filter-rerun-phase2',{});
+                            somethingChanged = true;
                             break;
                         }
+                    }
+                    if(!somethingChanged) {
+                        somethingChanged = saved_ydo != $scope.arg.ydo;
+                    }
+                    if(somethingChanged) {
+                        $rootScope.$broadcast('filter-rerun-phase2',{});
                     }
                 }
             });
@@ -2189,7 +2238,7 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('networkFilterTag',['FilterService','SettingsService',function(FilterService,SettingsService){
+.directive('networkFilterTag',['$rootScope','FilterService','SettingsService',function($rootScope,FilterService,SettingsService){
     return {
         restrict: 'E',
         require: '^filterTags',
@@ -2198,11 +2247,21 @@ angular.module('npn-viz-tool.filter',[
             arg: '='
         },
         controller: function($scope){
+            $scope.status = {
+                isopen: false
+            };
             $scope.badgeFormat = SettingsService.getSettingValue('tagBadgeFormat');
             $scope.badgeTooltip = SettingsService.getSettingValueLabel('tagBadgeFormat');
             $scope.$on('setting-update-tagBadgeFormat',function(event,data){
                 $scope.badgeFormat = data.value;
                 $scope.badgeTooltip = SettingsService.getSettingValueLabel('tagBadgeFormat');
+            });
+            $scope.$on('setting-update-onlyYesData',function(event,data) {
+                if(data.value !== $scope.arg.ydo) {
+                    $scope.arg.ydo = data.value;
+                    // this can change the phase2 results
+                    $rootScope.$broadcast('filter-rerun-phase2',{});
+                }
             });
             $scope.removeFromFilter = FilterService.removeFromFilter;
             $scope.$on('filter-phase1-start',function(event,data) {
@@ -2210,6 +2269,18 @@ angular.module('npn-viz-tool.filter',[
             });
             $scope.$on('filter-phase2-start',function(event,data) {
                 $scope.arg.resetCounts(0);
+            });
+            // it would be perhaps cleaner to watch just arg.ydo
+            // but the species dd only re-runs when the dd is closed
+            var saved_ydo;
+            $scope.$watch('status.isopen',function(open) {
+                if(open) {
+                    saved_ydo = $scope.arg.ydo;
+                } else if(typeof(saved_ydo) !== 'undefined') {
+                    if(saved_ydo !== $scope.arg.ydo) {
+                        $rootScope.$broadcast('filter-rerun-phase2',{});
+                    }
+                }
             });
         }
     };
@@ -2373,6 +2444,7 @@ angular.module('npn-viz-tool.filter',[
         }]
     };
 }]);
+
 angular.module('npn-viz-tool.filters',[
 ])
 .filter('cssClassify',function(){
@@ -2785,7 +2857,7 @@ angular.module('npn-viz-tool.gridded-services',[
 /**
  * @ngdoc directive
  * @restrict E
- * @name npn-viz-tool.gridded-services:map-vis-opacity-slider
+ * @name npn-viz-tool.gridded-services:gridded-opacity-slider
  * @module npn-viz-tool.gridded-services
  * @description
  *
@@ -2797,20 +2869,21 @@ angular.module('npn-viz-tool.gridded-services',[
 .directive('griddedOpacitySlider',['$log','$timeout','WmsService',function($log,$timeout,WmsService) {
     return {
         restrict: 'E',
-        template: '<div ng-if="layer" class="form-group"><label for="griddedOpacitySlider" style="margin-bottom: 15px;">Opacity</label><input ng-model="selection.opacity" type="text" id="griddedOpacitySlider" slider options="options" /></div>',
+        template: '<div ng-if="layer" class="form-group">'+
+        '<label for="griddedOpacitySlider" style="margin-bottom: 15px;">Opacity</label>'+
+        '<rzslider rz-slider-model="selection.opacity" rz-slider-options="options"></rzslider>'+
+        '</div>',
         scope: {
             layer: '='
         },
         link: function($scope) {
-
             $scope.selection = {
                 opacity: 75
             };
             $scope.options = {
-                from: 1,
-                to: 100,
-                step: 1,
-                dimension: ' %'
+                floor: 0,
+                ceil: 100,
+                step: 1
             };
             function updateOpacity() {
                 if($scope.layer) {
@@ -2820,6 +2893,97 @@ angular.module('npn-viz-tool.gridded-services',[
             $scope.$watch('layer.extent.current',updateOpacity);
             $scope.$watch('selection.opacity',updateOpacity);
             $scope.$watch('layer',updateOpacity);
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:gridded-range-slider
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Dynamically controls the opacity ranges of the data from the WMS Server.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
+ */
+.directive('griddedRangeSlider',['$log','$timeout','WmsService',function($log,$timeout,WmsService) {
+    return {
+        restrict: 'E',
+        template: '<div ng-if="legend" class="form-group">'+
+        '<label for="griddedRangeSlider" style="margin-bottom: 15px;">AGDD Range</label>'+
+        '<rzslider rz-slider-model="selection.min" rz-slider-high="selection.max" rz-slider-options="options"></rzslider>'+
+        '</div>',
+        scope: {
+            layer: '='
+        },
+        link: function($scope) {
+            $scope.$watch('layer',function(layer) {
+                delete $scope.legend;
+                if(layer) {
+                    layer.getLegend().then(function(legend){
+                        $scope.legend = legend;
+                        $log.debug('legend',legend);
+                        var data = $scope.data = legend.getData();
+                        $scope.selection = {
+                            min: 0,
+                            max: (data.length-1)
+                        };
+                        $scope.options = {
+                            //showTickValues: false,
+                            floor: 0,
+                            ceil: (data.length-1),
+                            step: 1,
+                            showTicks: true,
+                            showSelectionBar: true,
+                            translate: function(n) {
+                                return data[n].label;
+                            },
+                            getTickColor: function(n) {
+                                return data[n].color;
+                            }
+                        };
+                    });
+                }
+            });
+            function xmlToString(xmlData) {
+                var xmlString;
+                if (window.ActiveXObject){
+                    xmlString = xmlData.xml; // MSIE
+                }
+                else{
+                    xmlString = (new XMLSerializer()).serializeToString(xmlData);
+                }
+                return xmlString;
+            }
+            var timer;
+            function updateRange() {
+                if(timer) {
+                    $timeout.cancel(timer);
+                }
+                timer = $timeout(function(){
+                    var layer = $scope.layer,
+                        legend = $scope.legend,
+                        data = $scope.data;
+                    if(legend && data){
+                        var styleDef = legend.getStyleDefinition(),
+                            minQ = data[$scope.selection.min].quantity,
+                            maxQ = data[$scope.selection.max].quantity,
+                            $styleDef = $(styleDef);
+                        $styleDef.find('ColorMapEntry').each(function() {
+                            var cme = $(this),
+                                q = parseInt(cme.attr('quantity'));
+                            cme.attr('opacity',(q >= minQ && q <= maxQ) ? '1.0' : '0.0');
+                        });
+                        var style = xmlToString(styleDef[0]);
+                        layer.setStyle(style);
+
+                    }
+                },500);
+            }
+            $scope.$watch('selection.min',updateRange);
+            $scope.$watch('selection.max',updateRange);
         }
     };
 }])
@@ -2955,7 +3119,7 @@ angular.module('npn-viz-tool.gridded-services',[
                 $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,value){
                     return current||(formattedDate === dateFilter(value.date,fmt) ? value : undefined);
                 },undefined);
-				
+
             });
         }
     };
@@ -3118,17 +3282,17 @@ angular.module('npn-viz-tool.gridded-services',[
                        .attr('text-anchor','middle')
                        .text(legend.ldef.legend_units);
                 }
-				
+
 				svg.append('g').append('text').attr('dx',5)
                        .attr('dy',100+top_pad)
 					   .attr('font-size', '18px')
                        .attr('text-anchor','right').text(legend.ldef.title + ', ' + legend.ldef.extent.current.label);
-					   
+
 				svg.append('g').append('text').attr('dx',5)
                        .attr('dy',118+top_pad)
 					   .attr('font-size', '11px')
                        .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
-					   
+
             }
             $scope.$watch('legend',redraw);
 
@@ -3482,7 +3646,7 @@ angular.module('npn-viz-tool.gridded-services',[
      *
      * A legend object associated with a specific map layer.
      */
-    function WmsMapLegend(color_map,ldef) {
+    function WmsMapLegend(color_map,ldef,legend_data) {
         function get_filter(filter_def) {
             var filter = $filter(filter_def.name);
             return function(l,q) {
@@ -3512,6 +3676,7 @@ angular.module('npn-viz-tool.gridded-services',[
             });
             return arr;
         },[]);
+        this.styleDefinition = legend_data;
         this.ldef = ldef;
         this.lformat = lformat;
         this.gformat = gformat;
@@ -3519,7 +3684,6 @@ angular.module('npn-viz-tool.gridded-services',[
         this.data = data.slice(1);
         this.length = this.data.length;
     }
-	
 
     /**
      * @ngdoc method
@@ -3532,8 +3696,8 @@ angular.module('npn-viz-tool.gridded-services',[
      WmsMapLegend.prototype.setLayer = function(layer) {
      this.layer = layer;
              return this;
-     };	
-	
+     };
+
     /**
      * @ngdoc method
      * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
@@ -3543,6 +3707,16 @@ angular.module('npn-viz-tool.gridded-services',[
      */
     WmsMapLegend.prototype.getData = function() {
         return this.data;
+    };
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
+     * @name  getStyleDefinition
+     * @description Get the raw style definition DOM.
+     * @returns {object}
+     */
+    WmsMapLegend.prototype.getStyleDefinition = function() {
+        return this.styleDefinition;
     };
     /**
      * @ngdoc method
@@ -3676,6 +3850,7 @@ angular.module('npn-viz-tool.gridded-services',[
             width: boxSize,
             srs: 'EPSG:3857' // 'EPSG:4326'
         },
+        sldBody,
         googleLayer = new google.maps.ImageMapType({
             getTileUrl: function (coord, zoom) {
                 var proj = map.getProjection(),
@@ -3688,7 +3863,11 @@ angular.module('npn-viz-tool.gridded-services',[
                 if(l.extent && l.extent.current) {
                     l.extent.current.addToWmsParams(base);
                 }
-                return WMS_BASE_URL+'?'+$httpParamSerializer(angular.extend(base,wmsArgs,{bbox: [ctop.lng,cbot.lat,cbot.lng,ctop.lat].join(',')}));
+                var args = {bbox: [ctop.lng,cbot.lat,cbot.lng,ctop.lat].join(',')};
+                if(sldBody) {
+                    args.sld_body = sldBody;
+                }
+                return WMS_BASE_URL+'?'+$httpParamSerializer(angular.extend(base,wmsArgs,args));
             },
             tileSize: new google.maps.Size(boxSize, boxSize),
             isPng: true,
@@ -3711,6 +3890,11 @@ angular.module('npn-viz-tool.gridded-services',[
              */
             getMap: function() {
                 return map;
+            },
+            setStyle: function(style) {
+                sldBody = style;
+                l.off();
+                l.on();
             },
             /**
              * @ngdoc method
@@ -3812,7 +3996,7 @@ angular.module('npn-viz-tool.gridded-services',[
             getLegend: function() {
 				var self = this,
                  def = $q.defer();
-				 
+
                 if(legends.hasOwnProperty(layer_def.name)) {
                     def.resolve(legends[layer_def.name]);
 					def.resolve(legends[layer_def.name].setLayer(self));
@@ -3835,12 +4019,12 @@ angular.module('npn-viz-tool.gridded-services',[
                         }
                         // this code is selecting the first if there are multiples....
                         // as is the case for si-x:leaf_anomaly
-                        legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def) : undefined;
+                        legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def,legend_data) : undefined;
                         def.resolve(legends[layer_def.name]);
 						def.resolve(legends[layer_def.name].setLayer(self));
                     },def.reject);
                 }
-				
+
                 return def.promise;
             },
             /**
@@ -4157,6 +4341,7 @@ angular.module('npn-viz-tool.gridded-services',[
         };
     return service;
 }]);
+
 angular.module('npn-viz-tool.help',[
 ])
 .factory('HelpService',['$timeout',function($timeout){
@@ -4758,7 +4943,7 @@ angular.module('npn-viz-tool.vis-map',[
     'npn-viz-tool.settings',
     'npn-viz-tool.gridded',
     'ui.bootstrap',
-    'angularAwesomeSlider'
+    'rzModule',
 ])
 /**
  * @ngdoc directive
@@ -5505,6 +5690,7 @@ angular.module('npn-viz-tool.vis-map',[
             });
         };
 }]);
+
 angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/gridded/date-control.html', 'js/gridded/doy-control.html', 'js/gridded/gridded-control.html', 'js/gridded/layer-control.html', 'js/gridded/legend.html', 'js/gridded/year-control.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/filter-tags.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/mapvis.html', 'js/mapvis/marker-info-window.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
@@ -5743,40 +5929,52 @@ angular.module("js/filter/filterTags.html", []).run(["$templateCache", function(
 
 angular.module("js/filter/networkFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/networkFilterTag.html",
-    "<div class=\"btn-group filter-tag date\">\n" +
-    "    <a class=\"btn btn-default\">\n" +
-    "        {{arg.arg.network_name}} \n" +
+    "<div class=\"btn-group filter-tag date\" ng-class=\"{open: status.isopen}\">\n" +
+    "    <a class=\"btn btn-default\" ng-click=\"status.isopen = !status.isopen\">\n" +
+    "        {{arg.arg.network_name}}\n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
     "              popover-trigger=\"mouseenter\" uib-popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span>\n" +
+    "        <span class=\"caret\"></span>\n" +
     "    </a>\n" +
+    "    <ul class=\"dropdown-menu network-dd\" role=\"menu\">\n" +
+    "        <li class=\"inline\">\n" +
+    "            <label for=\"ydo-{{arg.arg.network_id}}\"><input id=\"ydo-{{arg.arg.network_id}}\" type=\"checkbox\" ng-model=\"arg.ydo\"/> Yes Data Only</label>\n" +
+    "        </li>\n" +
+    "    </ul>\n" +
     "    <a class=\"btn btn-default\" ng-click=\"removeFromFilter(arg)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
     "    </a>\n" +
-    "</div>");
+    "</div>\n" +
+    "");
 }]);
 
 angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/speciesFilterTag.html",
     "<div class=\"btn-group filter-tag\" ng-class=\"{open: status.isopen}\">\n" +
     "    <a class=\"btn btn-primary\" style=\"background-color: {{arg.color}};\" ng-disabled=\"!arg.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
-    "        {{arg.arg | speciesTitle:titleFormat}} \n" +
+    "        {{arg.arg | speciesTitle:titleFormat}}\n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
-    "              popover-trigger=\"mouseenter\" uib-popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span> \n" +
+    "              popover-trigger=\"mouseenter\" uib-popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span>\n" +
     "        <span class=\"caret\"></span>\n" +
     "    </a>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
+    "        <li class=\"inline\">\n" +
+    "            <label for=\"ydo-{{arg.arg.species_id}}\"><input id=\"ydo-{{arg.arg.species_id}}\" type=\"checkbox\" ng-model=\"arg.ydo\"/> Yes Data Only</label>\n" +
+    "        </li>\n" +
+    "        <li class=\"divider\"></li>\n" +
     "        <li class=\"inline\">Select <a href ng-click=\"selectAll(true)\">all</a> <a href ng-click=\"selectAll(false)\">none</a></li>\n" +
     "        <li class=\"divider\"></li>\n" +
     "        <li ng-repeat=\"phenophase in arg.phenophases | filter:hasCount\">\n" +
-    "            <input type=\"checkbox\" ng-model=\"phenophase.selected\"> <span class=\"badge\">{{phenophase.count}}</span> {{phenophase.phenophase_name}}\n" +
+    "            <label for=\"{{arg.arg.species_id}}-{{phenophase.phenophase_id}}\"><input id=\"{{arg.arg.species_id}}-{{phenophase.phenophase_id}}\" type=\"checkbox\" ng-model=\"phenophase.selected\"> <span class=\"badge\">{{phenophase.count}}</span> {{phenophase.phenophase_name}}</label>\n" +
     "        </li>\n" +
     "    </ul>\n" +
     "    <a class=\"btn btn-primary\" style=\"background-color: {{arg.color}};\" ng-click=\"removeFromFilter(arg)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
     "    </a>\n" +
-    "</div>");
+    "</div>\n" +
+    "");
 }]);
 
 angular.module("js/gridded/date-control.html", []).run(["$templateCache", function($templateCache) {
@@ -5846,9 +6044,11 @@ angular.module("js/gridded/layer-control.html", []).run(["$templateCache", funct
     "        <gridded-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></gridded-year-control>\n" +
     "    </div>\n" +
     "    <gridded-opacity-slider layer=\"selection.layer\"></gridded-opacity-slider>\n" +
+    "    <gridded-range-slider layer=\"selection.layer\"></gridded-range-slider>\n" +
     "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.getAbstract()}}</p>\n" +
     "    <p ng-if=\"selection.layer.$description\" ng-bind-html=\"selection.layer.$description\"></p>\n" +
-    "</div>");
+    "</div>\n" +
+    "");
 }]);
 
 angular.module("js/gridded/legend.html", []).run(["$templateCache", function($templateCache) {
@@ -6141,6 +6341,16 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
+    "        <Label for=\"onlyYesData\">Only Show Yes Data</label>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li ng-repeat=\"option in [true,false]\">\n" +
+    "                <input type=\"radio\" name=\"onlyYesData\" id=\"onlyYesData{{option}}\" ng-model=\"settings.onlyYesData.value\"\n" +
+    "                       ng-value=\"{{option}}\" /> <label for=\"onlyYesData{{option}}\">{{option | yesNo}}</label>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "    </li>\n" +
+    "    <li class=\"divider\"></li>\n" +
+    "    <li>\n" +
     "        <label>Species Tag Title</label>\n" +
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-repeat=\"option in settings.tagSpeciesTitle.options\">\n" +
@@ -6161,7 +6371,8 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "        </ul>\n" +
     "        <p>Selecting <strong>Yes</strong> will exclude data points which lack a \"no\" record preceding the first \"yes\" record from certain visualizations. </p>\n" +
     "    </li>\n" +
-    "</ul>");
+    "</ul>\n" +
+    "");
 }]);
 
 angular.module("js/toolbar/tool.html", []).run(["$templateCache", function($templateCache) {
@@ -6657,6 +6868,11 @@ angular.module('npn-viz-tool.settings',[
             name: 'filter-lqd-summary',
             q: 'flqdf',
             value: true
+        },
+        onlyYesData: {
+            name: 'only-yes-data',
+            q: 'oyd',
+            value: false
         }
     };
     return {

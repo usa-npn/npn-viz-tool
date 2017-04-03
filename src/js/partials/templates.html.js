@@ -236,40 +236,52 @@ angular.module("js/filter/filterTags.html", []).run(["$templateCache", function(
 
 angular.module("js/filter/networkFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/networkFilterTag.html",
-    "<div class=\"btn-group filter-tag date\">\n" +
-    "    <a class=\"btn btn-default\">\n" +
-    "        {{arg.arg.network_name}} \n" +
+    "<div class=\"btn-group filter-tag date\" ng-class=\"{open: status.isopen}\">\n" +
+    "    <a class=\"btn btn-default\" ng-click=\"status.isopen = !status.isopen\">\n" +
+    "        {{arg.arg.network_name}}\n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
     "              popover-trigger=\"mouseenter\" uib-popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span>\n" +
+    "        <span class=\"caret\"></span>\n" +
     "    </a>\n" +
+    "    <ul class=\"dropdown-menu network-dd\" role=\"menu\">\n" +
+    "        <li class=\"inline\">\n" +
+    "            <label for=\"ydo-{{arg.arg.network_id}}\"><input id=\"ydo-{{arg.arg.network_id}}\" type=\"checkbox\" ng-model=\"arg.ydo\"/> Yes Data Only</label>\n" +
+    "        </li>\n" +
+    "    </ul>\n" +
     "    <a class=\"btn btn-default\" ng-click=\"removeFromFilter(arg)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
     "    </a>\n" +
-    "</div>");
+    "</div>\n" +
+    "");
 }]);
 
 angular.module("js/filter/speciesFilterTag.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/filter/speciesFilterTag.html",
     "<div class=\"btn-group filter-tag\" ng-class=\"{open: status.isopen}\">\n" +
     "    <a class=\"btn btn-primary\" style=\"background-color: {{arg.color}};\" ng-disabled=\"!arg.phenophases\" ng-click=\"status.isopen = !status.isopen\">\n" +
-    "        {{arg.arg | speciesTitle:titleFormat}} \n" +
+    "        {{arg.arg | speciesTitle:titleFormat}}\n" +
     "        <span class=\"badge\"\n" +
     "              popover-placement=\"bottom\" popover-popup-delay=\"500\" popover-append-to-body=\"true\"\n" +
-    "              popover-trigger=\"mouseenter\" uib-popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span> \n" +
+    "              popover-trigger=\"mouseenter\" uib-popover=\"{{badgeTooltip}}\">{{arg.counts | speciesBadge:badgeFormat}}</span>\n" +
     "        <span class=\"caret\"></span>\n" +
     "    </a>\n" +
     "    <ul class=\"dropdown-menu phenophase-list\" role=\"menu\">\n" +
+    "        <li class=\"inline\">\n" +
+    "            <label for=\"ydo-{{arg.arg.species_id}}\"><input id=\"ydo-{{arg.arg.species_id}}\" type=\"checkbox\" ng-model=\"arg.ydo\"/> Yes Data Only</label>\n" +
+    "        </li>\n" +
+    "        <li class=\"divider\"></li>\n" +
     "        <li class=\"inline\">Select <a href ng-click=\"selectAll(true)\">all</a> <a href ng-click=\"selectAll(false)\">none</a></li>\n" +
     "        <li class=\"divider\"></li>\n" +
     "        <li ng-repeat=\"phenophase in arg.phenophases | filter:hasCount\">\n" +
-    "            <input type=\"checkbox\" ng-model=\"phenophase.selected\"> <span class=\"badge\">{{phenophase.count}}</span> {{phenophase.phenophase_name}}\n" +
+    "            <label for=\"{{arg.arg.species_id}}-{{phenophase.phenophase_id}}\"><input id=\"{{arg.arg.species_id}}-{{phenophase.phenophase_id}}\" type=\"checkbox\" ng-model=\"phenophase.selected\"> <span class=\"badge\">{{phenophase.count}}</span> {{phenophase.phenophase_name}}</label>\n" +
     "        </li>\n" +
     "    </ul>\n" +
     "    <a class=\"btn btn-primary\" style=\"background-color: {{arg.color}};\" ng-click=\"removeFromFilter(arg)\">\n" +
     "        <i class=\"fa fa-times-circle-o\"></i>\n" +
     "    </a>\n" +
-    "</div>");
+    "</div>\n" +
+    "");
 }]);
 
 angular.module("js/gridded/date-control.html", []).run(["$templateCache", function($templateCache) {
@@ -339,9 +351,11 @@ angular.module("js/gridded/layer-control.html", []).run(["$templateCache", funct
     "        <gridded-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></gridded-year-control>\n" +
     "    </div>\n" +
     "    <gridded-opacity-slider layer=\"selection.layer\"></gridded-opacity-slider>\n" +
+    "    <gridded-range-slider layer=\"selection.layer\"></gridded-range-slider>\n" +
     "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.getAbstract()}}</p>\n" +
     "    <p ng-if=\"selection.layer.$description\" ng-bind-html=\"selection.layer.$description\"></p>\n" +
-    "</div>");
+    "</div>\n" +
+    "");
 }]);
 
 angular.module("js/gridded/legend.html", []).run(["$templateCache", function($templateCache) {
@@ -634,6 +648,16 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
+    "        <Label for=\"onlyYesData\">Only Show Yes Data</label>\n" +
+    "        <ul class=\"list-unstyled\">\n" +
+    "            <li ng-repeat=\"option in [true,false]\">\n" +
+    "                <input type=\"radio\" name=\"onlyYesData\" id=\"onlyYesData{{option}}\" ng-model=\"settings.onlyYesData.value\"\n" +
+    "                       ng-value=\"{{option}}\" /> <label for=\"onlyYesData{{option}}\">{{option | yesNo}}</label>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "    </li>\n" +
+    "    <li class=\"divider\"></li>\n" +
+    "    <li>\n" +
     "        <label>Species Tag Title</label>\n" +
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-repeat=\"option in settings.tagSpeciesTitle.options\">\n" +
@@ -654,7 +678,8 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "        </ul>\n" +
     "        <p>Selecting <strong>Yes</strong> will exclude data points which lack a \"no\" record preceding the first \"yes\" record from certain visualizations. </p>\n" +
     "    </li>\n" +
-    "</ul>");
+    "</ul>\n" +
+    "");
 }]);
 
 angular.module("js/toolbar/tool.html", []).run(["$templateCache", function($templateCache) {

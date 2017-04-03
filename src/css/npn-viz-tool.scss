@@ -85,7 +85,7 @@ body {
 }
 
 // toolbar
-$tb-content-width: 350px;
+$tb-content-width: 500px;
 $tb-content-padding: 15px;
 $tb-open-close-duration: 0.75s;
 $tb-bg: #fff;
@@ -142,7 +142,7 @@ $tool-content-overlap: 40px;
 
             @include tb-transition();
         }
-		
+
 		li:last-child{
 			margin-top:57px;
 		}
@@ -285,10 +285,14 @@ ul.filter-tags {
             border-top-right-radius: 0px;
             border-bottom-right-radius: 0px;
         }
-        .phenophase-list {
+        .phenophase-list,
+        .network-dd {
             padding: 5px;
             li {
                 font-size: .9em;
+                >label {
+                    font-weight: normal;
+                }
             }
         }
         .popover-content {
@@ -335,7 +339,7 @@ ul.filter-tags.map-vis {
     ul {
         margin-bottom: 50px;
     }
-    li {
+    li:not(.rz-tick) {
         margin-top: 10px;
         padding-bottom: 10px;
         border-bottom: 1px solid #ccc;
@@ -627,7 +631,7 @@ $pulse-count: 60;
             opacity: 0.2;
             border-radius: 5px;
         }
-    }	
+    }
 }
 
 #griddedPointInfoWindow {
@@ -648,3 +652,15 @@ $pulse-count: 60;
         font-size: 1.2em;
     }
 }
+
+/*
+$slider-ctrl-size: 16px;
+.rzslider .rz-pointer {
+    top: -($slider-ctrl-size/2);
+    width: $slider-ctrl-size;
+    height: $slider-ctrl-size;
+    border-radius: ($slider-ctrl-size/2);
+    &:after {
+        top: 6px
+    }
+}*/

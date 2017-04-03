@@ -21,6 +21,16 @@
     </li>
     <li class="divider"></li>
     <li>
+        <Label for="onlyYesData">Only Show Yes Data</label>
+        <ul class="list-unstyled">
+            <li ng-repeat="option in [true,false]">
+                <input type="radio" name="onlyYesData" id="onlyYesData{{option}}" ng-model="settings.onlyYesData.value"
+                       ng-value="{{option}}" /> <label for="onlyYesData{{option}}">{{option | yesNo}}</label>
+            </li>
+        </ul>
+    </li>
+    <li class="divider"></li>
+    <li>
         <label>Species Tag Title</label>
         <ul class="list-unstyled">
             <li ng-repeat="option in settings.tagSpeciesTitle.options">

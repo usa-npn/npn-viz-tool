@@ -119,7 +119,7 @@ body {
 .toolbar ul.tools-list li.open {
   position: absolute;
   z-index: 499;
-  left: 310px;
+  left: 460px;
   transition: left 0.75s;
   -webkit-transition: left 0.75s;
   -moz-transition: left 0.75s;
@@ -129,13 +129,13 @@ body {
   margin-top: 57px;
 }
 .toolbar .toolbar-content {
-  width: 350px;
+  width: 500px;
   height: 1000px;
   height: 100vh;
   padding: 15px;
   position: absolute;
   top: 0;
-  left: -380px;
+  left: -530px;
   z-index: 500;
   background: #fff;
   overflow: auto;
@@ -262,11 +262,17 @@ ul.filter-tags .filter-tag a:first-of-type {
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;
 }
-ul.filter-tags .filter-tag .phenophase-list {
+ul.filter-tags .filter-tag .phenophase-list,
+ul.filter-tags .filter-tag .network-dd {
   padding: 5px;
 }
-ul.filter-tags .filter-tag .phenophase-list li {
+ul.filter-tags .filter-tag .phenophase-list li,
+ul.filter-tags .filter-tag .network-dd li {
   font-size: .9em;
+}
+ul.filter-tags .filter-tag .phenophase-list li > label,
+ul.filter-tags .filter-tag .network-dd li > label {
+  font-weight: normal;
 }
 ul.filter-tags .filter-tag .popover-content {
   color: #666;
@@ -306,15 +312,15 @@ ul.filter-tags.map-vis .filter-tag svg {
 .tool-content.layers ul {
   margin-bottom: 50px;
 }
-.tool-content.layers li {
+.tool-content.layers li:not(.rz-tick) {
   margin-top: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid #ccc;
 }
-.tool-content.layers li img {
-  width: 262.5px;
+.tool-content.layers li:not(.rz-tick) img {
+  width: 375px;
 }
-.tool-content.layers li label.selected-layer {
+.tool-content.layers li:not(.rz-tick) label.selected-layer {
   text-decoration: underline;
 }
 .tool-content.layers li:first-of-type {
@@ -598,5 +604,17 @@ div[title="Stop drawing"] {
 .gridded-layer-control .reset-layer {
   font-size: 1.2em;
 }
+
+/*
+$slider-ctrl-size: 16px;
+.rzslider .rz-pointer {
+    top: -($slider-ctrl-size/2);
+    width: $slider-ctrl-size;
+    height: $slider-ctrl-size;
+    border-radius: ($slider-ctrl-size/2);
+    &:after {
+        top: 6px
+    }
+}*/
 
 /*# sourceMappingURL=npn-viz-tool.css.map */
