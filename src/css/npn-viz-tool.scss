@@ -85,7 +85,7 @@ body {
 }
 
 // toolbar
-$tb-content-width: 350px;
+$tb-content-width: 500px;
 $tb-content-padding: 15px;
 $tb-open-close-duration: 0.75s;
 $tb-bg: #fff;
@@ -339,7 +339,7 @@ ul.filter-tags.map-vis {
     ul {
         margin-bottom: 50px;
     }
-    li {
+    li:not(.rz-tick) {
         margin-top: 10px;
         padding-bottom: 10px;
         border-bottom: 1px solid #ccc;
@@ -652,3 +652,15 @@ $pulse-count: 60;
         font-size: 1.2em;
     }
 }
+
+/*
+$slider-ctrl-size: 16px;
+.rzslider .rz-pointer {
+    top: -($slider-ctrl-size/2);
+    width: $slider-ctrl-size;
+    height: $slider-ctrl-size;
+    border-radius: ($slider-ctrl-size/2);
+    &:after {
+        top: 6px
+    }
+}*/

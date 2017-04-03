@@ -113,7 +113,7 @@ angular.module('npn-viz-tool.gridded-services',[
 /**
  * @ngdoc directive
  * @restrict E
- * @name npn-viz-tool.gridded-services:map-vis-opacity-slider
+ * @name npn-viz-tool.gridded-services:gridded-opacity-slider
  * @module npn-viz-tool.gridded-services
  * @description
  *
@@ -125,20 +125,21 @@ angular.module('npn-viz-tool.gridded-services',[
 .directive('griddedOpacitySlider',['$log','$timeout','WmsService',function($log,$timeout,WmsService) {
     return {
         restrict: 'E',
-        template: '<div ng-if="layer" class="form-group"><label for="griddedOpacitySlider" style="margin-bottom: 15px;">Opacity</label><input ng-model="selection.opacity" type="text" id="griddedOpacitySlider" slider options="options" /></div>',
+        template: '<div ng-if="layer" class="form-group">'+
+        '<label for="griddedOpacitySlider" style="margin-bottom: 15px;">Opacity</label>'+
+        '<rzslider rz-slider-model="selection.opacity" rz-slider-options="options"></rzslider>'+
+        '</div>',
         scope: {
             layer: '='
         },
         link: function($scope) {
-
             $scope.selection = {
                 opacity: 75
             };
             $scope.options = {
-                from: 1,
-                to: 100,
-                step: 1,
-                dimension: ' %'
+                floor: 0,
+                ceil: 100,
+                step: 1
             };
             function updateOpacity() {
                 if($scope.layer) {
@@ -148,6 +149,97 @@ angular.module('npn-viz-tool.gridded-services',[
             $scope.$watch('layer.extent.current',updateOpacity);
             $scope.$watch('selection.opacity',updateOpacity);
             $scope.$watch('layer',updateOpacity);
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:gridded-range-slider
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Dynamically controls the opacity ranges of the data from the WMS Server.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
+ */
+.directive('griddedRangeSlider',['$log','$timeout','WmsService',function($log,$timeout,WmsService) {
+    return {
+        restrict: 'E',
+        template: '<div ng-if="legend" class="form-group">'+
+        '<label for="griddedRangeSlider" style="margin-bottom: 15px;">AGDD Range</label>'+
+        '<rzslider rz-slider-model="selection.min" rz-slider-high="selection.max" rz-slider-options="options"></rzslider>'+
+        '</div>',
+        scope: {
+            layer: '='
+        },
+        link: function($scope) {
+            $scope.$watch('layer',function(layer) {
+                delete $scope.legend;
+                if(layer) {
+                    layer.getLegend().then(function(legend){
+                        $scope.legend = legend;
+                        $log.debug('legend',legend);
+                        var data = $scope.data = legend.getData();
+                        $scope.selection = {
+                            min: 0,
+                            max: (data.length-1)
+                        };
+                        $scope.options = {
+                            //showTickValues: false,
+                            floor: 0,
+                            ceil: (data.length-1),
+                            step: 1,
+                            showTicks: true,
+                            showSelectionBar: true,
+                            translate: function(n) {
+                                return data[n].label;
+                            },
+                            getTickColor: function(n) {
+                                return data[n].color;
+                            }
+                        };
+                    });
+                }
+            });
+            function xmlToString(xmlData) {
+                var xmlString;
+                if (window.ActiveXObject){
+                    xmlString = xmlData.xml; // MSIE
+                }
+                else{
+                    xmlString = (new XMLSerializer()).serializeToString(xmlData);
+                }
+                return xmlString;
+            }
+            var timer;
+            function updateRange() {
+                if(timer) {
+                    $timeout.cancel(timer);
+                }
+                timer = $timeout(function(){
+                    var layer = $scope.layer,
+                        legend = $scope.legend,
+                        data = $scope.data;
+                    if(legend && data){
+                        var styleDef = legend.getStyleDefinition(),
+                            minQ = data[$scope.selection.min].quantity,
+                            maxQ = data[$scope.selection.max].quantity,
+                            $styleDef = $(styleDef);
+                        $styleDef.find('ColorMapEntry').each(function() {
+                            var cme = $(this),
+                                q = parseInt(cme.attr('quantity'));
+                            cme.attr('opacity',(q >= minQ && q <= maxQ) ? '1.0' : '0.0');
+                        });
+                        var style = xmlToString(styleDef[0]);
+                        layer.setStyle(style);
+
+                    }
+                },500);
+            }
+            $scope.$watch('selection.min',updateRange);
+            $scope.$watch('selection.max',updateRange);
         }
     };
 }])
@@ -283,7 +375,7 @@ angular.module('npn-viz-tool.gridded-services',[
                 $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,value){
                     return current||(formattedDate === dateFilter(value.date,fmt) ? value : undefined);
                 },undefined);
-				
+
             });
         }
     };
@@ -446,17 +538,17 @@ angular.module('npn-viz-tool.gridded-services',[
                        .attr('text-anchor','middle')
                        .text(legend.ldef.legend_units);
                 }
-				
+
 				svg.append('g').append('text').attr('dx',5)
                        .attr('dy',100+top_pad)
 					   .attr('font-size', '18px')
                        .attr('text-anchor','right').text(legend.ldef.title + ', ' + legend.ldef.extent.current.label);
-					   
+
 				svg.append('g').append('text').attr('dx',5)
                        .attr('dy',118+top_pad)
 					   .attr('font-size', '11px')
                        .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
-					   
+
             }
             $scope.$watch('legend',redraw);
 
@@ -810,7 +902,7 @@ angular.module('npn-viz-tool.gridded-services',[
      *
      * A legend object associated with a specific map layer.
      */
-    function WmsMapLegend(color_map,ldef) {
+    function WmsMapLegend(color_map,ldef,legend_data) {
         function get_filter(filter_def) {
             var filter = $filter(filter_def.name);
             return function(l,q) {
@@ -840,6 +932,7 @@ angular.module('npn-viz-tool.gridded-services',[
             });
             return arr;
         },[]);
+        this.styleDefinition = legend_data;
         this.ldef = ldef;
         this.lformat = lformat;
         this.gformat = gformat;
@@ -847,7 +940,6 @@ angular.module('npn-viz-tool.gridded-services',[
         this.data = data.slice(1);
         this.length = this.data.length;
     }
-	
 
     /**
      * @ngdoc method
@@ -860,8 +952,8 @@ angular.module('npn-viz-tool.gridded-services',[
      WmsMapLegend.prototype.setLayer = function(layer) {
      this.layer = layer;
              return this;
-     };	
-	
+     };
+
     /**
      * @ngdoc method
      * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
@@ -871,6 +963,16 @@ angular.module('npn-viz-tool.gridded-services',[
      */
     WmsMapLegend.prototype.getData = function() {
         return this.data;
+    };
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
+     * @name  getStyleDefinition
+     * @description Get the raw style definition DOM.
+     * @returns {object}
+     */
+    WmsMapLegend.prototype.getStyleDefinition = function() {
+        return this.styleDefinition;
     };
     /**
      * @ngdoc method
@@ -1004,6 +1106,7 @@ angular.module('npn-viz-tool.gridded-services',[
             width: boxSize,
             srs: 'EPSG:3857' // 'EPSG:4326'
         },
+        sldBody,
         googleLayer = new google.maps.ImageMapType({
             getTileUrl: function (coord, zoom) {
                 var proj = map.getProjection(),
@@ -1016,7 +1119,11 @@ angular.module('npn-viz-tool.gridded-services',[
                 if(l.extent && l.extent.current) {
                     l.extent.current.addToWmsParams(base);
                 }
-                return WMS_BASE_URL+'?'+$httpParamSerializer(angular.extend(base,wmsArgs,{bbox: [ctop.lng,cbot.lat,cbot.lng,ctop.lat].join(',')}));
+                var args = {bbox: [ctop.lng,cbot.lat,cbot.lng,ctop.lat].join(',')};
+                if(sldBody) {
+                    args.sld_body = sldBody;
+                }
+                return WMS_BASE_URL+'?'+$httpParamSerializer(angular.extend(base,wmsArgs,args));
             },
             tileSize: new google.maps.Size(boxSize, boxSize),
             isPng: true,
@@ -1039,6 +1146,11 @@ angular.module('npn-viz-tool.gridded-services',[
              */
             getMap: function() {
                 return map;
+            },
+            setStyle: function(style) {
+                sldBody = style;
+                l.off();
+                l.on();
             },
             /**
              * @ngdoc method
@@ -1140,7 +1252,7 @@ angular.module('npn-viz-tool.gridded-services',[
             getLegend: function() {
 				var self = this,
                  def = $q.defer();
-				 
+
                 if(legends.hasOwnProperty(layer_def.name)) {
                     def.resolve(legends[layer_def.name]);
 					def.resolve(legends[layer_def.name].setLayer(self));
@@ -1163,12 +1275,12 @@ angular.module('npn-viz-tool.gridded-services',[
                         }
                         // this code is selecting the first if there are multiples....
                         // as is the case for si-x:leaf_anomaly
-                        legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def) : undefined;
+                        legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def,legend_data) : undefined;
                         def.resolve(legends[layer_def.name]);
 						def.resolve(legends[layer_def.name].setLayer(self));
                     },def.reject);
                 }
-				
+
                 return def.promise;
             },
             /**

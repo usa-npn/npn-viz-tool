@@ -351,9 +351,11 @@ angular.module("js/gridded/layer-control.html", []).run(["$templateCache", funct
     "        <gridded-year-control ng-switch-when=\"year\" layer=\"selection.layer\"></gridded-year-control>\n" +
     "    </div>\n" +
     "    <gridded-opacity-slider layer=\"selection.layer\"></gridded-opacity-slider>\n" +
+    "    <gridded-range-slider layer=\"selection.layer\"></gridded-range-slider>\n" +
     "    <p ng-if=\"selection.layer.abstract\">{{selection.layer.getAbstract()}}</p>\n" +
     "    <p ng-if=\"selection.layer.$description\" ng-bind-html=\"selection.layer.$description\"></p>\n" +
-    "</div>");
+    "</div>\n" +
+    "");
 }]);
 
 angular.module("js/gridded/legend.html", []).run(["$templateCache", function($templateCache) {
