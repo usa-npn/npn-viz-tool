@@ -2970,10 +2970,17 @@ angular.module('npn-viz-tool.gridded-services',[
                         legend = $scope.legend,
                         data = $scope.data;
                     if(legend && data){
+                        if($scope.selection.min === $scope.options.floor &&
+                           $scope.selection.max === $scope.options.ceil) {
+                            // they have selected the complete range, don't send the style
+                            // definition with map tile requests...
+                            return layer.setStyle(undefined);
+                        }
                         var styleDef = legend.getStyleDefinition(),
                             minQ = data[$scope.selection.min].quantity,
                             maxQ = data[$scope.selection.max].quantity,
                             $styleDef = $(styleDef);
+
                         $styleDef.find('ColorMapEntry').each(function() {
                             var cme = $(this),
                                 q = parseInt(cme.attr('quantity'));
@@ -3895,9 +3902,11 @@ angular.module('npn-viz-tool.gridded-services',[
                 return map;
             },
             setStyle: function(style) {
-                sldBody = style;
-                l.off();
-                l.on();
+                if(style !== sldBody) { // avoid off/on if nothing is changing
+                    sldBody = style;
+                    l.off();
+                    l.on();
+                }
             },
             /**
              * @ngdoc method
