@@ -37,6 +37,7 @@
         },
         "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 2000,
+        "supports_time_series": true,
         "layers":[{
                 "name": "gdd:agdd"
             },{

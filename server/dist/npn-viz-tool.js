@@ -2773,6 +2773,57 @@ angular.module('npn-viz-tool.gridded-services',[
     };
 }])
 /**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:gridded-point-info-window
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * The base info window contents for gridded point data.  This directive doesn't
+ * open the InfoWindow but is just used to render its contents (not intended for general re-use).
+ *
+ * @scope
+ * @param {number} point The point data returned by the layer.
+ * @param {object} layer The currently selected map layer.
+ * @param {object} legend The legend for the currently selected layer.
+ * @param {google.maps.LatLng} latLng The LatLng where the InfoWindow has been be opened.
+ */
+.directive('griddedPointInfoWindow',['$log','$timeSeriesVis',function($log,$timeSeriesVis){
+    return {
+        restrict: 'E',
+        template: '<div id="griddedPointInfoWindow" class="ng-cloak">'+
+        '<div ng-if="gridded_point_legend" class="gridded-legend-color" style="background-color: {{gridded_point_legend.color}};">&nbsp;</div>'+
+        '<div class="gridded-point-data">{{legend.formatPointData(point)}}</div>'+
+        '<ul class="list-unstyled" ng-if="timeSeries">'+
+        '<li><a href="#" ng-click="timeSeries()">Show Time Series</a></li>'+
+        '</ul>'+
+        //'<pre>\n{{gridded_point_data}}\n{{gridded_point_legend}}</pre>'+
+        '</div>',
+        scope: {
+            point: '=',
+            layer: '=',
+            legend: '=',
+            latLng: '='
+        },
+        link: function($scope) {
+            var latLng = $scope.latLng,
+                point = $scope.point,
+                layer = $scope.layer,
+                legend = $scope.legend;
+            $log.debug('griddedPointInfoWindow:latLng',latLng);
+            $log.debug('griddedPointInfoWindow:point',point);
+            $log.debug('griddedPointInfoWindow:layer',layer);
+            $log.debug('griddedPointInfoWindow:legend',legend);
+            $scope.gridded_point_legend = $scope.legend.getPointData(point);
+            if(layer.supports_time_series) {
+                $scope.timeSeries = function() {
+                    $timeSeriesVis(layer,legend,latLng);
+                };
+            }
+        }
+    };
+}])
+/**
  * @ngdoc object
  * @name npn-viz-tool.gridded-services:GriddedInfoWindowHandler
  * @module npn-viz-tool.gridded-services
@@ -2811,38 +2862,26 @@ angular.module('npn-viz-tool.gridded-services',[
             layer.getGriddedData(latLng)
                 .then(function(tuples){
                     $log.debug('tuples',tuples);
-                    var html,compiled,
+                    var compiled,
                         point = tuples && tuples.length ? tuples[0] : undefined,
                         $scope = $rootScope.$new();
-
                     if(point === -9999 || isNaN(point)) {
                         $log.debug('received -9999 or Nan ignoring');
                         return;
                     }
-                    $scope.gridded_point_data = point;
-                    if(typeof($scope.gridded_point_data) === 'undefined') {
+                    if(typeof($scope.point = point) === 'undefined') {
+                        $log.debug('undefined point?');
                         return;
                     }
+                    $scope.layer = layer;
                     $scope.legend = legend;
-                    $scope.gridded_point_legend = legend.getPointData($scope.gridded_point_data);
-                    if($scope.gridded_point_legend){
-                        $log.debug('data from legend:',$scope.gridded_point_data,$scope.gridded_point_legend);
-                        html = '<div><div id="griddedPointInfoWindow" class="ng-cloak">';
-                        html += '<div class="gridded-legend-color" style="background-color: {{gridded_point_legend.color}};">&nbsp;</div>';
-                        html += '<div class="gridded-point-data">{{legend.formatPointData(gridded_point_data)}}</div>';
-                        //html += '<pre>\n{{gridded_point_data}}\n{{gridded_point_legend}}</pre>';
-                        html += '</div></div>';
-                        compiled = $compile(html)($scope);
-                        $timeout(function(){
-                            infoWindow.setContent(compiled.html());
-                            infoWindow.setPosition(latLng);
-                            infoWindow.open(map);
-                        });
-                    } else {
-                        infoWindow.setContent(legend.formatPointData($scope.gridded_point_data));
+                    $scope.latLng = latLng;
+                    compiled = $compile('<div><gridded-point-info-window point="point" layer="layer" legend="legend" lat-lng="latLng"></gridded-point-info-window></div>')($scope);
+                    $timeout(function(){
+                        infoWindow.setContent(compiled[0]);
                         infoWindow.setPosition(latLng);
                         infoWindow.open(map);
-                    }
+                    });
                 },function() {
                     $log.error('unable to get gridded data.');
                 });
@@ -3542,6 +3581,7 @@ angular.module('npn-viz-tool.gridded-services',[
  *   <li><code>extent_default_filter</code> - specifies anangular filter and optional arguments used to select a default value.  (if not specified the default provided by the server will be used).</li>
  *   <li><code>legend_units</code> - specifies a string that should be placed on the legend below the cell labels (units separated from legend labels).</li>
  *   <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true).</li>
+ *   <li><code>supports_time_series</code> - specifies a boolean indicating if a layer supports plotting of time series data (default false).</li>
  *   <li>code>current_year_only</code> - if <code>supports_data</code> is true (or unspecified) the indicates that a given layer should only support plotting of data for the year of the currently selected extent on it (default false).</li>
  *   <li><code>description</code> - contains a description of a given layer.  this value can also be specified at the top level so that it applies to all layers in all categories (as the default).</li>
  * </ul>
@@ -5712,7 +5752,7 @@ angular.module('npn-viz-tool.vis-map',[
         };
 }]);
 
-angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/gridded/date-control.html', 'js/gridded/doy-control.html', 'js/gridded/gridded-control.html', 'js/gridded/layer-control.html', 'js/gridded/legend.html', 'js/gridded/year-control.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/filter-tags.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/mapvis.html', 'js/mapvis/marker-info-window.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
+angular.module('templates-npnvis', ['js/calendar/calendar.html', 'js/filter/choroplethInfo.html', 'js/filter/dateFilterTag.html', 'js/filter/filterControl.html', 'js/filter/filterTags.html', 'js/filter/networkFilterTag.html', 'js/filter/speciesFilterTag.html', 'js/gridded/date-control.html', 'js/gridded/doy-control.html', 'js/gridded/gridded-control.html', 'js/gridded/layer-control.html', 'js/gridded/legend.html', 'js/gridded/year-control.html', 'js/layers/layerControl.html', 'js/map/map.html', 'js/mapvis/filter-tags.html', 'js/mapvis/in-situ-control.html', 'js/mapvis/mapvis.html', 'js/mapvis/marker-info-window.html', 'js/scatter/scatter.html', 'js/settings/settingsControl.html', 'js/time/time.html', 'js/toolbar/tool.html', 'js/toolbar/toolbar.html', 'js/vis/visControl.html', 'js/vis/visDialog.html', 'js/vis/visDownload.html']);
 
 angular.module("js/calendar/calendar.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/calendar/calendar.html",
@@ -6393,6 +6433,14 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "        <p>Selecting <strong>Yes</strong> will exclude data points which lack a \"no\" record preceding the first \"yes\" record from certain visualizations. </p>\n" +
     "    </li>\n" +
     "</ul>\n" +
+    "");
+}]);
+
+angular.module("js/time/time.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("js/time/time.html",
+    "<vis-dialog title=\"Time Series\" modal=\"modal\">\n" +
+    "    <h1>TODO</h1>\n" +
+    "</vis-dialog>\n" +
     "");
 }]);
 
@@ -7394,6 +7442,33 @@ angular.module('npn-viz-tool.stations',[
     };
 }]);
 
+angular.module('npn-viz-tool.vis-time',[
+    'npn-viz-tool.vis',
+    'npn-viz-tool.filter',
+    'npn-viz-tool.filters',
+    'npn-viz-tool.settings',
+    'ui.bootstrap'
+])
+.controller('TimeSeriesVisCtrl',['$scope','$uibModalInstance','layer','legend','latLng',function($scope,$uibModalInstance,layer,legend,latLng){
+    $scope.modal = $uibModalInstance;
+    // TODO
+}])
+.provider('$timeSeriesVis',[function(){
+    this.$get = ['ChartService',function(ChartService){
+        return function(layer,legend,latLng) {
+            ChartService.openVisualization({
+                noFilterRequired: true,
+                template: 'js/time/time.html',
+                controller: 'TimeSeriesVisCtrl'
+            },{
+                layer: function() { return layer; },
+                legend: function() { return legend; },
+                latLng: function() { return latLng; }
+            });
+        };
+    }];
+}]);
+
 angular.module('npn-viz-tool.toolbar',[
   'npn-viz-tool.help'
 ])
@@ -7458,6 +7533,7 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.vis-scatter',
     'npn-viz-tool.vis-calendar',
     'npn-viz-tool.vis-map',
+    'npn-viz-tool.vis-time',
     'ui.bootstrap'
 ])
 /**
@@ -7727,17 +7803,22 @@ angular.module('npn-viz-tool.vis',[
          * @description Open a visualization dialog.
          *
          * @param {object} vis The visualization object.
+         * @param {object} resolve The resolve object used to populate the modal scope (if necessary).
          */
-        openVisualization: function(vis) {
-            if(!FilterService.isFilterEmpty()) {
-                return $uibModal.open({
+        openVisualization: function(vis,resolve) {
+            if(vis.noFilterRequired || !FilterService.isFilterEmpty()) {
+                var modalDef = {
                     templateUrl: vis.template,
                     controller: vis.controller,
                     windowClass: 'vis-dialog-window',
                     backdrop: 'static',
                     keyboard: false,
                     size: 'lg'
-                });
+                };
+                if(resolve) {
+                    modalDef.resolve = resolve;
+                }
+                return $uibModal.open(modalDef);
             }
         }
     };

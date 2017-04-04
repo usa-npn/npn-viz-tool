@@ -11,6 +11,7 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.vis-scatter',
     'npn-viz-tool.vis-calendar',
     'npn-viz-tool.vis-map',
+    'npn-viz-tool.vis-time',
     'ui.bootstrap'
 ])
 /**
@@ -280,17 +281,22 @@ angular.module('npn-viz-tool.vis',[
          * @description Open a visualization dialog.
          *
          * @param {object} vis The visualization object.
+         * @param {object} resolve The resolve object used to populate the modal scope (if necessary).
          */
-        openVisualization: function(vis) {
-            if(!FilterService.isFilterEmpty()) {
-                return $uibModal.open({
+        openVisualization: function(vis,resolve) {
+            if(vis.noFilterRequired || !FilterService.isFilterEmpty()) {
+                var modalDef = {
                     templateUrl: vis.template,
                     controller: vis.controller,
                     windowClass: 'vis-dialog-window',
                     backdrop: 'static',
                     keyboard: false,
                     size: 'lg'
-                });
+                };
+                if(resolve) {
+                    modalDef.resolve = resolve;
+                }
+                return $uibModal.open(modalDef);
             }
         }
     };
