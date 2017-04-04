@@ -86,7 +86,7 @@ angular.module('npn-viz-tool.filter',[
     };
     return DateFilterArg;
 }])
-.factory('NetworkFilterArg',['$http','$rootScope','$log','FilterArg','SpeciesFilterArg','SettingsService',function($http,$rootScope,$log,FilterArg,SpeciesFilterArg,SettingsService){
+.factory('NetworkFilterArg',['$http','$rootScope','$log','$url','FilterArg','SpeciesFilterArg','SettingsService',function($http,$rootScope,$log,$url,FilterArg,SpeciesFilterArg,SettingsService){
     /**
      * Constructs a NetworkFilterArg.  TODO over-ride $filter??
      *
@@ -154,7 +154,7 @@ angular.module('npn-viz-tool.filter',[
             ydo = parts.length === 2 ? parts[1] === '1' : undefined;
         // TODO can I just fetch a SINGLE network??  the network_id parameter of
         // getPartnerNetworks.json doesn't appear to work.
-        return $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/networks/getPartnerNetworks.json',{
+        return $http.get($url('/npn_portal/networks/getPartnerNetworks.json'),{
             params: {
                 active_only: true,
                 // network_id: s
@@ -171,7 +171,7 @@ angular.module('npn-viz-tool.filter',[
     };
     return NetworkFilterArg;
 }])
-.factory('SpeciesFilterArg',['$http','$rootScope','$log','FilterArg','SettingsService',function($http,$rootScope,$log,FilterArg,SettingsService){
+.factory('SpeciesFilterArg',['$http','$rootScope','$log','$url','FilterArg','SettingsService',function($http,$rootScope,$log,$url,FilterArg,SettingsService){
     /**
      * Constructs a SpeciesFilterArg.  This type of arg spans both side of the wire.  It's id is used as input
      * to web services and its $filter method deals with post-processing phenophase filtering.  It exposes additional
@@ -192,7 +192,7 @@ angular.module('npn-viz-tool.filter',[
         this.ydo = arguments.length > 2 ? arguments[2] : SettingsService.getSettingValue('onlyYesData');
         $log.debug('SpeciesFilterArg:',species,this.phenophaseSelections,this.ydo);
         var self = this;
-        $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/phenophases/getPhenophasesForSpecies.json',{ // cache ??
+        $http.get($url('/npn_portal/phenophases/getPhenophasesForSpecies.json'),{ // cache ??
                 params: {
                     return_all: true,
                     //date: FilterService.getDate().end_date+'-12-31',
@@ -305,7 +305,7 @@ angular.module('npn-viz-tool.filter',[
             sid = parts[0],
             ppids = parts[1],
             ydo = parts.length === 3 ? parts[2] === '1' : undefined;
-        return $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/species/getSpeciesById.json',{
+        return $http.get($url('/npn_portal/species/getSpeciesById.json'),{
             params: {
                 species_id: sid
             }
@@ -426,8 +426,8 @@ angular.module('npn-viz-tool.filter',[
     };
     return BoundsFilterArg;
 }])
-.factory('NpnFilter',[ '$q','$log','$http','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','CacheService',
-    function($q,$log,$http,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,CacheService){
+.factory('NpnFilter',[ '$q','$log','$http','$url','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','CacheService',
+    function($q,$log,$http,$url,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,CacheService){
     function getValues(map) {
         var vals = [],key;
         for(key in map) {
@@ -572,7 +572,7 @@ angular.module('npn-viz-tool.filter',[
             if(list && list.length) {
                 def.resolve(list);
             } else {
-                $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/species/getSpeciesFilter.json',{params: params})
+                $http.get($url('/npn_portal/species/getSpeciesFilter.json'),{params: params})
                      .success(function(species){
                         CacheService.put(cacheKey,species);
                         def.resolve(species);
@@ -610,7 +610,7 @@ angular.module('npn-viz-tool.filter',[
 		if(cached) {
             def.resolve(cached);
         } else {
-            $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/phenophases/getPhenophasesForSpecies.json',{
+            $http.get($url('/npn_portal/phenophases/getPhenophasesForSpecies.json'),{
                 params: params
             }).success(function(phases) {
 				var list = phases[0].phenophases;
@@ -684,8 +684,8 @@ angular.module('npn-viz-tool.filter',[
  * TODO - need to nail down the event model and probably even formalize it via a service because it's all
  * pretty loosey goosey at the moment.  Bad enough duplicating strings around...
  */
-.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','$filter','uiGmapGoogleMapApi','md5','NpnFilter','SpeciesFilterArg','SettingsService',
-    function($q,$http,$rootScope,$timeout,$log,$filter,uiGmapGoogleMapApi,md5,NpnFilter,SpeciesFilterArg,SettingsService){
+.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','$filter','$url','uiGmapGoogleMapApi','md5','NpnFilter','SpeciesFilterArg','SettingsService',
+    function($q,$http,$rootScope,$timeout,$log,$filter,$url,uiGmapGoogleMapApi,md5,NpnFilter,SpeciesFilterArg,SettingsService){
     // NOTE: this scale is limited to 20 colors
     var colors = [
           '#1f77b4','#ff7f0e','#2ca02c','#d62728','#222299', '#c51b8a',  '#8c564b', '#637939', '#843c39',
@@ -1027,7 +1027,7 @@ angular.module('npn-viz-tool.filter',[
             var start = Date.now();
             $log.debug('execute',filterUpdateCount,filterParams);
             $rootScope.$broadcast('filter-phase1-start',{});
-            $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/observations/getAllObservationsForSpecies.json',{
+            $http.get($url('/npn_portal/observations/getAllObservationsForSpecies.json'),{
                 params: filterParams
             }).success(function(d) {
                 angular.forEach(d.station_list,function(station){
@@ -1492,8 +1492,8 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('filterControl',['$http','$filter','$timeout','FilterService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','HelpService',
-    function($http,$filter,$timeout,FilterService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,HelpService){
+.directive('filterControl',['$http','$filter','$timeout','$url','FilterService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','HelpService',
+    function($http,$filter,$timeout,$url,FilterService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,HelpService){
     return {
         restrict: 'E',
         templateUrl: 'js/filter/filterControl.html',
@@ -1593,7 +1593,7 @@ angular.module('npn-viz-tool.filter',[
                         $scope.speciesList = allSpecies;
                     } else {
                         $scope.findingSpecies = true;
-                        $scope.serverResults = $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/species/getSpeciesFilter.json',{
+                        $scope.serverResults = $http.get($url('/npn_portal/species/getSpeciesFilter.json'),{
                             params: findSpeciesParams
                         }).then(function(response){
                             var species = [];
@@ -1632,7 +1632,7 @@ angular.module('npn-viz-tool.filter',[
                     });
                 },250);
             });
-            $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/networks/getPartnerNetworks.json?active_only=true').success(function(partners){
+            $http.get($url('/npn_portal/networks/getPartnerNetworks.json?active_only=true')).success(function(partners){
                 angular.forEach(partners,function(p) {
                     p.network_name = p.network_name.trim();
                 });
@@ -1640,10 +1640,10 @@ angular.module('npn-viz-tool.filter',[
             });
             // not selecting all by default to force the user to pick which should result
             // in less expensive type-ahead queries later (e.g. 4s vs 60s).
-            $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/species/getPlantTypes.json').success(function(types){
+            $http.get($url('/npn_portal/species/getPlantTypes.json')).success(function(types){
                 $scope.plantTypes = types;
             });
-            $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/species/getAnimalTypes.json').success(function(types){
+            $http.get($url('/npn_portal/species/getAnimalTypes.json')).success(function(types){
                 $scope.animalTypes = types;
             });
             // load up "all" species...

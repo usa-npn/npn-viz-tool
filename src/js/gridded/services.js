@@ -7,6 +7,15 @@
  */
 angular.module('npn-viz-tool.gridded-services',[
 ])
+.provider('$url',[function(){
+    this.$get = ['$log',function($log){
+        var BASE_URL = window.location.origin.replace('data', 'www');
+        $log.debug('BASE_URL',BASE_URL);
+        return function(path) {
+            return BASE_URL+path;
+        };
+    }];
+}])
 .service('DateExtentUtil',[function(){
     var FMT_REGEX = /^(\d\d\d\d)-0?(\d+)-0?(\d+)/;
     return {

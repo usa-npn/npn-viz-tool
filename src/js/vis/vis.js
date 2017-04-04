@@ -22,8 +22,8 @@ angular.module('npn-viz-tool.vis',[
  * Handles data gathering in a generic fashion for visualizations that should share, rather than
  * duplicate such logic.
  */
-.factory('ChartService',['$window','$http','$log','$uibModal','FilterService','SettingsService',
-    function($window,$http,$log,$uibModal,FilterService,SettingsService){
+.factory('ChartService',['$window','$http','$log','$uibModal','$url','FilterService','SettingsService',
+    function($window,$http,$log,$uibModal,$url,FilterService,SettingsService){
     // some hard coded values that will be massaged into generated
     // values at runtime.
     var CHART_W = 930,
@@ -202,7 +202,7 @@ angular.module('npn-viz-tool.vis',[
         getSummarizedData: function(params,success) {
             $http({
                 method: 'POST',
-                url: window.location.origin.replace('data', 'www') + '/npn_portal/observations/getSummarizedData.json',
+                url: $url('/npn_portal/observations/getSummarizedData.json'),
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
@@ -229,7 +229,7 @@ angular.module('npn-viz-tool.vis',[
         getObservationDates: function(params,success) {
             $http({
                 method: 'POST',
-                url: window.location.origin.replace('data', 'www') + '/npn_portal/observations/getObservationDates.json',
+                url: $url('/npn_portal/observations/getObservationDates.json'),
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)

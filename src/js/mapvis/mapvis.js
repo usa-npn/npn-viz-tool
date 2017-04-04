@@ -241,7 +241,7 @@ angular.module('npn-viz-tool.vis-map',[
  * @scope
  * @param {object} layer The currently selected map layer.
  */
-.directive('mapVisInSituControl',['$log','$q','$http','CacheService','FilterService',function($log,$q,$http,CacheService,FilterService){
+.directive('mapVisInSituControl',['$log','$q','$http','$url','CacheService','FilterService',function($log,$q,$http,$url,CacheService,FilterService){
     var IMPLICIT_SPECIES_IDS = ['20','1198','35','36'],
         IMPLICIT_SPECIES_KEY = 'map-vis-insitu-implicit-species';
     function mergeImplicitAndUser(implicit_list,user_list) {
@@ -264,7 +264,7 @@ angular.module('npn-viz-tool.vis-map',[
             // unfortunately there's no web service to select multiple species by id
             // and the getSpeciesById.json service returns slightly different objects
             // so go get all species and filter out the list to those of interest.
-            $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/species/getSpeciesFilter.json').then(function(response){
+            $http.get($url('/npn_portal/species/getSpeciesFilter.json')).then(function(response){
                 implicit_list = response.data.filter(function(species){
                     return IMPLICIT_SPECIES_IDS.indexOf(species.species_id) !== -1;
                 });
@@ -380,8 +380,8 @@ angular.module('npn-viz-tool.vis-map',[
  *
  * Controller for the gridded data map visualization dialog.
  */
-.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','$http','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5','GriddedInfoWindowHandler',
-    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,$http,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5,GriddedInfoWindowHandler){
+.controller('MapVisCtrl',['$scope','$uibModalInstance','$filter','$log','$compile','$timeout','$q','$http','$url','uiGmapGoogleMapApi','uiGmapIsReady','RestrictedBoundsService','WmsService','ChartService','MapVisMarkerService','md5','GriddedInfoWindowHandler',
+    function($scope,$uibModalInstance,$filter,$log,$compile,$timeout,$q,$http,$url,uiGmapGoogleMapApi,uiGmapIsReady,RestrictedBoundsService,WmsService,ChartService,MapVisMarkerService,md5,GriddedInfoWindowHandler){
         var api,
             map,
             griddedIwHandler,
@@ -562,7 +562,7 @@ angular.module('npn-viz-tool.vis-map',[
                 if(!model.station) {
                     station_def = $q.defer();
                     promises.push(station_def.promise);
-                    $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/stations/getStationDetails.json',{params:{ids: model.site_id}}).success(function(info){
+                    $http.get($url('/npn_portal/stations/getStationDetails.json'),{params:{ids: model.site_id}}).success(function(info){
                         model.station = info && info.length ? info[0] : undefined;
                         station_def.resolve();
                     });
