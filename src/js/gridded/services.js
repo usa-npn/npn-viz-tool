@@ -51,7 +51,7 @@ angular.module('npn-viz-tool.gridded-services',[
         '<div ng-if="gridded_point_legend" class="gridded-legend-color" style="background-color: {{gridded_point_legend.color}};">&nbsp;</div>'+
         '<div class="gridded-point-data">{{legend.formatPointData(point)}}</div>'+
         '<ul class="list-unstyled" ng-if="timeSeries">'+
-        '<li><a href="#" ng-click="timeSeries()">Show Time Series</a></li>'+
+        '<li><a href ng-click="timeSeries()">Show Time Series</a></li>'+
         '</ul>'+
         //'<pre>\n{{gridded_point_data}}\n{{gridded_point_legend}}</pre>'+
         '</div>',
