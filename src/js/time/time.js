@@ -64,7 +64,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         chart,
         d3_date_fmt = d3.time.format('%m/%d'),
         date_fmt = function(d){
-            var time = (d*ChartService.ONE_DAY_MILLIS)+start.getTime(),
+            var time = ((d-1)*ChartService.ONE_DAY_MILLIS)+start.getTime(),
                 date = new Date(time);
             return d3_date_fmt(date);
         },
@@ -79,6 +79,14 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .x(function(d,i){ return x(d.doy); })
             .y(function(d,i){ return y(d.point_value); }).interpolate('basis'),
         data = {}; // keys: selected,average[,previous];
+
+    function addData(key,obj) {
+        data[key] = obj;
+        data[key].doyMap = data[key].data.reduce(function(map,d){
+            map[idFunc(d)] = dataFunc(d);
+            return map;
+        },{});
+    }
 
     $scope.selection = {
         lastYearValid: this_year > 2016, // time series data starts in 2016
@@ -240,6 +248,119 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .attr('font-style','italic')
             .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
 
+        var hover = svg.append('g')
+            .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')')
+            .style('display','none');
+        var hoverLine = hover.append('line')
+                .attr('class','focus')
+                .attr('fill','none')
+                .attr('stroke','green')
+                .attr('stroke-width',1)
+                .attr('x1',x(1))
+                .attr('y1',y(0))
+                .attr('x2',x(1))
+                .attr('y2',y(yMax));
+        var hoverInfoDy = '1.2em',
+            hoverInfoX = 15,
+            hoverInfo = hover.append('text')
+                .attr('class','gdd-info')
+                .attr('font-size',14)
+                .attr('y',y(0)/2),
+            doyInfo = hoverInfo.append('tspan').attr('dy','1em').attr('x',hoverInfoX),
+            doyLabel = doyInfo.append('tspan').attr('class','gdd-label').text('DOY: '),
+            doyValue = doyInfo.append('tspan').attr('class','gdd-value'),
+            infoKeys = ['average','previous','selected'],
+            infos = infoKeys.reduce(function(map,key){
+                map[key] = hoverInfo.append('tspan').attr('dy',hoverInfoDy).attr('x',hoverInfoX);
+                return map;
+            },{}),
+            infoLabels = infoKeys.reduce(function(map,key){
+                map[key] = infos[key].append('tspan').attr('class','gdd-label '+key);
+                return map;
+            },{}),
+            infoValues = infoKeys.reduce(function(map,key){
+                map[key] = infos[key].append('tspan').attr('class','gdd-value');
+                return map;
+            },{}),
+            infoDiffs = ['previous','selected'].reduce(function(map,key){
+                map[key] = infos[key].append('tspan').attr('class','gdd-diff');
+                return map;
+            },{});
+        function focusOff() {
+            hover.style('display','none');
+        }
+        function focusOn() {
+            hover.style('display',null);
+        }
+        function updateFocus() {
+            var coords = d3.mouse(this),
+                xCoord = coords[0],
+                yCoord = coords[1],
+                doy = Math.round(x.invert(xCoord)),
+                lineKeys = Object.keys(data),
+                temps;
+            hoverLine.attr('transform','translate('+xCoord+')');
+            temps = lineKeys.reduce(function(map,key) {
+                var temp;
+                if(data[key].plotted) {
+                    // get the value for doy
+                    temp = data[key].doyMap[doy];
+                    if(typeof(temp) !== 'undefined') {
+                        map[key] = {
+                            year: data[key].year,
+                            gdd: temp
+                        };
+                        //console.log(key,temp);
+                        if(!data[key].focus) {
+                            // create a focus ring for this line
+                            data[key].focus = hover.append('circle')
+                                .attr('r',4.5)
+                                .attr('fill','none')
+                                .attr('stroke','steelblue');
+                        }
+                        data[key].focus
+                            .style('display',null)
+                            .attr('transform','translate('+xCoord+','+y(temp)+')');
+                    } else if (data[key].focus) {
+                        // invalid doy, hide focus ring
+                        data[key].focus.style('display','none');
+                    }
+                }
+                return map;
+            },{});
+            $log.debug('temps for doy '+doy,temps);
+            doyValue.text(doy+' ('+date_fmt(doy)+')');
+            Object.keys(infos).forEach(function(key) {
+                var diff;
+                if(temps[key]) {
+                    infos[key].style('display',null);
+                    infoLabels[key].text((temps[key].year||'Average')+': ');
+                    infoValues[key].text(number(temps[key].gdd,0)+'°F');
+                    if(infoDiffs[key]) {
+                        diff = temps[key].gdd-temps.average.gdd;
+                        infoDiffs[key]
+                        .attr('class','gdd-diff '+(diff > 0 ? 'above' : 'below'))
+                        .text(' ('+(diff > 0 ? '+' : '')+number(diff,0)+'°F)');
+                    }
+                } else {
+                    infos[key].style('display','none');
+                }
+            });
+
+        }
+        svg.append('rect')
+            .attr('class','overlay')
+            .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')')
+            .style('fill','none')
+            .style('pointer-events','all')
+            .attr('x',0)
+            .attr('y',0)
+            .attr('width',x(365))
+            .attr('height',y(0))
+            .on('mouseover',focusOn)
+            .on('mouseout',focusOff)
+            .on('mousemove',updateFocus);
+
         commonChartUpdates();
         visualize();
     });
@@ -262,10 +383,11 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
                     params:last_params
                 }).then(function(response) {
-                    data.previous = {
+                    addData('previous',{
+                        year: lastStart.getFullYear(),
                         color: 'orange',
                         data: response.data
-                    };
+                    });
                     updateYAxis();
                     commonChartUpdates();
                     addLine('previous');
@@ -296,14 +418,15 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 params:params
             })
         }).then(function(results){
-            data.selected = {
+            addData('selected',{
+                year: start.getFullYear(),
                 color: 'black',
                 data: results.selected.data
-            };
-            data.average = {
+            });
+            addData('average',{
                 color: 'blue',
                 data: results.average.data
-            };
+            });
             $log.debug('draw',data);
 
             updateYAxis();

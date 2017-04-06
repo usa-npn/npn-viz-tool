@@ -620,5 +620,23 @@ $slider-ctrl-size: 16px;
         top: 6px
     }
 }*/
+text.gdd-info .gdd-label {
+  font-weight: bold;
+}
+text.gdd-info .gdd-label.average {
+  fill: blue;
+}
+text.gdd-info .gdd-label.selected {
+  fill: black;
+}
+text.gdd-info .gdd-label.previous {
+  fill: orange;
+}
+text.gdd-info .gdd-diff.above {
+  fill: red;
+}
+text.gdd-info .gdd-diff.below {
+  fill: blue;
+}
 
 /*# sourceMappingURL=npn-viz-tool.css.map */

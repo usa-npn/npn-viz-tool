@@ -667,3 +667,29 @@ $slider-ctrl-size: 16px;
         top: 6px
     }
 }*/
+
+text.gdd-info {
+    .gdd-label {
+        font-weight: bold;
+        &.average {
+            fill: blue;
+        }
+        &.selected {
+            fill: black;
+        }
+        &.previous {
+            fill: orange;
+        }
+    }
+    .gdd-value {
+
+    }
+    .gdd-diff {
+        &.above {
+            fill: red;
+        }
+        &.below {
+            fill: blue;
+        }
+    }
+}
