@@ -7528,7 +7528,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     $log.debug('TimeSeries.params',params);
 
     var sizing = ChartService.getSizeInfo({top: 80,left: 80}),
-        chart,
+        chart,thresholdLine,
         d3_date_fmt = d3.time.format('%m/%d'),
         date_fmt = function(d){
             var time = ((d-1)*ChartService.ONE_DAY_MILLIS)+start.getTime(),
@@ -7556,7 +7556,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     }
 
     $scope.selection = {
-        lastYearValid: this_year > 2016, // time series data starts in 2016
+        lastYearValid: extent_year > 2016, // time series data starts in 2016
         showLastYear: false,
         threshold: {
             value: 1000,
@@ -7603,12 +7603,30 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         chart.selectAll('g .y.axis text')
             .style('font-size', fontSize);
 
+        // em doesn't work when saving as an image
+        var dyBase = -5,
+            dyIncr = 14;
+        chart.selectAll('.legend circle')
+            .attr('r','5')
+            .attr('cx','5')
+            .attr('cy',function(d,i) {
+                return dyBase + (i*dyIncr);
+            });
+    }
+
+    function updateLegend() {
+        chart.select('.legend').remove();
+        var legend = chart.append('g')
+          .attr('class','legend')
+          .attr('transform','translate(30,-45)') // relative to the chart, not the svg
+          .style('font-size','1em');
     }
 
     function removeLine(key) {
         if(data[key]) {
             chart.selectAll('path.gdd.'+key).remove();
             delete data[key].plotted;
+            updateLegend();
         }
     }
 
@@ -7623,20 +7641,12 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 .attr('stroke-width',1.5)
                 .attr('d',line(data[key].data));
             data[key].plotted = true;
+            updateLegend();
         }
     }
     function updateThreshold() {
-        var threshold = $scope.selection.threshold.value;
-        chart.selectAll('line.threshold').remove();
-        chart.append('line')
-            .attr('class','threshold')
-            .attr('fill','none')
-            .attr('stroke','green')
-            .attr('stroke-width',1)
-            .attr('x1',x(1))
-            .attr('y1',y(threshold))
-            .attr('x2',x(365))
-            .attr('y2',y(threshold));
+        var yCoord = y($scope.selection.threshold.value);
+        thresholdLine.attr('y1',yCoord).attr('y2',yCoord);
     }
 
     function updateYAxis() {
@@ -7714,6 +7724,16 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .attr('font-size', '11px')
             .attr('font-style','italic')
             .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
+
+        thresholdLine = chart.append('line')
+            .attr('class','threshold')
+            .attr('fill','none')
+            .attr('stroke','green')
+            .attr('stroke-width',1)
+            .attr('x1',x(1))
+            .attr('y1',y(yMax))
+            .attr('x2',x(365))
+            .attr('y2',y(yMax));
 
         var hover = svg.append('g')
             .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')')
