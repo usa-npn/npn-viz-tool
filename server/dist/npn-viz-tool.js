@@ -6439,7 +6439,7 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
 angular.module("js/time/time.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/time/time.html",
     "<vis-dialog title=\"Time Series\" modal=\"modal\">\n" +
-    "    <div class=\"checkbox\" ng-if=\"selection.showLastYear\">\n" +
+    "    <div class=\"checkbox\" ng-if=\"selection.lastYearValid\">\n" +
     "        <label ng-disabled=\"working\">\n" +
     "          <input type=\"checkbox\" ng-model=\"selection.showLastYear\"> Show previous year’s data\n" +
     "        </label>\n" +
@@ -7539,7 +7539,13 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         idFunc = function(d) { return d.doy; }, // id is the doy which is the index.
         line = d3.svg.line() // TODO remove if decide to not use
             .x(function(d,i){ return x(d.doy); })
-            .y(function(d,i){ return y(d.point_value); }).interpolate('basis');
+            .y(function(d,i){ return y(d.point_value); }).interpolate('basis'),
+        data = {}; // keys: selected,average[,previous];
+
+    $scope.selection = {
+        lastYearValid: this_year > 2016, // time series data starts in 2016
+        showLastYear: false
+    };
 
     function commonChartUpdates() {
         chart.selectAll('.axis path')
@@ -7574,7 +7580,47 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .style('font-size', fontSize);
 
     }
+
+    function removeLine(key) {
+        if(data[key]) {
+            chart.selectAll('path.gdd.'+key).remove();
+            delete data[key].plotted;
+        }
+    }
+
+    function addLine(key) {
+        if(data[key]) {
+            chart.append('path')
+                .attr('class','gdd '+key)
+                .attr('fill','none')
+                .attr('stroke',data[key].color)
+                .attr('stroke-linejoin','round')
+                .attr('stroke-linecap','round')
+                .attr('stroke-width',1.5)
+                .attr('d',line(data[key].data));
+            data[key].plotted = true;
+        }
+    }
+
     function updateYAxis() {
+        var lineKeys = Object.keys(data),maxes;
+        if(lineKeys.length) {
+            // calculate/re-calculate the y-axis domain so that the data fits nicely
+            maxes = lineKeys.reduce(function(arr,key){
+                arr.push(d3.max(data[key].data,dataFunc));
+                return arr;
+            },[]);
+            yAxis.scale(y.domain([0,d3.max(maxes)]));
+            // if this happens we need to re-draw all lines that have been plotted
+            // because the domain of our axis just changed
+            lineKeys.forEach(function(key) {
+                if(data[key].plotted) {
+                    removeLine(key);
+                    addLine(key);
+                }
+            });
+        }
+
         chart.selectAll('g .y.axis').remove();
         chart.append('g')
             .attr('class', 'y axis')
@@ -7587,6 +7633,10 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
           .style('text-anchor', 'middle')
           .text('AGDD');
     }
+
+    // this initializes the empty visualization and gets the ball rolling
+    // it is within a timeout so that the HTML gets rendered and we can grab
+    // the nested chart element (o/w it doesn't exist yet).
     $timeout(function(){
         var svg = d3.select('.chart')
             .attr('width', sizing.width + sizing.margin.left + sizing.margin.right)
@@ -7618,103 +7668,23 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .style('text-anchor', 'middle')
             .text('DOY');
 
-      updateYAxis();
+        updateYAxis();
 
-      svg.append('g').append('text').attr('dx',5)
-		   .attr('dy',sizing.height + 136)
-		   .attr('font-size', '11px')
-		   .attr('font-style','italic')
-		   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
+        svg.append('g').append('text').attr('dx',5)
+            .attr('dy',sizing.height + 136)
+            .attr('font-size', '11px')
+            .attr('font-style','italic')
+            .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
+
         commonChartUpdates();
         visualize();
     });
 
-    /*
-    function addLine(key,color) {
-        chart.selectAll('line.'+key)
-            .data(data[key],idFunc)
-            .enter()
-            .append('line')
-            .attr('class',key)
-            .attr('fill','none')
-            .attr('stroke',color)
-            .attr('stroke-width',2.5)
-            .style('cursor','pointer')
-            .attr('x1',function(d,i) { return x(i); })
-            .attr('y1',function(d,i) { return y(i === 0 ? 0 : data[key][i-1]); })
-            .attr('x2',function(d,i) { return x(i+1); })
-            .attr('y2',function(d,i) { return y(data[key][i]); })
-            .append('title')
-            .text(function(d,i) {
-                return 'DOY: '+(i+1)+' GDD: '+number((i === 0 ? 0 : data[key][i-1]),2);
-            });
-    }*/
-
-    function addLine(cls,color,dataset) {
-        chart.append('path')
-            .attr('class','gdd '+cls)
-            .attr('fill','none')
-            .attr('stroke',color)
-            .attr('stroke-linejoin','round')
-            .attr('stroke-linecap','round')
-            .attr('stroke-width',1.5)
-            .attr('d',line(dataset));
-    }
-
-    function draw(data) {
-        $log.debug('draw',data);
-        $scope.working = true;
-
-        var max = d3.max([d3.max(data.current,dataFunc),d3.max(data.average,dataFunc)]);
-        yAxis.scale(y.domain([0,max]));
-        updateYAxis();
-
-        /*
-        addLine('average','#0000ff');
-        addLine('current','#000000');
-        */
-
-        /* going this route draws a continuous line but then
-           we can't do a mouseover on an individual segment to show the data */
-        addLine('average','blue',data.average);
-        addLine('current','red',data.current);
-        /*
-        chart.append('path')
-            .attr('class','gdd average')
-            .attr('fill','none')
-            .attr('stroke','blue')
-            .attr('stroke-linejoin','round')
-            .attr('stroke-linecap','round')
-            .attr('stroke-width',1.5)
-            .attr('d',line(data.average));
-
-        chart.append('path')
-            .attr('class','gdd current')
-            .attr('fill','none')
-            .attr('stroke','red')
-            .attr('stroke-linejoin','round')
-            .attr('stroke-linecap','round')
-            .attr('stroke-width',1.5)
-            .attr('d',line(data.current));*/
-
-        commonChartUpdates();
-        delete $scope.working;
-    }
-
-    $scope.selection = {
-        lastYearValid: this_year > 2016, // time series data starts in 2016
-        showLastYear: false
-    };
-    var lastYear;
-    function addLastYear() {
-        addLine('last','orange',lastYear);
-    }
-    function removeLastYear() {
-        chart.selectAll('path.gdd.last').remove();
-    }
+    // only setup a watch on selection.showLastYear if it can even happen
     if($scope.selection.lastYearValid) {
         $scope.$watch('selection.showLastYear',function(show) {
-            if(show && !lastYear) {
+            if(show && (!data.previous)) {
+                // no data for last year yet, go get it
                 $scope.working = true;
                 var lastStart = new Date(start.getTime()),
                     lastEnd = new Date(start.getTime()),
@@ -7728,34 +7698,55 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
                     params:last_params
                 }).then(function(response) {
-                    lastYear = response.data;
-                    addLastYear();
+                    data.previous = {
+                        color: 'orange',
+                        data: response.data
+                    };
+                    updateYAxis();
+                    commonChartUpdates();
+                    addLine('previous');
                     delete $scope.working;
                 });
-            } else if (lastYear) {
+            } else if (data.previous) {
+                // toggle the line
                 if(show) {
-                    addLastYear();
+                    addLine('previous');
                 } else {
-                    removeLastYear();
+                    removeLine('previous');
                 }
             }
         });
     }
 
+    // this function, called from the $timeout above, gets the initial data
+    // and draws the selected/average lines on the chart.
     function visualize() {
         $scope.working = true;
         $q.all({
-            avg: $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
+            average: $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
                 params:avg_params
             }),
-            current: $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
+            selected: $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
                 params:params
             })
         }).then(function(results){
-            draw({
-                average: results.avg.data,
-                current: results.current.data
-            });
+            data.selected = {
+                color: 'black',
+                data: results.selected.data
+            };
+            data.average = {
+                color: 'blue',
+                data: results.average.data
+            };
+            $log.debug('draw',data);
+
+            updateYAxis();
+
+            addLine('average');
+            addLine('selected');
+
+            commonChartUpdates();
+            delete $scope.working;
         });
     }
 }])

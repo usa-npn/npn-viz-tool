@@ -1,5 +1,5 @@
 <vis-dialog title="Time Series" modal="modal">
-    <div class="checkbox" ng-if="selection.showLastYear">
+    <div class="checkbox" ng-if="selection.lastYearValid">
         <label ng-disabled="working">
           <input type="checkbox" ng-model="selection.showLastYear"> Show previous year’s data
         </label>
