@@ -105,6 +105,17 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                     return number(n,0)+'°F';
                 }
             }
+        },
+        doys: {
+            value: 365,
+            options: {
+                floor: 1,
+                ceil: 365,
+                step: 1,
+                translate: function(n) {
+                    return date_fmt(n)+' ('+n+')';
+                }
+            }
         }
     };
 
@@ -148,11 +159,10 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             keys = ['average','selected','forecast','previous'], //Object.keys(data), hard coding to control order
             plotCnt = keys.reduce(function(cnt,key,i) {
                 var row;
-                if(data[key] && data[key].plotted) {
-                    cnt++;
+                if(data[key] && data[key].plotted && (data[key].filtered||data[key].data).length) {
                     row = legend.append('g')
                         .attr('class','legend-item '+key)
-                        .attr('transform','translate(10,'+(((i+1)*fontSize)+(i*vpad))+')');
+                        .attr('transform','translate(10,'+(((cnt+1)*fontSize)+(cnt*vpad))+')');
                     row.append('circle')
                         .attr('r',r)
                         .attr('fill',data[key].color);
@@ -161,6 +171,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                         .attr('x',(2*r))
                         .attr('y',(r/2))
                         .text(data[key].year||'Average');
+                    cnt++;
                 }
                 return cnt;
             },0);
@@ -188,7 +199,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 .attr('stroke-linejoin','round')
                 .attr('stroke-linecap','round')
                 .attr('stroke-width',1.5)
-                .attr('d',line(data[key].data));
+                .attr('d',line(data[key].filtered||data[key].data));
             data[key].plotted = true;
             updateLegend();
         }
@@ -198,16 +209,22 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         thresholdLine.attr('y1',yCoord).attr('y2',yCoord);
     }
 
-    function updateYAxis() {
+    function updateAxes() {
         var lineKeys = Object.keys(data),maxes;
         if(lineKeys.length) {
             // calculate/re-calculate the y-axis domain so that the data fits nicely
             maxes = lineKeys.reduce(function(arr,key){
-                arr.push(d3.max(data[key].data,dataFunc));
+                arr.push(d3.max((data[key].filtered||data[key].data),dataFunc));
                 return arr;
             },[]);
             $scope.selection.threshold.options.ceil = Math.round(yMax = d3.max(maxes));
+            if($scope.selection.threshold.value > $scope.selection.threshold.options.ceil) {
+                $scope.selection.threshold.value = $scope.selection.threshold.options.ceil;
+            }
             yAxis.scale(y.domain([0,yMax]));
+            updateThreshold();
+            // updathe x-axis as necessary
+            xAxis.scale(x.domain([1,$scope.selection.doys.value]));
             // if this happens we need to re-draw all lines that have been plotted
             // because the domain of our axis just changed
             lineKeys.forEach(function(key) {
@@ -216,26 +233,39 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                     addLine(key);
                 }
             });
-            updateThreshold();
+
         }
 
-        chart.selectAll('g .y.axis').remove();
+        chart.selectAll('g .axis').remove();
         chart.append('g')
             .attr('class', 'y axis')
             .call(yAxis)
-          .append('text')
-          .attr('transform', 'rotate(-90)')
-          .attr('y', '0')
-          .attr('dy','-4em')
-          .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
-          .style('text-anchor', 'middle')
-          .text('AGDD');
+            .append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('y', '0')
+            .attr('dy','-4em')
+            .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
+            .style('text-anchor', 'middle')
+            .text('AGDD');
+
+        chart.append('g')
+            .attr('class', 'x axis')
+            .attr('transform', 'translate(0,' + sizing.height + ')')
+            .call(xAxis)
+            .append('text')
+            .attr('y','0')
+            .attr('dy','3em')
+            .attr('x',(sizing.width/2))
+            .style('text-anchor', 'middle')
+            .text('DOY');
+        commonChartUpdates();
     }
 
     // this initializes the empty visualization and gets the ball rolling
     // it is within a timeout so that the HTML gets rendered and we can grab
     // the nested chart element (o/w it doesn't exist yet).
     $timeout(function(){
+        $scope.$broadcast('rzSliderForceRender');
         var svg = d3.select('.chart')
             .attr('width', sizing.width + sizing.margin.left + sizing.margin.right)
             .attr('height', sizing.height + sizing.margin.top + sizing.margin.bottom);
@@ -255,18 +285,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 number(latLng.lat())+','+
                 number(latLng.lng())+' '+base_temp+'°F Base Temp');
 
-        chart.append('g')
-            .attr('class', 'x axis')
-            .attr('transform', 'translate(0,' + sizing.height + ')')
-            .call(xAxis)
-            .append('text')
-            .attr('y','0')
-            .attr('dy','3em')
-            .attr('x',(sizing.width/2))
-            .style('text-anchor', 'middle')
-            .text('DOY');
-
-        updateYAxis();
+        updateAxes();
 
         svg.append('g').append('text').attr('dx',5)
             .attr('dy',sizing.height + 136)
@@ -418,6 +437,31 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         visualize();
     });
 
+    function doyTrim() {
+        var value = $scope.selection.doys.value;
+        if(value === 365) {
+            Object.keys(data).forEach(function(key){
+                delete data[key].filtered;
+            });
+        } else {
+            Object.keys(data).forEach(function(key) {
+                data[key].filtered = data[key].data.filter(function(d) {
+                    return idFunc(d) <= value;
+                });
+            });
+        }
+        updateAxes();
+    }
+    var $doyTrimTimer;
+    $scope.$watch('selection.doys.value',function(value,oldValue) {
+        if(value !== oldValue) {
+            if($doyTrimTimer) {
+                $timeout.cancel($doyTrimTimer);
+            }
+            $doyTrimTimer = $timeout(doyTrim,500);
+        }
+    });
+
     // only setup a watch on selection.showLastYear if it can even happen
     if($scope.selection.lastYearValid) {
         $scope.$watch('selection.showLastYear',function(show) {
@@ -441,7 +485,8 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                         color: 'orange',
                         data: response.data
                     });
-                    updateYAxis();
+                    doyTrim();
+                    updateAxes();
                     commonChartUpdates();
                     addLine('previous');
                     delete $scope.working;
@@ -511,16 +556,16 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             });
             $log.debug('draw',data);
 
-            updateYAxis();
+            updateAxes();
 
             addLine('average');
             addLine('selected');
             if(forecast) {
                 addLine('forecast');
             }
-
             commonChartUpdates();
             delete $scope.working;
+
         });
     }
 }])
