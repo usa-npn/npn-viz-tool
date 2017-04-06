@@ -9,11 +9,11 @@ angular.module('npn-viz-tool.vis-time',[
 function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,legend,latLng,ChartService){
     // DEVELOPMENT - for development hard-coding lat/lng so that the proxy server can cache
     // the results and avoid waiting repeatedly for the web service to respond (8-10 seconds per)..
-    latLng = {
+    /*latLng = {
         // somewhere in AZ
         lat: function() { return 32.84267363195431; },
         lng: function() { return -112.412109375; }
-    };
+    };*/
 
     $scope.layer = layer;
     $scope.legend = legend;
@@ -122,29 +122,12 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .style('font-family','Arial');
 
         var fontSize = '12px';
-/*
-        chart.selectAll('.legend text')
-             .style('font-size', fontSize)
-             .attr('y',function(d,i){
-                return (i*12) + i;
-            });*/
 
         chart.selectAll('g .x.axis text')
             .style('font-size', fontSize);
 
         chart.selectAll('g .y.axis text')
             .style('font-size', fontSize);
-
-        // em doesn't work when saving as an image
-        /*
-        var dyBase = -5,
-            dyIncr = 14;
-        chart.selectAll('.legend circle')
-            .attr('r','5')
-            .attr('cx','5')
-            .attr('cy',function(d,i) {
-                return dyBase + (i*dyIncr);
-            });*/
     }
 
     function updateLegend() {
@@ -335,7 +318,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 map[key] = infos[key].append('tspan').attr('class','gdd-value');
                 return map;
             },{}),
-            infoDiffs = ['previous','selected'].reduce(function(map,key){
+            infoDiffs = ['previous','forecast','selected'].reduce(function(map,key){
                 map[key] = infos[key].append('tspan').attr('class','gdd-diff');
                 return map;
             },{});
