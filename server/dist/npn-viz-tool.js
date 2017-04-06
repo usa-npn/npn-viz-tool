@@ -6444,6 +6444,10 @@ angular.module("js/time/time.html", []).run(["$templateCache", function($templat
     "          <input type=\"checkbox\" ng-model=\"selection.showLastYear\"> Show previous year’s data\n" +
     "        </label>\n" +
     "    </div>\n" +
+    "    <div>\n" +
+    "        <label>AGDD Threshold</label>\n" +
+    "        <rzslider rz-slider-model=\"selection.threshold.value\" rz-slider-options=\"selection.threshold.options\"></rzslider>\n" +
+    "    </div>\n" +
     "    <div class=\"panel panel-default main-vis-panel\" >\n" +
     "        <div class=\"panel-body\">\n" +
     "            <center>\n" +
@@ -7533,7 +7537,8 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         },
         x = d3.scale.linear().range([0,sizing.width]).domain([1,365]),
         xAxis = d3.svg.axis().scale(x).orient('bottom').tickFormat(date_fmt),
-        y = d3.scale.linear().range([sizing.height,0]).domain([0,20000]), // bogus initially
+        yMax = 20000, // the max possible, initially
+        y = d3.scale.linear().range([sizing.height,0]).domain([0,yMax]),
         yAxis = d3.svg.axis().scale(y).orient('left'),
         dataFunc = function(d) { return d.point_value; },
         idFunc = function(d) { return d.doy; }, // id is the doy which is the index.
@@ -7544,7 +7549,18 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
 
     $scope.selection = {
         lastYearValid: this_year > 2016, // time series data starts in 2016
-        showLastYear: false
+        showLastYear: false,
+        threshold: {
+            value: 1000,
+            options: {
+                floor: 0,
+                ceil: yMax,
+                step: 10,
+                translate: function(n) {
+                    return number(n,0)+'°F';
+                }
+            }
+        }
     };
 
     function commonChartUpdates() {
@@ -7601,6 +7617,19 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             data[key].plotted = true;
         }
     }
+    function updateThreshold() {
+        var threshold = $scope.selection.threshold.value;
+        chart.selectAll('line.threshold').remove();
+        chart.append('line')
+            .attr('class','threshold')
+            .attr('fill','none')
+            .attr('stroke','green')
+            .attr('stroke-width',1)
+            .attr('x1',x(1))
+            .attr('y1',y(threshold))
+            .attr('x2',x(365))
+            .attr('y2',y(threshold));
+    }
 
     function updateYAxis() {
         var lineKeys = Object.keys(data),maxes;
@@ -7610,7 +7639,8 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 arr.push(d3.max(data[key].data,dataFunc));
                 return arr;
             },[]);
-            yAxis.scale(y.domain([0,d3.max(maxes)]));
+            $scope.selection.threshold.options.ceil = Math.round(yMax = d3.max(maxes));
+            yAxis.scale(y.domain([0,yMax]));
             // if this happens we need to re-draw all lines that have been plotted
             // because the domain of our axis just changed
             lineKeys.forEach(function(key) {
@@ -7619,6 +7649,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                     addLine(key);
                 }
             });
+            updateThreshold();
         }
 
         chart.selectAll('g .y.axis').remove();
@@ -7721,6 +7752,8 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     // this function, called from the $timeout above, gets the initial data
     // and draws the selected/average lines on the chart.
     function visualize() {
+        // setup watch for slider
+        $scope.$watch('selection.threshold.value',updateThreshold);
         $scope.working = true;
         $q.all({
             average: $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
