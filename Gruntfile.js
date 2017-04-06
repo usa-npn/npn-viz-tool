@@ -219,6 +219,7 @@ module.exports = function(grunt){
     grunt.registerTask('watch',['before-test', 'after-test', 'karma:watch', 'delta']);
 
     grunt.registerTask('default', ['before-test', 'test', 'after-test']);
+    grunt.registerTask('no-test', ['before-test', 'after-test']);
 
     grunt.registerTask('build',function() {
         var jsSrc = [];

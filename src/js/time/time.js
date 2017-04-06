@@ -32,12 +32,16 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             d.setDate(1);
             return d;
         })(),
+        forecast = extent_year === this_year,
         end = (function(){
-            var d = new Date();
-            d.setFullYear(extent_year);
-            if(extent_year !== this_year) {
+            var d = forecast ?
+                // use the latest date the layer supports
+                new Date(layer.extent.values[layer.extent.values.length-1].date.getTime()) :
+                new Date();
+            if(!forecast) {
                 // if this year end today (no more data)
                 // if previous year then get the full year's data
+                d.setFullYear(extent_year);
                 d.setMonth(11);
                 d.setDate(31);
             }
@@ -153,12 +157,13 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 .style('fill','white')
                 .style('stroke','black')
                 .style('opacity','0.8')
-                .attr('width',75)
+                .attr('width',100)
                 .attr('height',55),
             fontSize = 12,
             r = 5,
             vpad = 4,
-            plotCnt = ['average','selected','previous'].reduce(function(cnt,key,i) {
+            keys = ['average','selected','forecast','previous'], //Object.keys(data), hard coding to control order
+            plotCnt = keys.reduce(function(cnt,key,i) {
                 var row;
                 if(data[key] && data[key].plotted) {
                     cnt++;
@@ -178,6 +183,8 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             },0);
             if(plotCnt < 3) {
                 rect.attr('height',40);
+            } else if (plotCnt > 3) {
+                rect.attr('height',70);
             }
     }
 
@@ -315,7 +322,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             doyInfo = hoverInfo.append('tspan').attr('dy','1em').attr('x',hoverInfoX),
             doyLabel = doyInfo.append('tspan').attr('class','gdd-label').text('DOY: '),
             doyValue = doyInfo.append('tspan').attr('class','gdd-value'),
-            infoKeys = ['average','previous','selected'],
+            infoKeys = ['average','previous','selected','forecast'],
             infos = infoKeys.reduce(function(map,key){
                 map[key] = hoverInfo.append('tspan').attr('dy',hoverInfoDy).attr('x',hoverInfoX);
                 return map;
@@ -481,11 +488,40 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 params:params
             })
         }).then(function(results){
-            addData('selected',{
-                year: start.getFullYear(),
-                color: 'black',
-                data: results.selected.data
-            });
+            if(forecast) {
+                // need to separate out <=today and >today
+                // this is kind of quick and dirty for doy
+                var todayString = date(new Date(),'yyyy-MM-dd'),
+                    processed = results.selected.data.reduce(function(map,d){
+                        if(!map.forecast) {
+                            map.selected.push(d);
+                            if(d.date === todayString) {
+                                map.forecast = []; // forecast data starts here
+                            }
+                        } else {
+                            map.forecast.push(d);
+                        }
+                        return map;
+                    },{
+                        selected: []
+                    });
+                addData('selected',{
+                    year: start.getFullYear(),
+                    color: 'black',
+                    data: processed.selected
+                });
+                addData('forecast',{
+                    year: start.getFullYear()+' forecast',
+                    color: 'red',
+                    data: processed.forecast
+                });
+            } else {
+                addData('selected',{
+                    year: start.getFullYear(),
+                    color: 'black',
+                    data: results.selected.data
+                });
+            }
             addData('average',{
                 color: 'blue',
                 data: results.average.data
@@ -496,6 +532,9 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
 
             addLine('average');
             addLine('selected');
+            if(forecast) {
+                addLine('forecast');
+            }
 
             commonChartUpdates();
             delete $scope.working;

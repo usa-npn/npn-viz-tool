@@ -677,6 +677,9 @@ text.gdd-info {
         &.selected {
             fill: black;
         }
+        &.forecast {
+            fill: red;
+        }
         &.previous {
             fill: orange;
         }
