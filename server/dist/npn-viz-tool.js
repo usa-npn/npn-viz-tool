@@ -7584,18 +7584,13 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         chart.selectAll('text')
             .style('font-family','Arial');
 
-        chart.selectAll('.legend rect')
-            .style('fill','white')
-            .style('stroke','black')
-            .style('opacity','0.8');
-
         var fontSize = '12px';
-
+/*
         chart.selectAll('.legend text')
              .style('font-size', fontSize)
              .attr('y',function(d,i){
                 return (i*12) + i;
-             });
+            });*/
 
         chart.selectAll('g .x.axis text')
             .style('font-size', fontSize);
@@ -7604,6 +7599,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .style('font-size', fontSize);
 
         // em doesn't work when saving as an image
+        /*
         var dyBase = -5,
             dyIncr = 14;
         chart.selectAll('.legend circle')
@@ -7611,15 +7607,45 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .attr('cx','5')
             .attr('cy',function(d,i) {
                 return dyBase + (i*dyIncr);
-            });
+            });*/
     }
 
     function updateLegend() {
         chart.select('.legend').remove();
         var legend = chart.append('g')
-          .attr('class','legend')
-          .attr('transform','translate(30,-45)') // relative to the chart, not the svg
-          .style('font-size','1em');
+              .attr('class','legend')
+              .attr('transform','translate(30,-45)') // relative to the chart, not the svg
+              .style('font-size','1em'),
+            rect = legend.append('rect')
+                .style('fill','white')
+                .style('stroke','black')
+                .style('opacity','0.8')
+                .attr('width',75)
+                .attr('height',55),
+            fontSize = 12,
+            r = 5,
+            vpad = 4,
+            plotCnt = ['average','selected','previous'].reduce(function(cnt,key,i) {
+                var row;
+                if(data[key] && data[key].plotted) {
+                    cnt++;
+                    row = legend.append('g')
+                        .attr('class','legend-item '+key)
+                        .attr('transform','translate(10,'+(((i+1)*fontSize)+(i*vpad))+')');
+                    row.append('circle')
+                        .attr('r',r)
+                        .attr('fill',data[key].color);
+                    row.append('text')
+                        .style('font-size', '12px')
+                        .attr('x',(2*r))
+                        .attr('y',(r/2))
+                        .text(data[key].year||'Average');
+                }
+                return cnt;
+            },0);
+            if(plotCnt < 3) {
+                rect.attr('height',40);
+            }
     }
 
     function removeLine(key) {
@@ -7752,7 +7778,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             hoverInfo = hover.append('text')
                 .attr('class','gdd-info')
                 .attr('font-size',14)
-                .attr('y',y(0)/2),
+                .attr('y',40),
             doyInfo = hoverInfo.append('tspan').attr('dy','1em').attr('x',hoverInfoX),
             doyLabel = doyInfo.append('tspan').attr('class','gdd-label').text('DOY: '),
             doyValue = doyInfo.append('tspan').attr('class','gdd-value'),
@@ -7797,7 +7823,6 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                             year: data[key].year,
                             gdd: temp
                         };
-                        //console.log(key,temp);
                         if(!data[key].focus) {
                             // create a focus ring for this line
                             data[key].focus = hover.append('circle')
@@ -7834,7 +7859,10 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                                 break;
                             }
                         }
-                        if(avgDoy > 0 && avgDoy < 366) { // this should always happen but to be safe
+                        // this can happen when the year being compared
+                        // is now hotter than the average has ever been
+                        // i.e. late in the year
+                        if(avgDoy > 0 && avgDoy < 366) {
                             diffDoy = (avgDoy-doy);
                             text +='/'+(diffDoy > 0 ?'+' : '')+diffDoy+' days';
                         }
@@ -7875,15 +7903,15 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 $scope.working = true;
                 var lastStart = new Date(start.getTime()),
                     lastEnd = new Date(start.getTime()),
-                    last_params;
+                    previous_params;
                 lastStart.setFullYear(lastStart.getFullYear()-1);
                 lastEnd.setFullYear(lastStart.getFullYear());
                 lastEnd.setMonth(11);
                 lastEnd.setDate(31);
-                last_params = angular.extend({},params,{start_date:date(lastStart,dateFmt),end_date:date(lastEnd,dateFmt)});
-                $log.debug('last_params',last_params);
+                previous_params = angular.extend({},params,{start_date:date(lastStart,dateFmt),end_date:date(lastEnd,dateFmt)});
+                $log.debug('previous_params',previous_params);
                 $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
-                    params:last_params
+                    params:previous_params
                 }).then(function(response) {
                     addData('previous',{
                         year: lastStart.getFullYear(),
