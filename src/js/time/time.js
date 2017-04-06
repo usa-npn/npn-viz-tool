@@ -23,13 +23,26 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     var dateFmt = 'yyyy-MM-dd',
         date = $filter('date'),
         number = $filter('number'),
+        this_year = (new Date()).getFullYear(),
+        extent_year = layer.extent.current && layer.extent.current.date ? layer.extent.current.date.getFullYear() : this_year,
         start = (function(){
             var d = new Date();
+            d.setFullYear(extent_year);
             d.setMonth(0);
             d.setDate(1);
             return d;
         })(),
-        today = $scope.today = new Date(),
+        end = (function(){
+            var d = new Date();
+            d.setFullYear(extent_year);
+            if(extent_year !== this_year) {
+                // if this year end today (no more data)
+                // if previous year then get the full year's data
+                d.setMonth(11);
+                d.setDate(31);
+            }
+            return d;
+        })(),
         avg_params = {
             latitude: latLng.lat(),
             longitude: latLng.lng()
@@ -37,20 +50,17 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         params = {
             layer : layer.name,
             start_date: date(start,dateFmt),
-            end_date: date(today,dateFmt),
+            end_date: date(end,dateFmt),
             latitude: latLng.lat(),
             longitude: latLng.lng()
         };
-    // TODO, talk to lee about the parameter name var being a keyword
-    // and that we have new made up identifiers for map layers with existing names
     avg_params.layer = (params.layer === 'gdd:agdd') ? 'gdd:30yr_avg_agdd' : 'gdd:30yr_avg_agdd_50f';
     var base_temp = (params.layer === 'gdd:agdd') ? 32 : 50;
 
     $log.debug('TimeSeries.avg_params',avg_params);
     $log.debug('TimeSeries.params',params);
 
-    var data,
-        sizing = ChartService.getSizeInfo({top: 80,left: 80}),
+    var sizing = ChartService.getSizeInfo({top: 80,left: 80}),
         chart,
         d3_date_fmt = d3.time.format('%m/%d'),
         date_fmt = function(d){
@@ -58,14 +68,15 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 date = new Date(time);
             return d3_date_fmt(date);
         },
-        x = d3.scale.linear().range([0,sizing.width]).domain([0,364]),
+        x = d3.scale.linear().range([0,sizing.width]).domain([1,365]),
         xAxis = d3.svg.axis().scale(x).orient('bottom').tickFormat(date_fmt),
         y = d3.scale.linear().range([sizing.height,0]).domain([0,20000]), // bogus initially
         yAxis = d3.svg.axis().scale(y).orient('left'),
-        idFunc = function(d,i) { return i; }, // id is the doy which is the index.
-        line = d3.svg.line()
-            .x(function(d,i){ return x(i); })
-            .y(function(d,i){ return y(d); }).interpolate('basis');
+        dataFunc = function(d) { return d.point_value; },
+        idFunc = function(d) { return d.doy; }, // id is the doy which is the index.
+        line = d3.svg.line() // TODO remove if decide to not use
+            .x(function(d,i){ return x(d.doy); })
+            .y(function(d,i){ return y(d.point_value); }).interpolate('basis');
 
     function commonChartUpdates() {
         chart.selectAll('.axis path')
@@ -155,18 +166,56 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         visualize();
     });
 
-    function draw() {
-        if(!data) {
-            return;
-        }
+    /*
+    function addLine(key,color) {
+        chart.selectAll('line.'+key)
+            .data(data[key],idFunc)
+            .enter()
+            .append('line')
+            .attr('class',key)
+            .attr('fill','none')
+            .attr('stroke',color)
+            .attr('stroke-width',2.5)
+            .style('cursor','pointer')
+            .attr('x1',function(d,i) { return x(i); })
+            .attr('y1',function(d,i) { return y(i === 0 ? 0 : data[key][i-1]); })
+            .attr('x2',function(d,i) { return x(i+1); })
+            .attr('y2',function(d,i) { return y(data[key][i]); })
+            .append('title')
+            .text(function(d,i) {
+                return 'DOY: '+(i+1)+' GDD: '+number((i === 0 ? 0 : data[key][i-1]),2);
+            });
+    }*/
+
+    function addLine(cls,color,dataset) {
+        chart.append('path')
+            .attr('class','gdd '+cls)
+            .attr('fill','none')
+            .attr('stroke',color)
+            .attr('stroke-linejoin','round')
+            .attr('stroke-linecap','round')
+            .attr('stroke-width',1.5)
+            .attr('d',line(dataset));
+    }
+
+    function draw(data) {
+        $log.debug('draw',data);
         $scope.working = true;
 
-        var max = d3.max([d3.max(data.current),d3.max(data.average)]);
+        var max = d3.max([d3.max(data.current,dataFunc),d3.max(data.average,dataFunc)]);
         yAxis.scale(y.domain([0,max]));
         updateYAxis();
 
-        chart.selectAll('path .gdd').remove();
+        /*
+        addLine('average','#0000ff');
+        addLine('current','#000000');
+        */
 
+        /* going this route draws a continuous line but then
+           we can't do a mouseover on an individual segment to show the data */
+        addLine('average','blue',data.average);
+        addLine('current','red',data.current);
+        /*
         chart.append('path')
             .attr('class','gdd average')
             .attr('fill','none')
@@ -183,10 +232,51 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .attr('stroke-linejoin','round')
             .attr('stroke-linecap','round')
             .attr('stroke-width',1.5)
-            .attr('d',line(data.current));
+            .attr('d',line(data.current));*/
 
         commonChartUpdates();
         delete $scope.working;
+    }
+
+    $scope.selection = {
+        lastYearValid: this_year > 2016, // time series data starts in 2016
+        showLastYear: false
+    };
+    var lastYear;
+    function addLastYear() {
+        addLine('last','orange',lastYear);
+    }
+    function removeLastYear() {
+        chart.selectAll('path.gdd.last').remove();
+    }
+    if($scope.selection.lastYearValid) {
+        $scope.$watch('selection.showLastYear',function(show) {
+            if(show && !lastYear) {
+                $scope.working = true;
+                var lastStart = new Date(start.getTime()),
+                    lastEnd = new Date(start.getTime()),
+                    last_params;
+                lastStart.setFullYear(lastStart.getFullYear()-1);
+                lastEnd.setFullYear(lastStart.getFullYear());
+                lastEnd.setMonth(11);
+                lastEnd.setDate(31);
+                last_params = angular.extend({},params,{start_date:date(lastStart,dateFmt),end_date:date(lastEnd,dateFmt)});
+                $log.debug('last_params',last_params);
+                $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
+                    params:last_params
+                }).then(function(response) {
+                    lastYear = response.data;
+                    addLastYear();
+                    delete $scope.working;
+                });
+            } else if (lastYear) {
+                if(show) {
+                    addLastYear();
+                } else {
+                    removeLastYear();
+                }
+            }
+        });
     }
 
     function visualize() {
@@ -199,18 +289,10 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 params:params
             })
         }).then(function(results){
-            function massage(data) {
-                return Object.keys(data).reduce(function(arr,key,i){
-                    arr[i] = data[key];
-                    return arr;
-                },[]);
-            }
-            data = {
-                average: massage(results.avg.data),
-                current: massage(results.current.data)
-            };
-            $log.debug('data',data);
-            draw();
+            draw({
+                average: results.avg.data,
+                current: results.current.data
+            });
         });
     }
 }])

@@ -8,6 +8,10 @@ body {
   overflow: hidden;
 }
 
+*[disabled] {
+  pointer-events: none;
+}
+
 .angular-google-map-container {
   position: absolute;
   top: 0px;

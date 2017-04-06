@@ -1,12 +1,16 @@
 <vis-dialog title="Time Series" modal="modal">
-
+    <div class="checkbox" ng-if="selection.showLastYear">
+        <label ng-disabled="working">
+          <input type="checkbox" ng-model="selection.showLastYear"> Show previous year’s data
+        </label>
+    </div>
     <div class="panel panel-default main-vis-panel" >
         <div class="panel-body">
             <center>
             <div id="vis-container">
                 <div id="vis-working" ng-show="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>
                 <div class="chart-container">
-                    <vis-download ng-if="data"
+                    <vis-download ng-if="!working"
                                   selector=".chart"
                                   filename="time-series.png"></vis-download>
                     <div><svg class="chart"></svg></div>

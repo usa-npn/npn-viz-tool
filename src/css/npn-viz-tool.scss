@@ -13,6 +13,9 @@ html, body {
 body {
     overflow: hidden; // full screen map, no scrollbars
 }
+*[disabled] {
+    pointer-events: none;
+}
 
 .angular-google-map-container {
     position: absolute;
