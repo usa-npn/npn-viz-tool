@@ -7818,16 +7818,31 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             $log.debug('temps for doy '+doy,temps);
             doyValue.text(doy+' ('+date_fmt(doy)+')');
             Object.keys(infos).forEach(function(key) {
-                var diff;
+                var temp,diff,avgDoy,diffDoy,text,i;
                 if(temps[key]) {
                     infos[key].style('display',null);
                     infoLabels[key].text((temps[key].year||'Average')+': ');
-                    infoValues[key].text(number(temps[key].gdd,0)+'°F');
+                    temp = temps[key].gdd;
+                    infoValues[key].text(number(temp,0)+'°F');
                     if(infoDiffs[key]) {
-                        diff = temps[key].gdd-temps.average.gdd;
+                        diff = temp-temps.average.gdd;
+                        text = ' ('+(diff > 0 ? '+' : '')+number(diff,0)+'°F';
+                        // on what day did the current temperature happen
+                        for(i = 0; i < data.average.data.length; i++) {
+                            if(dataFunc(data.average.data[i]) > temp) {
+                                avgDoy = idFunc(data.average.data[i]);
+                                break;
+                            }
+                        }
+                        if(avgDoy > 0 && avgDoy < 366) { // this should always happen but to be safe
+                            diffDoy = (avgDoy-doy);
+                            text +='/'+(diffDoy > 0 ?'+' : '')+diffDoy+' days';
+                        }
+
+                        text += ')';
                         infoDiffs[key]
                         .attr('class','gdd-diff '+(diff > 0 ? 'above' : 'below'))
-                        .text(' ('+(diff > 0 ? '+' : '')+number(diff,0)+'°F)');
+                        .text(text);
                     }
                 } else {
                     infos[key].style('display','none');
