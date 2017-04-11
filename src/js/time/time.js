@@ -20,7 +20,8 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     $scope.modal = $uibModalInstance;
     $scope.latLng = latLng;
 
-    var dateFmt = 'yyyy-MM-dd',
+    var degF = 'F',//'\u00B0F',//'°F',
+        dateFmt = 'yyyy-MM-dd',
         date = $filter('date'),
         number = $filter('number'),
         this_year = (new Date()).getFullYear(),
@@ -102,7 +103,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 ceil: yMax,
                 step: 10,
                 translate: function(n) {
-                    return number(n,0)+'°F';
+                    return number(n,0)+degF;
                 }
             }
         },
@@ -283,7 +284,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
              .style('font-size','18px')
              .text(start.getFullYear()+' AGDD Daily Trends for '+
                 number(latLng.lat())+','+
-                number(latLng.lng())+' '+base_temp+'°F Base Temp');
+                number(latLng.lng())+' '+base_temp+degF+' Base Temp');
 
         updateAxes();
 
@@ -390,10 +391,10 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                     infos[key].style('display',null);
                     infoLabels[key].text((temps[key].year||'Average')+': ');
                     temp = temps[key].gdd;
-                    infoValues[key].text(number(temp,0)+'°F');
+                    infoValues[key].text(number(temp,0)+degF);
                     if(infoDiffs[key]) {
                         diff = temp-temps.average.gdd;
-                        text = ' ('+(diff > 0 ? '+' : '')+number(diff,0)+'°F';
+                        text = ' ('+(diff > 0 ? '+' : '')+number(diff,0)+degF;
                         // on what day did the current temperature happen
                         for(i = 0; i < data.average.data.length; i++) {
                             if(dataFunc(data.average.data[i]) > temp) {
@@ -524,7 +525,9 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                         if(!map.forecast) {
                             map.selected.push(d);
                             if(d.date === todayString) {
-                                map.forecast = []; // forecast data starts here
+                                // include the last day of the selected range
+                                // on the forecast so the two connect on the graph
+                                map.forecast = [d]; // forecast data starts here
                             }
                         } else {
                             map.forecast.push(d);

@@ -642,4 +642,11 @@ text.gdd-info .gdd-diff.below {
   fill: blue;
 }
 
+.modal-body.time-series .controls {
+  padding: 0px 20px;
+}
+.modal-body.time-series .controls .threshold .rzslider {
+  margin-top: 25px;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */

@@ -696,3 +696,12 @@ text.gdd-info {
         }
     }
 }
+
+.modal-body.time-series {
+    .controls {
+        padding: 0px 20px;
+        .threshold .rzslider {
+            margin-top: 25px;
+        }
+    }
+}
