@@ -49,6 +49,12 @@ angular.module('npn-viz-tool.settings',[
             name: 'only-yes-data',
             q: 'oyd',
             value: false
+        },
+        dataPrecisionFilter: {
+            name: 'filter-data-precision',
+            q: 'fdp',
+            value: 30,
+            options: [7,14,30]
         }
     };
     return {

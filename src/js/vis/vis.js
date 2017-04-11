@@ -69,6 +69,13 @@ angular.module('npn-viz-tool.vis',[
         }
         return keep;
     }
+    function filterLqSiteData(d) {
+        var keep = d.mean_numdays_since_prior_no >= 0;
+        if(!keep) {
+            $log.debug('filtering less precise data from site level output',d);
+        }
+        return keep;
+    }
     function addCommonParams(params) {
         if(visualizeSingleStationId) {
             params['station_id[0]'] = visualizeSingleStationId;
@@ -191,6 +198,34 @@ angular.module('npn-viz-tool.vis',[
         /**
          * @ngdoc method
          * @methodOf npn-viz-tool.vis:ChartService
+         * @name getSiteLevelData
+         * @description
+         *
+         * Issue a request for site level data.  Common parameters will be implicitly added like
+         * networks in the base filter or lists of sites if geographic filtering is enabled.
+         *
+         * @param {Object} params Parameters to send to the web service.
+         * @param {function} success The success callback to receive the data.
+         */
+        getSiteLevelData: function(params,success) {
+            params.num_days_quality_filter = SettingsService.getSettingValue('dataPrecisionFilter');
+            $http({
+                method: 'POST',
+                url: $url('/npn_portal/observations/getSiteLevelData.json'),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                transformRequest: txformUrlEncoded,
+                data: addCommonParams(params)
+            }).success(function(response){
+                var minusSuspect = response.filter(filterSuspectSummaryData),
+                    filtered = minusSuspect.filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSiteData : angular.identity);
+                $log.debug('filtered out '+(response.length-minusSuspect.length)+'/'+response.length+' suspect records');
+                $log.debug('filtered out '+(minusSuspect.length-filtered.length)+'/'+minusSuspect.length+' LQD records.');
+                success(filtered,(minusSuspect.length !== filtered.length));
+            });
+        },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
          * @name getSummarizedData
          * @description
          *
@@ -208,11 +243,29 @@ angular.module('npn-viz-tool.vis',[
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
             }).success(function(response){
-                var filtered = response
-                                .filter(filterSuspectSummaryData)
-                                .filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSummaryData : angular.identity);
-                $log.debug('filtered out '+(response.length-filtered.length)+'/'+response.length+' suspect records or with negative num_days_prior_no.');
-                success(filtered);
+                var minusSuspect = response.filter(filterSuspectSummaryData),
+                    filtered = minusSuspect.filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSummaryData : angular.identity),
+                    individuals = filtered.reduce(function(map,d){
+                        var key = d.individual_id+'/'+d.phenophase_id+'/'+d.first_yes_year;
+                        map[key] = map[key]||[];
+                        map[key].push(d);
+                        return map;
+                    },{}),
+                    uniqueIndividuals = [];
+                $log.debug('filtered out '+(response.length-minusSuspect.length)+'/'+response.length+' suspect records');
+                $log.debug('filtered out '+(minusSuspect.length-filtered.length)+'/'+minusSuspect.length+' LQD records.');
+                angular.forEach(individuals,function(arr,key){
+                    if(arr.length > 1) {
+                        // sort by first_yes_doy
+                        arr.sort(function(a,b){
+                            return a.first_yes_doy - b.first_yes_doy;
+                        });
+                    }
+                    // use the earliest record
+                    uniqueIndividuals.push(arr[0]);
+                });
+                $log.debug('filtered out '+(filtered.length-uniqueIndividuals.length)+'/'+filtered.length+ ' individual records (preferring lowest first_yes_doy)');
+                success(uniqueIndividuals,(minusSuspect.length !== filtered.length));
             });
         },
         /**

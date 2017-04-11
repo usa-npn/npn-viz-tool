@@ -6397,6 +6397,10 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "                <label for=\"fitLinesInput\">Fit Line{{toPlot.length > 1 ? 's' : ''}}</label>\n" +
     "                <input type=\"checkbox\" id=\"fitLinesInput\" ng-model=\"selection.regressionLines\" />\n" +
     "            </li>\n" +
+    "            <li>\n" +
+    "                <label for=\"individualPhenometrics\">Use Individual Phenometrics</label>\n" +
+    "                <input type=\"checkbox\" id=\"individualPhenometrics\" ng-model=\"selection.useIndividualPhenometrics\" />\n" +
+    "            </li>\n" +
     "            <li ng-if=\"!data\"><button class=\"btn btn-primary\" ng-click=\"visualize()\">Visualize</button></li>\n" +
     "        </ul>\n" +
     "        <div id=\"vis-container\">\n" +
@@ -6414,7 +6418,8 @@ angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($t
     "</div>\n" +
     "<!--pre ng-if=\"record\">{{record | json}}</pre-->\n" +
     "\n" +
-    "</vis-dialog>");
+    "</vis-dialog>\n" +
+    "");
 }]);
 
 angular.module("js/settings/settingsControl.html", []).run(["$templateCache", function($templateCache) {
@@ -6463,7 +6468,7 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "    </li>\n" +
     "    <li class=\"divider\"></li>\n" +
     "    <li>\n" +
-    "        <label for=\"clusterMarkersSetting\">Exclude less precise data from visualizations</label>\n" +
+    "        <label for=\"excludeLqd\">Exclude less precise data from visualizations</label>\n" +
     "        <ul class=\"list-unstyled\">\n" +
     "            <li ng-repeat=\"option in [true,false]\">\n" +
     "                <input type=\"radio\" id=\"filterLqdSummary{{option}}\" ng-model=\"settings.filterLqdSummary.value\"\n" +
@@ -6471,6 +6476,13 @@ angular.module("js/settings/settingsControl.html", []).run(["$templateCache", fu
     "            </li>\n" +
     "        </ul>\n" +
     "        <p>Selecting <strong>Yes</strong> will exclude data points which lack a \"no\" record preceding the first \"yes\" record from certain visualizations. </p>\n" +
+    "    </li>\n" +
+    "    <li class=\"divider\"></li>\n" +
+    "    <li>\n" +
+    "        <label for=\"dataPrecisionFilter\">Data Precision Filter</label>\n" +
+    "        <select class=\"form-control\" ng-model=\"settings.dataPrecisionFilter.value\"\n" +
+    "            ng-options=\"days as days+' days' for days in settings.dataPrecisionFilter.options\" />\n" +
+    "        <p style=\"margin: 15px 0px;\">Less precise data is removed from the scatter plot and map visualizations by only plotting data points preceded or followed by a “no” within 30 days. This filter can be adjusted here to  7, 14, or 30 days.</p>\n" +
     "    </li>\n" +
     "</ul>\n" +
     "");
@@ -6588,7 +6600,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         {key: 'latitude', label: 'Latitude', axisFmt: d3.format('.2f')},
         {key: 'longitude', label: 'Longitude', axisFmt: d3.format('.2f')},
         {key:'elevation_in_meters',label:'Elevation (m)'},
-        {key:'first_yes_year', label: 'Year'},
+        {key:'fyy', label: 'Year'},
 
         {key:'prcp_fall',label:'Precip Fall (mm)'},
         {key:'prcp_spring',label:'Precip Spring (mm)'},
@@ -6618,7 +6630,8 @@ angular.module('npn-viz-tool.vis-scatter',[
     $scope.selection = {
         color: 0,
         axis: $scope.axis[0],
-        regressionLines: false
+        regressionLines: false,
+        useIndividualPhenometrics: false
     };
     $scope.$watch('selection.regressionLines',function(nv,ov) {
         if(nv !== ov) {
@@ -6681,19 +6694,36 @@ angular.module('npn-viz-tool.vis-scatter',[
         }
         return true;
     };
+    function clearData() {
+        $scope.data = data = undefined;
+        angular.forEach(chartServiceHandlers,function(handler) {
+            delete handler.data;
+        });
+    }
     $scope.addToPlot = function() {
         if($scope.canAddToPlot()) {
             $scope.toPlot.push(getNewToPlot());
             advanceColor();
-            $scope.data = data = undefined;
+            clearData();
         }
     };
     $scope.removeFromPlot = function(idx) {
         $scope.toPlot.splice(idx,1);
-        $scope.data = data = undefined;
+        clearData();
     };
 
     var data, // the data from the server....
+        chartServiceFunction = 'getSiteLevelData',
+        chartServiceHandlers = {
+            getSiteLevelData: {
+                dataFunc: function(d) { return d.mean_first_yes_doy; },
+                firstYesYearFunc: function(d) { return d.mean_first_yes_year; }
+            },
+            getSummarizedData: {
+                dataFunc: function(d) { return d.first_yes_doy; },
+                firstYesYearFunc: function(d) { return d.first_yes_year; }
+            }
+        },
         dateArg = FilterService.getFilter().getDateArg(),
         start_year = dateArg.arg.start_date,
         start_date = new Date(start_year,0),
@@ -6833,8 +6863,9 @@ angular.module('npn-viz-tool.vis-scatter',[
           .style('stroke','#333')
           .style('stroke-width','1');
 
+        var dataFunc = chartServiceHandlers[chartServiceFunction].dataFunc;
         circles.attr('cx', function(d) { return x(d[$scope.selection.axis.key]); })
-          .attr('cy', function(d) { return y(d.first_yes_doy); })
+          .attr('cy', function(d) { return y(dataFunc(d)); })
           .attr('r', '5')
           .attr('fill',function(d) { return d.color; })
           .on('click',function(d){
@@ -6857,7 +6888,7 @@ angular.module('npn-viz-tool.vis-scatter',[
                         return o1[$scope.selection.axis.key] - o2[$scope.selection.axis.key];
                     }),
                     xSeries = datas.map(function(d) { return d[$scope.selection.axis.key]; }).filter(angular.isNumber),
-                    ySeries = datas.map(function(d) { return d.first_yes_doy; }).filter(angular.isNumber),
+                    ySeries = datas.map(dataFunc).filter(angular.isNumber),
                     leastSquaresCoeff = ChartService.leastSquares(xSeries,ySeries),
                     x1 = xSeries[0],
                     y1 = ChartService.approxY(leastSquaresCoeff,x1),
@@ -6915,50 +6946,66 @@ angular.module('npn-viz-tool.vis-scatter',[
         commonChartUpdates();
         $scope.working = false;
     }
-    $scope.visualize = function() {
-        if(data) {
-            return draw();
-        }
-        $scope.working = true;
-        $log.debug('visualize',$scope.selection.axis,$scope.toPlot);
-        var dateArg = FilterService.getFilter().getDateArg(),
-            params = {
-                climate_data: 1,
-                request_src: 'npn-vis-scatter-plot',
-                start_date: dateArg.getStartDate(),
-                end_date: dateArg.getEndDate()
-            },
-            i = 0,
-            colorMap = {};
-        angular.forEach($scope.toPlot,function(tp) {
-            colorMap[tp.species_id+'.'+tp.phenophase_id] = tp.color;
-            params['species_id['+i+']'] = tp.species_id;
-            params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
-        });
-        ChartService.getSummarizedData(params,function(response){
-            var filterLqd = SettingsService.getSettingValue('filterLqdSummary');
-            $scope.data = data = response.filter(function(d,i) {
-                var keep = true;
-                d.color = $scope.colorRange[colorMap[d.species_id+'.'+d.phenophase_id]];
-                if(d.color) {
-                    d.id = i;
-                    // this is the day # that will get plotted 1 being the first day of the start_year
-                    // 366 being the first day of start_year+1, etc.
-                    d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
-                } else {
-                    // this can happen if a phenophase id spans two species but is only plotted for one
-                    // e.g. boxelder/breaking leaf buds, boxelder/unfolding leaves, red maple/breaking leaf buds
-                    // the service will return data for 'red maple/unfolding leaves' but the user hasn't requested
-                    // that be plotted so we need to discard this data.
-                    keep = false;
-                }
-                return keep;
+
+    function visFunc(chartFunction){
+        return function(){
+            chartServiceFunction = chartFunction;
+            data = chartServiceHandlers[chartServiceFunction].data;
+            if(data) {
+                return draw();
+            }
+            var dataFunc = chartServiceHandlers[chartServiceFunction].dataFunc,
+                firstYesYearFunc = chartServiceHandlers[chartServiceFunction].firstYesYearFunc;
+            $scope.working = true;
+            $log.debug('visualize',$scope.selection.axis,$scope.toPlot);
+            var dateArg = FilterService.getFilter().getDateArg(),
+                params = {
+                    climate_data: 1,
+                    request_src: 'npn-vis-scatter-plot',
+                    start_date: dateArg.getStartDate(),
+                    end_date: dateArg.getEndDate()
+                },
+                i = 0,
+                colorMap = {};
+            angular.forEach($scope.toPlot,function(tp) {
+                colorMap[tp.species_id+'.'+tp.phenophase_id] = tp.color;
+                params['species_id['+i+']'] = tp.species_id;
+                params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
             });
-            $scope.filteredDisclaimer = response.length != data.length;
-            $log.debug('scatterPlot data',data);
-            draw();
-        });
-    };
+            function processResponse(response,filteredLqd){
+                $scope.data = data = response.filter(function(d,i) {
+                    var keep = true;
+                    d.color = $scope.colorRange[colorMap[d.species_id+'.'+d.phenophase_id]];
+                    if(d.color) {
+                        d.id = i;
+                        // store the "first yes year" in a common place to use
+                        d.fyy = firstYesYearFunc(d);
+                        // this is the day # that will get plotted 1 being the first day of the start_year
+                        // 366 being the first day of start_year+1, etc.
+                        d.day_in_range = ((d.fyy-start_year)*365)+dataFunc(d);
+                    } else {
+                        // this can happen if a phenophase id spans two species but is only plotted for one
+                        // e.g. boxelder/breaking leaf buds, boxelder/unfolding leaves, red maple/breaking leaf buds
+                        // the service will return data for 'red maple/unfolding leaves' but the user hasn't requested
+                        // that be plotted so we need to discard this data.
+                        keep = false;
+                    }
+                    return keep;
+                });
+                $scope.data = chartServiceHandlers[chartServiceFunction].data = data;
+                $scope.filteredDisclaimer = filteredLqd;
+                $log.debug('scatterPlot data',data);
+                draw();
+            }
+            ChartService[chartFunction](params,processResponse);
+        };
+    }
+    var visualizeSiteLevelData = visFunc('getSiteLevelData'),
+        visualizeSummarizedData = visFunc('getSummarizedData');
+    $scope.$watch('selection.useIndividualPhenometrics',function(summary){
+        delete $scope.data;
+        $scope.visualize = summary ? visualizeSummarizedData : visualizeSiteLevelData;
+    });
 }]);
 
 angular.module('npn-viz-tool.settings',[
@@ -7012,6 +7059,12 @@ angular.module('npn-viz-tool.settings',[
             name: 'only-yes-data',
             q: 'oyd',
             value: false
+        },
+        dataPrecisionFilter: {
+            name: 'filter-data-precision',
+            q: 'fdp',
+            value: 30,
+            options: [7,14,30]
         }
     };
     return {
@@ -8232,6 +8285,13 @@ angular.module('npn-viz-tool.vis',[
         }
         return keep;
     }
+    function filterLqSiteData(d) {
+        var keep = d.mean_numdays_since_prior_no >= 0;
+        if(!keep) {
+            $log.debug('filtering less precise data from site level output',d);
+        }
+        return keep;
+    }
     function addCommonParams(params) {
         if(visualizeSingleStationId) {
             params['station_id[0]'] = visualizeSingleStationId;
@@ -8354,6 +8414,34 @@ angular.module('npn-viz-tool.vis',[
         /**
          * @ngdoc method
          * @methodOf npn-viz-tool.vis:ChartService
+         * @name getSiteLevelData
+         * @description
+         *
+         * Issue a request for site level data.  Common parameters will be implicitly added like
+         * networks in the base filter or lists of sites if geographic filtering is enabled.
+         *
+         * @param {Object} params Parameters to send to the web service.
+         * @param {function} success The success callback to receive the data.
+         */
+        getSiteLevelData: function(params,success) {
+            params.num_days_quality_filter = SettingsService.getSettingValue('dataPrecisionFilter');
+            $http({
+                method: 'POST',
+                url: $url('/npn_portal/observations/getSiteLevelData.json'),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                transformRequest: txformUrlEncoded,
+                data: addCommonParams(params)
+            }).success(function(response){
+                var minusSuspect = response.filter(filterSuspectSummaryData),
+                    filtered = minusSuspect.filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSiteData : angular.identity);
+                $log.debug('filtered out '+(response.length-minusSuspect.length)+'/'+response.length+' suspect records');
+                $log.debug('filtered out '+(minusSuspect.length-filtered.length)+'/'+minusSuspect.length+' LQD records.');
+                success(filtered,(minusSuspect.length !== filtered.length));
+            });
+        },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
          * @name getSummarizedData
          * @description
          *
@@ -8371,11 +8459,29 @@ angular.module('npn-viz-tool.vis',[
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
             }).success(function(response){
-                var filtered = response
-                                .filter(filterSuspectSummaryData)
-                                .filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSummaryData : angular.identity);
-                $log.debug('filtered out '+(response.length-filtered.length)+'/'+response.length+' suspect records or with negative num_days_prior_no.');
-                success(filtered);
+                var minusSuspect = response.filter(filterSuspectSummaryData),
+                    filtered = minusSuspect.filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSummaryData : angular.identity),
+                    individuals = filtered.reduce(function(map,d){
+                        var key = d.individual_id+'/'+d.phenophase_id+'/'+d.first_yes_year;
+                        map[key] = map[key]||[];
+                        map[key].push(d);
+                        return map;
+                    },{}),
+                    uniqueIndividuals = [];
+                $log.debug('filtered out '+(response.length-minusSuspect.length)+'/'+response.length+' suspect records');
+                $log.debug('filtered out '+(minusSuspect.length-filtered.length)+'/'+minusSuspect.length+' LQD records.');
+                angular.forEach(individuals,function(arr,key){
+                    if(arr.length > 1) {
+                        // sort by first_yes_doy
+                        arr.sort(function(a,b){
+                            return a.first_yes_doy - b.first_yes_doy;
+                        });
+                    }
+                    // use the earliest record
+                    uniqueIndividuals.push(arr[0]);
+                });
+                $log.debug('filtered out '+(filtered.length-uniqueIndividuals.length)+'/'+filtered.length+ ' individual records (preferring lowest first_yes_doy)');
+                success(uniqueIndividuals,(minusSuspect.length !== filtered.length));
             });
         },
         /**
