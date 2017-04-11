@@ -7798,7 +7798,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
              .style('font-size','18px')
              .text(start.getFullYear()+' AGDD Daily Trends for '+
                 number(latLng.lat())+','+
-                number(latLng.lng())+' '+base_temp+degF+' Base Temp');
+                number(latLng.lng())+' '+base_temp+' Base Temp ('+degF+')');
 
         updateAxes();
 
