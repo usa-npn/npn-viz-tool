@@ -35,7 +35,7 @@
                 <a href ng-click="removeFromPlot($index)"><i class="fa fa-times-circle-o"></i></a>
             </li>
             <li ng-if="data">
-                <label for="negativeInput">Negative Data</label>
+                <label for="negativeInput">Absence Data</label>
                 <input type="checkbox" id="negativeInput" ng-model="selection.negative" />
             </li>
             <li ng-if="!data && toPlotYears.length && toPlot.length"><button class="btn btn-primary" ng-click="visualize()">Visualize</button></li>

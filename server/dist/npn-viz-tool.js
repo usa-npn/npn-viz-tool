@@ -5832,7 +5832,7 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "                <a href ng-click=\"removeFromPlot($index)\"><i class=\"fa fa-times-circle-o\"></i></a>\n" +
     "            </li>\n" +
     "            <li ng-if=\"data\">\n" +
-    "                <label for=\"negativeInput\">Negative Data</label>\n" +
+    "                <label for=\"negativeInput\">Absence Data</label>\n" +
     "                <input type=\"checkbox\" id=\"negativeInput\" ng-model=\"selection.negative\" />\n" +
     "            </li>\n" +
     "            <li ng-if=\"!data && toPlotYears.length && toPlot.length\"><button class=\"btn btn-primary\" ng-click=\"visualize()\">Visualize</button></li>\n" +
@@ -5867,7 +5867,8 @@ angular.module("js/calendar/calendar.html", []).run(["$templateCache", function(
     "    </div>\n" +
     "</div>\n" +
     "\n" +
-    "</vis-dialog>");
+    "</vis-dialog>\n" +
+    "");
 }]);
 
 angular.module("js/filter/choroplethInfo.html", []).run(["$templateCache", function($templateCache) {
