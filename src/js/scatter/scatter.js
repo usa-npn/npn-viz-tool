@@ -159,7 +159,7 @@ angular.module('npn-viz-tool.vis-scatter',[
             .style('stroke','black')
             .style('opacity','0.8');
 
-        var fontSize = '12px';
+        var fontSize = '14px';
 
         chart.selectAll('.legend text')
              .style('font-size', fontSize)
@@ -218,12 +218,12 @@ angular.module('npn-viz-tool.vis-scatter',[
             .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
             .style('text-anchor', 'middle')
             .text('Onset DOY');
-			
+
 		  svg.append('g').append('text').attr('dx',5)
 			   .attr('dy',sizing.height + 136)
 			   .attr('font-size', '11px')
 			   .attr('font-style','italic')
-			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');			
+			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
 
         commonChartUpdates();
 

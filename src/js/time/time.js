@@ -133,7 +133,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         chart.selectAll('text')
             .style('font-family','Arial');
 
-        var fontSize = '12px';
+        var fontSize = '14px';
 
         chart.selectAll('g .x.axis text')
             .style('font-size', fontSize);
