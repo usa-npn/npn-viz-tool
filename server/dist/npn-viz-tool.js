@@ -7736,6 +7736,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             if($scope.selection.threshold.value > $scope.selection.threshold.options.ceil) {
                 $scope.selection.threshold.value = $scope.selection.threshold.options.ceil;
             }
+            yMax = yMax*1.05;
             yAxis.scale(y.domain([0,yMax]));
             updateThreshold();
             // updathe x-axis as necessary
