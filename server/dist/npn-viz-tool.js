@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2017-04-06
+ * Version: 1.0.0 - 2017-04-11
  */
 
 /**
@@ -8059,7 +8059,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
 angular.module('npn-viz-tool.toolbar',[
   'npn-viz-tool.help'
 ])
-.directive('toolbar', ['$rootScope','HelpService',function($rootScope,HelpService) {
+.directive('toolbar', ['$rootScope','$timeout','HelpService',function($rootScope,$timeout,HelpService) {
   return {
     restrict: 'E',
     templateUrl: 'js/toolbar/toolbar.html',
@@ -8071,6 +8071,12 @@ angular.module('npn-viz-tool.toolbar',[
         $rootScope.$broadcast('tool-'+(t.selected ? 'open' : 'close'),{
           tool: t
         });
+        if(t.selected) {
+            // in case toolbars contain sliders force them to re-layout
+            $timeout(function(){
+                $rootScope.$broadcast('rzSliderForceRender');
+            },500);
+        }
       }
       $scope.select = function(t) {
         t.selected = !t.selected;
@@ -8107,6 +8113,7 @@ angular.module('npn-viz-tool.toolbar',[
     }
   };
 }]);
+
 /**
  * @ngdoc overview
  * @name npn-viz-tool.vis
