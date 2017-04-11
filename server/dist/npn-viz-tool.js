@@ -2555,7 +2555,12 @@ angular.module('npn-viz-tool.gridded',[
          */
         addSharingUrlArgs: function(params) {
             if(service.layer) {
-                params['gl'] = service.layer.name+'/'+service.layer.extent.current.value;
+                var args = service.layer.name+'/'+service.layer.extent.current.value,
+                    range = service.layer.getStyleRange();
+                if(range) {
+                    args += '/'+range[0]+'/'+range[1];
+                }
+                params['gl'] = args;
             }
         },
         /**
@@ -2663,6 +2668,9 @@ angular.module('npn-viz-tool.gridded',[
                                                         },undefined)||l.extent.current;
                                     $scope.selection.layerCategory = c;
                                     $scope.selection.layer = l;
+                                    if(sharingUrlArgs.length === 4) {
+                                        l.setStyleRange([parseInt(sharingUrlArgs[2]),parseInt(sharingUrlArgs[3])]);
+                                    }
                                 } else {
                                     $log.warn('unable to find gridded layer named '+lname);
                                 }
@@ -2727,21 +2735,22 @@ angular.module('npn-viz-tool.gridded',[
             $scope.$watch('selection.activeLayer.extent.current',function(v) {
 
                 var layer;
-				
+
                 if(layer = $scope.selection.activeLayer) {
                     $log.debug('layer extent change ',layer.name,v);
                     noInfoWindows();
-					
+
 					layer.off().on();
-					
+
 
                 }
 
-				
+
             });
         }
     };
 }]);
+
 /**
  * @ngdoc overview
  * @name npn-viz-tool.gridded-services
@@ -2973,10 +2982,11 @@ angular.module('npn-viz-tool.gridded-services',[
                     layer.getLegend().then(function(legend){
                         $scope.legend = legend;
                         $log.debug('legend',legend);
-                        var data = $scope.data = legend.getData();
+                        var data = $scope.data = legend.getData(),
+                            existingRange = layer.getStyleRange();
                         $scope.selection = {
-                            min: 0,
-                            max: (data.length-1)
+                            min: (existingRange ? existingRange[0] : 0),
+                            max: (existingRange ? existingRange[1] : (data.length-1))
                         };
                         $scope.options = {
                             //showTickValues: false,
@@ -2998,16 +3008,6 @@ angular.module('npn-viz-tool.gridded-services',[
                     });
                 }
             });
-            function xmlToString(xmlData) {
-                var xmlString;
-                if (window.ActiveXObject){
-                    xmlString = xmlData.xml; // MSIE
-                }
-                else{
-                    xmlString = (new XMLSerializer()).serializeToString(xmlData);
-                }
-                return xmlString;
-            }
             var timer;
             function updateRange() {
                 if(timer) {
@@ -3022,21 +3022,9 @@ angular.module('npn-viz-tool.gridded-services',[
                            $scope.selection.max === $scope.options.ceil) {
                             // they have selected the complete range, don't send the style
                             // definition with map tile requests...
-                            return layer.setStyle(undefined);
+                            return layer.setStyleRange(undefined);
                         }
-                        var styleDef = legend.getStyleDefinition(),
-                            minQ = data[$scope.selection.min].quantity,
-                            maxQ = data[$scope.selection.max].quantity,
-                            $styleDef = $(styleDef);
-
-                        $styleDef.find('ColorMapEntry').each(function() {
-                            var cme = $(this),
-                                q = parseInt(cme.attr('quantity'));
-                            cme.attr('opacity',(q >= minQ && q <= maxQ) ? '1.0' : '0.0');
-                        });
-                        var style = xmlToString(styleDef[0]);
-                        layer.setStyle(style);
-
+                        layer.setStyleRange([$scope.selection.min,$scope.selection.max]);
                     }
                 },500);
             }
@@ -3950,6 +3938,60 @@ angular.module('npn-viz-tool.gridded-services',[
             getMap: function() {
                 return map;
             },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
+             * @name  getStyleRange
+             * @description Get the style range, if any was set.
+             * @returns {Array|undefined} The range that was set.
+             */
+            getStyleRange: function() {
+                return l.styleRange;
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
+             * @name  setStyleRange
+             * @description Set the style range.
+             */
+            setStyleRange: function(range) {
+                function xmlToString(xmlData) {
+                    var xmlString;
+                    if (window.ActiveXObject){
+                        xmlString = xmlData.xml; // MSIE
+                    }
+                    else{
+                        xmlString = (new XMLSerializer()).serializeToString(xmlData);
+                    }
+                    return xmlString;
+                }
+                var self = this;
+                if(self.styleRange = range) {
+                    self.getLegend().then(function(legend){
+                        var styleDef = legend.getStyleDefinition(),
+                            data = legend.getData(),
+                            minQ = data[range[0]].quantity,
+                            maxQ = data[range[1]].quantity,
+                            $styleDef = $(styleDef);
+                        $styleDef.find('ColorMapEntry').each(function() {
+                            var cme = $(this),
+                                q = parseInt(cme.attr('quantity'));
+                            cme.attr('opacity',(q >= minQ && q <= maxQ) ? '1.0' : '0.0');
+                        });
+                        var style = xmlToString(styleDef[0]);
+                        self.setStyle(style);
+                    });
+                } else {
+                    self.setStyle(undefined);
+                }
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
+             * @name  setStyle
+             * @description Set the style and its associated range (if any).
+             * @param {string} The style (XML as a string).
+             */
             setStyle: function(style) {
                 if(style !== sldBody) { // avoid off/on if nothing is changing
                     sldBody = style;
