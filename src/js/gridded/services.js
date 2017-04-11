@@ -1219,8 +1219,12 @@ angular.module('npn-viz-tool.gridded-services',[
                             data = legend.getData(),
                             minQ = data[range[0]].quantity,
                             maxQ = data[range[1]].quantity,
-                            $styleDef = $(styleDef);
-                        $styleDef.find('ColorMapEntry').each(function() {
+                            $styleDef = $(styleDef),
+                            colors = $styleDef.find('ColorMapEntry');
+                        if(colors.length === 0) {
+                            colors = $styleDef.find('sld\\:ColorMapEntry'); // FF
+                        }
+                        colors.each(function() {
                             var cme = $(this),
                                 q = parseInt(cme.attr('quantity'));
                             cme.attr('opacity',(q >= minQ && q <= maxQ) ? '1.0' : '0.0');
@@ -1242,8 +1246,7 @@ angular.module('npn-viz-tool.gridded-services',[
             setStyle: function(style) {
                 if(style !== sldBody) { // avoid off/on if nothing is changing
                     sldBody = style;
-                    l.off();
-                    l.on();
+                    this.off().on();
                 }
             },
             /**
