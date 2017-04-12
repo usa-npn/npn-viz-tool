@@ -5656,14 +5656,20 @@ angular.module('npn-viz-tool.vis-map',[
                             delete o.legend_data;
                             if(o.records.length) {
                                 // info window code can re-use this information rather than calculating it.
-                                o.first_yes_doy_avg = o.records.reduce(function(sum,r){ return sum+r.first_yes_doy; },0)/o.records.length;
-                                if(o.records.length > 1) {
-                                    // calculate the standard deviation
-                                    o.first_yes_doy_stdev = Math.sqrt(
-                                        o.records.reduce(function(sum,r) {
-                                            return sum+Math.pow((r.first_yes_doy-o.first_yes_doy_avg),2);
-                                        },0)/o.records.length
-                                    );
+                                if(o.records.length === 1) {
+                                     o.first_yes_doy_avg = o.records[0].mean_first_yes_doy;
+                                } else {
+                                    // this code lingers from when the map visualizations were based on summary data and dealt with individuals
+                                    $log.error('more than one record?',o);
+                                    o.first_yes_doy_avg = o.records.reduce(function(sum,r){ return sum+r.mean_first_yes_doy; },0)/o.records.length;
+                                    if(o.records.length > 1) {
+                                        // calculate the standard deviation
+                                        o.first_yes_doy_stdev = Math.sqrt(
+                                            o.records.reduce(function(sum,r) {
+                                                return sum+Math.pow((r.mean_first_yes_doy-o.mean_first_yes_doy),2);
+                                            },0)/o.records.length
+                                        );
+                                    }
                                 }
                                 o.legend_data = $scope.legend.getPointData(o.first_yes_doy_avg)||{
                                     color: offscale_color,
@@ -5671,7 +5677,7 @@ angular.module('npn-viz-tool.vis-map',[
                                 };
                                 var s = $scope.speciesSelections[filter_index];
                                 o.records.forEach(function(record){
-                                    var ldata = $scope.legend.getPointData(record.first_yes_doy);
+                                    var ldata = $scope.legend.getPointData(record.mean_first_yes_doy);
                                     // info window code can just use this information rather than re-calculating it.
                                     record.legend_data = ldata||{
                                         color: offscale_color,
@@ -5749,6 +5755,21 @@ angular.module('npn-viz-tool.vis-map',[
                             'phenophase_id[0]': s.phenophase.phenophase_id
                         };
                     $log.debug('gathering summary data for ',s,params);
+                    ChartService.getSiteLevelData(params,function(data){
+                        $log.debug('site level data has arrived for ',s,data);
+                        var new_markers = (data||[]).reduce(function(new_markers,record) {
+                            if(site2marker[record.site_id]) { // update an existing marker (e.g. multiple species at a given site)
+                                site2marker[record.site_id].add(record,filter_index);
+                            } else { // add a new marker
+                                new_markers.push(site2marker[record.site_id] = (new GdMarkerModel()).add(record,filter_index));
+                            }
+                            return new_markers;
+                        },[]);
+                        // put the markers on the map as the data arrives appending any new markers
+                        $scope.results.markers = $scope.results.markers.concat(new_markers.map(function(m){ return m.marker(); }));
+                        def.resolve();
+                    });
+                    /*
                     ChartService.getSummarizedData(params,function(data){
                         $log.debug('data has arrived for ',s,data);
                         // sometimes there are multiple records per individual
@@ -5782,6 +5803,7 @@ angular.module('npn-viz-tool.vis-map',[
                         $scope.results.markers = $scope.results.markers.concat(new_markers.map(function(m){ return m.marker(); }));
                         def.resolve();
                     });
+                    */
                     return def.promise;
                 });
             $q.all(summary_promises).then(function(){
