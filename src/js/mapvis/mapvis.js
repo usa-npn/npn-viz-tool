@@ -627,6 +627,7 @@ angular.module('npn-viz-tool.vis-map',[
                                 // info window code can re-use this information rather than calculating it.
                                 if(o.records.length === 1) {
                                      o.first_yes_doy_avg = o.records[0].mean_first_yes_doy;
+                                     // stdev is sd_first_yes_in_days if !-9999
                                 } else {
                                     // this code lingers from when the map visualizations were based on summary data and dealt with individuals
                                     $log.error('more than one record?',o);
@@ -727,6 +728,8 @@ angular.module('npn-viz-tool.vis-map',[
                     ChartService.getSiteLevelData(params,function(data){
                         $log.debug('site level data has arrived for ',s,data);
                         var new_markers = (data||[]).reduce(function(new_markers,record) {
+                            // TODO filter out means with -9999
+                            // validate one site multiple species.
                             if(site2marker[record.site_id]) { // update an existing marker (e.g. multiple species at a given site)
                                 site2marker[record.site_id].add(record,filter_index);
                             } else { // add a new marker

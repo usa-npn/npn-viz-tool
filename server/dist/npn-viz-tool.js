@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2017-04-11
+ * Version: 1.0.0 - 2017-04-18
  */
 
 /**
@@ -5658,6 +5658,7 @@ angular.module('npn-viz-tool.vis-map',[
                                 // info window code can re-use this information rather than calculating it.
                                 if(o.records.length === 1) {
                                      o.first_yes_doy_avg = o.records[0].mean_first_yes_doy;
+                                     // stdev is sd_first_yes_in_days if !-9999
                                 } else {
                                     // this code lingers from when the map visualizations were based on summary data and dealt with individuals
                                     $log.error('more than one record?',o);
@@ -5758,6 +5759,8 @@ angular.module('npn-viz-tool.vis-map',[
                     ChartService.getSiteLevelData(params,function(data){
                         $log.debug('site level data has arrived for ',s,data);
                         var new_markers = (data||[]).reduce(function(new_markers,record) {
+                            // TODO filter out means with -9999
+                            // validate one site multiple species.
                             if(site2marker[record.site_id]) { // update an existing marker (e.g. multiple species at a given site)
                                 site2marker[record.site_id].add(record,filter_index);
                             } else { // add a new marker
@@ -7002,6 +7005,19 @@ angular.module('npn-viz-tool.vis-scatter',[
                         d.id = i;
                         // store the "first yes year" in a common place to use
                         d.fyy = firstYesYearFunc(d);
+                        // the site vs summary data stores a few things under different keys
+                        // the key is the summary key (what the UI plots) and the value
+                        // is the site key if using site data just copy the value over to the
+                        // key the summary data would supply
+                        angular.forEach({
+                            daylength: 'mean_daylength',
+                            acc_prcp: 'mean_accum_prcp',
+                            gdd: 'mean_gdd'
+                        },function(siteKey,summaryKey){
+                            if(typeof(d[summaryKey]) === 'undefined') {
+                                d[summaryKey] = d[siteKey];
+                            }
+                        });
                         // this is the day # that will get plotted 1 being the first day of the start_year
                         // 366 being the first day of start_year+1, etc.
                         d.day_in_range = ((d.fyy-start_year)*365)+dataFunc(d);

@@ -396,6 +396,19 @@ angular.module('npn-viz-tool.vis-scatter',[
                         d.id = i;
                         // store the "first yes year" in a common place to use
                         d.fyy = firstYesYearFunc(d);
+                        // the site vs summary data stores a few things under different keys
+                        // the key is the summary key (what the UI plots) and the value
+                        // is the site key if using site data just copy the value over to the
+                        // key the summary data would supply
+                        angular.forEach({
+                            daylength: 'mean_daylength',
+                            acc_prcp: 'mean_accum_prcp',
+                            gdd: 'mean_gdd'
+                        },function(siteKey,summaryKey){
+                            if(typeof(d[summaryKey]) === 'undefined') {
+                                d[summaryKey] = d[siteKey];
+                            }
+                        });
                         // this is the day # that will get plotted 1 being the first day of the start_year
                         // 366 being the first day of start_year+1, etc.
                         d.day_in_range = ((d.fyy-start_year)*365)+dataFunc(d);
