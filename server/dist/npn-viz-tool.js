@@ -5630,7 +5630,7 @@ angular.module('npn-viz-tool.vis-map',[
                         markerInfoWindow.setContent(compiled.html());
                         $timeout(function(){
                             $scope.speciesSelections.forEach(function(o,i){
-                                if(model.data[i].records.length && model.data[i].legend_data) {
+                                if(model.data[i].record && model.data[i].legend_data) {
                                     MapVisMarkerService.renderMarkerToSvg('svg#map-vis-iw-marker-'+i,i,model.data[i].legend_data.color);
                                 }
                             });
@@ -5643,54 +5643,32 @@ angular.module('npn-viz-tool.vis-map',[
         function GdMarkerModel() {
             var offscale_color = '#ffffff',
                 marker = {
-                    data: $scope.speciesSelections.map(function() { return {records: []}; }),
+                    data: $scope.speciesSelections.map(function() { return {record: null}; }),
                     getSiteId: function() {
                         return marker.site_id;
                     },
                     restyle: function() {
                         // change border based on if there are more than one individual recorded for a marker.
-                        marker.markerOpts.icon.strokeColor =  marker.data.reduce(function(sum,o){ return sum+o.records.length; },0) > 1 ? '#00ff00' : '#204d74';
+                        marker.markerOpts.icon.strokeColor =  marker.data.reduce(function(sum,o){ return sum+(o.record ? 1 : 0); },0) > 1 ? '#00ff00' : '#204d74';
                         marker.markerOpts.title = marker.data.reduce(function(title,o,filter_index){
-                            delete o.first_yes_doy_avg;
-                            delete o.first_yes_doy_stdev;
                             delete o.legend_data;
-                            if(o.records.length) {
-                                // info window code can re-use this information rather than calculating it.
-                                if(o.records.length === 1) {
-                                     o.first_yes_doy_avg = o.records[0].mean_first_yes_doy;
-                                     // stdev is sd_first_yes_in_days if !-9999
-                                } else {
-                                    // this code lingers from when the map visualizations were based on summary data and dealt with individuals
-                                    $log.error('more than one record?',o);
-                                    o.first_yes_doy_avg = o.records.reduce(function(sum,r){ return sum+r.mean_first_yes_doy; },0)/o.records.length;
-                                    if(o.records.length > 1) {
-                                        // calculate the standard deviation
-                                        o.first_yes_doy_stdev = Math.sqrt(
-                                            o.records.reduce(function(sum,r) {
-                                                return sum+Math.pow((r.mean_first_yes_doy-o.mean_first_yes_doy),2);
-                                            },0)/o.records.length
-                                        );
-                                    }
-                                }
-                                o.legend_data = $scope.legend.getPointData(o.first_yes_doy_avg)||{
+                            if(o.record) {
+                                o.legend_data = o.record.legend_data = $scope.legend.getPointData(o.record.mean_first_yes_doy)||{
                                     color: offscale_color,
                                     label: 'off scale'
                                 };
                                 var s = $scope.speciesSelections[filter_index];
-                                o.records.forEach(function(record){
-                                    var ldata = $scope.legend.getPointData(record.mean_first_yes_doy);
-                                    // info window code can just use this information rather than re-calculating it.
-                                    record.legend_data = ldata||{
-                                        color: offscale_color,
-                                        label: 'off scale'
-                                    };
-                                    if(title !== '') {
-                                        title += ', ';
-                                    }
-                                    title += s.year;
-                                    title += ': ';
-                                    title += record.legend_data.label;
-                                });
+                                if(title !== '') {
+                                    title += ', ';
+                                }
+                                title += s.year;
+                                title += ': ';
+                                // using the legend_data.label would not be the "exact" day but the day
+                                // for the matching range in the scale
+                                // i.e. 19 may result in January 15 rather than January 19 since 19 would fall
+                                // in then Jan 15-Feb 1 range (so the label would January 15)
+                                // formatPointData will give the exact day
+                                title += $scope.legend.formatPointData(o.record.mean_first_yes_doy);
                             }
                             return title;
                         },'');
@@ -5710,7 +5688,7 @@ angular.module('npn-viz-tool.vis-map',[
                         };
                     },
                     add: function(record,filter_index) {
-                        marker.data[filter_index].records.push(record);
+                        marker.data[filter_index].record = record;
                         // first record dictates shape, z-index, etc.
                         if(!marker.markerOpts) {
                             marker.site_id = record.site_id;
@@ -5759,7 +5737,10 @@ angular.module('npn-viz-tool.vis-map',[
                     ChartService.getSiteLevelData(params,function(data){
                         $log.debug('site level data has arrived for ',s,data);
                         var new_markers = (data||[]).reduce(function(new_markers,record) {
-                            // TODO filter out means with -9999
+                            // filter out means with -9999
+                            if(record.mean_first_yes_doy === -9999) {
+                                return new_markers;
+                            }
                             // validate one site multiple species.
                             if(site2marker[record.site_id]) { // update an existing marker (e.g. multiple species at a given site)
                                 site2marker[record.site_id].add(record,filter_index);
@@ -5769,48 +5750,18 @@ angular.module('npn-viz-tool.vis-map',[
                             return new_markers;
                         },[]);
                         // put the markers on the map as the data arrives appending any new markers
-                        $scope.results.markers = $scope.results.markers.concat(new_markers.map(function(m){ return m.marker(); }));
+                        $log.debug('resulted in '+new_markers.length+' added markers.');
                         def.resolve();
                     });
-                    /*
-                    ChartService.getSummarizedData(params,function(data){
-                        $log.debug('data has arrived for ',s,data);
-                        // sometimes there are multiple records per individual
-                        // I.e. two first_yes_doy for a single individual for a single year
-                        // so the data cannot be plotted directly, when this happens we pick
-                        // the first first_yes_doy (chronologically) for a given year so the code below
-                        // organizes records by individual, sorts the records for a given indivual and
-                        // uses only the first as input to a map marker.
-                        var individuals = data.reduce(function(map,d){
-                                if(!map[d.individual_id]) {
-                                    map[d.individual_id] = [];
-                                }
-                                map[d.individual_id].push(d);
-                                return map;
-                            },{}),new_markers = [];
-                        Object.keys(individuals).forEach(function(in_id){
-                            // sort individual arrays ascending on first_yes_doy
-                            individuals[in_id].sort(function(a,b){
-                                return a.first_yes_doy - b.first_yes_doy;
-                            });
-                            // use just the first, ignore the rest (if there are any)
-                            var record = individuals[in_id][0];
-
-                            if(site2marker[record.site_id]) { // update an existing marker
-                                site2marker[record.site_id].add(record,filter_index);
-                            } else { // add a new marker
-                                new_markers.push(site2marker[record.site_id] = (new GdMarkerModel()).add(record,filter_index));
-                            }
-                        });
-                        // put the markers on the map as the data arrives appending any new markers
-                        $scope.results.markers = $scope.results.markers.concat(new_markers.map(function(m){ return m.marker(); }));
-                        def.resolve();
-                    });
-                    */
                     return def.promise;
                 });
             $q.all(summary_promises).then(function(){
                 $log.debug('all summary data has arrived...');
+                // post-pone adding markers until all data has arrived so things are styled properly.
+                $scope.results.markers = Object.keys(site2marker).reduce(function(markers,site_id){
+                    markers.push(site2marker[site_id].marker());
+                    return markers;
+                },[]);
                 $scope.working = false;
             });
         };
@@ -6378,14 +6329,15 @@ angular.module("js/mapvis/marker-info-window.html", []).run(["$templateCache", f
     "    </div>\n" +
     "    <div class=\"gridded-data\" ng-if=\"markerModel.gridded_legend_data\">\n" +
     "    </div>\n" +
-    "    <div ng-repeat=\"md in markerModel.data\" ng-init=\"tag = speciesSelections[$index];\" ng-if=\"md.records.length\">\n" +
+    "    <div ng-repeat=\"md in markerModel.data\" ng-init=\"tag = speciesSelections[$index];\" ng-if=\"md.record\">\n" +
     "        <h4><span>{{tag.species | speciesTitle}}, {{tag.phenophase.phenophase_name}}, {{tag.year}} </span>\n" +
     "                <svg id=\"map-vis-iw-marker-{{$index}}\" uib-tooltip=\"{{md.legend_data.label}}\" tooltip-append-to-body=\"true\" tooltip-placement=\"top\"></svg></h4>\n" +
     "        <ul class=\"list-unstyled\">\n" +
-    "            <li><label>Observed Day of Onset:</label> {{md.first_yes_doy_avg | number:0}} ({{legend.formatPointData(md.first_yes_doy_avg)}})<span ng-if=\"md.records.length > 1\"> [Average of {{md.records.length}} individuals. Standard Deviation: {{md.first_yes_doy_stdev | number:1}}]</span></li>\n" +
+    "            <li><label>Observed Day of Onset:</label> {{md.record.mean_first_yes_doy | number:0}} ({{legend.formatPointData(md.record.mean_first_yes_doy)}})<span ng-if=\"md.record && md.record.sd_first_yes_in_days > 0\"> [Standard Deviation: {{md.record.sd_first_yes_in_days | number:1}}]</span></li>\n" +
     "        </ul>\n" +
     "    </div>\n" +
-    "</div>");
+    "</div>\n" +
+    "");
 }]);
 
 angular.module("js/scatter/scatter.html", []).run(["$templateCache", function($templateCache) {
