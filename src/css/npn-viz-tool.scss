@@ -241,7 +241,7 @@ $control-font-size: 1.15em;
     font-size: $control-font-size;
 }
 // put the share-control in its original place...
-#reset-control,#share-control,#export-control {
+#reset-control,#share-control,#export-control,#help-video-control {
     @extend .little-npn-control;
     position: absolute;
     right: 10px;
@@ -257,18 +257,50 @@ $control-font-size: 1.15em;
 #reset-control {
     top: $controls-top + (2*$control-height) + (2*$control-margin);
 }
-#share-content {
+#help-video-control {
+    top: $controls-top + (4*$control-height) + (4*$control-margin);
+}
+#share-content,
+#help-video-content
+ {
     position: absolute;
     top: 50px;
-    right: 40px;
+    right: 50px;
     box-shadow: rgba(0, 0, 0, 0.29804) 0px 1px 4px -1px;
     z-index: 1000;
     padding: 10px;
     background: #eee;
     @include rounded(4px);
     border: 1px solid #aaa;
+}
+#share-content {
     input {
         width: 400px;
+    }
+}
+#help-video-content {
+    min-width: 200px;
+    min-height: 200px;
+    >h4 {
+        margin-top: 0px;
+    }
+    a.close {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        opacity: 1;
+        color: #000;
+        &:hover {
+            color: #000;
+        }
+    }
+    a:focus {
+        text-decoration: none;
+    }
+    a.selected::before {
+        font-family: 'FontAwesome';
+        content: '\f054';
+        margin-right: 5px;
     }
 }
 

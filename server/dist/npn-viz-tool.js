@@ -4504,7 +4504,35 @@ angular.module('npn-viz-tool.help',[
         }
     };
     return service;
+}])
+.directive('helpVideoControl',['$http','$sce',function($http,$sce) {
+
+    return {
+        restrict: 'E',
+        template: '<a ng-show="videos.length" title="Help" href id="help-video-control" class="btn btn-default btn-xs" ng-click="visible = !visible;"><i class="fa fa-question"></i></a>'+
+        '<div ng-show="visible" id="help-video-content">'+
+        '<a class="close" href ng-click="visible = false"><i class="fa fa-times-circle-o" aria-hidden="true"></i></a>'+
+        '<h4>Help videos</h4>'+
+        '<ul class="list-unstyled">'+
+        '<li ng-repeat="video in videos"><a href ng-click="selection.video = video;" ng-class="{selected: selection.video === video}">{{video.title}}</a></li>'+
+        '</ul>'+
+        '<span ng-if="selection.video" ng-bind-html="selection.video.$embed"></span>',
+        scope: {},
+        link: function($scope) {
+            $scope.visible = false;
+            $scope.$watch('visible',function() {
+                $scope.selection = {};
+            });
+            $http.get('help-videos.json').then(function(response) {
+                $scope.videos = response.data.map(function(v) {
+                    v.$embed = $sce.trustAsHtml(v.embed);
+                    return v;
+                });
+            });
+        }
+    };
 }]);
+
 angular.module('npn-viz-tool.layers',[
 'npn-viz-tool.filter',
 'ngResource'
@@ -6222,6 +6250,7 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "\n" +
     "<share-control></share-control>\n" +
     "<export-control></export-control>\n" +
+    "<help-video-control></help-video-control>\n" +
     "<filter-tags></filter-tags>\n" +
     "<choropleth-info></choropleth-info>\n" +
     "<gridded-legend-main></gridded-legend-main>\n" +
@@ -6239,11 +6268,10 @@ angular.module("js/map/map.html", []).run(["$templateCache", function($templateC
     "    <tool id=\"settings\" icon=\"fa-cog\" title=\"Settings\">\n" +
     "        <settings-control></settings-control>\n" +
     "    </tool>\n" +
-    "	<tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">		\n" +
+    "	<tool id=\"gridded\" icon=\"fa-th\" title=\"Gridded Layers\">\n" +
     "		<gridded-control></gridded-control>\n" +
-    "	</tool>	\n" +
+    "	</tool>\n" +
     "</toolbar>\n" +
-    "\n" +
     "");
 }]);
 
