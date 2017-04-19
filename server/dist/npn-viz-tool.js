@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2017-04-18
+ * Version: 1.0.0 - 2017-04-19
  */
 
 /**
@@ -1282,6 +1282,18 @@ angular.module('npn-viz-tool.filter',[
     NpnFilter.prototype.getGeographicArgs = function() {
         return this.getBoundsArgs().concat(this.getGeoArgs());
     };
+    NpnFilter.prototype.gaString = function() {
+        var gas = 'date:',
+            date = this.getDateArg();
+        if(date) {
+            gas += date.getStartYear()+'-'+date.getEndYear();
+        }
+        gas += '/species:'+this.getSpeciesArgs().map(function(s) { return s.arg.common_name; }).join(',');
+        gas += '/network:'+this.getNetworkArgs().map(function(n) { return n.getName(); }).join(',');
+        gas += '/geo:'+this.getGeoArgs().map(function(g) { return g.getUid(); }).join(',');
+        gas += '/bounds:'+this.getBoundsArgs().length;
+        return gas;
+    };
     NpnFilter.prototype.add = function(item) {
         this.updateCount++;
         if(item instanceof DateFilterArg) {
@@ -1478,8 +1490,8 @@ angular.module('npn-viz-tool.filter',[
  * TODO - need to nail down the event model and probably even formalize it via a service because it's all
  * pretty loosey goosey at the moment.  Bad enough duplicating strings around...
  */
-.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','$filter','$url','uiGmapGoogleMapApi','md5','NpnFilter','SpeciesFilterArg','SettingsService',
-    function($q,$http,$rootScope,$timeout,$log,$filter,$url,uiGmapGoogleMapApi,md5,NpnFilter,SpeciesFilterArg,SettingsService){
+.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','$filter','$url','uiGmapGoogleMapApi','md5','NpnFilter','SpeciesFilterArg','SettingsService','Analytics',
+    function($q,$http,$rootScope,$timeout,$log,$filter,$url,uiGmapGoogleMapApi,md5,NpnFilter,SpeciesFilterArg,SettingsService,Analytics){
     // NOTE: this scale is limited to 20 colors
     var colors = [
           '#1f77b4','#ff7f0e','#2ca02c','#d62728','#222299', '#c51b8a',  '#8c564b', '#637939', '#843c39',
@@ -1542,6 +1554,7 @@ angular.module('npn-viz-tool.filter',[
         if(!paused) {
             $timeout(function(){
                 if(last) {
+                    Analytics.trackEvent('filter','re-execute (phase2)',FilterService.getFilter().gaString());
                     var markers = post_filter(last,true);
                     $rootScope.$broadcast('filter-marker-updates',{markers: markers});
                 }
@@ -1859,7 +1872,7 @@ angular.module('npn-viz-tool.filter',[
             arg.color = colorScale(i);
         });
     }
-    return {
+    var FilterService = {
         execute: execute,
         getFilteredMarkers: function() {
             return lastFiltered;
@@ -1921,9 +1934,10 @@ angular.module('npn-viz-tool.filter',[
             return choroplethScales;
         }
     };
+    return FilterService;
 }])
-.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService','StationService','ClusterService',
-    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService,StationService,ClusterService){
+.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService','StationService','ClusterService','Analytics',
+    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService,StationService,ClusterService,Analytics){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl" events="markerEvents"></ui-gmap-markers>',
@@ -1973,6 +1987,7 @@ angular.module('npn-viz-tool.filter',[
             }
             function executeFilter() {
                 if(FilterService.hasFilterChanged() && FilterService.hasSufficientCriteria()) {
+                    Analytics.trackEvent('filter','execute',FilterService.getFilter().gaString());
                     $timeout(function(){
                         $scope.results.markers = [];
                         $timeout(function(){
@@ -2738,7 +2753,7 @@ angular.module('npn-viz-tool.gridded',[
                 if(layer = $scope.selection.activeLayer) {
                     $log.debug('layer extent change ',layer.name,v);
                     noInfoWindows();
-					layer.off().on();
+					layer.bounce();
                 }
             });
         }
@@ -3611,7 +3626,7 @@ angular.module('npn-viz-tool.gridded-services',[
  * Similarly both layers will use the same <code>extent_values_filter</code> whilch will filter valid extent values as reported
  * by the WMS to only those <em>before</em> "today".
  */
-.service('WmsService',['$log','$q','$http','$sce','$httpParamSerializer','$filter','DateExtentUtil','WcsService',function($log,$q,$http,$sce,$httpParamSerializer,$filter,DateExtentUtil,WcsService){
+.service('WmsService',['$log','$q','$http','$sce','$httpParamSerializer','$filter','DateExtentUtil','WcsService','Analytics',function($log,$q,$http,$sce,$httpParamSerializer,$filter,DateExtentUtil,WcsService,Analytics){
     function setGeoServerUrl(url) {
         GEOSERVER_URL = url;
         WMS_BASE_URL = GEOSERVER_URL+'/wms';
@@ -3993,7 +4008,7 @@ angular.module('npn-viz-tool.gridded-services',[
             setStyle: function(style) {
                 if(style !== sldBody) { // avoid off/on if nothing is changing
                     sldBody = style;
-                    this.off().on();
+                    this.bounce();
                 }
             },
             /**
@@ -4065,11 +4080,29 @@ angular.module('npn-viz-tool.gridded-services',[
             /**
              * @ngdoc method
              * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
+             * @name  bounce
+             * @description
+             *  Toggle this layer off then on.  This function exists since off/on
+             *  are tracked by analytics and sometimes a layer needs to be updated
+             *  in this fashion.
+             * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
+             */
+            bounce: function() {
+                if(map.overlayMapTypes.length) {
+                    map.overlayMapTypes.pop();
+                }
+                map.overlayMapTypes.push(googleLayer);
+                return l;
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  on
              * @description Put this layer on the map.
              * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
              */
             on: function() {
+                Analytics.trackEvent('gridded-layer','on',this.getTitle());
                 map.overlayMapTypes.push(googleLayer);
                 return l;
             },
@@ -4082,6 +4115,7 @@ angular.module('npn-viz-tool.gridded-services',[
              */
             off: function() {
                 if(map.overlayMapTypes.length) {
+                    Analytics.trackEvent('gridded-layer','off',this.getTitle());
                     map.overlayMapTypes.pop();
                 }
                 return l;
@@ -4475,7 +4509,7 @@ angular.module('npn-viz-tool.layers',[
 'npn-viz-tool.filter',
 'ngResource'
 ])
-.factory('LayerService',['$rootScope','$http','$q','$log','uiGmapIsReady',function($rootScope,$http,$q,$log,uiGmapIsReady){
+.factory('LayerService',['$rootScope','$http','$q','$log','uiGmapIsReady','Analytics',function($rootScope,$http,$q,$log,uiGmapIsReady,Analytics){
     var layers = null,
         map = null,
         readyPromise = uiGmapIsReady.promise(1).then(function(instances){
@@ -4676,6 +4710,7 @@ angular.module('npn-viz-tool.layers',[
                         feature.setProperty('$style',style);
                     });
                     restyleSync();
+                    Analytics.trackEvent('filter-layer','on',layer.label);
                     def.resolve([map,layer.loaded]);
                 });
             });
@@ -4689,6 +4724,7 @@ angular.module('npn-viz-tool.layers',[
                     $log.debug('no such layer with id',id);
                     return def.reject(id);
                 }
+                Analytics.trackEvent('filter-layer','off',layer.label);
                 var unloaded = unloadLayer(layer);
                 def.resolve(unloaded);
             });
@@ -4873,24 +4909,34 @@ angular.module('npn-viz-tool.layers',[
         }
     };
 }]);
+
 angular.module('npn-viz-tool',[
 'templates-npnvis',
 'npn-viz-tool.map',
 'uiGmapgoogle-maps',
 'ui.bootstrap',
+'angular-google-analytics',
 'ngAnimate'
 ])
-.config(['uiGmapGoogleMapApiProvider','$logProvider',function(uiGmapGoogleMapApiProvider,$logProvider) {
+.config(['uiGmapGoogleMapApiProvider','$logProvider','AnalyticsProvider',function(uiGmapGoogleMapApiProvider,$logProvider,AnalyticsProvider) {
     uiGmapGoogleMapApiProvider.configure({
         key: 'AIzaSyAsTM8XaktfkwpjEeDMXkNrojaiB2W5WyE',
         v: '3.24',
         libraries: ['geometry','drawing']
     });
-    $logProvider.debugEnabled(window.location.hash && window.location.hash.match(/^#.*#debug/));
+    var debug = window.location.hash && window.location.hash.match(/^#.*#debug/);
+    $logProvider.debugEnabled(debug);
     window.onbeforeunload = function() {
         return 'You are about to navigate away from the USA-NPN Visualization Tool.  Are you sure you want to do this?';
     };
+
+    // TODO insert real account #
+    AnalyticsProvider.setAccount('UU-XXXXXXX-X');
+    // TODO remove the true and only enter debug mode if UI is loaded
+    // with the debug flag
+    AnalyticsProvider.enterDebugMode(debug||true);
 }]);
+
 angular.module('npn-viz-tool.map',[
     'npn-viz-tool.layers',
     'npn-viz-tool.stations',
@@ -5534,7 +5580,7 @@ angular.module('npn-viz-tool.vis-map',[
             if(layer = $scope.selection.activeLayer) {
                 $log.debug('layer extent change ',layer.name,v);
                 noInfoWindows();
-                layer.off().on();
+                layer.bounce();
                 if(layer.currentYearOnly()) {
                     currentYear = v.date.getFullYear();
                     updateSelections = $scope.speciesSelections.filter(function(ss){ return ss.year === currentYear; });
@@ -8134,6 +8180,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     this.$get = ['ChartService',function(ChartService){
         return function(layer,legend,latLng) {
             ChartService.openVisualization({
+                title: 'Time Series',
                 noFilterRequired: true,
                 template: 'js/time/time.html',
                 controller: 'TimeSeriesVisCtrl'
@@ -8229,8 +8276,8 @@ angular.module('npn-viz-tool.vis',[
  * Handles data gathering in a generic fashion for visualizations that should share, rather than
  * duplicate such logic.
  */
-.factory('ChartService',['$window','$http','$log','$uibModal','$url','FilterService','SettingsService',
-    function($window,$http,$log,$uibModal,$url,FilterService,SettingsService){
+.factory('ChartService',['$window','$http','$log','$uibModal','$url','FilterService','SettingsService','Analytics',
+    function($window,$http,$log,$uibModal,$url,FilterService,SettingsService,Analytics){
     // some hard coded values that will be massaged into generated
     // values at runtime.
     var CHART_W = 930,
@@ -8555,6 +8602,7 @@ angular.module('npn-viz-tool.vis',[
                 if(resolve) {
                     modalDef.resolve = resolve;
                 }
+                Analytics.trackEvent('visualization','open',vis.title);
                 return $uibModal.open(modalDef);
             }
         }

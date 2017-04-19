@@ -488,6 +488,18 @@ angular.module('npn-viz-tool.filter',[
     NpnFilter.prototype.getGeographicArgs = function() {
         return this.getBoundsArgs().concat(this.getGeoArgs());
     };
+    NpnFilter.prototype.gaString = function() {
+        var gas = 'date:',
+            date = this.getDateArg();
+        if(date) {
+            gas += date.getStartYear()+'-'+date.getEndYear();
+        }
+        gas += '/species:'+this.getSpeciesArgs().map(function(s) { return s.arg.common_name; }).join(',');
+        gas += '/network:'+this.getNetworkArgs().map(function(n) { return n.getName(); }).join(',');
+        gas += '/geo:'+this.getGeoArgs().map(function(g) { return g.getUid(); }).join(',');
+        gas += '/bounds:'+this.getBoundsArgs().length;
+        return gas;
+    };
     NpnFilter.prototype.add = function(item) {
         this.updateCount++;
         if(item instanceof DateFilterArg) {
@@ -684,8 +696,8 @@ angular.module('npn-viz-tool.filter',[
  * TODO - need to nail down the event model and probably even formalize it via a service because it's all
  * pretty loosey goosey at the moment.  Bad enough duplicating strings around...
  */
-.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','$filter','$url','uiGmapGoogleMapApi','md5','NpnFilter','SpeciesFilterArg','SettingsService',
-    function($q,$http,$rootScope,$timeout,$log,$filter,$url,uiGmapGoogleMapApi,md5,NpnFilter,SpeciesFilterArg,SettingsService){
+.factory('FilterService',['$q','$http','$rootScope','$timeout','$log','$filter','$url','uiGmapGoogleMapApi','md5','NpnFilter','SpeciesFilterArg','SettingsService','Analytics',
+    function($q,$http,$rootScope,$timeout,$log,$filter,$url,uiGmapGoogleMapApi,md5,NpnFilter,SpeciesFilterArg,SettingsService,Analytics){
     // NOTE: this scale is limited to 20 colors
     var colors = [
           '#1f77b4','#ff7f0e','#2ca02c','#d62728','#222299', '#c51b8a',  '#8c564b', '#637939', '#843c39',
@@ -748,6 +760,7 @@ angular.module('npn-viz-tool.filter',[
         if(!paused) {
             $timeout(function(){
                 if(last) {
+                    Analytics.trackEvent('filter','re-execute (phase2)',FilterService.getFilter().gaString());
                     var markers = post_filter(last,true);
                     $rootScope.$broadcast('filter-marker-updates',{markers: markers});
                 }
@@ -1065,7 +1078,7 @@ angular.module('npn-viz-tool.filter',[
             arg.color = colorScale(i);
         });
     }
-    return {
+    var FilterService = {
         execute: execute,
         getFilteredMarkers: function() {
             return lastFiltered;
@@ -1127,9 +1140,10 @@ angular.module('npn-viz-tool.filter',[
             return choroplethScales;
         }
     };
+    return FilterService;
 }])
-.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService','StationService','ClusterService',
-    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService,StationService,ClusterService){
+.directive('npnFilterResults',['$rootScope','$http','$timeout','$filter','$log','FilterService','SettingsService','StationService','ClusterService','Analytics',
+    function($rootScope,$http,$timeout,$filter,$log,FilterService,SettingsService,StationService,ClusterService,Analytics){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl" events="markerEvents"></ui-gmap-markers>',
@@ -1179,6 +1193,7 @@ angular.module('npn-viz-tool.filter',[
             }
             function executeFilter() {
                 if(FilterService.hasFilterChanged() && FilterService.hasSufficientCriteria()) {
+                    Analytics.trackEvent('filter','execute',FilterService.getFilter().gaString());
                     $timeout(function(){
                         $scope.results.markers = [];
                         $timeout(function(){

@@ -238,7 +238,7 @@ angular.module('npn-viz-tool.gridded',[
                 if(layer = $scope.selection.activeLayer) {
                     $log.debug('layer extent change ',layer.name,v);
                     noInfoWindows();
-					layer.off().on();
+					layer.bounce();
                 }
             });
         }

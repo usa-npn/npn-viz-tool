@@ -23,8 +23,8 @@
     "bootstrap": "~3.3.2",
     "angular-multi-select": "4.0.0",
     "angular-md5": "0.1.x",
-    "angular-awesome-slider": "ng-slider#^2.4.4",
-    "angularjs-slider": "^6.1.1"
+    "angularjs-slider": "^6.1.1",
+    "angular-google-analytics": "^1.1.9"
   },
   "resolutions": {
     "angular": "1.4.x"

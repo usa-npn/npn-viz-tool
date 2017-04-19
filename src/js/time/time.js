@@ -577,6 +577,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     this.$get = ['ChartService',function(ChartService){
         return function(layer,legend,latLng) {
             ChartService.openVisualization({
+                title: 'Time Series',
                 noFilterRequired: true,
                 template: 'js/time/time.html',
                 controller: 'TimeSeriesVisCtrl'

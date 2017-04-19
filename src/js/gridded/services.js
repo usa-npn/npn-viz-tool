@@ -864,7 +864,7 @@ angular.module('npn-viz-tool.gridded-services',[
  * Similarly both layers will use the same <code>extent_values_filter</code> whilch will filter valid extent values as reported
  * by the WMS to only those <em>before</em> "today".
  */
-.service('WmsService',['$log','$q','$http','$sce','$httpParamSerializer','$filter','DateExtentUtil','WcsService',function($log,$q,$http,$sce,$httpParamSerializer,$filter,DateExtentUtil,WcsService){
+.service('WmsService',['$log','$q','$http','$sce','$httpParamSerializer','$filter','DateExtentUtil','WcsService','Analytics',function($log,$q,$http,$sce,$httpParamSerializer,$filter,DateExtentUtil,WcsService,Analytics){
     function setGeoServerUrl(url) {
         GEOSERVER_URL = url;
         WMS_BASE_URL = GEOSERVER_URL+'/wms';
@@ -1246,7 +1246,7 @@ angular.module('npn-viz-tool.gridded-services',[
             setStyle: function(style) {
                 if(style !== sldBody) { // avoid off/on if nothing is changing
                     sldBody = style;
-                    this.off().on();
+                    this.bounce();
                 }
             },
             /**
@@ -1318,11 +1318,29 @@ angular.module('npn-viz-tool.gridded-services',[
             /**
              * @ngdoc method
              * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
+             * @name  bounce
+             * @description
+             *  Toggle this layer off then on.  This function exists since off/on
+             *  are tracked by analytics and sometimes a layer needs to be updated
+             *  in this fashion.
+             * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
+             */
+            bounce: function() {
+                if(map.overlayMapTypes.length) {
+                    map.overlayMapTypes.pop();
+                }
+                map.overlayMapTypes.push(googleLayer);
+                return l;
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  on
              * @description Put this layer on the map.
              * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
              */
             on: function() {
+                Analytics.trackEvent('gridded-layer','on',this.getTitle());
                 map.overlayMapTypes.push(googleLayer);
                 return l;
             },
@@ -1335,6 +1353,7 @@ angular.module('npn-viz-tool.gridded-services',[
              */
             off: function() {
                 if(map.overlayMapTypes.length) {
+                    Analytics.trackEvent('gridded-layer','off',this.getTitle());
                     map.overlayMapTypes.pop();
                 }
                 return l;

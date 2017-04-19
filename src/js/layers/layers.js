@@ -2,7 +2,7 @@ angular.module('npn-viz-tool.layers',[
 'npn-viz-tool.filter',
 'ngResource'
 ])
-.factory('LayerService',['$rootScope','$http','$q','$log','uiGmapIsReady',function($rootScope,$http,$q,$log,uiGmapIsReady){
+.factory('LayerService',['$rootScope','$http','$q','$log','uiGmapIsReady','Analytics',function($rootScope,$http,$q,$log,uiGmapIsReady,Analytics){
     var layers = null,
         map = null,
         readyPromise = uiGmapIsReady.promise(1).then(function(instances){
@@ -203,6 +203,7 @@ angular.module('npn-viz-tool.layers',[
                         feature.setProperty('$style',style);
                     });
                     restyleSync();
+                    Analytics.trackEvent('filter-layer','on',layer.label);
                     def.resolve([map,layer.loaded]);
                 });
             });
@@ -216,6 +217,7 @@ angular.module('npn-viz-tool.layers',[
                     $log.debug('no such layer with id',id);
                     return def.reject(id);
                 }
+                Analytics.trackEvent('filter-layer','off',layer.label);
                 var unloaded = unloadLayer(layer);
                 def.resolve(unloaded);
             });

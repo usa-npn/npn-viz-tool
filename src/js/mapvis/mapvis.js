@@ -503,7 +503,7 @@ angular.module('npn-viz-tool.vis-map',[
             if(layer = $scope.selection.activeLayer) {
                 $log.debug('layer extent change ',layer.name,v);
                 noInfoWindows();
-                layer.off().on();
+                layer.bounce();
                 if(layer.currentYearOnly()) {
                     currentYear = v.date.getFullYear();
                     updateSelections = $scope.speciesSelections.filter(function(ss){ return ss.year === currentYear; });

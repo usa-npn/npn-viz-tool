@@ -23,8 +23,8 @@ angular.module('npn-viz-tool.vis',[
  * Handles data gathering in a generic fashion for visualizations that should share, rather than
  * duplicate such logic.
  */
-.factory('ChartService',['$window','$http','$log','$uibModal','$url','FilterService','SettingsService',
-    function($window,$http,$log,$uibModal,$url,FilterService,SettingsService){
+.factory('ChartService',['$window','$http','$log','$uibModal','$url','FilterService','SettingsService','Analytics',
+    function($window,$http,$log,$uibModal,$url,FilterService,SettingsService,Analytics){
     // some hard coded values that will be massaged into generated
     // values at runtime.
     var CHART_W = 930,
@@ -349,6 +349,7 @@ angular.module('npn-viz-tool.vis',[
                 if(resolve) {
                     modalDef.resolve = resolve;
                 }
+                Analytics.trackEvent('visualization','open',vis.title);
                 return $uibModal.open(modalDef);
             }
         }
