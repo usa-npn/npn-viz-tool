@@ -1,0 +1,30 @@
+<vis-dialog title="Activity Cruves" modal="modal">
+<form class="form-inline plot-criteria-form">
+    <ul class="list-unstyled">
+        <li ng-repeat="input in selection.curves"><h4>Curve {{$index+1}}</h4><activity-curve-control input="input"></activity-curve-control></li>
+        <li  style="padding-top: 10px;">
+            <form class="form-inline">
+                <div class="form-group">
+                    <label for="frequency">Frequency</label>
+                    <select class="form-control" id="year-{{input.id}}"
+                        ng-model="selection.frequency"
+                        ng-options="f as f.label for f in frequencies"></select>
+                </div>
+                <button class="btn btn-primary" ng-click="visualize()" ng-disabled="!selection.haveValidCurve()">Visualize</button>
+            </form>
+        </li>
+    </ul>
+</form>
+
+<div class="panel panel-default main-vis-panel" >
+    <div class="panel-body">
+        <center>
+            <div id="vis-container">
+                <div id="vis-working" ng-show="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>
+                <activity-curves-chart selection="selection"></activity-curves-chart>
+            </div>
+        </center>
+    </div>
+    <pre>{{selection | json}}</pre>
+</div>
+</vis-dialog>

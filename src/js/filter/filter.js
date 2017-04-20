@@ -1507,8 +1507,8 @@ angular.module('npn-viz-tool.filter',[
         }
     };
 }])
-.directive('filterControl',['$http','$filter','$timeout','$url','FilterService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','HelpService',
-    function($http,$filter,$timeout,$url,FilterService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,HelpService){
+.directive('filterControl',['$http','$filter','$timeout','$url','FilterService','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','HelpService','SpeciesService',
+    function($http,$filter,$timeout,$url,FilterService,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,HelpService,SpeciesService){
     return {
         restrict: 'E',
         templateUrl: 'js/filter/filterControl.html',
@@ -1655,14 +1655,31 @@ angular.module('npn-viz-tool.filter',[
             });
             // not selecting all by default to force the user to pick which should result
             // in less expensive type-ahead queries later (e.g. 4s vs 60s).
-            $http.get($url('/npn_portal/species/getPlantTypes.json')).success(function(types){
+            SpeciesService.getPlantTypes().then(function(types) {
                 $scope.plantTypes = types;
             });
-            $http.get($url('/npn_portal/species/getAnimalTypes.json')).success(function(types){
+            SpeciesService.getAnimalTypes().then(function(types) {
                 $scope.animalTypes = types;
             });
             // load up "all" species...
             $scope.findSpecies();
         }]
+    };
+}])
+.factory('SpeciesService',['$q','$http','$url',function($q,$http,$url){
+    var PLANTS = $http.get($url('/npn_portal/species/getPlantTypes.json')),
+        ANIMALS = $http.get($url('/npn_portal/species/getAnimalTypes.json'));
+    function resolver(promise) {
+        return function() {
+            var def = $q.defer();
+            promise.then(function(response) {
+                def.resolve(response.data);
+            });
+            return def.promise;
+        };
+    }
+    return {
+        getPlantTypes: resolver(PLANTS),
+        getAnimalTypes: resolver(ANIMALS)
     };
 }]);

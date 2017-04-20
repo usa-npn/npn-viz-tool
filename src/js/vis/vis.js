@@ -12,6 +12,7 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.vis-calendar',
     'npn-viz-tool.vis-map',
     'npn-viz-tool.vis-time',
+    'npn-viz-tool.vis-activity',
     'ui.bootstrap'
 ])
 /**
@@ -53,6 +54,11 @@ angular.module('npn-viz-tool.vis',[
             template: 'js/mapvis/mapvis.html',
             description: 'This visualization maps ground-based observations against USA-NPN phenology maps, including Accumulated Growing Degree Days and Spring Index models.',
             singleStation: false // doesn't make sense for a single station visualization.
+        },{
+            title: 'Activity Curves',
+            controller: 'ActivityCurvesVisCtrl',
+            template: 'js/activity/activity.html',
+            description: 'TODO'
         }],
         visualizeSingleStationId;
     function filterSuspectSummaryData (d){
@@ -194,6 +200,29 @@ angular.module('npn-viz-tool.vis',[
             var a = leastSquaresCoeff[1],
                 b = leastSquaresCoeff[0];
             return a + (b*x);
+        },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
+         * @name getMagnitudeData
+         * @description
+         *
+         * Issue a request for magnitude data.  Common parameters will be implicitly added like
+         * networks in the base filter or lists of sites if geographic filtering is enabled.
+         *
+         * @param {Object} params Parameters to send to the web service.
+         * @param {function} success The success callback to receive the data.
+         */
+        getMagnitudeData: function(params,success) {
+            $http({
+                method: 'POST',
+                url: $url('/npn_portal/observations/getMagnitudeData.json'),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                transformRequest: txformUrlEncoded,
+                data: addCommonParams(params)
+            }).success(function(response){
+                success(response);
+            });
         },
         /**
          * @ngdoc method

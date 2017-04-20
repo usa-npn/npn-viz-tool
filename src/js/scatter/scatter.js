@@ -5,8 +5,8 @@ angular.module('npn-viz-tool.vis-scatter',[
     'npn-viz-tool.settings',
     'ui.bootstrap'
 ])
-.controller('ScatterVisCtrl',['$scope','$uibModalInstance','$http','$timeout','$filter','$log','FilterService','ChartService','SettingsService',
-    function($scope,$uibModalInstance,$http,$timeout,$filter,$log,FilterService,ChartService,SettingsService){
+.controller('ScatterVisCtrl',['$scope','$uibModalInstance','$timeout','$filter','$log','FilterService','ChartService',
+    function($scope,$uibModalInstance,$timeout,$filter,$log,FilterService,ChartService){
     $scope.modal = $uibModalInstance;
     var colorScale = FilterService.getColorScale();
     $scope.colors = colorScale.domain();
