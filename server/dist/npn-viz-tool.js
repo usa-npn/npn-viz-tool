@@ -10,7 +10,7 @@ angular.module('npn-viz-tool.vis-activity',[
     'npn-viz-tool.settings',
     'ui.bootstrap'
 ])
-.factory('ActivityCurveInput',['$filter','FilterService',function($filter,FilterService) {
+.factory('ActivityCurve',['$log','$filter','FilterService',function($log,$filter,FilterService) {
     var DOY = $filter('doy'),
         COMMON_METRICS = [{
             id: 'num_yes_records',
@@ -41,7 +41,7 @@ angular.module('npn-viz-tool.vis-activity',[
                 label: 'Animals In-Phase/Hour/Acre'
             }])
         },
-        ActivityCurveInput = function(id) {
+        ActivityCurve = function(id) {
             var self = this,
                 _species,
                 _phenophases,
@@ -80,7 +80,13 @@ angular.module('npn-viz-tool.vis-activity',[
                 }
             });
         };
-    ActivityCurveInput.prototype.data = function(_) {
+    ActivityCurve.prototype.axisLabel = function() {
+        return this.metric ? this.metric.label : '?';
+    };
+    ActivityCurve.prototype.metricId = function() {
+        return this.metric ? this.metric.id : undefined;
+    };
+    ActivityCurve.prototype.data = function(_) {
         if(arguments.length) {
             delete this.$data;
             if(_) {
@@ -97,53 +103,74 @@ angular.module('npn-viz-tool.vis-activity',[
         }
         return this.$data;
     };
-    ActivityCurveInput.prototype.color = function(_) {
+    ActivityCurve.prototype.color = function(_) {
         if(arguments.length) {
             this.$color = _;
             return this;
         }
         return this.$color;
     };
-    ActivityCurveInput.prototype.x = function(_) {
+    ActivityCurve.prototype.axisOrient = function(_) {
+        if(arguments.length) {
+            this.$orient = _;
+            return this;
+        }
+        return this.$orient;
+    };
+    ActivityCurve.prototype.axis = function() {
+        if(!this.$axis) {
+            this.$axis = d3.svg.axis();
+        }
+        this.$axis.scale(this.y());
+        return this.$axis.orient(this.axisOrient()||'left');
+    };
+    ActivityCurve.prototype.x = function(_) {
         if(arguments.length) {
             this.$$x = _;
             return this;
         }
         return this.$$x;
     };
-    ActivityCurveInput.prototype.y = function(_) {
+    ActivityCurve.prototype.y = function(_) {
         if(arguments.length) {
             this.$$y = _;
             return this;
         }
-        if(this.$$y) {
-            this.$$y.domain(this.domain());
-        }
         return this.$$y;
     };
-    ActivityCurveInput.prototype.isValid = function() {
+    ActivityCurve.prototype.isValid = function() {
         return this.species && this.phenophase && this.year && this.metric;
     };
-    ActivityCurveInput.prototype.domain = function() {
+    ActivityCurve.prototype.domain = function() {
         var self = this;
         if(self.$data && self.metric) {
             return d3.extent(self.$data,function(d){
                 return d[self.metric.id];
             });
         }
-        return [0,100];
     };
-    ActivityCurveInput.prototype.draw = function(chart) {
+    ActivityCurve.prototype.draw = function(chart) {
         var self = this,
-            x,y,line;
+            x,y,data,line;
         chart.selectAll('path.curve.curve-'+self.id).remove();
-        if(self.$data) {
+        if(data = self.$data) {
             x = self.x();
             y = self.y();
             line = d3.svg.line()
-                .interpolate('basis')
-                .x(function(d) { return x(d.start_doy); })
+                .interpolate(self.interpolate||'monotone')//'cardinal')
+                .x(function(d,i) {
+                    // TODO should each point be duplicated and plotted for both
+                    // the start/end_doy or something like this?
+                    if(i === 0) {
+                        return x(d.start_doy);
+                    }
+                    if(i === (data.length-1)) {
+                        return x(d.end_doy);
+                    }
+                    return x(d.start_doy+Math.round((d.end_doy-d.start_doy)/2));
+                })
                 .y(function(d) { return y(d[self.metric.id]); });
+            $log.debug('ActivityCurve.draw',self.species,self.phenophase,self.year,self.metric,data,self.domain(),y.domain());
             chart.append('path')
                 .attr('class','curve curve-'+self.id)
                 .attr('fill','none')
@@ -151,17 +178,16 @@ angular.module('npn-viz-tool.vis-activity',[
                 .attr('stroke-linejoin','round')
                 .attr('stroke-linecap','round')
                 .attr('stroke-width',1.5)
-                .attr('d',line(self.$data));
+                .attr('d',line(data));
         }
     };
-    return ActivityCurveInput;
+    return ActivityCurve;
 }])
-.controller('ActivityCurvesVisCtrl',['$scope','$q','$uibModalInstance','$timeout','$log','$filter','ActivityCurveInput','FilterService','ChartService',
-
-    function($scope,$q,$uibModalInstance,$timeout,$log,$filter,ActivityCurveInput,FilterService,ChartService){
+.controller('ActivityCurvesVisCtrl',['$scope','$q','$uibModalInstance','$timeout','$log','$filter','ActivityCurve','FilterService','ChartService',
+    function($scope,$q,$uibModalInstance,$timeout,$log,$filter,ActivityCurve,FilterService,ChartService){
     $scope.modal = $uibModalInstance;
     $scope.frequencies = [{
-        value: 30,
+        value: 'months',
         label: 'Monthly'
     },{
         value: 14,
@@ -172,7 +198,8 @@ angular.module('npn-viz-tool.vis-activity',[
     }];
     $scope.selection = {
         $updateCount: 0,
-        curves: ['red','blue'].map(function(color,i){ return new ActivityCurveInput(i).color(color); }),
+        interpolate: 'monotone',
+        curves: [{color:'#0000ff',orient:'left'},{color:'#ff0000',orient:'right'}].map(function(config,i){ return new ActivityCurve(i).color(config.color).axisOrient(config.orient); }),
         frequency: $scope.frequencies[0],
         haveValidCurve: function() {
             return $scope.selection.curves.reduce(function(valid,c){
@@ -180,6 +207,23 @@ angular.module('npn-viz-tool.vis-activity',[
             },false);
         }
     };
+    function updateChart() {
+        if($scope.selection.$updateCount > 0) {
+            $scope.selection.$updateCount++;
+        }
+    }
+    $scope.$watch('selection.interpolate',function(interpolate) {
+        $scope.selection.curves.forEach(function(c) {
+            if(interpolate) {
+                c.interpolate = interpolate;
+            } else {
+                delete c.interpolate;
+            }
+            updateChart();
+        });
+    });
+    $scope.$watch('selection.curves[0].metric',updateChart);
+    $scope.$watch('selection.curves[1].metric',updateChart);
     $scope.visualize = function() {
         function endDate(year) {
             var now = new Date();
@@ -253,16 +297,16 @@ angular.module('npn-viz-tool.vis-activity',[
         return ticks;
     }
     var X_TICK_VALUES = {
-        7: doyIntervalTick(14), // 52 is too many tickes
-        14: doyIntervalTick(14),
-        30: [1,32,60,91,121,152,182,213,244,274,305,335]
+        7: doyIntervalTick(14),
+        14: doyIntervalTick(28),
+        months: [1,32,60,91,121,152,182,213,244,274,305,335]
     },
     ROOT_DATE = new Date(2010,0);
     return {
         restrict: 'E',
         replace: true,
         template: '<div class="chart-container">'+
-        '<vis-download ng-if="data" selector=".chart" filename="npn-activity-curves.png"></vis-download>'+
+        '<vis-download ng-if="selection.$updateCount > 0" selector=".chart" filename="npn-activity-curves.png"></vis-download>'+
         '<div><svg class="chart"></svg></div>'+
         '</div>',
         scope: {
@@ -282,41 +326,67 @@ angular.module('npn-viz-tool.vis-activity',[
                 xAxis = d3.svg.axis().scale(x).orient('bottom')
                     .tickValues(X_TICK_VALUES[selection.frequency.value])
                     .tickFormat(date_fmt),
-                ylAxis = d3.svg.axis().scale(selection.curves[0].y(d3.scale.linear().range([sizing.height,0])).y()).orient('left'),
-                yrAxis = d3.svg.axis().scale(selection.curves[1].y(d3.scale.linear().range([sizing.height,0])).y()).orient('right');
+                new_y = function() { return d3.scale.linear().range([sizing.height,0]).domain([0,100]); };
 
-            // pass along the x-axis
-            selection.curves.forEach(function(c) { c.x(x); });
+            // setup
+            selection.curves.forEach(function(c) {
+                c.x(x) // x
+                 .y(new_y()); // bogus y
+            });
 
             function updateChart() {
                 chart.selectAll('g .axis').remove();
 
-                ylAxis.scale(selection.curves[0].y());
+                var commonMetric = selection.curves[0].metricId() === selection.curves[1].metricId();
+                if(commonMetric) {
+                    // both use the same y-axis domain needs to include all valid curve's data
+                    var domain = d3.extent(selection.curves.reduce(function(arr,c){
+                            if(c.isValid()) {
+                                arr = arr.concat(c.domain());
+                            }
+                            return arr;
+                        },[])),
+                        y = new_y().domain(domain);
+                    $log.debug('ActivityCurves.common domain',domain);
+                    selection.curves.forEach(function(c){
+                        c.y(y);
+                    });
+                } else {
+                    selection.curves.forEach(function(c){
+                        // re-initialize y in case a previous plot re-used the same y
+                        // each has an independent domain
+                        if(c.isValid()) {
+                            c.y(new_y().domain(c.domain()));
+                        }
+                    });
+                }
+
                 chart.append('g')
                     .attr('class', 'y axis left')
-                    .call(ylAxis)
+                    .call(selection.curves[0].axis())
                     .append('text')
                     .attr('transform', 'rotate(-90)')
                     .attr('y', '0')
                     .attr('dy','-4em')
                     .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
                     .style('text-anchor', 'middle')
-                    .text(selection.curves[0].metric.label);
+                    .text(selection.curves[0].axisLabel());
 
-                if(selection.curves[0].metric.id !== selection.curves[1].metric.id) {
-                    yrAxis.scale(selection.curves[1].y());
+                if(!commonMetric) {
                     chart.append('g')
                         .attr('class', 'y axis right')
                         .attr('transform','translate('+sizing.width+')')
-                        .call(yrAxis)
+                        .call(selection.curves[1].axis())
                         .append('text')
                         .attr('transform', 'rotate(-90)')
                         .attr('y', '0')
                         .attr('dy','4em')
                         .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
                         .style('text-anchor', 'middle')
-                        .text(selection.curves[1].metric.label);
+                        .text(selection.curves[1].axisLabel());
                 }
+
+                xAxis.tickValues(X_TICK_VALUES[selection.frequency.value]);
 
                 chart.append('g')
                     .attr('class', 'x axis')
@@ -6283,19 +6353,26 @@ angular.module('templates-npnvis', ['js/activity/activity.html', 'js/activity/cu
 
 angular.module("js/activity/activity.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("js/activity/activity.html",
-    "<vis-dialog title=\"Activity Cruves\" modal=\"modal\">\n" +
+    "<vis-dialog title=\"Activity Curves\" modal=\"modal\">\n" +
     "<form class=\"form-inline plot-criteria-form\">\n" +
     "    <ul class=\"list-unstyled\">\n" +
-    "        <li ng-repeat=\"input in selection.curves\"><h4>Curve {{$index+1}}</h4><activity-curve-control input=\"input\"></activity-curve-control></li>\n" +
+    "        <li ng-repeat=\"input in selection.curves\"><h4 ng-style=\"{color: input.color()}\">Curve {{$index+1}}</h4><activity-curve-control input=\"input\"></activity-curve-control></li>\n" +
     "        <li  style=\"padding-top: 10px;\">\n" +
     "            <form class=\"form-inline\">\n" +
     "                <div class=\"form-group\">\n" +
     "                    <label for=\"frequency\">Frequency</label>\n" +
-    "                    <select class=\"form-control\" id=\"year-{{input.id}}\"\n" +
+    "                    <select class=\"form-control\" id=\"frequency\"\n" +
     "                        ng-model=\"selection.frequency\"\n" +
     "                        ng-options=\"f as f.label for f in frequencies\"></select>\n" +
     "                </div>\n" +
     "                <button class=\"btn btn-primary\" ng-click=\"visualize()\" ng-disabled=\"!selection.haveValidCurve()\">Visualize</button>\n" +
+    "                &nbsp;&nbsp;&nbsp;\n" +
+    "                <div class=\"form-group\">\n" +
+    "                    <label for=\"interpolate\">Interpolate</label>\n" +
+    "                    <select class=\"form-control\" id=\"year-{{input.id}}\"\n" +
+    "                        ng-model=\"selection.interpolate\"\n" +
+    "                        ng-options=\"i as i for i in ['linear','step','cardinal','monotone']\"></select>\n" +
+    "                </div>\n" +
     "            </form>\n" +
     "        </li>\n" +
     "    </ul>\n" +
@@ -6310,7 +6387,7 @@ angular.module("js/activity/activity.html", []).run(["$templateCache", function(
     "            </div>\n" +
     "        </center>\n" +
     "    </div>\n" +
-    "    <pre>{{selection | json}}</pre>\n" +
+    "    <!--pre>{{selection | json}}</pre-->\n" +
     "</div>\n" +
     "</vis-dialog>\n" +
     "");
@@ -6324,7 +6401,9 @@ angular.module("js/activity/curve-control.html", []).run(["$templateCache", func
     "            <label for=\"species-{{input.id}}\">Species</label>\n" +
     "            <select class=\"form-control\" id=\"species-{{input.id}}\"\n" +
     "                ng-model=\"input.species\"\n" +
-    "                ng-options=\"(o|speciesTitle) for o in speciesList\"></select>\n" +
+    "                ng-options=\"(o|speciesTitle) for o in speciesList\">\n" +
+    "              <option ng-if=\"input.id > 0\" value=\"\">-- Select species --</option>\n" +
+    "            </select>\n" +
     "        </div>\n" +
     "        <div class=\"form-group\">\n" +
     "            <label for=\"phenophase-{{input.id}}\">Phenophase</label>\n" +

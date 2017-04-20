@@ -4,7 +4,9 @@
             <label for="species-{{input.id}}">Species</label>
             <select class="form-control" id="species-{{input.id}}"
                 ng-model="input.species"
-                ng-options="(o|speciesTitle) for o in speciesList"></select>
+                ng-options="(o|speciesTitle) for o in speciesList">
+              <option ng-if="input.id > 0" value="">-- Select species --</option>
+            </select>
         </div>
         <div class="form-group">
             <label for="phenophase-{{input.id}}">Phenophase</label>
