@@ -29,11 +29,11 @@ angular.module('npn-viz-tool.vis-activity',[
                 id: 'proportion_sites_with_yes_record',
                 label: 'Proportion Sites with Yes Records'
             },{
-                id: 'animal_TODO_3',
+                id: 'animals_in_phase',
                 label: 'Animals In-Phase/Hour'
             },{
                 id: 'animal_TODO_4',
-                label: 'Animals In-Phase/Hour/Acre'
+                label: '(TODO) Animals In-Phase/Hour/Acre'
             }])
         },
         ActivityCurve = function(id) {
@@ -61,6 +61,7 @@ angular.module('npn-viz-tool.vis-activity',[
                     if(_metrics.length && !self.metric) {
                         self.metric = _metrics[0];
                     }
+                    _phenophases = undefined;
                     if(_species) {
                         FilterService.getFilter().getPhenophasesForSpecies(_species.species_id).then(function(list){
                             _phenophases = list;
@@ -291,10 +292,18 @@ angular.module('npn-viz-tool.vis-activity',[
         }
         return ticks;
     }
-    var X_TICK_VALUES = {
-        7: doyIntervalTick(14),
-        14: doyIntervalTick(28),
-        months: [1,32,60,91,121,152,182,213,244,274,305,335]
+    var X_TICK_CFG = {
+        7: {
+            rotate: 45,
+            values: doyIntervalTick(14)
+        },
+        14: {
+            rotate: 45,
+            values: doyIntervalTick(28)
+        },
+        months: {
+            values: [1,32,60,91,121,152,182,213,244,274,305,335]
+        }
     },
     ROOT_DATE = new Date(2010,0);
     return {
@@ -310,7 +319,7 @@ angular.module('npn-viz-tool.vis-activity',[
         link: function($scope) {
             var selection = $scope.selection,
                 chart,
-                sizing = ChartService.getSizeInfo({top: 80,left: 80,right: 80}),
+                sizing = ChartService.getSizeInfo({top: 80,left: 80,right: 80,bottom: 80}),
                 d3_date_fmt = d3.time.format('%m/%d'),
                 date_fmt = function(d){
                     var time = ((d-1)*ChartService.ONE_DAY_MILLIS)+ROOT_DATE.getTime(),
@@ -319,7 +328,6 @@ angular.module('npn-viz-tool.vis-activity',[
                 },
                 x = d3.scale.linear().range([0,sizing.width]).domain([1,365]),
                 xAxis = d3.svg.axis().scale(x).orient('bottom')
-                    .tickValues(X_TICK_VALUES[selection.frequency.value])
                     .tickFormat(date_fmt),
                 new_y = function() { return d3.scale.linear().range([sizing.height,0]).domain([0,100]); };
 
@@ -381,8 +389,8 @@ angular.module('npn-viz-tool.vis-activity',[
                         .text(selection.curves[1].axisLabel());
                 }
 
-                xAxis.tickValues(X_TICK_VALUES[selection.frequency.value]);
-
+                var xTickConfig = X_TICK_CFG[selection.frequency.value];
+                xAxis.tickValues(xTickConfig.values);
                 chart.append('g')
                     .attr('class', 'x axis')
                     .attr('transform', 'translate(0,' + sizing.height + ')')
@@ -391,8 +399,16 @@ angular.module('npn-viz-tool.vis-activity',[
                     .attr('y','0')
                     .attr('dy','3em')
                     .attr('x',(sizing.width/2))
+                    .attr('class','axis-label')
                     .style('text-anchor', 'middle')
                     .text('Date');
+                if(xTickConfig.rotate) {
+                    chart.selectAll('g.x.axis g.tick text')
+                        .style('text-anchor','end')
+                        .attr('transform','rotate(-'+xTickConfig.rotate+')');
+                    chart.selectAll('g.x.axis .axis-label')
+                        .attr('dy','4em');
+                }
 
 
                 chart.selectAll('.axis path')
