@@ -681,4 +681,13 @@ text.gdd-info .gdd-diff.below {
   margin-top: 25px;
 }
 
+.modal-body.activity-curves li.control > h4,
+.modal-body.activity-curves li.control .activity-curve-control {
+  display: inline-block;
+}
+.modal-body.activity-curves li.control > h4::after {
+  content: ':';
+  margin-right: 10px;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */

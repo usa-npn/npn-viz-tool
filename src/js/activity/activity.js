@@ -40,6 +40,8 @@ angular.module('npn-viz-tool.vis-activity',[
         ActivityCurve = function(id) {
             var self = this,
                 _species,
+                _year,
+                _phenophase,
                 _phenophases,
                 _metrics;
             self.id = id;
@@ -49,10 +51,27 @@ angular.module('npn-viz-tool.vis-activity',[
             Object.defineProperty(this,'validMetrics',{
                 get: function() { return _metrics; }
             });
+            Object.defineProperty(this,'year',{
+                enumerable: true,
+                get: function() { return _year; },
+                set: function(y) {
+                    delete self.$data; // change invalidates any held data
+                    _year = y;
+                }
+            });
+            Object.defineProperty(this,'phenophase',{
+                enumerable: true,
+                get: function() { return _phenophase; },
+                set: function(p) {
+                    delete self.$data; // change invalidates any held data
+                    _phenophase = p;
+                }
+            });
             Object.defineProperty(this,'species',{
                 enumerable: true,
                 get: function() { return _species; },
                 set: function(s) {
+                    delete self.$data; // change invalidates any held data
                     _species = s;
                     _metrics = _species && _species.kingdom  ? (KINGDOM_METRICS[_species.kingdom]||[]) : [];
                     if(self.metric && _metrics.indexOf(self.metric) === -1) {
@@ -202,14 +221,20 @@ angular.module('npn-viz-tool.vis-activity',[
         interpolate: 'monotone',
         curves: [{color:'#0000ff',orient:'left'},{color:'#ff0000',orient:'right'}].map(function(config,i){ return new ActivityCurve(i).color(config.color).axisOrient(config.orient); }),
         frequency: $scope.frequencies[0],
-        haveValidCurve: function() {
-            return $scope.selection.curves.reduce(function(valid,c){
-                return valid||(c.isValid() ? true : false);
+        shouldRevisualize: function() {
+            return $scope.selection.curves.reduce(function(reviz,c){
+                return reviz||((c.isValid() && !c.data()) ? true : false);
             },false);
         }
     };
+    $scope.$watch('selection.frequency',function(f) {
+        // any change to frequency invalidates any data currently held by curves
+        $scope.selection.curves.forEach(function(c) {
+            c.data(null);
+        });
+    });
     function updateChart() {
-        if($scope.selection.$updateCount > 0) {
+        if($scope.selection.$updateCount > 0/* not been drawn yet*/ && !$scope.selection.shouldRevisualize() /*requires new data to redraw*/) {
             $scope.selection.$updateCount++;
         }
     }

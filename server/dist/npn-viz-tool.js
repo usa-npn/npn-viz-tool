@@ -45,6 +45,8 @@ angular.module('npn-viz-tool.vis-activity',[
         ActivityCurve = function(id) {
             var self = this,
                 _species,
+                _year,
+                _phenophase,
                 _phenophases,
                 _metrics;
             self.id = id;
@@ -54,10 +56,27 @@ angular.module('npn-viz-tool.vis-activity',[
             Object.defineProperty(this,'validMetrics',{
                 get: function() { return _metrics; }
             });
+            Object.defineProperty(this,'year',{
+                enumerable: true,
+                get: function() { return _year; },
+                set: function(y) {
+                    delete self.$data; // change invalidates any held data
+                    _year = y;
+                }
+            });
+            Object.defineProperty(this,'phenophase',{
+                enumerable: true,
+                get: function() { return _phenophase; },
+                set: function(p) {
+                    delete self.$data; // change invalidates any held data
+                    _phenophase = p;
+                }
+            });
             Object.defineProperty(this,'species',{
                 enumerable: true,
                 get: function() { return _species; },
                 set: function(s) {
+                    delete self.$data; // change invalidates any held data
                     _species = s;
                     _metrics = _species && _species.kingdom  ? (KINGDOM_METRICS[_species.kingdom]||[]) : [];
                     if(self.metric && _metrics.indexOf(self.metric) === -1) {
@@ -207,14 +226,20 @@ angular.module('npn-viz-tool.vis-activity',[
         interpolate: 'monotone',
         curves: [{color:'#0000ff',orient:'left'},{color:'#ff0000',orient:'right'}].map(function(config,i){ return new ActivityCurve(i).color(config.color).axisOrient(config.orient); }),
         frequency: $scope.frequencies[0],
-        haveValidCurve: function() {
-            return $scope.selection.curves.reduce(function(valid,c){
-                return valid||(c.isValid() ? true : false);
+        shouldRevisualize: function() {
+            return $scope.selection.curves.reduce(function(reviz,c){
+                return reviz||((c.isValid() && !c.data()) ? true : false);
             },false);
         }
     };
+    $scope.$watch('selection.frequency',function(f) {
+        // any change to frequency invalidates any data currently held by curves
+        $scope.selection.curves.forEach(function(c) {
+            c.data(null);
+        });
+    });
     function updateChart() {
-        if($scope.selection.$updateCount > 0) {
+        if($scope.selection.$updateCount > 0/* not been drawn yet*/ && !$scope.selection.shouldRevisualize() /*requires new data to redraw*/) {
             $scope.selection.$updateCount++;
         }
     }
@@ -6448,7 +6473,7 @@ angular.module("js/activity/activity.html", []).run(["$templateCache", function(
     "<vis-dialog title=\"Activity Curves\" modal=\"modal\">\n" +
     "<form class=\"form-inline plot-criteria-form\">\n" +
     "    <ul class=\"list-unstyled\">\n" +
-    "        <li ng-repeat=\"input in selection.curves\"><h4 ng-style=\"{color: input.color()}\">Curve {{$index+1}}</h4><activity-curve-control input=\"input\"></activity-curve-control></li>\n" +
+    "        <li ng-repeat=\"input in selection.curves\" class=\"control\"><h4 ng-style=\"{color: input.color()}\">Curve {{$index+1}}</h4><activity-curve-control input=\"input\"></activity-curve-control></li>\n" +
     "        <li  style=\"padding-top: 10px;\">\n" +
     "            <form class=\"form-inline\">\n" +
     "                <div class=\"form-group\">\n" +
@@ -6457,14 +6482,13 @@ angular.module("js/activity/activity.html", []).run(["$templateCache", function(
     "                        ng-model=\"selection.frequency\"\n" +
     "                        ng-options=\"f as f.label for f in frequencies\"></select>\n" +
     "                </div>\n" +
-    "                <button class=\"btn btn-primary\" ng-click=\"visualize()\" ng-disabled=\"!selection.haveValidCurve()\">Visualize</button>\n" +
-    "                &nbsp;&nbsp;&nbsp;\n" +
     "                <div class=\"form-group\">\n" +
     "                    <label for=\"interpolate\">Interpolate</label>\n" +
     "                    <select class=\"form-control\" id=\"year-{{input.id}}\"\n" +
     "                        ng-model=\"selection.interpolate\"\n" +
     "                        ng-options=\"i as i for i in ['linear','step','cardinal','monotone']\"></select>\n" +
     "                </div>\n" +
+    "                <button class=\"btn btn-primary\" ng-click=\"visualize()\" ng-disabled=\"!selection.shouldRevisualize()\">Visualize</button>\n" +
     "            </form>\n" +
     "        </li>\n" +
     "    </ul>\n" +

@@ -1,7 +1,7 @@
 <vis-dialog title="Activity Curves" modal="modal">
 <form class="form-inline plot-criteria-form">
     <ul class="list-unstyled">
-        <li ng-repeat="input in selection.curves"><h4 ng-style="{color: input.color()}">Curve {{$index+1}}</h4><activity-curve-control input="input"></activity-curve-control></li>
+        <li ng-repeat="input in selection.curves" class="control"><h4 ng-style="{color: input.color()}">Curve {{$index+1}}</h4><activity-curve-control input="input"></activity-curve-control></li>
         <li  style="padding-top: 10px;">
             <form class="form-inline">
                 <div class="form-group">
@@ -10,14 +10,13 @@
                         ng-model="selection.frequency"
                         ng-options="f as f.label for f in frequencies"></select>
                 </div>
-                <button class="btn btn-primary" ng-click="visualize()" ng-disabled="!selection.haveValidCurve()">Visualize</button>
-                &nbsp;&nbsp;&nbsp;
                 <div class="form-group">
                     <label for="interpolate">Interpolate</label>
                     <select class="form-control" id="year-{{input.id}}"
                         ng-model="selection.interpolate"
                         ng-options="i as i for i in ['linear','step','cardinal','monotone']"></select>
                 </div>
+                <button class="btn btn-primary" ng-click="visualize()" ng-disabled="!selection.shouldRevisualize()">Visualize</button>
             </form>
         </li>
     </ul>

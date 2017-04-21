@@ -737,3 +737,15 @@ text.gdd-info {
         }
     }
 }
+.modal-body.activity-curves {
+    li.control {
+        >h4,
+        .activity-curve-control {
+            display: inline-block;
+        }
+        >h4::after {
+            content:':';
+            margin-right: 10px;
+        }
+    }
+}
