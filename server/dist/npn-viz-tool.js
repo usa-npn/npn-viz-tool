@@ -5583,11 +5583,10 @@ angular.module('npn-viz-tool',[
         return 'You are about to navigate away from the USA-NPN Visualization Tool.  Are you sure you want to do this?';
     };
 
-    // TODO insert real account #
-    AnalyticsProvider.setAccount('UU-XXXXXXX-X');
-    // TODO remove the true and only enter debug mode if UI is loaded
-    // with the debug flag
-    AnalyticsProvider.enterDebugMode(debug||true);
+    AnalyticsProvider.setAccount('UA-30327499-1');
+    if(debug) { // odd but feels wrong to call 'enterDebugMode' unless entering debug mode...
+        AnalyticsProvider.enterDebugMode(true);
+    }
 }]);
 
 angular.module('npn-viz-tool.map',[
