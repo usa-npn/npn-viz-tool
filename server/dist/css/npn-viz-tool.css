@@ -265,6 +265,12 @@ $gmaps-maptype-right: 30px;
 #help-video-content > h4 {
   margin-top: 0px;
 }
+#help-video-content > h4 a {
+  color: #000;
+}
+#help-video-content > h4 a:hover {
+  color: #000;
+}
 #help-video-content a.close {
   position: absolute;
   top: 5px;
@@ -277,11 +283,6 @@ $gmaps-maptype-right: 30px;
 }
 #help-video-content a:focus {
   text-decoration: none;
-}
-#help-video-content a.selected::before {
-  font-family: 'FontAwesome';
-  content: '\f054';
-  margin-right: 5px;
 }
 
 ul.filter-tags {

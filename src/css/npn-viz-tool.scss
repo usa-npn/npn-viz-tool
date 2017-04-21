@@ -283,6 +283,12 @@ $control-font-size: 1.15em;
     min-height: 200px;
     >h4 {
         margin-top: 0px;
+        a {
+            color: #000;
+            &:hover {
+                color: #000;
+            }
+        }
     }
     a.close {
         position: absolute;
@@ -296,11 +302,6 @@ $control-font-size: 1.15em;
     }
     a:focus {
         text-decoration: none;
-    }
-    a.selected::before {
-        font-family: 'FontAwesome';
-        content: '\f054';
-        margin-right: 5px;
     }
 }
 

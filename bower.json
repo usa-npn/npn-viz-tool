@@ -15,7 +15,7 @@
     "angular-animate": "1.4.x",
     "angular-bootstrap": "0.14.x",
     "angular-mocks": "1.4.x",
-    "font-awesome": "4.x",
+    "font-awesome": "4.7",
     "jasmine-jquery": "~2.0.7",
     "angular-google-maps": "2.3.x",
     "d3": "3.5.x",
