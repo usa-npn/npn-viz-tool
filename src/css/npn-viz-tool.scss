@@ -267,11 +267,22 @@ $control-font-size: 1.15em;
     top: 50px;
     right: 50px;
     box-shadow: rgba(0, 0, 0, 0.29804) 0px 1px 4px -1px;
-    z-index: 1000;
+    z-index: 3000;
     padding: 10px;
     background: #eee;
     @include rounded(4px);
     border: 1px solid #aaa;
+    transition-property: all;
+    transition-duration: 1s;
+    transition-timing-function: ease-in-out;
+}
+body.modal-open {
+    #help-video-content {
+        top: 100%;
+        right: 100%;
+        transform: translate(100%,-100%);
+        opacity: 0.8;
+    }
 }
 #share-content {
     input {
