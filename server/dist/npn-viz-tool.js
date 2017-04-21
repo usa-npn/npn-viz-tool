@@ -12,13 +12,18 @@ angular.module('npn-viz-tool.vis-activity',[
 ])
 .factory('ActivityCurve',['$log','$filter','FilterService',function($log,$filter,FilterService) {
     var DOY = $filter('doy'),
+        NUMBER = $filter('number'),
         SPECIES_TITLE = $filter('speciesTitle'),
+        DECIMAL = function(v) {
+            return NUMBER(v,2);
+        },
         COMMON_METRICS = [{
             id: 'num_yes_records',
-            label: 'Total Yes Records'
+            label: 'Total Yes Records',
         },{
             id: 'proportion_yes_records',
-            label: 'Proportion Yes Records'
+            label: 'Proportion Yes Records',
+            valueFormat: DECIMAL
         }],
         KINGDOM_METRICS = {
             Plantae: COMMON_METRICS.concat([{
@@ -26,14 +31,16 @@ angular.module('npn-viz-tool.vis-activity',[
                 label: 'Total Individuals with Yes Records'
             },{
                 id: 'proportion_individuals_with_yes_record',
-                label: 'Proportion Individuals with Yes Records'
+                label: 'Proportion Individuals with Yes Records',
+                valueFormat: DECIMAL
             }]),
             Animalia: COMMON_METRICS.concat([{
                 id: 'numsites_with_yes_record',
                 label: 'Total Sites with Yes Records'
             },{
                 id: 'proportion_sites_with_yes_record',
-                label: 'Proportion Sites with Yes Records'
+                label: 'Proportion Sites with Yes Records',
+                valueFormat: DECIMAL
             },{
                 id: 'animals_in_phase',
                 label: 'Animals In-Phase/Hour'
@@ -104,9 +111,23 @@ angular.module('npn-viz-tool.vis-activity',[
     ActivityCurve.prototype.axisLabel = function() {
         return this.metric ? this.metric.label : '?';
     };
+    ActivityCurve.prototype.doyDataValue = function() {
+        var self = this,
+            value,d,i;
+        if(self.doyFocus && self.$data) {
+            for(i = 0; i < self.$data.length; i++) {
+                d = self.$data[i];
+                if(self.doyFocus >= d.start_doy && self.doyFocus <= d.end_doy) {
+                    return (self.metric.valueFormat||angular.identity)(d[self.metric.id]);
+                }
+            }
+        }
+    };
     ActivityCurve.prototype.legendLabel = function(includeMetric) {
+        var doyFocusValue = this.doyDataValue();
         return this.year+': '+SPECIES_TITLE(this.species)+' - '+this.phenophase.phenophase_name+
-            (includeMetric ? (' ('+this.metric.label+')') : '');
+            (includeMetric ? (' ('+this.metric.label+')') : '')+
+            (doyFocusValue ? (' ['+doyFocusValue+']') : '');
     };
     ActivityCurve.prototype.metricId = function() {
         return this.metric ? this.metric.id : undefined;
@@ -166,6 +187,14 @@ angular.module('npn-viz-tool.vis-activity',[
     ActivityCurve.prototype.isValid = function() {
         return this.species && this.phenophase && this.year && this.metric;
     };
+    ActivityCurve.prototype.plotted = function() {
+        // not keeping track of a flag but curves are plotted if they
+        // are valid and have data
+        return this.isValid() && this.data();
+    };
+    ActivityCurve.prototype.shouldRevisualize = function() {
+        return this.isValid() && !this.data();
+    };
     ActivityCurve.prototype.domain = function() {
         var self = this;
         if(self.$data && self.metric) {
@@ -224,11 +253,11 @@ angular.module('npn-viz-tool.vis-activity',[
     $scope.selection = {
         $updateCount: 0,
         interpolate: 'monotone',
-        curves: [{color:'#0000ff',orient:'left'},{color:'#ff0000',orient:'right'}].map(function(config,i){ return new ActivityCurve(i).color(config.color).axisOrient(config.orient); }),
+        curves: [{color:'#0000ff',orient:'left'},{color:'orange',orient:'right'}].map(function(config,i){ return new ActivityCurve(i).color(config.color).axisOrient(config.orient); }),
         frequency: $scope.frequencies[0],
         shouldRevisualize: function() {
             return $scope.selection.curves.reduce(function(reviz,c){
-                return reviz||((c.isValid() && !c.data()) ? true : false);
+                return reviz||c.shouldRevisualize();
             },false);
         }
     };
@@ -317,7 +346,7 @@ angular.module('npn-viz-tool.vis-activity',[
         }
     };
 }])
-.directive('activityCurvesChart',['$log','$timeout','ChartService',function($log,$timeout,ChartService){
+.directive('activityCurvesChart',['$log','$timeout','$filter','ChartService',function($log,$timeout,$filter,ChartService){
     function doyIntervalTick(interval) {
         var doy = 1,
             ticks = [];
@@ -340,7 +369,10 @@ angular.module('npn-viz-tool.vis-activity',[
             values: [1,32,60,91,121,152,182,213,244,274,305,335]
         }
     },
-    ROOT_DATE = new Date(2010,0);
+    ROOT_DATE = new Date(2010,0),
+    // this filter is part of the gridded functionality and maybe a more generic
+    // version should be created
+    DOY_FILTER = $filter('legendDoy');
     return {
         restrict: 'E',
         replace: true,
@@ -353,6 +385,7 @@ angular.module('npn-viz-tool.vis-activity',[
         },
         link: function($scope) {
             var selection = $scope.selection,
+                fontSize = 14,
                 chart,
                 sizing = ChartService.getSizeInfo({top: 80,left: 80,right: 80,bottom: 80}),
                 d3_date_fmt = d3.time.format('%m/%d'),
@@ -372,11 +405,15 @@ angular.module('npn-viz-tool.vis-activity',[
                  .y(new_y()); // bogus y
             });
 
+            function usingCommonMetric() {
+                return !selection.curves[1].isValid() || // 0 can't be invalid, but if 1 is then there's only 1 axis
+                        (selection.curves[0].metricId() === selection.curves[1].metricId());
+            }
+
             function updateChart() {
                 chart.selectAll('g .axis').remove();
 
-                var commonMetric = !selection.curves[1].isValid() || // 0 can't be invalid, but if 1 is then there's only 1 axis
-                        (selection.curves[0].metricId() === selection.curves[1].metricId());
+                var commonMetric = usingCommonMetric();
                 if(commonMetric) {
                     // both use the same y-axis domain needs to include all valid curve's data
                     var domain = d3.extent(selection.curves.reduce(function(arr,c){
@@ -460,13 +497,11 @@ angular.module('npn-viz-tool.vis-activity',[
                 chart.selectAll('text')
                     .style('font-family','Arial');
 
-                var fontSize = '14px';
-
                 chart.selectAll('g .x.axis text')
-                    .style('font-size', fontSize);
+                    .style('font-size', fontSize+'px');
 
                 chart.selectAll('g .y.axis text')
-                    .style('font-size', fontSize);
+                    .style('font-size', fontSize+'px');
 
                 // if not using a common metric (two y-axes)
                 // then color the ticks/labels in alignment with their
@@ -487,10 +522,13 @@ angular.module('npn-viz-tool.vis-activity',[
                     c.draw(chart);
                 });
 
-                // update the legend
+                updateLegend();
+            }
+
+            function updateLegend() {
                 chart.select('.legend').remove();
-                fontSize = 14;
-                var legend = chart.append('g')
+                var commonMetric = usingCommonMetric(),
+                    legend = chart.append('g')
                       .attr('class','legend')
                       // the 150 below was picked just based on the site of the 'Activity Curves' title
                       .attr('transform','translate(150,-'+(sizing.margin.top-10)+')') // relative to the chart, not the svg
@@ -506,7 +544,7 @@ angular.module('npn-viz-tool.vis-activity',[
                     r = 5, vpad = 4,
                     plotCnt = selection.curves.reduce(function(cnt,c){
                         var row;
-                        if(c.isValid() && c.data()) {
+                        if(c.plotted()) {
                             row = legend.append('g')
                                 .attr('class','legend-item curve-'+c.id)
                                 .attr('transform','translate(10,'+(((cnt+1)*fontSize)+(cnt*vpad))+')');
@@ -522,8 +560,6 @@ angular.module('npn-viz-tool.vis-activity',[
                         }
                         return cnt;
                     },0);
-
-
             }
 
             $timeout(function(){
@@ -551,6 +587,61 @@ angular.module('npn-viz-tool.vis-activity',[
                     .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
 
                 updateChart();
+
+                var hover = svg.append('g')
+                    .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')')
+                    .style('display','none');
+                var hoverLine = hover.append('line')
+                        .attr('class','focus')
+                        .attr('fill','none')
+                        .attr('stroke','green')
+                        .attr('stroke-width',1)
+                        .attr('x1',0)
+                        .attr('y1',0)
+                        .attr('x2',0)
+                        .attr('y2',sizing.height),
+                    hoverDoy = hover.append('text')
+                        .attr('class','focus-doy')
+                        .style('text-anchor','start')
+                        .attr('y',10)
+                        .attr('x',0)
+                        .text('testing');
+                function focusOff() {
+                    selection.curves.forEach(function(c) { delete c.doyFocus; });
+                    hover.style('display','none');
+                    updateLegend();
+                }
+                function focusOn() {
+                    // only turn on if something has been plotted
+                    if(selection.curves.reduce(function(plotted,c){
+                            return plotted||c.plotted();
+                        },false)) {
+                        hover.style('display',null);
+                    }
+                }
+                function updateFocus() {
+                    var coords = d3.mouse(this),
+                        xCoord = coords[0],
+                        yCoord = coords[1],
+                        doy = Math.round(x.invert(xCoord));
+                    hoverLine.attr('transform','translate('+xCoord+')');
+                    hoverDoy.attr('x',xCoord+10)
+                        .text(DOY_FILTER(doy));
+                    selection.curves.forEach(function(c) { c.doyFocus = doy; });
+                    updateLegend();
+                }
+                svg.append('rect')
+                    .attr('class','overlay')
+                    .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')')
+                    .style('fill','none')
+                    .style('pointer-events','all')
+                    .attr('x',0)
+                    .attr('y',0)
+                    .attr('width',sizing.width)
+                    .attr('height',sizing.height)
+                    .on('mouseover',focusOn)
+                    .on('mouseout',focusOff)
+                    .on('mousemove',updateFocus);
             });
 
             $scope.$watch('selection.$updateCount',function(count){
@@ -6476,7 +6567,7 @@ angular.module("js/activity/activity.html", []).run(["$templateCache", function(
     "        <li  style=\"padding-top: 10px;\">\n" +
     "            <form class=\"form-inline\">\n" +
     "                <div class=\"form-group\">\n" +
-    "                    <label for=\"frequency\">Frequency</label>\n" +
+    "                    <label for=\"frequency\">Date Interval</label>\n" +
     "                    <select class=\"form-control\" id=\"frequency\"\n" +
     "                        ng-model=\"selection.frequency\"\n" +
     "                        ng-options=\"f as f.label for f in frequencies\"></select>\n" +
