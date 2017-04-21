@@ -411,6 +411,10 @@ angular.module('npn-viz-tool.vis-activity',[
             }
 
             function updateChart() {
+                // pad top end of domains by N%
+                function padDomain(d) {
+                    return (d && d.length === 2) ? [d[0],(d[1]*1.05)] : d;
+                }
                 chart.selectAll('g .axis').remove();
 
                 var commonMetric = usingCommonMetric();
@@ -422,7 +426,7 @@ angular.module('npn-viz-tool.vis-activity',[
                             }
                             return arr;
                         },[])),
-                        y = new_y().domain(domain);
+                        y = new_y().domain(padDomain(domain));
                     $log.debug('ActivityCurves.common domain',domain);
                     selection.curves.forEach(function(c){
                         c.y(y);
@@ -432,7 +436,7 @@ angular.module('npn-viz-tool.vis-activity',[
                         // re-initialize y in case a previous plot re-used the same y
                         // each has an independent domain
                         if(c.isValid()) {
-                            c.y(new_y().domain(c.domain()));
+                            c.y(new_y().domain(padDomain(c.domain())));
                         }
                     });
                 }
