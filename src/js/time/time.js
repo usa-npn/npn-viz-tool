@@ -168,7 +168,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                         .attr('r',r)
                         .attr('fill',data[key].color);
                     row.append('text')
-                        .style('font-size', '12px')
+                        .style('font-size', fontSize+'px')
                         .attr('x',(2*r))
                         .attr('y',(r/2))
                         .text(data[key].year||'Average');

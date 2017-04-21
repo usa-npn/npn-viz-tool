@@ -12,6 +12,7 @@ angular.module('npn-viz-tool.vis-activity',[
 ])
 .factory('ActivityCurve',['$log','$filter','FilterService',function($log,$filter,FilterService) {
     var DOY = $filter('doy'),
+        SPECIES_TITLE = $filter('speciesTitle'),
         COMMON_METRICS = [{
             id: 'num_yes_records',
             label: 'Total Yes Records'
@@ -83,6 +84,9 @@ angular.module('npn-viz-tool.vis-activity',[
         };
     ActivityCurve.prototype.axisLabel = function() {
         return this.metric ? this.metric.label : '?';
+    };
+    ActivityCurve.prototype.legendLabel = function() {
+        return this.year+': '+SPECIES_TITLE(this.species)+' - '+this.phenophase.phenophase_name+' ('+this.metric.label+')';
     };
     ActivityCurve.prototype.metricId = function() {
         return this.metric ? this.metric.id : undefined;
@@ -437,6 +441,9 @@ angular.module('npn-viz-tool.vis-activity',[
                 chart.selectAll('g .y.axis text')
                     .style('font-size', fontSize);
 
+                // if not using a common metric (two y-axes)
+                // then color the ticks/labels in alignment with their
+                // corresponding curve for clarity.
                 if(!commonMetric) {
                     chart.selectAll('g.y.axis.left g.tick text')
                         .style('fill',selection.curves[0].color());
@@ -448,9 +455,48 @@ angular.module('npn-viz-tool.vis-activity',[
                         .style('fill',selection.curves[1].color());
                 }
 
+                // draw the curves
                 selection.curves.forEach(function(c) {
                     c.draw(chart);
                 });
+
+                // update the legend
+                chart.select('.legend').remove();
+                fontSize = 14;
+                var legend = chart.append('g')
+                      .attr('class','legend')
+                      // the 150 below was picked just based on the site of the 'Activity Curves' title
+                      .attr('transform','translate(150,-'+(sizing.margin.top-10)+')') // relative to the chart, not the svg
+                      .style('font-size','1em'),
+                    /* legend labels can differ greatly in length, don't try to put them
+                       inside a box that will be impossible to size correctly
+                    rect = legend.append('rect')
+                        .style('fill','white')
+                        .style('stroke','black')
+                        .style('opacity','0.8')
+                        .attr('width',100)
+                        .attr('height',55),*/
+                    r = 5, vpad = 4,
+                    plotCnt = selection.curves.reduce(function(cnt,c){
+                        var row;
+                        if(c.isValid() && c.data()) {
+                            row = legend.append('g')
+                                .attr('class','legend-item curve-'+c.id)
+                                .attr('transform','translate(10,'+(((cnt+1)*fontSize)+(cnt*vpad))+')');
+                            row.append('circle')
+                                .attr('r',r)
+                                .attr('fill',c.color());
+                            row.append('text')
+                                .style('font-size', fontSize+'px')
+                                .attr('x',(2*r))
+                                .attr('y',(r/2))
+                                .text(c.legendLabel());
+                            cnt++;
+                        }
+                        return cnt;
+                    },0);
+
+
             }
 
             $timeout(function(){
@@ -466,8 +512,8 @@ angular.module('npn-viz-tool.vis-activity',[
                      .append('text')
                      .attr('y', '0')
                      .attr('dy','-3em')
-                     .attr('x', (sizing.width/2))
-                     .style('text-anchor','middle')
+                     .attr('x', '0')
+                     .style('text-anchor','start')
                      .style('font-size','18px')
                      .text('Activity Curves');
 
@@ -6431,7 +6477,7 @@ angular.module("js/activity/activity.html", []).run(["$templateCache", function(
     "            </div>\n" +
     "        </center>\n" +
     "    </div>\n" +
-    "    <!--pre>{{selection | json}}</pre-->\n" +
+    "    <pre>{{selection | json}}</pre>\n" +
     "</div>\n" +
     "</vis-dialog>\n" +
     "");
@@ -8428,7 +8474,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                         .attr('r',r)
                         .attr('fill',data[key].color);
                     row.append('text')
-                        .style('font-size', '12px')
+                        .style('font-size', fontSize+'px')
                         .attr('x',(2*r))
                         .attr('y',(r/2))
                         .text(data[key].year||'Average');
