@@ -373,6 +373,7 @@ angular.module('npn-viz-tool.vis-activity',[
                     .attr('class', 'y axis left')
                     .call(selection.curves[0].axis())
                     .append('text')
+                    .attr('class','axis-title')
                     .attr('transform', 'rotate(-90)')
                     .attr('y', '0')
                     .attr('dy','-4em')
@@ -386,6 +387,7 @@ angular.module('npn-viz-tool.vis-activity',[
                         .attr('transform','translate('+sizing.width+')')
                         .call(selection.curves[1].axis())
                         .append('text')
+                        .attr('class','axis-title')
                         .attr('transform', 'rotate(-90)')
                         .attr('y', '0')
                         .attr('dy','4em')
@@ -415,7 +417,6 @@ angular.module('npn-viz-tool.vis-activity',[
                         .attr('dy','4em');
                 }
 
-
                 chart.selectAll('.axis path')
                     .style('fill','none')
                     .style('stroke','#000')
@@ -435,6 +436,17 @@ angular.module('npn-viz-tool.vis-activity',[
 
                 chart.selectAll('g .y.axis text')
                     .style('font-size', fontSize);
+
+                if(!commonMetric) {
+                    chart.selectAll('g.y.axis.left g.tick text')
+                        .style('fill',selection.curves[0].color());
+                    chart.selectAll('g.y.axis.left text.axis-title')
+                        .style('fill',selection.curves[0].color());
+                    chart.selectAll('g.y.axis.right g.tick text')
+                        .style('fill',selection.curves[1].color());
+                    chart.selectAll('g.y.axis.right text.axis-title')
+                        .style('fill',selection.curves[1].color());
+                }
 
                 selection.curves.forEach(function(c) {
                     c.draw(chart);
