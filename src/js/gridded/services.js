@@ -706,14 +706,30 @@ angular.module('npn-viz-tool.gridded-services',[
 }])
 /**
  * @ngdoc filter
- * @name npn-viz-tool.gridded-services:agddDefaultToday
+ * @name npn-viz-tool.gridded-services:agddDefaultTodayElevation
  * @module npn-viz-tool.gridded-services
  * @description
  *
  * Selects a default extent value for a doy layer of "today" (if found among the possibilities).
  */
-.filter('agddDefaultToday',['dateFilter',function(dateFilter){
+.filter('agddDefaultTodayElevation',['dateFilter',function(dateFilter){
     var todayLabel = dateFilter(new Date(),'MMMM d');
+    return function(values) {
+        return values.reduce(function(dflt,v){
+            return dflt||(v.label == todayLabel ? v : undefined);
+        },undefined);
+    };
+}])
+/**
+ * @ngdoc filter
+ * @name npn-viz-tool.gridded-services:agddDefaultTodayTime
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Selects a default extent value for a time layer of "today" (if found among the possibilities).
+ */
+.filter('agddDefaultTodayTime',['dateFilter',function(dateFilter){
+    var todayLabel = dateFilter(new Date(),'longDate');
     return function(values) {
         return values.reduce(function(dflt,v){
             return dflt||(v.label == todayLabel ? v : undefined);
@@ -1007,7 +1023,7 @@ angular.module('npn-viz-tool.gridded-services',[
      * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
      * @name  getStyleDefinition
      * @description Get the raw style definition DOM.
-     * @returns {object}
+     * @returns {object} The style definitino DOM.
      */
     WmsMapLegend.prototype.getStyleDefinition = function() {
         return this.styleDefinition;

@@ -15,7 +15,7 @@
             "args": [true]
         },
         "extent_default_filter": {
-            "name": "agddDefaultToday"
+            "name": "agddDefaultTodayElevation"
         },
         "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 2000,
@@ -34,6 +34,9 @@
         "gridded_label_filter": {
             "name": "legendGddUnits",
             "args": [true]
+        },
+        "extent_default_filter": {
+            "name": "agddDefaultTodayTime"
         },
         "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 2000,
@@ -76,6 +79,9 @@
             "name": "legendAgddAnomaly",
             "args": [true]
         },
+        "extent_default_filter": {
+            "name": "agddDefaultTodayTime"
+        },
         "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 100,
         "layers":[{
@@ -110,6 +116,9 @@
         "name": "Spring Indices, Current Year",
         "legend_label_filter": {
             "name": "legendDoy"
+        },
+        "extent_default_filter": {
+            "name": "agddDefaultTodayTime"
         },
         "current_year_only": true,
         "layers": [{
@@ -162,6 +171,9 @@
         "legend_label_filter": {
             "name": "legendSixAnomaly"
         },
+        "extent_default_filter": {
+            "name": "agddDefaultTodayTime"
+        },
         "layers": [{
                 "name": "si-x:leaf_anomaly"
             },{
@@ -171,6 +183,9 @@
         "name": "Spring Indices, 30-Year Average",
         "legend_label_filter": {
             "name": "legendDoy"
+        },
+        "extent_default_filter": {
+            "name": "agddDefaultTodayElevation"
         },
         "layers": [{
                 "name": "si-x:30yr_avg_six_leaf"

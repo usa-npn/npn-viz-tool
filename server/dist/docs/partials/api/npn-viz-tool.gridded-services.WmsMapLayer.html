@@ -7,7 +7,14 @@
 <div class="description"><div class="npn-viz-tool-gridded-services-page npn-viz-tool-gridded-services-wmsmaplayer-page"><p>A map layer object associated with a specific google map.</p>
 </div></div>
 <div class="member method"><h2 id="methods">Methods</h2>
-<ul class="methods"><li><h3 id="methods_currentyearonly">currentYearOnly()</h3>
+<ul class="methods"><li><h3 id="methods_bounce">bounce()</h3>
+<div class="bounce"><div class="bounce-page"><p>Toggle this layer off then on.  This function exists since off/on
+are tracked by analytics and sometimes a layer needs to be updated
+in this fashion.</p>
+</div><h5 id="methods_bounce_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-npn-viz-tool">npn-viz-tool.gridded-services:WmsMapLayer</a></td><td><div class="bounce-page"><p>this map layer instance.</p>
+</div></td></tr></table></div>
+</li>
+<li><h3 id="methods_currentyearonly">currentYearOnly()</h3>
 <div class="currentyearonly"><div class="currentyearonly-page"><p>Indicates whether a given layer should constrain what gets plotted on it to the currently selected year.</p>
 </div><h5 id="methods_currentyearonly_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-boolean">boolean</a></td><td><div class="currentyearonly-page"><p>true if plotted data should be restrained.</p>
 </div></td></tr></table></div>
@@ -43,6 +50,11 @@
 </div><h5 id="methods_getmap_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-google">google.maps.Map</a></td><td><div class="getmap-page"><p>The map instance.</p>
 </div></td></tr></table></div>
 </li>
+<li><h3 id="methods_getstylerange">getStyleRange()</h3>
+<div class="getstylerange"><div class="getstylerange-page"><p>Get the style range, if any was set.</p>
+</div><h5 id="methods_getstylerange_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-array">Array|undefined</a></td><td><div class="getstylerange-page"><p>The range that was set.</p>
+</div></td></tr></table></div>
+</li>
 <li><h3 id="methods_gettitle">getTitle()</h3>
 <div class="gettitle"><div class="gettitle-page"><p>Get the layer title, if any.</p>
 </div><h5 id="methods_gettitle_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-string">string</a></td><td><div class="gettitle-page"><p>The title.</p>
@@ -57,6 +69,15 @@
 <div class="on"><div class="on-page"><p>Put this layer on the map.</p>
 </div><h5 id="methods_on_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-npn-viz-tool">npn-viz-tool.gridded-services:WmsMapLayer</a></td><td><div class="on-page"><p>this map layer instance.</p>
 </div></td></tr></table></div>
+</li>
+<li><h3 id="methods_setstyle">setStyle(The)</h3>
+<div class="setstyle"><div class="setstyle-page"><p>Set the style and its associated range (if any).</p>
+</div><h5 id="methods_setstyle_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>The</td><td><a href="" class="label type-hint type-hint-string">string</a></td><td><div class="setstyle-page"><p>style (XML as a string).</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_setstylerange">setStyleRange()</h3>
+<div class="setstylerange"><div class="setstylerange-page"><p>Set the style range.</p>
+</div></div>
 </li>
 <li><h3 id="methods_supportsdata">supportsData()</h3>
 <div class="supportsdata"><div class="supportsdata-page"><p>Indicates whether a given layer supports data to be plotted on it or not.</p>
