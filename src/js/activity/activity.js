@@ -80,8 +80,9 @@ angular.module('npn-viz-tool.vis-activity',[
     ActivityCurve.prototype.axisLabel = function() {
         return this.metric ? this.metric.label : '?';
     };
-    ActivityCurve.prototype.legendLabel = function() {
-        return this.year+': '+SPECIES_TITLE(this.species)+' - '+this.phenophase.phenophase_name+' ('+this.metric.label+')';
+    ActivityCurve.prototype.legendLabel = function(includeMetric) {
+        return this.year+': '+SPECIES_TITLE(this.species)+' - '+this.phenophase.phenophase_name+
+            (includeMetric ? (' ('+this.metric.label+')') : '');
     };
     ActivityCurve.prototype.metricId = function() {
         return this.metric ? this.metric.id : undefined;
@@ -344,7 +345,8 @@ angular.module('npn-viz-tool.vis-activity',[
             function updateChart() {
                 chart.selectAll('g .axis').remove();
 
-                var commonMetric = selection.curves[0].metricId() === selection.curves[1].metricId();
+                var commonMetric = !selection.curves[1].isValid() || // 0 can't be invalid, but if 1 is then there's only 1 axis
+                        (selection.curves[0].metricId() === selection.curves[1].metricId());
                 if(commonMetric) {
                     // both use the same y-axis domain needs to include all valid curve's data
                     var domain = d3.extent(selection.curves.reduce(function(arr,c){
@@ -485,7 +487,7 @@ angular.module('npn-viz-tool.vis-activity',[
                                 .style('font-size', fontSize+'px')
                                 .attr('x',(2*r))
                                 .attr('y',(r/2))
-                                .text(c.legendLabel());
+                                .text(c.legendLabel(!commonMetric));
                             cnt++;
                         }
                         return cnt;
