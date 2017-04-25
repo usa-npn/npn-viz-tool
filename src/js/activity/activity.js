@@ -92,12 +92,7 @@ angular.module('npn-viz-tool.vis-activity',[
                     if(_species) {
                         FilterService.getFilter().getPhenophasesForSpecies(_species.species_id).then(function(list){
                             _phenophases = list;
-                            if(self.phenophase && _phenophases.indexOf(self.phenophase)) {
-                                delete self.phenophase;
-                            }
-                            if(_phenophases.length && !self.phenophase) {
-                                self.phenophase = _phenophases[0];
-                            }
+                            self.phenophase = _phenophases.length ? _phenophases[0] : undefined;
                         });
                     }
                 }
