@@ -8,19 +8,19 @@
               <option ng-if="input.id > 0" value="">-- Select species --</option>
             </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" ng-show="input.species">
             <label for="phenophase-{{input.id}}">Phenophase</label>
             <select class="form-control" id="phenophase-{{input.id}}"
                 ng-model="input.phenophase"
                 ng-options="o.phenophase_name for o in input.validPhenophases"></select>
         </div>
-        <div class="form-group">
+        <div class="form-group" ng-show="input.species">
             <label for="year-{{input.id}}">Year</label>
             <select class="form-control" id="year-{{input.id}}"
                 ng-model="input.year"
                 ng-options="y for y in validYears"></select>
         </div>
-        <div class="form-group">
+        <div class="form-group" ng-show="input.species">
             <label for="metric-{{input.id}}">Metric</label>
             <select class="form-control" id="metric-{{input.id}}"
                 ng-model="input.metric"

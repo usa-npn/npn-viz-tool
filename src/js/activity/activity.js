@@ -334,7 +334,7 @@ angular.module('npn-viz-tool.vis-activity',[
             FilterService.getFilter().getSpeciesList().then(function(list) {
                 $log.debug('speciesList',list);
                 $scope.speciesList = list;
-                if(list.length) {
+                if(list.length && $scope.input.id === 0 /* only populate curve #1 by default */ ) {
                     $scope.input.species = $scope.input.id < list.length ? list[$scope.input.id] : list[0];
                 }
             });

@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2017-04-21
+ * Version: 1.0.0 - 2017-04-25
  */
 
 angular.module('npn-viz-tool.vis-activity',[
@@ -339,7 +339,7 @@ angular.module('npn-viz-tool.vis-activity',[
             FilterService.getFilter().getSpeciesList().then(function(list) {
                 $log.debug('speciesList',list);
                 $scope.speciesList = list;
-                if(list.length) {
+                if(list.length && $scope.input.id === 0 /* only populate curve #1 by default */ ) {
                     $scope.input.species = $scope.input.id < list.length ? list[$scope.input.id] : list[0];
                 }
             });
@@ -6618,19 +6618,19 @@ angular.module("js/activity/curve-control.html", []).run(["$templateCache", func
     "              <option ng-if=\"input.id > 0\" value=\"\">-- Select species --</option>\n" +
     "            </select>\n" +
     "        </div>\n" +
-    "        <div class=\"form-group\">\n" +
+    "        <div class=\"form-group\" ng-show=\"input.species\">\n" +
     "            <label for=\"phenophase-{{input.id}}\">Phenophase</label>\n" +
     "            <select class=\"form-control\" id=\"phenophase-{{input.id}}\"\n" +
     "                ng-model=\"input.phenophase\"\n" +
     "                ng-options=\"o.phenophase_name for o in input.validPhenophases\"></select>\n" +
     "        </div>\n" +
-    "        <div class=\"form-group\">\n" +
+    "        <div class=\"form-group\" ng-show=\"input.species\">\n" +
     "            <label for=\"year-{{input.id}}\">Year</label>\n" +
     "            <select class=\"form-control\" id=\"year-{{input.id}}\"\n" +
     "                ng-model=\"input.year\"\n" +
     "                ng-options=\"y for y in validYears\"></select>\n" +
     "        </div>\n" +
-    "        <div class=\"form-group\">\n" +
+    "        <div class=\"form-group\" ng-show=\"input.species\">\n" +
     "            <label for=\"metric-{{input.id}}\">Metric</label>\n" +
     "            <select class=\"form-control\" id=\"metric-{{input.id}}\"\n" +
     "                ng-model=\"input.metric\"\n" +
