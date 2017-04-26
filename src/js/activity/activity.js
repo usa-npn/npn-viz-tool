@@ -37,11 +37,21 @@ angular.module('npn-viz-tool.vis-activity',[
                 label: 'Proportion Sites with Yes Records',
                 valueFormat: DECIMAL
             },{
-                id: 'animals_in_phase',
-                label: 'Animals In-Phase/Hour'
+                id: 'total_numanimals_in-phase',
+                label: 'Total Animals In Phase'
+            },
+            {
+                id: 'mean_numanimals_in-phase',
+                label: 'Animals In Phase',
+                valueFormat: DECIMAL
             },{
-                id: 'animal_TODO_4',
-                label: '(TODO) Animals In-Phase/Hour/Acre'
+                id: 'mean_numanimals_in-phase_per_hr',
+                label: 'Animals In Phase per Hour',
+                valueFormat: DECIMAL
+            },{
+                id: 'mean_numanimals_in-phase_per_hr_per_acre',
+                label: 'Animals In Phase per Hour per Acre',
+                valueFormat: DECIMAL
             }])
         },
         ActivityCurve = function(id) {
