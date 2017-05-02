@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2017-04-26
+ * Version: 1.0.0 - 2017-05-02
  */
 
 angular.module('npn-viz-tool.vis-activity',[
@@ -132,7 +132,7 @@ angular.module('npn-viz-tool.vis-activity',[
         var doyFocusValue = this.doyDataValue();
         return this.year+': '+SPECIES_TITLE(this.species)+' - '+this.phenophase.phenophase_name+
             (includeMetric ? (' ('+this.metric.label+')') : '')+
-            (doyFocusValue ? (' ['+doyFocusValue+']') : '');
+            (typeof(doyFocusValue) !== 'undefined' ? (' ['+doyFocusValue+']') : '');
     };
     ActivityCurve.prototype.metricId = function() {
         return this.metric ? this.metric.id : undefined;
@@ -169,11 +169,19 @@ angular.module('npn-viz-tool.vis-activity',[
         return this.$orient;
     };
     ActivityCurve.prototype.axis = function() {
-        if(!this.$axis) {
-            this.$axis = d3.svg.axis();
+        var y = this.y(),
+            ticks = y.ticks(), // default is ~10 ticks
+            axis = d3.svg.axis().scale(y);
+        if(ticks.length) {
+            // replace the final tick with the top of the y domain
+            // that -would- have been generated and use them explicitly
+            // this can result in ticks stacked on on another if too close
+            //ticks.push(y.domain()[1]);
+            // this often results in a larger space between the two topmost ticks
+            ticks[ticks.length-1] = y.domain()[1];
+            axis.tickValues(ticks);
         }
-        this.$axis.scale(this.y());
-        return this.$axis.orient(this.axisOrient()||'left');
+        return axis.orient(this.axisOrient()||'left');
     };
     ActivityCurve.prototype.x = function(_) {
         if(arguments.length) {
@@ -210,23 +218,22 @@ angular.module('npn-viz-tool.vis-activity',[
     };
     ActivityCurve.prototype.draw = function(chart) {
         var self = this,
-            x,y,data,line;
+            data = self.$data,
+            x,y,line;
         chart.selectAll('path.curve.curve-'+self.id).remove();
-        if(data = self.$data) {
+        if(data && data.length) {
+            // need to duplicate the final datapoint so we can draw a line from
+            // its start_doy to end_doy
+            // for preceeding interval N, N.end_doy = (N+1).start_doy -1
+            // see x implementation below
+            data = data.concat([data[data.length-1]]);
+            $log.debug('draw.data',data);
             x = self.x();
             y = self.y();
             line = d3.svg.line()
-                .interpolate(self.interpolate||'monotone')//'cardinal')
+                .interpolate(self.interpolate||'monotone')
                 .x(function(d,i) {
-                    // TODO should each point be duplicated and plotted for both
-                    // the start/end_doy or something like this?
-                    if(i === 0) {
-                        return x(d.start_doy);
-                    }
-                    if(i === (data.length-1)) {
-                        return x(d.end_doy);
-                    }
-                    return x(d.start_doy+Math.round((d.end_doy-d.start_doy)/2));
+                    return x(i === (data.length-1) ? d.end_doy : d.start_doy);
                 })
                 .y(function(d) { return y(d[self.metric.id]); });
             $log.debug('ActivityCurve.draw',self.species,self.phenophase,self.year,self.metric,data,self.domain(),y.domain());
@@ -6588,7 +6595,7 @@ angular.module("js/activity/activity.html", []).run(["$templateCache", function(
     "                    <label for=\"interpolate\">Interpolate</label>\n" +
     "                    <select class=\"form-control\" id=\"year-{{input.id}}\"\n" +
     "                        ng-model=\"selection.interpolate\"\n" +
-    "                        ng-options=\"i as i for i in ['linear','step','cardinal','monotone']\"></select>\n" +
+    "                        ng-options=\"i as i for i in ['linear','step-after','cardinal','monotone']\"></select>\n" +
     "                </div>\n" +
     "                <button class=\"btn btn-primary\" ng-click=\"visualize()\" ng-disabled=\"!selection.shouldRevisualize()\">Visualize</button>\n" +
     "            </form>\n" +

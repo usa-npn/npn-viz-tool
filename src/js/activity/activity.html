@@ -14,7 +14,7 @@
                     <label for="interpolate">Interpolate</label>
                     <select class="form-control" id="year-{{input.id}}"
                         ng-model="selection.interpolate"
-                        ng-options="i as i for i in ['linear','step','cardinal','monotone']"></select>
+                        ng-options="i as i for i in ['linear','step-after','cardinal','monotone']"></select>
                 </div>
                 <button class="btn btn-primary" ng-click="visualize()" ng-disabled="!selection.shouldRevisualize()">Visualize</button>
             </form>
