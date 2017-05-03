@@ -426,8 +426,8 @@ angular.module('npn-viz-tool.filter',[
     };
     return BoundsFilterArg;
 }])
-.factory('NpnFilter',[ '$q','$log','$http','$url','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','CacheService',
-    function($q,$log,$http,$url,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,CacheService){
+.factory('NpnFilter',[ '$q','$log','$http','$url','$filter','DateFilterArg','SpeciesFilterArg','NetworkFilterArg','GeoFilterArg','BoundsFilterArg','CacheService','Analytics',
+    function($q,$log,$http,$url,$filter,DateFilterArg,SpeciesFilterArg,NetworkFilterArg,GeoFilterArg,BoundsFilterArg,CacheService,Analytics){
     function getValues(map) {
         var vals = [],key;
         for(key in map) {
@@ -488,17 +488,27 @@ angular.module('npn-viz-tool.filter',[
     NpnFilter.prototype.getGeographicArgs = function() {
         return this.getBoundsArgs().concat(this.getGeoArgs());
     };
-    NpnFilter.prototype.gaString = function() {
-        var gas = 'date:',
-            date = this.getDateArg();
+    // send google analytics for filter [re-]execution
+    NpnFilter.prototype.ga = function(action) {
+        action = action||'execute';
+        var date = this.getDateArg(),
+            speciesTitle = $filter('speciesTitle'),
+            nBounds = this.getBoundsArgs().length;
         if(date) {
-            gas += date.getStartYear()+'-'+date.getEndYear();
+            Analytics.trackEvent('filter',action+' date',date.getStartYear()+'-'+date.getEndYear());
         }
-        gas += '/species:'+this.getSpeciesArgs().map(function(s) { return s.arg.common_name; }).join(',');
-        gas += '/network:'+this.getNetworkArgs().map(function(n) { return n.getName(); }).join(',');
-        gas += '/geo:'+this.getGeoArgs().map(function(g) { return g.getUid(); }).join(',');
-        gas += '/bounds:'+this.getBoundsArgs().length;
-        return gas;
+        this.getSpeciesArgs().forEach(function(s) {
+            Analytics.trackEvent('filter',action+' species',speciesTitle(s.arg,'common-name'));
+        });
+        this.getNetworkArgs().forEach(function(n){
+            Analytics.trackEvent('filter',action+' network',n.getName());
+        });
+        this.getGeoArgs().forEach(function(g){
+            Analytics.trackEvent('filter',action+' geo',g.getUid());
+        });
+        if(nBounds) {
+            Analytics.trackEvent('filter',action+' bounds',nBounds);
+        }
     };
     NpnFilter.prototype.add = function(item) {
         this.updateCount++;
@@ -760,7 +770,7 @@ angular.module('npn-viz-tool.filter',[
         if(!paused) {
             $timeout(function(){
                 if(last) {
-                    Analytics.trackEvent('filter','re-execute (phase2)',FilterService.getFilter().gaString());
+                    FilterService.getFilter().ga('re-execute');
                     var markers = post_filter(last,true);
                     $rootScope.$broadcast('filter-marker-updates',{markers: markers});
                 }
@@ -1193,7 +1203,7 @@ angular.module('npn-viz-tool.filter',[
             }
             function executeFilter() {
                 if(FilterService.hasFilterChanged() && FilterService.hasSufficientCriteria()) {
-                    Analytics.trackEvent('filter','execute',FilterService.getFilter().gaString());
+                    FilterService.getFilter().ga('execute'); // send google analytics
                     $timeout(function(){
                         $scope.results.markers = [];
                         $timeout(function(){
