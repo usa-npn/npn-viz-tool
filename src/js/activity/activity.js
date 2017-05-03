@@ -147,7 +147,17 @@ angular.module('npn-viz-tool.vis-activity',[
             }
             return this;
         }
-        return this.$data;
+        var self = this,
+            data = self.$data;
+        if(data && self.metric) {
+            data = data.filter(function(d){
+                return d[self.metric.id] != -9999;
+            });
+            if(data.length !== self.$data.length) {
+                $log.debug('filtered out '+(self.$data.length-data.length)+'/'+ self.$data.length +' of -9999 records for metric ',self.metric);
+            }
+        }
+        return data;
     };
     ActivityCurve.prototype.color = function(_) {
         if(arguments.length) {
@@ -204,16 +214,28 @@ angular.module('npn-viz-tool.vis-activity',[
         return this.isValid() && !this.data();
     };
     ActivityCurve.prototype.domain = function() {
-        var self = this;
-        if(self.$data && self.metric) {
-            return d3.extent(self.$data,function(d){
+        var self = this,
+            data = self.data(),
+            extents;
+        if(data && self.metric) {
+            extents = d3.extent(data,function(d){
                 return d[self.metric.id];
             });
+            if(extents[0] > 0) {
+                // typically data sets will contain 0 but really always want the
+                // lower extent of any y axis to be zero so make it so
+                extents[0] = 0;
+            } else if(extents[0] < 0) {
+                // this shouldn't happen but don't futz with the domain in this
+                // case or the graph would go wonky
+                $log.warn('negative domain start for metric',extents,self.metric);
+            }
+            return extents;
         }
     };
     ActivityCurve.prototype.draw = function(chart) {
         var self = this,
-            data = self.$data,
+            data = self.data(),
             x,y,line;
         chart.selectAll('path.curve.curve-'+self.id).remove();
         if(data && data.length) {
