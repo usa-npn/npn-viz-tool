@@ -1236,9 +1236,16 @@ angular.module('npn-viz-tool.gridded-services',[
                             minQ = data[range[0]].quantity,
                             maxQ = data[range[1]].quantity,
                             $styleDef = $(styleDef),
-                            colors = $styleDef.find('ColorMapEntry');
+                            colors = $styleDef.find('ColorMapEntry'),
+                            colorMap = $styleDef.find('ColorMap');
                         if(colors.length === 0) {
                             colors = $styleDef.find('sld\\:ColorMapEntry'); // FF
+                        }
+                        if(colorMap.length === 0) {
+                            colorMap = $styleDef.find('sld\\:ColorMap'); // FF
+                        }
+                        if(colorMap) {
+                            colorMap.attr('type','intervals');
                         }
                         colors.each(function() {
                             var cme = $(this),
@@ -1261,6 +1268,9 @@ angular.module('npn-viz-tool.gridded-services',[
              */
             setStyle: function(style) {
                 if(style !== sldBody) { // avoid off/on if nothing is changing
+                    if(style) {
+                        $log.debug('style:',style);
+                    }
                     sldBody = style;
                     this.bounce();
                 }
