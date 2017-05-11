@@ -3779,6 +3779,9 @@ angular.module('npn-viz-tool.gridded-services',[
                             },
                             getPointerColor: function(n) {
                                 return data[n].color;
+                            },
+                            getSelectionBarColor: function(n) {
+                                return data[n].color;
                             }
                         };
                     });
@@ -4779,7 +4782,12 @@ angular.module('npn-viz-tool.gridded-services',[
                         colors.each(function() {
                             var cme = $(this),
                                 q = parseInt(cme.attr('quantity'));
-                            cme.attr('opacity',(q >= minQ && q <= maxQ) ? '1.0' : '0.0');
+                            /*if(q === -9999) {
+                                cme.attr('opacity','0.0');
+                                //cme.remove();
+                            } else {*/
+                                cme.attr('opacity',(q > minQ && q <= maxQ) ? '1.0' : '0.0');
+                            /*}*/
                         });
                         var style = xmlToString(styleDef[0]);
                         self.setStyle(style);

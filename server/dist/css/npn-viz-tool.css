@@ -16,6 +16,10 @@ body {
   cursor: pointer;
 }
 
+.rzslider .rz-pointer.rz-active:after {
+  background-color: #fff !important;
+}
+
 .angular-google-map-container {
   position: absolute;
   top: 0px;

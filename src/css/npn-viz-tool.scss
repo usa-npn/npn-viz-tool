@@ -19,6 +19,9 @@ body {
 *[uib-popover] {
     cursor: pointer;
 }
+.rzslider .rz-pointer.rz-active:after {
+    background-color: #fff !important;
+}
 
 .angular-google-map-container {
     position: absolute;
