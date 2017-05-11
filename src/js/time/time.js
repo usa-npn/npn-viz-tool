@@ -73,6 +73,12 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 date = new Date(time);
             return d3_date_fmt(date);
         },
+        d3_short_date_fmt = d3.time.format('%b %-d'),
+        short_date_fmt = function(d) {
+            var time = ((d-1)*ChartService.ONE_DAY_MILLIS)+start.getTime(),
+                date = new Date(time);
+            return d3_short_date_fmt(date);
+        },
         x = d3.scale.linear().range([0,sizing.width]).domain([1,365]),
         xAxis = d3.svg.axis().scale(x).orient('bottom').tickFormat(date_fmt),
         yMax = 20000, // the max possible, initially
@@ -114,7 +120,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 ceil: 365,
                 step: 1,
                 translate: function(n) {
-                    return date_fmt(n)+' ('+n+')';
+                    return short_date_fmt(n)+' ('+n+')';
                 }
             }
         }
@@ -133,7 +139,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         chart.selectAll('text')
             .style('font-family','Arial');
 
-        var fontSize = '14px';
+        var fontSize = '16px';
 
         chart.selectAll('g .x.axis text')
             .style('font-size', fontSize);
@@ -152,9 +158,9 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 .style('fill','white')
                 .style('stroke','black')
                 .style('opacity','0.8')
-                .attr('width',100)
-                .attr('height',55),
-            fontSize = 12,
+                .attr('width',130)
+                .attr('height',60),
+            fontSize = 14,
             r = 5,
             vpad = 4,
             keys = ['average','selected','forecast','previous'], //Object.keys(data), hard coding to control order
@@ -171,15 +177,15 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                         .style('font-size', fontSize+'px')
                         .attr('x',(2*r))
                         .attr('y',(r/2))
-                        .text(data[key].year||'Average');
+                        .text(data[key].year||'30-year Average');
                     cnt++;
                 }
                 return cnt;
             },0);
             if(plotCnt < 3) {
-                rect.attr('height',40);
+                rect.attr('height',45);
             } else if (plotCnt > 3) {
-                rect.attr('height',70);
+                rect.attr('height',80);
             }
     }
 
@@ -245,10 +251,10 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .append('text')
             .attr('transform', 'rotate(-90)')
             .attr('y', '0')
-            .attr('dy','-4em')
+            .attr('dy','-3.75em')
             .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
             .style('text-anchor', 'middle')
-            .text('AGDD');
+            .text('Accumulated Growing Degree Days');
 
         chart.append('g')
             .attr('class', 'x axis')
@@ -256,10 +262,10 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .call(xAxis)
             .append('text')
             .attr('y','0')
-            .attr('dy','3em')
+            .attr('dy','2.5em')
             .attr('x',(sizing.width/2))
             .style('text-anchor', 'middle')
-            .text('DOY');
+            .text('Day of Year');
         commonChartUpdates();
     }
 
@@ -275,17 +281,20 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         chart = svg.append('g')
             .attr('transform', 'translate(' + sizing.margin.left + ',' + sizing.margin.top + ')');
 
-        chart.append('g')
-             .attr('class','chart-title')
-             .append('text')
-             .attr('y', '0')
-             .attr('dy','-3em')
-             .attr('x', (sizing.width/2))
-             .style('text-anchor','middle')
-             .style('font-size','18px')
-             .text(start.getFullYear()+' AGDD Daily Trends for '+
-                number(latLng.lat())+','+
-                number(latLng.lng())+' '+base_temp+' Base Temp ('+degF+')');
+        var chart_title = chart.append('g')
+             .attr('class','chart-title');
+        chart_title.append('text')
+            .attr('y', '0')
+            .attr('dy','-3em')
+            .attr('x', (sizing.width/3))
+            .style('text-anchor','start')
+            .style('font-size','18px').text('Accumulated Growing Degree Days');
+        chart_title.append('text')
+            .attr('y', '0')
+            .attr('dy','-1.8em')
+            .attr('x', (sizing.width/3))
+            .style('text-anchor','start')
+            .style('font-size','18px').text('(Lat: '+number(latLng.lat())+', Lon: '+number(latLng.lng())+') '+base_temp+degF+' Base Temp');
 
         updateAxes();
 
@@ -321,7 +330,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             hoverInfoX = 15,
             hoverInfo = hover.append('text')
                 .attr('class','gdd-info')
-                .attr('font-size',14)
+                .attr('font-size',16)
                 .attr('y',40),
             doyInfo = hoverInfo.append('tspan').attr('dy','1em').attr('x',hoverInfoX),
             doyLabel = doyInfo.append('tspan').attr('class','gdd-label').text('DOY: '),
@@ -390,7 +399,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 var temp,diff,avgDoy,diffDoy,text,i;
                 if(temps[key]) {
                     infos[key].style('display',null);
-                    infoLabels[key].text((temps[key].year||'Average')+': ');
+                    infoLabels[key].text((temps[key].year||'30-year Average')+': ');
                     temp = temps[key].gdd;
                     infoValues[key].text(number(temp,0)+degF);
                     if(infoDiffs[key]) {
@@ -539,7 +548,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                     });
                 addData('selected',{
                     year: start.getFullYear(),
-                    color: 'black',
+                    color: 'blue',
                     data: processed.selected
                 });
                 addData('forecast',{
@@ -550,12 +559,12 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             } else {
                 addData('selected',{
                     year: start.getFullYear(),
-                    color: 'black',
+                    color: 'blue',
                     data: results.selected.data
                 });
             }
             addData('average',{
-                color: 'blue',
+                color: 'black',
                 data: results.average.data
             });
             $log.debug('draw',data);

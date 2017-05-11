@@ -685,6 +685,10 @@ text.gdd-info .gdd-diff.below {
   fill: blue;
 }
 
+.modal-body.vis-dialog {
+  font-size: 1.1em;
+}
+
 .modal-body.time-series .controls {
   padding: 0px 20px;
 }
