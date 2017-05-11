@@ -674,8 +674,8 @@ angular.module('npn-viz-tool.vis-activity',[
                         },undefined);
                     hoverLine.attr('transform','translate('+xCoord+')');
                     hoverDoy
-                        .style('text-anchor',doy < 350 ? 'start' : 'end')
-                        .attr('x',xCoord+(10*(doy < 350 ? 1 : -1)))
+                        .style('text-anchor',doy < 324 ? 'start' : 'end')
+                        .attr('x',xCoord+(10*(doy < 324 ? 1 : -1)))
                         .text(dataPoint ?
                             DOY_FILTER(dataPoint.start_doy)+' - '+DOY_FILTER(dataPoint.end_doy) :
                             DOY_FILTER(doy));
