@@ -11,12 +11,12 @@
                         ng-options="f as f.label for f in frequencies"></select>
                 </div>
                 <div class="form-group">
-                    <label for="interpolate">Interpolate</label>
+                    <label for="interpolate">Line Interpolation</label>
                     <select class="form-control" id="year-{{input.id}}"
                         ng-model="selection.interpolate"
-                        ng-options="i as i for i in ['linear','step-after','cardinal','monotone']"></select>
+                        ng-options="i as i for i in ['linear','step-after','monotone']"></select>
                 </div>
-                <button class="btn btn-primary" ng-click="visualize()" ng-disabled="!selection.shouldRevisualize()">Visualize</button>
+                <!--button class="btn btn-primary" ng-click="visualize()" ng-disabled="!selection.shouldRevisualize()">Visualize</button-->
             </form>
         </li>
     </ul>
@@ -31,6 +31,5 @@
             </div>
         </center>
     </div>
-    <!--pre>{{selection | json}}</pre-->
 </div>
 </vis-dialog>

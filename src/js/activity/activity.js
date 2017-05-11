@@ -290,6 +290,13 @@ angular.module('npn-viz-tool.vis-activity',[
             },false);
         }
     };
+    $scope.$watch(function(){
+        return $scope.selection.shouldRevisualize();
+    },function(reviz) {
+        if(reviz) {
+            $scope.visualize();
+        }
+    });
     $scope.$watch('selection.frequency',function(f) {
         // any change to frequency invalidates any data currently held by curves
         $scope.selection.curves.forEach(function(c) {
@@ -356,6 +363,7 @@ angular.module('npn-viz-tool.vis-activity',[
             input: '='
         },
         link: function($scope) {
+            $scope.metricPopoverText = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. In in posuere sapien. Mauris interdum enim enim, vel dapibus turpis dapibus vitae. Fusce venenatis tellus sed velit consectetur cursus. Fusce a lorem a ligula molestie semper. Curabitur tempus luctus neque, elementum congue velit dictum vitae. Suspendisse eget ultricies quam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Cras quis elit nibh. Donec leo tellus, tempus at eros sed, sodales varius arcu.';
             $scope.validYears = (function(current){
                 var thisYear = (new Date()).getFullYear(),
                     years = [];
@@ -635,10 +643,9 @@ angular.module('npn-viz-tool.vis-activity',[
                         .attr('y2',sizing.height),
                     hoverDoy = hover.append('text')
                         .attr('class','focus-doy')
-                        .style('text-anchor','start')
                         .attr('y',10)
                         .attr('x',0)
-                        .text('testing');
+                        .text('hover doy');
                 function focusOff() {
                     selection.curves.forEach(function(c) { delete c.doyFocus; });
                     hover.style('display','none');
@@ -656,10 +663,22 @@ angular.module('npn-viz-tool.vis-activity',[
                     var coords = d3.mouse(this),
                         xCoord = coords[0],
                         yCoord = coords[1],
-                        doy = Math.round(x.invert(xCoord));
+                        doy = Math.round(x.invert(xCoord)),
+                        dataPoint = selection.curves.reduce(function(dp,curve){
+                            if(!dp && curve.plotted()) {
+                                dp = curve.data().reduce(function(found,point){
+                                    return found||(doy >= point.start_doy && doy <= point.end_doy ? point : undefined);
+                                },undefined);
+                            }
+                            return dp;
+                        },undefined);
                     hoverLine.attr('transform','translate('+xCoord+')');
-                    hoverDoy.attr('x',xCoord+10)
-                        .text(DOY_FILTER(doy));
+                    hoverDoy
+                        .style('text-anchor',doy < 350 ? 'start' : 'end')
+                        .attr('x',xCoord+(10*(doy < 350 ? 1 : -1)))
+                        .text(dataPoint ?
+                            DOY_FILTER(dataPoint.start_doy)+' - '+DOY_FILTER(dataPoint.end_doy) :
+                            DOY_FILTER(doy));
                     selection.curves.forEach(function(c) { c.doyFocus = doy; });
                     updateLegend();
                 }

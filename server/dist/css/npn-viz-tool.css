@@ -12,6 +12,10 @@ body {
   pointer-events: none;
 }
 
+*[uib-popover] {
+  cursor: pointer;
+}
+
 .angular-google-map-container {
   position: absolute;
   top: 0px;

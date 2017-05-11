@@ -235,7 +235,7 @@ angular.module('npn-viz-tool.vis-scatter',[
             .attr('dy','-3em')
             .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
             .style('text-anchor', 'middle')
-            .text('Day of Year');
+            .text('Onset Day of Year');
 
 		  svg.append('g').append('text').attr('dx',5)
 			   .attr('dy',sizing.height + 136)

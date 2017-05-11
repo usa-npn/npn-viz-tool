@@ -295,6 +295,13 @@ angular.module('npn-viz-tool.vis-activity',[
             },false);
         }
     };
+    $scope.$watch(function(){
+        return $scope.selection.shouldRevisualize();
+    },function(reviz) {
+        if(reviz) {
+            $scope.visualize();
+        }
+    });
     $scope.$watch('selection.frequency',function(f) {
         // any change to frequency invalidates any data currently held by curves
         $scope.selection.curves.forEach(function(c) {
@@ -361,6 +368,7 @@ angular.module('npn-viz-tool.vis-activity',[
             input: '='
         },
         link: function($scope) {
+            $scope.metricPopoverText = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. In in posuere sapien. Mauris interdum enim enim, vel dapibus turpis dapibus vitae. Fusce venenatis tellus sed velit consectetur cursus. Fusce a lorem a ligula molestie semper. Curabitur tempus luctus neque, elementum congue velit dictum vitae. Suspendisse eget ultricies quam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Cras quis elit nibh. Donec leo tellus, tempus at eros sed, sodales varius arcu.';
             $scope.validYears = (function(current){
                 var thisYear = (new Date()).getFullYear(),
                     years = [];
@@ -640,10 +648,9 @@ angular.module('npn-viz-tool.vis-activity',[
                         .attr('y2',sizing.height),
                     hoverDoy = hover.append('text')
                         .attr('class','focus-doy')
-                        .style('text-anchor','start')
                         .attr('y',10)
                         .attr('x',0)
-                        .text('testing');
+                        .text('hover doy');
                 function focusOff() {
                     selection.curves.forEach(function(c) { delete c.doyFocus; });
                     hover.style('display','none');
@@ -661,10 +668,22 @@ angular.module('npn-viz-tool.vis-activity',[
                     var coords = d3.mouse(this),
                         xCoord = coords[0],
                         yCoord = coords[1],
-                        doy = Math.round(x.invert(xCoord));
+                        doy = Math.round(x.invert(xCoord)),
+                        dataPoint = selection.curves.reduce(function(dp,curve){
+                            if(!dp && curve.plotted()) {
+                                dp = curve.data().reduce(function(found,point){
+                                    return found||(doy >= point.start_doy && doy <= point.end_doy ? point : undefined);
+                                },undefined);
+                            }
+                            return dp;
+                        },undefined);
                     hoverLine.attr('transform','translate('+xCoord+')');
-                    hoverDoy.attr('x',xCoord+10)
-                        .text(DOY_FILTER(doy));
+                    hoverDoy
+                        .style('text-anchor',doy < 350 ? 'start' : 'end')
+                        .attr('x',xCoord+(10*(doy < 350 ? 1 : -1)))
+                        .text(dataPoint ?
+                            DOY_FILTER(dataPoint.start_doy)+' - '+DOY_FILTER(dataPoint.end_doy) :
+                            DOY_FILTER(doy));
                     selection.curves.forEach(function(c) { c.doyFocus = doy; });
                     updateLegend();
                 }
@@ -6634,12 +6653,12 @@ angular.module("js/activity/activity.html", []).run(["$templateCache", function(
     "                        ng-options=\"f as f.label for f in frequencies\"></select>\n" +
     "                </div>\n" +
     "                <div class=\"form-group\">\n" +
-    "                    <label for=\"interpolate\">Interpolate</label>\n" +
+    "                    <label for=\"interpolate\">Line Interpolation</label>\n" +
     "                    <select class=\"form-control\" id=\"year-{{input.id}}\"\n" +
     "                        ng-model=\"selection.interpolate\"\n" +
-    "                        ng-options=\"i as i for i in ['linear','step-after','cardinal','monotone']\"></select>\n" +
+    "                        ng-options=\"i as i for i in ['linear','step-after','monotone']\"></select>\n" +
     "                </div>\n" +
-    "                <button class=\"btn btn-primary\" ng-click=\"visualize()\" ng-disabled=\"!selection.shouldRevisualize()\">Visualize</button>\n" +
+    "                <!--button class=\"btn btn-primary\" ng-click=\"visualize()\" ng-disabled=\"!selection.shouldRevisualize()\">Visualize</button-->\n" +
     "            </form>\n" +
     "        </li>\n" +
     "    </ul>\n" +
@@ -6654,7 +6673,6 @@ angular.module("js/activity/activity.html", []).run(["$templateCache", function(
     "            </div>\n" +
     "        </center>\n" +
     "    </div>\n" +
-    "    <!--pre>{{selection | json}}</pre-->\n" +
     "</div>\n" +
     "</vis-dialog>\n" +
     "");
@@ -6689,6 +6707,7 @@ angular.module("js/activity/curve-control.html", []).run(["$templateCache", func
     "            <select class=\"form-control\" id=\"metric-{{input.id}}\"\n" +
     "                ng-model=\"input.metric\"\n" +
     "                ng-options=\"m as m.label for m in input.validMetrics\"></select>\n" +
+    "            <label popover-placement=\"bottom\" popover-title=\"Metric\" uib-popover=\"{{metricPopoverText}}\" popover-trigger=\"mouseenter\" popover-append-to-body=\"true\"><i class=\"fa fa-info-circle\" aria-hidden=\"true\"></i></label>\n" +
     "        </div>\n" +
     "    </form>\n" +
     "</div>\n" +
@@ -7722,7 +7741,7 @@ angular.module('npn-viz-tool.vis-scatter',[
             .attr('dy','-3em')
             .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
             .style('text-anchor', 'middle')
-            .text('Day of Year');
+            .text('Onset Day of Year');
 
 		  svg.append('g').append('text').attr('dx',5)
 			   .attr('dy',sizing.height + 136)
