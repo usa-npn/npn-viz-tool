@@ -229,7 +229,7 @@ angular.module('npn-viz-tool.layers',[
     return {
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
-        controller: function($scope) {
+        link: function($scope) {
             $scope.hasSufficientCriteria = FilterService.hasSufficientCriteria;
             var eventListeners = [],
                 lastFeature;

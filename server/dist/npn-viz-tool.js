@@ -2660,7 +2660,7 @@ angular.module('npn-viz-tool.filter',[
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl" events="markerEvents"></ui-gmap-markers>',
         scope: {
         },
-        controller: function($scope) {
+        link: function($scope) {
             var filter_control_open = false;
             $scope.results = {
                 markers: []
@@ -2752,7 +2752,7 @@ angular.module('npn-viz-tool.filter',[
     return {
         restrict: 'E',
         templateUrl: 'js/filter/choroplethInfo.html',
-        controller: function($scope) {
+        link: function($scope) {
             var mouseIn = false;
             $scope.show = false;
             function buildColors(val) {
@@ -2833,9 +2833,9 @@ angular.module('npn-viz-tool.filter',[
         templateUrl: 'js/filter/filterTags.html',
         scope: {
         },
-        controller: function($scope){
+        controller: ['$scope',function($scope){
             $scope.getFilter = FilterService.getFilter;
-        }
+        }]
     };
 }])
 .filter('speciesBadge',function(){
@@ -2875,7 +2875,7 @@ angular.module('npn-viz-tool.filter',[
         scope: {
             arg: '='
         },
-        controller: function($scope){
+        link: function($scope){
             $scope.titleFormat = SettingsService.getSettingValue('tagSpeciesTitle');
             $scope.$on('setting-update-tagSpeciesTitle',function(event,data){
                 $scope.titleFormat = data.value;
@@ -2947,7 +2947,7 @@ angular.module('npn-viz-tool.filter',[
         scope: {
             arg: '='
         },
-        controller: function($scope){
+        link: function($scope){
             $scope.badgeFormat = SettingsService.getSettingValue('tagBadgeFormat');
             $scope.badgeTooltip = SettingsService.getSettingValueLabel('tagBadgeFormat');
             $scope.$on('setting-update-tagBadgeFormat',function(event,data){
@@ -2979,7 +2979,7 @@ angular.module('npn-viz-tool.filter',[
         scope: {
             arg: '='
         },
-        controller: function($scope){
+        link: function($scope){
             $scope.status = {
                 isopen: false
             };
@@ -5568,7 +5568,7 @@ angular.module('npn-viz-tool.layers',[
     return {
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
-        controller: function($scope) {
+        link: function($scope) {
             $scope.hasSufficientCriteria = FilterService.hasSufficientCriteria;
             var eventListeners = [],
                 lastFeature;
@@ -5892,7 +5892,7 @@ angular.module('npn-viz-tool.map',[
         template: '<div id="npn-working" ng-show="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>',
         scope: {
         },
-        controller: function($scope) {
+        link: function($scope) {
             function startWorking() { $scope.working = true; }
             function stopWorking() { $scope.working = false;}
             startWorking();
@@ -5906,6 +5906,7 @@ angular.module('npn-viz-tool.map',[
         }
     };
 }]);
+
 /**
  * @ngdoc overview
  * @name npn-viz-tool.vis-map
@@ -8071,7 +8072,7 @@ angular.module('npn-viz-tool.settings',[
     return {
         restrict: 'E',
         templateUrl: 'js/settings/settingsControl.html',
-        controller: function($scope) {
+        link: function($scope) {
             SettingsService.populateFromSharingUrlArgs($location.search()['ss']);
             $scope.settings = SettingsService.getSettings();
             function broadcastSettingChange(key) {
@@ -8108,7 +8109,7 @@ angular.module('npn-viz-tool.share',[
         restrict: 'E',
         template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria() && !gridSelected()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
         scope: {},
-        controller: function($scope){
+        link: function($scope){
             FilterService.pause();
             uiGmapIsReady.promise(1).then(function(instances){
                 var map = instances[0],
@@ -8173,7 +8174,7 @@ angular.module('npn-viz-tool.share',[
                     FilterService.resume();
                 }
             });
-			
+
 			$scope.gridSelected = function() {
                 return GriddedControlService.layer;
             };
@@ -8188,11 +8189,11 @@ angular.module('npn-viz-tool.share',[
 
 				var params = {},
 					absUrl = $location.absUrl(),
-					q = absUrl.indexOf('?');				
+					q = absUrl.indexOf('?');
 				if(!FilterService.isFilterEmpty()){
-					
+
 					var filter = FilterService.getFilter();
-					
+
 					params['d'] = filter.getDateArg().toString();
 					filter.getSpeciesArgs().forEach(function(s){
 						if(!params['s']) {
@@ -8240,6 +8241,7 @@ angular.module('npn-viz-tool.share',[
         }
     };
 }]);
+
 angular.module('npn-viz-tool.stations',[
     'npn-viz-tool.filter',
     'npn-viz-tool.vis-cache',
@@ -9118,7 +9120,7 @@ angular.module('npn-viz-tool.toolbar',[
     templateUrl: 'js/toolbar/toolbar.html',
     transclude: true,
     scope: {},
-    controller: function($scope) {
+    controller: ['$scope',function($scope) {
       var tools = $scope.tools = [];
       function broadcastChange(t) {
         $rootScope.$broadcast('tool-'+(t.selected ? 'open' : 'close'),{
@@ -9144,7 +9146,7 @@ angular.module('npn-viz-tool.toolbar',[
         $scope.open = t.selected = false;
         broadcastChange(t);
       };
-    }
+    }]
   };
 }])
 .directive('tool', [function() {
@@ -9590,7 +9592,7 @@ angular.module('npn-viz-tool.vis',[
         templateUrl: 'js/vis/visControl.html',
         scope: {
         },
-        controller: function($scope) {
+        link: function($scope) {
             $scope.isFilterEmpty = ChartService.isFilterEmpty;
             $scope.open = ChartService.openVisualization;
             $scope.visualizations = ChartService.getVisualizations();

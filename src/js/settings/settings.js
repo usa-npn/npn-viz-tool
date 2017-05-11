@@ -118,7 +118,7 @@ angular.module('npn-viz-tool.settings',[
     return {
         restrict: 'E',
         templateUrl: 'js/settings/settingsControl.html',
-        controller: function($scope) {
+        link: function($scope) {
             SettingsService.populateFromSharingUrlArgs($location.search()['ss']);
             $scope.settings = SettingsService.getSettings();
             function broadcastSettingChange(key) {

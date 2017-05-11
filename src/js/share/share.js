@@ -16,7 +16,7 @@ angular.module('npn-viz-tool.share',[
         restrict: 'E',
         template: '<a title="Share" href id="share-control" class="btn btn-default btn-xs" ng-disabled="!getFilter().hasSufficientCriteria() && !gridSelected()" ng-click="share()"><i class="fa fa-share"></i></a><div ng-show="url" id="share-content"><input type="text" class="form-control" ng-model="url" ng-blur="url = null" onClick="this.setSelectionRange(0, this.value.length)"/></div>',
         scope: {},
-        controller: function($scope){
+        link: function($scope){
             FilterService.pause();
             uiGmapIsReady.promise(1).then(function(instances){
                 var map = instances[0],
@@ -81,7 +81,7 @@ angular.module('npn-viz-tool.share',[
                     FilterService.resume();
                 }
             });
-			
+
 			$scope.gridSelected = function() {
                 return GriddedControlService.layer;
             };
@@ -96,11 +96,11 @@ angular.module('npn-viz-tool.share',[
 
 				var params = {},
 					absUrl = $location.absUrl(),
-					q = absUrl.indexOf('?');				
+					q = absUrl.indexOf('?');
 				if(!FilterService.isFilterEmpty()){
-					
+
 					var filter = FilterService.getFilter();
-					
+
 					params['d'] = filter.getDateArg().toString();
 					filter.getSpeciesArgs().forEach(function(s){
 						if(!params['s']) {

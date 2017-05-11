@@ -1159,7 +1159,7 @@ angular.module('npn-viz-tool.filter',[
         template: '<ui-gmap-markers models="results.markers" idKey="\'$markerKey\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" clusterOptions="clusterOptions" control="mapControl" events="markerEvents"></ui-gmap-markers>',
         scope: {
         },
-        controller: function($scope) {
+        link: function($scope) {
             var filter_control_open = false;
             $scope.results = {
                 markers: []
@@ -1251,7 +1251,7 @@ angular.module('npn-viz-tool.filter',[
     return {
         restrict: 'E',
         templateUrl: 'js/filter/choroplethInfo.html',
-        controller: function($scope) {
+        link: function($scope) {
             var mouseIn = false;
             $scope.show = false;
             function buildColors(val) {
@@ -1332,9 +1332,9 @@ angular.module('npn-viz-tool.filter',[
         templateUrl: 'js/filter/filterTags.html',
         scope: {
         },
-        controller: function($scope){
+        controller: ['$scope',function($scope){
             $scope.getFilter = FilterService.getFilter;
-        }
+        }]
     };
 }])
 .filter('speciesBadge',function(){
@@ -1374,7 +1374,7 @@ angular.module('npn-viz-tool.filter',[
         scope: {
             arg: '='
         },
-        controller: function($scope){
+        link: function($scope){
             $scope.titleFormat = SettingsService.getSettingValue('tagSpeciesTitle');
             $scope.$on('setting-update-tagSpeciesTitle',function(event,data){
                 $scope.titleFormat = data.value;
@@ -1446,7 +1446,7 @@ angular.module('npn-viz-tool.filter',[
         scope: {
             arg: '='
         },
-        controller: function($scope){
+        link: function($scope){
             $scope.badgeFormat = SettingsService.getSettingValue('tagBadgeFormat');
             $scope.badgeTooltip = SettingsService.getSettingValueLabel('tagBadgeFormat');
             $scope.$on('setting-update-tagBadgeFormat',function(event,data){
@@ -1478,7 +1478,7 @@ angular.module('npn-viz-tool.filter',[
         scope: {
             arg: '='
         },
-        controller: function($scope){
+        link: function($scope){
             $scope.status = {
                 isopen: false
             };

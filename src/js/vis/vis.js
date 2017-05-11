@@ -421,7 +421,7 @@ angular.module('npn-viz-tool.vis',[
         templateUrl: 'js/vis/visControl.html',
         scope: {
         },
-        controller: function($scope) {
+        link: function($scope) {
             $scope.isFilterEmpty = ChartService.isFilterEmpty;
             $scope.open = ChartService.openVisualization;
             $scope.visualizations = ChartService.getVisualizations();

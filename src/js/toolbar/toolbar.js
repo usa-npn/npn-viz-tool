@@ -7,7 +7,7 @@ angular.module('npn-viz-tool.toolbar',[
     templateUrl: 'js/toolbar/toolbar.html',
     transclude: true,
     scope: {},
-    controller: function($scope) {
+    controller: ['$scope',function($scope) {
       var tools = $scope.tools = [];
       function broadcastChange(t) {
         $rootScope.$broadcast('tool-'+(t.selected ? 'open' : 'close'),{
@@ -33,7 +33,7 @@ angular.module('npn-viz-tool.toolbar',[
         $scope.open = t.selected = false;
         broadcastChange(t);
       };
-    }
+    }]
   };
 }])
 .directive('tool', [function() {
