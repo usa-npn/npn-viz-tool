@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2017-05-11
+ * Version: 1.0.0 - 2017-05-16
  */
 
 angular.module('npn-viz-tool.vis-activity',[
@@ -19,42 +19,52 @@ angular.module('npn-viz-tool.vis-activity',[
         },
         COMMON_METRICS = [{
             id: 'num_yes_records',
-            label: 'Total Yes Records',
+            sampleSize: 'status_records_sample_size',
+            label: 'Total Yes Records'
         },{
             id: 'proportion_yes_records',
+            sampleSize: 'status_records_sample_size',
             label: 'Proportion Yes Records',
             valueFormat: DECIMAL
         }],
         KINGDOM_METRICS = {
             Plantae: COMMON_METRICS.concat([{
                 id: 'numindividuals_with_yes_record',
+                sampleSize: 'individuals_sample_size',
                 label: 'Total Individuals with Yes Records'
             },{
                 id: 'proportion_individuals_with_yes_record',
+                sampleSize: 'individuals_sample_size',
                 label: 'Proportion Individuals with Yes Records',
                 valueFormat: DECIMAL
             }]),
             Animalia: COMMON_METRICS.concat([{
                 id: 'numsites_with_yes_record',
+                sampleSize: 'sites_sample_size',
                 label: 'Total Sites with Yes Records'
             },{
                 id: 'proportion_sites_with_yes_record',
+                sampleSize: 'sites_sample_size',
                 label: 'Proportion Sites with Yes Records',
                 valueFormat: DECIMAL
             },{
                 id: 'total_numanimals_in-phase',
+                sampleSize: 'in-phase_site_visits_sample_size',
                 label: 'Total Animals In Phase'
             },
             {
                 id: 'mean_numanimals_in-phase',
+                sampleSize: 'in-phase_per_hr_sites_sample_size',
                 label: 'Animals In Phase',
                 valueFormat: DECIMAL
             },{
                 id: 'mean_numanimals_in-phase_per_hr',
+                sampleSize: 'in-phase_per_hr_sites_sample_size',
                 label: 'Animals In Phase per Hour',
                 valueFormat: DECIMAL
             },{
                 id: 'mean_numanimals_in-phase_per_hr_per_acre',
+                sampleSize: 'phase_per_hr_per_acre_sites_sample_size',
                 label: 'Animals In Phase per Hour per Acre',
                 valueFormat: DECIMAL
             }])
@@ -64,9 +74,14 @@ angular.module('npn-viz-tool.vis-activity',[
                 _species,
                 _year,
                 _phenophase,
+                _metric,
                 _phenophases,
                 _metrics;
             self.id = id;
+            function reset() {
+                delete self.$data;
+                delete self.$metricData;
+            }
             Object.defineProperty(this,'validPhenophases',{
                 get: function() { return _phenophases; }
             });
@@ -77,7 +92,7 @@ angular.module('npn-viz-tool.vis-activity',[
                 enumerable: true,
                 get: function() { return _year; },
                 set: function(y) {
-                    delete self.$data; // change invalidates any held data
+                    reset();
                     _year = y;
                 }
             });
@@ -85,15 +100,23 @@ angular.module('npn-viz-tool.vis-activity',[
                 enumerable: true,
                 get: function() { return _phenophase; },
                 set: function(p) {
-                    delete self.$data; // change invalidates any held data
+                    reset();
                     _phenophase = p;
+                }
+            });
+            Object.defineProperty(this,'metric',{
+                enumerable: true,
+                get: function() { return _metric; },
+                set: function(m) {
+                    reset();
+                    _metric = m;
                 }
             });
             Object.defineProperty(this,'species',{
                 enumerable: true,
                 get: function() { return _species; },
                 set: function(s) {
-                    delete self.$data; // change invalidates any held data
+                    reset();
                     _species = s;
                     _metrics = _species && _species.kingdom  ? (KINGDOM_METRICS[_species.kingdom]||[]) : [];
                     if(self.metric && _metrics.indexOf(self.metric) === -1) {
@@ -118,10 +141,11 @@ angular.module('npn-viz-tool.vis-activity',[
     };
     ActivityCurve.prototype.doyDataValue = function() {
         var self = this,
+            data = self.data(),
             value,d,i;
-        if(self.doyFocus && self.$data) {
-            for(i = 0; i < self.$data.length; i++) {
-                d = self.$data[i];
+        if(self.doyFocus && data) {
+            for(i = 0; i < data.length; i++) {
+                d = data[i];
                 if(self.doyFocus >= d.start_doy && self.doyFocus <= d.end_doy) {
                     return (self.metric.valueFormat||angular.identity)(d[self.metric.id]);
                 }
@@ -140,6 +164,7 @@ angular.module('npn-viz-tool.vis-activity',[
     ActivityCurve.prototype.data = function(_) {
         if(arguments.length) {
             delete this.$data;
+            delete this.$metricData;
             if(_) {
                 _.forEach(function(d) {
                     d.start_doy = DOY(d.start_date);
@@ -155,11 +180,34 @@ angular.module('npn-viz-tool.vis-activity',[
         var self = this,
             data = self.$data;
         if(data && self.metric) {
-            data = data.filter(function(d){
-                return d[self.metric.id] != -9999;
-            });
-            if(data.length !== self.$data.length) {
-                $log.debug('filtered out '+(self.$data.length-data.length)+'/'+ self.$data.length +' of -9999 records for metric ',self.metric);
+            // avoid re-filtering with UI updates, store the result and re-use until
+            // something changes
+            if(!self.$metricData) {
+                if(!self.metric.sampleSize) {
+                    $log.warn('Metric does not define a sampleSize property, cannot filter out invalid data points.');
+                }
+                data = data.filter(function(d){
+                    if(self.metric.sampleSize && d[self.metric.sampleSize] === -9999) {
+                        //console.log('SAMPLE_SIZE filter.');
+                        return false;
+                    }
+                    return d[self.metric.id] !== -9999;
+                });
+                if(data.length !== self.$data.length) {
+                    $log.debug('filtered out '+(self.$data.length-data.length)+'/'+ self.$data.length +' of -9999 records for metric ',self.metric);
+                }
+                /*
+                if(data.length === 26) { // simulate situation for development bi-weekly data
+                    //console.log('DEBUG CODE MODIFYING DATA!!');
+                    // create a single isolated data point and three separate curves
+                    // [0-9] [11] [13-19] [21-25]
+                    data = data.filter(function(d,i) {
+                        return (i !== 10 && i !== 12 && i !== 20);
+                    });
+                }*/
+                self.$metricData = data;
+            } else {
+                data = self.$metricData;
             }
         }
         return data;
@@ -241,32 +289,55 @@ angular.module('npn-viz-tool.vis-activity',[
     ActivityCurve.prototype.draw = function(chart) {
         var self = this,
             data = self.data(),
-            x,y,line;
+            datas = [[]],
+            x,y,i,d,dn,line,
+            r = 3;
         chart.selectAll('path.curve.curve-'+self.id).remove();
+        chart.selectAll('circle.curve-point.curve-point-'+self.id).remove();
         if(data && data.length) {
-            // need to duplicate the final datapoint so we can draw a line from
-            // its start_doy to end_doy
-            // for preceeding interval N, N.end_doy = (N+1).start_doy -1
-            // see x implementation below
-            data = data.concat([data[data.length-1]]);
-            $log.debug('draw.data',data);
+            // detect any gaps in the data, break it into multiple curves/points
+            // to plot
+            for(i = 0; i < data.length; i++) {
+                d = data[i];
+                dn = (i+1) < data.length ? data[i+1] : undefined;
+                datas[datas.length-1].push(d);
+                if(dn && dn.start_doy !== (d.end_doy+1)) {
+                    datas.push([]); // there's a gap in the data, start another curve or point
+                }
+            }
+
             x = self.x();
             y = self.y();
+            var x_functor = function(d,i) { return x(d.start_doy+Math.round((d.end_doy-d.start_doy)/2)); },
+                y_functor = function(d) { return y(d[self.metric.id]); };
             line = d3.svg.line()
                 .interpolate(self.interpolate||'monotone')
-                .x(function(d,i) {
-                    return x(i === (data.length-1) ? d.end_doy : d.start_doy);
-                })
-                .y(function(d) { return y(d[self.metric.id]); });
-            $log.debug('ActivityCurve.draw',self.species,self.phenophase,self.year,self.metric,data,self.domain(),y.domain());
-            chart.append('path')
-                .attr('class','curve curve-'+self.id)
-                .attr('fill','none')
-                .attr('stroke',self.color())
-                .attr('stroke-linejoin','round')
-                .attr('stroke-linecap','round')
-                .attr('stroke-width',1.5)
-                .attr('d',line(data));
+                .x(x_functor)
+                .y(y_functor);
+            $log.debug('ActivityCurve.draw',self.species,self.phenophase,self.year,self.metric,self.domain(),y.domain());
+            $log.debug('draw.datas',datas);
+            datas.forEach(function(curve_data,i){
+                if(curve_data.length === 1 || self.dataPoints) {
+                    curve_data.forEach(function(d){
+                        chart.append('circle')
+                            .attr('class','curve-point curve-point-'+self.id)
+                            .attr('r',r)
+                            .attr('fill',self.color())
+                            .attr('cx',x_functor(d))
+                            .attr('cy',y_functor(d));
+                    });
+                }
+                if(curve_data.length > 1) {
+                    chart.append('path')
+                        .attr('class','curve curve-'+self.id)
+                        .attr('fill','none')
+                        .attr('stroke',self.color())
+                        .attr('stroke-linejoin','round')
+                        .attr('stroke-linecap','round')
+                        .attr('stroke-width',1.5)
+                        .attr('d',line(curve_data));
+                }
+            });
         }
     };
     return ActivityCurve;
@@ -287,6 +358,7 @@ angular.module('npn-viz-tool.vis-activity',[
     $scope.selection = {
         $updateCount: 0,
         interpolate: 'monotone',
+        dataPoints: false,
         curves: [{color:'#0000ff',orient:'left'},{color:'orange',orient:'right'}].map(function(config,i){ return new ActivityCurve(i).color(config.color).axisOrient(config.orient); }),
         frequency: $scope.frequencies[0],
         shouldRevisualize: function() {
@@ -322,6 +394,12 @@ angular.module('npn-viz-tool.vis-activity',[
             }
             updateChart();
         });
+    });
+    $scope.$watch('selection.dataPoints',function(dataPoints){
+        $scope.selection.curves.forEach(function(c){
+            c.dataPoints = dataPoints;
+        });
+        updateChart();
     });
     $scope.$watch('selection.curves[0].metric',updateChart);
     $scope.$watch('selection.curves[1].metric',updateChart);
@@ -6663,9 +6741,13 @@ angular.module("js/activity/activity.html", []).run(["$templateCache", function(
     "                </div>\n" +
     "                <div class=\"form-group\">\n" +
     "                    <label for=\"interpolate\">Line Interpolation</label>\n" +
-    "                    <select class=\"form-control\" id=\"year-{{input.id}}\"\n" +
+    "                    <select class=\"form-control\" id=\"interpolate\"\n" +
     "                        ng-model=\"selection.interpolate\"\n" +
     "                        ng-options=\"i as i for i in ['linear','step-after','monotone']\"></select>\n" +
+    "                </div>\n" +
+    "                <div class=\"form-group\">\n" +
+    "                    <label for=\"points\">Data Points</label>\n" +
+    "                    <input type=\"checkbox\" id=\"points\" ng-model=\"selection.dataPoints\" />\n" +
     "                </div>\n" +
     "                <!--button class=\"btn btn-primary\" ng-click=\"visualize()\" ng-disabled=\"!selection.shouldRevisualize()\">Visualize</button-->\n" +
     "            </form>\n" +

@@ -12,9 +12,13 @@
                 </div>
                 <div class="form-group">
                     <label for="interpolate">Line Interpolation</label>
-                    <select class="form-control" id="year-{{input.id}}"
+                    <select class="form-control" id="interpolate"
                         ng-model="selection.interpolate"
                         ng-options="i as i for i in ['linear','step-after','monotone']"></select>
+                </div>
+                <div class="form-group">
+                    <label for="points">Data Points</label>
+                    <input type="checkbox" id="points" ng-model="selection.dataPoints" />
                 </div>
                 <!--button class="btn btn-primary" ng-click="visualize()" ng-disabled="!selection.shouldRevisualize()">Visualize</button-->
             </form>
