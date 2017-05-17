@@ -410,7 +410,15 @@ angular.module('npn-viz-tool.vis-map',[
                     featureType: 'transit.station',
                     elementType: 'labels',
                     stylers: [{visibility:'off'}]
-                }],
+                },
+                {
+                    featureType: 'poi.park',
+                    stylers: [{ visibility: 'off' }]
+                },
+                {
+                    featureType: 'landscape',
+                    stylers: [{ visibility: 'off' }]
+                }]
             },
 
             events: {
