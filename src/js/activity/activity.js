@@ -20,7 +20,8 @@ angular.module('npn-viz-tool.vis-activity',[
             id: 'proportion_yes_records',
             sampleSize: 'status_records_sample_size',
             label: 'Proportion Yes Records',
-            valueFormat: DECIMAL
+            valueFormat: DECIMAL,
+            proportion: true
         }],
         KINGDOM_METRICS = {
             Plantae: COMMON_METRICS.concat([{
@@ -31,7 +32,8 @@ angular.module('npn-viz-tool.vis-activity',[
                 id: 'proportion_individuals_with_yes_record',
                 sampleSize: 'individuals_sample_size',
                 label: 'Proportion Individuals with Yes Records',
-                valueFormat: DECIMAL
+                valueFormat: DECIMAL,
+                proportion: true
             }]),
             Animalia: COMMON_METRICS.concat([{
                 id: 'numsites_with_yes_record',
@@ -41,7 +43,8 @@ angular.module('npn-viz-tool.vis-activity',[
                 id: 'proportion_sites_with_yes_record',
                 sampleSize: 'sites_sample_size',
                 label: 'Proportion Sites with Yes Records',
-                valueFormat: DECIMAL
+                valueFormat: DECIMAL,
+                proportion: true
             },{
                 id: 'total_numanimals_in-phase',
                 sampleSize: 'in-phase_site_visits_sample_size',
@@ -142,7 +145,11 @@ angular.module('npn-viz-tool.vis-activity',[
             for(i = 0; i < data.length; i++) {
                 d = data[i];
                 if(self.doyFocus >= d.start_doy && self.doyFocus <= d.end_doy) {
-                    return (self.metric.valueFormat||angular.identity)(d[self.metric.id]);
+                    value = (self.metric.valueFormat||angular.identity)(d[self.metric.id]);
+                    if(d[self.metric.sampleSize] !== -9999) {
+                        value += ' N:'+ d[self.metric.sampleSize];
+                    }
+                    return value;
                 }
             }
         }
@@ -353,7 +360,7 @@ angular.module('npn-viz-tool.vis-activity',[
     $scope.selection = {
         $updateCount: 0,
         interpolate: 'monotone',
-        dataPoints: false,
+        dataPoints: true,
         curves: [{color:'#0000ff',orient:'left'},{color:'orange',orient:'right'}].map(function(config,i){ return new ActivityCurve(i).color(config.color).axisOrient(config.orient); }),
         frequency: $scope.frequencies[0],
         shouldRevisualize: function() {
@@ -521,14 +528,22 @@ angular.module('npn-viz-tool.vis-activity',[
             });
 
             function usingCommonMetric() {
-                return !selection.curves[1].isValid() || // 0 can't be invalid, but if 1 is then there's only 1 axis
-                        (selection.curves[0].metricId() === selection.curves[1].metricId());
+                if (!selection.curves[1].isValid() || // 0 can't be invalid, but if 1 is then there's only 1 axis
+                    (selection.curves[0].metricId() === selection.curves[1].metricId())) {
+                    return selection.curves[0].metric;
+                }
             }
 
             function updateChart() {
                 // pad top end of domains by N%
-                function padDomain(d) {
-                    return (d && d.length === 2) ? [d[0],(d[1]*1.05)] : d;
+                function padDomain(d,metric) {
+                    if(d && d.length === 2) {
+                        d = [d[0],(d[1]*1.05)];
+                        if(metric && metric.proportion && d[1] > 1) {
+                            d[1] = 1.0; // don't allow proportions to overflow for clarity.
+                        }
+                    }
+                    return d;
                 }
                 chart.selectAll('g .axis').remove();
 
@@ -541,7 +556,7 @@ angular.module('npn-viz-tool.vis-activity',[
                             }
                             return arr;
                         },[])),
-                        y = new_y().domain(padDomain(domain));
+                        y = new_y().domain(padDomain(domain,commonMetric));
                     $log.debug('ActivityCurves.common domain',domain);
                     selection.curves.forEach(function(c){
                         c.y(y);
@@ -551,7 +566,7 @@ angular.module('npn-viz-tool.vis-activity',[
                         // re-initialize y in case a previous plot re-used the same y
                         // each has an independent domain
                         if(c.isValid()) {
-                            c.y(new_y().domain(padDomain(c.domain())));
+                            c.y(new_y().domain(padDomain(c.domain(),c.metric)));
                         }
                     });
                 }
