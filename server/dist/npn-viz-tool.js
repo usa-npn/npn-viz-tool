@@ -1,6 +1,6 @@
 /*
  * USANPN-Visualization-Tool
- * Version: 1.0.0 - 2017-05-16
+ * Version: 1.0.0 - 2017-05-23
  */
 
 angular.module('npn-viz-tool.vis-activity',[

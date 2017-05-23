@@ -722,10 +722,10 @@ text.gdd-info {
     .gdd-label {
         font-weight: bold;
         &.average {
-            fill: blue;
+            fill: black;
         }
         &.selected {
-            fill: black;
+            fill: blue;
         }
         &.forecast {
             fill: red;

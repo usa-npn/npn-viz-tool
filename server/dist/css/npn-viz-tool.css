@@ -675,10 +675,10 @@ text.gdd-info .gdd-label {
   font-weight: bold;
 }
 text.gdd-info .gdd-label.average {
-  fill: blue;
+  fill: black;
 }
 text.gdd-info .gdd-label.selected {
-  fill: black;
+  fill: blue;
 }
 text.gdd-info .gdd-label.forecast {
   fill: red;
