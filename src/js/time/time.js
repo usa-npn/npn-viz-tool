@@ -286,14 +286,14 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         chart_title.append('text')
             .attr('y', '0')
             .attr('dy','-3em')
-            .attr('x', (sizing.width/3))
-            .style('text-anchor','start')
+            .attr('x', (sizing.width/2))
+            .style('text-anchor','middle')
             .style('font-size','18px').text('Accumulated Growing Degree Days');
         chart_title.append('text')
             .attr('y', '0')
             .attr('dy','-1.8em')
-            .attr('x', (sizing.width/3))
-            .style('text-anchor','start')
+            .attr('x', (sizing.width/2))
+            .style('text-anchor','middle')
             .style('font-size','18px').text('(Lat: '+number(latLng.lat())+', Lon: '+number(latLng.lng())+') '+base_temp+degF+' Base Temp');
 
         updateAxes();
