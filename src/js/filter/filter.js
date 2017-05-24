@@ -198,7 +198,8 @@ angular.module('npn-viz-tool.filter',[
                     //date: FilterService.getDate().end_date+'-12-31',
                     species_id: self.arg.species_id
                 }
-            }).success(function(phases) {
+            }).then(function(response){
+                var phases = response.data;
                 var seen = {}; // the call returns redundant data so filter it out.
                 self.phenophases = phases[0].phenophases.filter(function(pp){
                     if(seen[pp.phenophase_id]) {
@@ -595,10 +596,11 @@ angular.module('npn-viz-tool.filter',[
                 def.resolve(list);
             } else {
                 $http.get($url('/npn_portal/species/getSpeciesFilter.json'),{params: params})
-                     .success(function(species){
+                    .then(function(response) {
+                        var species = response.data;
                         CacheService.put(cacheKey,species);
                         def.resolve(species);
-                     });
+                    });
                  }
         } else {
             def.resolve(list);
@@ -634,12 +636,12 @@ angular.module('npn-viz-tool.filter',[
         } else {
             $http.get($url('/npn_portal/phenophases/getPhenophasesForSpecies.json'),{
                 params: params
-            }).success(function(phases) {
-				var list = phases[0].phenophases;
+            }).then(function(response){
+                var phases = response.data;
+                var list = phases[0].phenophases;
                 list = removeRedundantPhenophases(list);
                 CacheService.put(cacheKey,list);
                 def.resolve(list);
-
             },def.reject);
         }
         return def.promise;
@@ -1052,7 +1054,8 @@ angular.module('npn-viz-tool.filter',[
             $rootScope.$broadcast('filter-phase1-start',{});
             $http.get($url('/npn_portal/observations/getAllObservationsForSpecies.json'),{
                 params: filterParams
-            }).success(function(d) {
+            }).then(function(response) {
+                var d = response.data;
                 angular.forEach(d.station_list,function(station){
                     station.markerOpts = {
                         title: station.station_name,
@@ -1657,12 +1660,14 @@ angular.module('npn-viz-tool.filter',[
                     });
                 },250);
             });
-            $http.get($url('/npn_portal/networks/getPartnerNetworks.json?active_only=true')).success(function(partners){
-                angular.forEach(partners,function(p) {
-                    p.network_name = p.network_name.trim();
+            $http.get($url('/npn_portal/networks/getPartnerNetworks.json?active_only=true'))
+                .then(function(response) {
+                    var partners = response.data;
+                    angular.forEach(partners,function(p) {
+                        p.network_name = p.network_name.trim();
+                    });
+                    $scope.partners = partners;
                 });
-                $scope.partners = partners;
-            });
             // not selecting all by default to force the user to pick which should result
             // in less expensive type-ahead queries later (e.g. 4s vs 60s).
             SpeciesService.getPlantTypes().then(function(types) {
