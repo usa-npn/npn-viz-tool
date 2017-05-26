@@ -281,6 +281,8 @@ $control-font-size: 1.15em;
     background: #eee;
     @include rounded(4px);
     border: 1px solid #aaa;
+}
+#help-video-content {
     transition-property: all;
     transition-duration: 1s;
     transition-timing-function: ease-in-out;
