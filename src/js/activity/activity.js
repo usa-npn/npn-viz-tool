@@ -26,12 +26,14 @@ angular.module('npn-viz-tool.vis-activity',[
             proportion: true
         }],
         KINGDOM_METRICS = {
-            Plantae: COMMON_METRICS.concat([{
-                id: 'numindividuals_with_yes_record',
-                sampleSize: 'individuals_sample_size',
-                label: 'Total Individuals with Yes Records',
-                description: ''
-            },{
+            Plantae: COMMON_METRICS.concat([
+            //     {
+            //     id: 'numindividuals_with_yes_record',
+            //     sampleSize: 'individuals_sample_size',
+            //     label: 'Total Individuals with Yes Records',
+            //     description: ''
+            // },
+                {
                 id: 'proportion_individuals_with_yes_record',
                 sampleSize: 'individuals_sample_size',
                 label: 'Proportion Individuals with Yes Records',
@@ -39,12 +41,14 @@ angular.module('npn-viz-tool.vis-activity',[
                 valueFormat: DECIMAL,
                 proportion: true
             }]),
-            Animalia: COMMON_METRICS.concat([{
-                id: 'numsites_with_yes_record',
-                sampleSize: 'sites_sample_size',
-                label: 'Total Sites with Yes Records',
-                description: ''
-            },{
+            Animalia: COMMON_METRICS.concat([
+            //     {
+            //     id: 'numsites_with_yes_record',
+            //     sampleSize: 'sites_sample_size',
+            //     label: 'Total Sites with Yes Records',
+            //     description: ''
+            // },
+                {
                 id: 'proportion_sites_with_yes_record',
                 sampleSize: 'sites_sample_size',
                 label: 'Proportion Sites with Yes Records',
