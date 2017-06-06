@@ -328,17 +328,17 @@ angular.module('npn-viz-tool.vis-scatter',[
 
         regression
             .attr('data-legend',function(d) { return d.legend; } )
-            .attr('data-legend-color',function(d) { return d.color; })
+            //.attr('data-legend-color',function(d) { return d.color; }) // no longer used, uses fill then stroke, added fill below
             .attr('x1', function(d) { return x(d.p1[0]); })
             .attr('y1', function(d) { return y(d.p1[1]); })
             .attr('x2', function(d) { return x(d.p2[0]); })
             .attr('y2', function(d) { return y(d.p2[1]); })
+            .attr('fill', function(d) { return d.color; })
             .attr('stroke', function(d) { return d.color; })
             .attr('stroke-width', $scope.selection.regressionLines ? 2 : 0);
             // FF doesn't like the use of display, so using stroke-width to hide
             // regression lines.
             //.style('display', $scope.selection.regressionLines ? 'inherit' : 'none');
-
 
         chart.select('.legend').remove();
         var legend = chart.append('g')

@@ -19,7 +19,8 @@ angular.module('npn-viz-tool.stations',[
             //m.info.setContent('<div class="station-details"><i class="fa fa-circle-o-notch fa-spin"></i></div>');
             //m.info.open(m.map,m);
             $log.debug('Fetching info for station '+m.model.station_id);
-            $http.get($url('/npn_portal/stations/getStationDetails.json'),{params:{ids: m.model.station_id}}).success(function(info){
+            $http.get($url('/npn_portal/stations/getStationDetails.json'),{params:{ids: m.model.station_id}}).then(function(response){
+                var info = response.data;
                 function litem(label,value) {
                     return value && value !== '' ?
                      '<li><label>'+label+':</label> '+value+'</li>' : '';
@@ -131,7 +132,8 @@ angular.module('npn-viz-tool.stations',[
             if(stationCounts) {
                 handleCounts(stationCounts);
             } else {
-                $http.get($url('/npn_portal/stations/getStationCountByState.json')).success(function(counts){
+                $http.get($url('/npn_portal/stations/getStationCountByState.json')).then(function(response){
+                    var counts = response.data;
                     CacheService.put('stations-counts-by-state',counts);
                     handleCounts(counts);
                 });
@@ -225,7 +227,8 @@ angular.module('npn-viz-tool.stations',[
                                     $timeout(function(){
                                         $http.get($url('/npn_portal/stations/getAllStations.json'),
                                                     {params:{state_code:state}})
-                                            .success(function(data){
+                                            .then(function(response){
+                                                var data = response.data;
                                                 data.forEach(function(d){
                                                     d.markerOpts = {
                                                         title: d.station_name,

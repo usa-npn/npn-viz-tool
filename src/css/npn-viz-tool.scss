@@ -1,4 +1,7 @@
-@import "../lib/font-awesome/css/font-awesome.min.css";
+@import '../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap';
+@import '../../node_modules/font-awesome/scss/font-awesome.scss';
+@import '../../node_modules/angularjs-slider/dist/rzslider.scss';
+@import 'isteven-multi-select.css';
 
 @mixin rounded($r) {
   -webkit-border-radius: $r;
@@ -278,6 +281,8 @@ $control-font-size: 1.15em;
     background: #eee;
     @include rounded(4px);
     border: 1px solid #aaa;
+}
+#help-video-content {
     transition-property: all;
     transition-duration: 1s;
     transition-timing-function: ease-in-out;
@@ -722,10 +727,10 @@ text.gdd-info {
     .gdd-label {
         font-weight: bold;
         &.average {
-            fill: blue;
+            fill: black;
         }
         &.selected {
-            fill: black;
+            fill: blue;
         }
         &.forecast {
             fill: red;

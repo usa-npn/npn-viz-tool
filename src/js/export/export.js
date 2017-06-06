@@ -43,11 +43,11 @@ angular.module('npn-viz-tool.export',[
                 }
                 else if(location.hostname.includes('dev')) {
                     serverUrl = '//data-dev.usanpn.org';
-                    popServerUrl = 'http://data-dev.usanpn.org';
+                    popServerUrl = '//data-dev.usanpn.org';
                 }
                 else {
                     serverUrl = '//data.usanpn.org';
-                    popServerUrl = 'http://data.usanpn.org';
+                    popServerUrl = '//data.usanpn.org';
                 }
                 $http({
                     method: 'POST',

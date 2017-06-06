@@ -6,7 +6,8 @@ angular.module('npn-viz-tool',[
 'angular-google-analytics',
 'ngAnimate'
 ])
-.config(['uiGmapGoogleMapApiProvider','$logProvider','AnalyticsProvider',function(uiGmapGoogleMapApiProvider,$logProvider,AnalyticsProvider) {
+.config(['uiGmapGoogleMapApiProvider','$logProvider','AnalyticsProvider','$locationProvider',function(uiGmapGoogleMapApiProvider,$logProvider,AnalyticsProvider,$locationProvider) {
+    $locationProvider.hashPrefix('');
     uiGmapGoogleMapApiProvider.configure({
         key: 'AIzaSyAsTM8XaktfkwpjEeDMXkNrojaiB2W5WyE',
         v: '3.27',

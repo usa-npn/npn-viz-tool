@@ -220,8 +220,8 @@ angular.module('npn-viz-tool.vis',[
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
-            }).success(function(response){
-                success(response);
+            }).then(function(response){
+                success(response.data);
             });
         },
         /**
@@ -244,10 +244,11 @@ angular.module('npn-viz-tool.vis',[
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
-            }).success(function(response){
-                var minusSuspect = response.filter(filterSuspectSummaryData),
+            }).then(function(response){
+                var data = response.data,
+                    minusSuspect = data.filter(filterSuspectSummaryData),
                     filtered = minusSuspect.filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSiteData : angular.identity);
-                $log.debug('filtered out '+(response.length-minusSuspect.length)+'/'+response.length+' suspect records');
+                $log.debug('filtered out '+(data.length-minusSuspect.length)+'/'+data.length+' suspect records');
                 $log.debug('filtered out '+(minusSuspect.length-filtered.length)+'/'+minusSuspect.length+' LQD records.');
                 success(filtered,(minusSuspect.length !== filtered.length));
             });
@@ -271,8 +272,9 @@ angular.module('npn-viz-tool.vis',[
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
-            }).success(function(response){
-                var minusSuspect = response.filter(filterSuspectSummaryData),
+            }).then(function(response){
+                var data = response.data,
+                    minusSuspect = data.filter(filterSuspectSummaryData),
                     filtered = minusSuspect.filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSummaryData : angular.identity),
                     individuals = filtered.reduce(function(map,d){
                         var key = d.individual_id+'/'+d.phenophase_id+'/'+d.first_yes_year;
@@ -281,7 +283,7 @@ angular.module('npn-viz-tool.vis',[
                         return map;
                     },{}),
                     uniqueIndividuals = [];
-                $log.debug('filtered out '+(response.length-minusSuspect.length)+'/'+response.length+' suspect records');
+                $log.debug('filtered out '+(data.length-minusSuspect.length)+'/'+data.length+' suspect records');
                 $log.debug('filtered out '+(minusSuspect.length-filtered.length)+'/'+minusSuspect.length+' LQD records.');
                 angular.forEach(individuals,function(arr,key){
                     if(arr.length > 1) {
@@ -316,7 +318,9 @@ angular.module('npn-viz-tool.vis',[
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
-            }).success(success);
+            }).then(function(response) {
+                success(response.data);
+            });
         },
         /**
          * @ngdoc method

@@ -562,7 +562,8 @@ angular.module('npn-viz-tool.vis-map',[
                 if(!model.station) {
                     station_def = $q.defer();
                     promises.push(station_def.promise);
-                    $http.get($url('/npn_portal/stations/getStationDetails.json'),{params:{ids: model.site_id}}).success(function(info){
+                    $http.get($url('/npn_portal/stations/getStationDetails.json'),{params:{ids: model.site_id}}).then(function(response){
+                        var info = response.data;
                         model.station = info && info.length ? info[0] : undefined;
                         station_def.resolve();
                     });

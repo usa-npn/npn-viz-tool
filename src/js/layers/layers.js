@@ -8,7 +8,9 @@ angular.module('npn-viz-tool.layers',[
         readyPromise = uiGmapIsReady.promise(1).then(function(instances){
             map = instances[0].map;
             $log.debug('LayerService - map is ready');
-            return $http.get('layers/layers.json').success(function(data) {
+            return $http.get('layers/layers.json')
+            .then(function(response){
+                var data = response.data;
                 layers = {};
                 data.forEach(function(layer,idx){
                     layer.index = idx;
@@ -69,7 +71,8 @@ angular.module('npn-viz-tool.layers',[
             def.resolve(layer);
         } else {
             $rootScope.$broadcast('layer-load-start',{});
-            $http.get('layers/'+layer.file).success(function(data){
+            $http.get('layers/'+layer.file).then(function(response){
+                var data = response.data;
                 if(data.type === 'GeometryCollection') {
                     $log.debug('Translating GeometryCollection to FeatureCollection');
                     // translate to FeatureCollection
