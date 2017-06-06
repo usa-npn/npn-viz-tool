@@ -42,23 +42,23 @@ angular.module('npn-viz-tool.vis',[
             title: 'Scatter Plots',
             controller: 'ScatterVisCtrl',
             template: 'js/scatter/scatter.html',
-            description: 'This visualization plots selected geographic or climactic variables against estimated onset dates for individuals for up to three species/phenophase pairs.'
+            description: 'This visualization plots selected geographic or seasonal climatic variables against estimated onset dates at a site to region for individuals or sites for up to three species, phenophases or years.'
         },{
             title: 'Calendars',
             controller: 'CalendarVisCtrl',
             template: 'js/calendar/calendar.html',
-            description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
-        },{
-            title: 'Maps',
-            controller: 'MapVisCtrl',
-            template: 'js/mapvis/mapvis.html',
-            description: 'This visualization maps ground-based observations against USA-NPN phenology maps, including Accumulated Growing Degree Days and Spring Index models.',
-            singleStation: false // doesn't make sense for a single station visualization.
+            description: 'This visualization illustrates the daily timing of phenological activity for selected species and phenophases. Horizontal bars represent the annual patterns at a site to region for up to two years.'
         },{
             title: 'Activity Curves',
             controller: 'ActivityCurvesVisCtrl',
             template: 'js/activity/activity.html',
-            description: 'TODO'
+            description: 'This visualization plots annual patterns of the timing and magnitude of phenological activity, based on proportion of “yes” records, animal abundances per hour and other metrics. Data are summarized at a weekly, biweekly or monthly scale for one or more sites,  for up to two species, phenophases, or years.'
+        },{
+            title: 'Maps',
+            controller: 'MapVisCtrl',
+            template: 'js/mapvis/mapvis.html',
+            description: 'This visualization maps ground-based observations overlaid with USA-NPN phenology maps, including Accumulated Growing Degree Days and Spring Index models.',
+            singleStation: false // doesn't make sense for a single station visualization.
         }],
         visualizeSingleStationId;
     function filterSuspectSummaryData (d){

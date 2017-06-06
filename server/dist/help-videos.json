@@ -1,16 +1,19 @@
 [{
-"title" : "Parrots ...",
-"embed" : "<iframe width='560' height='315' src='https://www.youtube.com/embed/npjOSLCR2hE?rel=0' frameborder='0' allowfullscreen></iframe>"
+"title" : "Part 1: Visualization Tool Orientation",
+"embed" : "<iframe width='560' height='315' src='https://www.youtube.com/watch?v=p86svJLwHGc&feature=youtu.be' frameborder='0' allowfullscreen></iframe>"
 },{
-"title" : "Swallows (African vs European) ...",
-"embed" : "<iframe width='560' height='315' src='https://www.youtube.com/embed/liIlW-ovx0Y?rel=0' frameborder='0' allowfullscreen></iframe>"
+"title" : "Part 2: Scatter Plot",
+"embed" : "<iframe width='560' height='315' src='https://www.youtube.com/watch?v=V3q7zMkI4dw&feature=youtu.be' frameborder='0' allowfullscreen></iframe>"
 },{
-"title": "Llamas ...",
-"embed" : "<iframe width='560' height='315' src='https://www.youtube.com/embed/hBaUmx5s6iE?rel=0' frameborder='0' allowfullscreen></iframe>"
+"title": "Part 3: Calendar",
+"embed" : "<iframe width='560' height='315' src='https://www.youtube.com/watch?v=1al64H_Xcfg&feature=youtu.be' frameborder='0' allowfullscreen></iframe>"
 },{
-"title" : "Bunnies (of the killer variety) ...",
-"embed" : "<iframe width='560' height='315' src='https://www.youtube.com/embed/tgj3nZWtOfA?rel=0' frameborder='0' allowfullscreen></iframe>"
+"title" : "Part 4: Partner Group Filter",
+"embed" : "<iframe width='560' height='315' src='https://www.youtube.com/watch?v=XoMZDO7NZlg&feature=youtu.be' frameborder='0' allowfullscreen></iframe>"
 },{
-"title" : "It's a tree ...",
-"embed" : "<iframe width='560' height='315' src='https://www.youtube.com/embed/5bNu4xLIzso?start=75' frameborder='0' allowfullscreen></iframe>"
+"title" : "Phenology maps - Part 1: Accumulated Growing Degree Days",
+"embed" : "<iframe width='560' height='315' src='https://www.youtube.com/watch?v=Rana7aslz2w&amp;feature=youtu.be' frameborder='0' allowfullscreen></iframe>"
+}, {
+  "title" : "Phenology maps - Part 2: Spring Indices",
+  "embed" : "<iframe width='560' height='315' src='https://www.youtube.com/watch?v=UU0iAyYYTE0&feature=youtu.be&list=PLlnHLGw8kUFaiNuujfvPv-tf0WUW_6cRI' frameborder='0' allowfullscreen></iframe>"
 }]

@@ -441,7 +441,7 @@ angular.module('npn-viz-tool.vis-activity',[
             input: '='
         },
         link: function($scope) {
-            $scope.metricPopoverText = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. In in posuere sapien. Mauris interdum enim enim, vel dapibus turpis dapibus vitae. Fusce venenatis tellus sed velit consectetur cursus. Fusce a lorem a ligula molestie semper. Curabitur tempus luctus neque, elementum congue velit dictum vitae. Suspendisse eget ultricies quam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Cras quis elit nibh. Donec leo tellus, tempus at eros sed, sodales varius arcu.';
+            $scope.metricPopoverText = 'The total number of reported "yes" (presence) records for the species and phenophase within the selected time period.';
             $scope.validYears = (function(current){
                 var thisYear = (new Date()).getFullYear(),
                     years = [];
