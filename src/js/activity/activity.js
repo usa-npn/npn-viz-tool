@@ -457,7 +457,11 @@ angular.module('npn-viz-tool.vis-activity',[
             input: '='
         },
         link: function($scope) {
-            $scope.metricPopoverText = $scope.metric.description; //'The total number of reported "yes" (presence) records for the species and phenophase within the selected time period.';
+            if ($scope.metric) {
+                $scope.metricPopoverText = $scope.metric.description;
+            } else {
+                $scope.metricPopoverText = '';
+            }
             $scope.validYears = (function(current){
                 var thisYear = (new Date()).getFullYear(),
                     years = [];
