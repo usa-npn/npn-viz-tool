@@ -15,11 +15,13 @@ angular.module('npn-viz-tool.vis-activity',[
         COMMON_METRICS = [{
             id: 'num_yes_records',
             sampleSize: 'status_records_sample_size',
-            label: 'Total Yes Records'
+            label: 'Total Yes Records',
+            description: 'The total number of reported "yes" (presence) records for the species and phenophase within the selected time period.'
         },{
             id: 'proportion_yes_records',
             sampleSize: 'status_records_sample_size',
             label: 'Proportion Yes Records',
+            description: 'The number of "yes" (presence) records divided by the total number of records (presence and absence) for the species and phenophase within the selected time period.',
             valueFormat: DECIMAL,
             proportion: true
         }],
@@ -27,43 +29,50 @@ angular.module('npn-viz-tool.vis-activity',[
             Plantae: COMMON_METRICS.concat([{
                 id: 'numindividuals_with_yes_record',
                 sampleSize: 'individuals_sample_size',
-                label: 'Total Individuals with Yes Records'
+                label: 'Total Individuals with Yes Records',
+                description: ''
             },{
                 id: 'proportion_individuals_with_yes_record',
                 sampleSize: 'individuals_sample_size',
                 label: 'Proportion Individuals with Yes Records',
+                description: 'The proportion of observed plant individuals of the species that have at least one "yes" record for the phenophase within the selected time period.',
                 valueFormat: DECIMAL,
                 proportion: true
             }]),
             Animalia: COMMON_METRICS.concat([{
                 id: 'numsites_with_yes_record',
                 sampleSize: 'sites_sample_size',
-                label: 'Total Sites with Yes Records'
+                label: 'Total Sites with Yes Records',
+                description: ''
             },{
                 id: 'proportion_sites_with_yes_record',
                 sampleSize: 'sites_sample_size',
                 label: 'Proportion Sites with Yes Records',
+                description: 'The proportion of observed sites that have at least one "yes" record for the species and phenophase within the selected time period.',
                 valueFormat: DECIMAL,
                 proportion: true
             },{
                 id: 'total_numanimals_in-phase',
                 sampleSize: 'in-phase_site_visits_sample_size',
-                label: 'Total Animals In Phase'
-            },
-            {
+                label: 'Total Animals In Phase',
+                description: 'The sum of reported animal abundance for each site visit for all "yes" records for the species and phenophase within the selected time period.',
+            }, {
                 id: 'mean_numanimals_in-phase',
                 sampleSize: 'in-phase_per_hr_sites_sample_size',
-                label: 'Animals In Phase',
+                label: 'Mean Animals In Phase',
+                description: 'The mean of reported animal abundance at each site visit for all "yes" records for the species and phenophase within the selected time period.',
                 valueFormat: DECIMAL
             },{
                 id: 'mean_numanimals_in-phase_per_hr',
                 sampleSize: 'in-phase_per_hr_sites_sample_size',
                 label: 'Animals In Phase per Hour',
+                description: 'The mean of reported animal abundance corrected by the time spent searching for animals at each site visit for all "yes" records for the species and phenophase within the selected time period. Site visits with a search method of "Incidental" or where no search time or method were reported are excluded.',
                 valueFormat: DECIMAL
             },{
                 id: 'mean_numanimals_in-phase_per_hr_per_acre',
                 sampleSize: 'phase_per_hr_per_acre_sites_sample_size',
                 label: 'Animals In Phase per Hour per Acre',
+                description: 'The mean of reported animal abundance corrected by the time spent searching and search area for animals at each site visit for all "yes" records for the species and phenophase within the selected time period. Sites with no size reported and site visits with a search method other than "Area Search" or where no search time were reported are excluded.',
                 valueFormat: DECIMAL
             }])
         },

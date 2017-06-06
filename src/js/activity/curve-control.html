@@ -25,7 +25,7 @@
             <select class="form-control" id="metric-{{input.id}}"
                 ng-model="input.metric"
                 ng-options="m as m.label for m in input.validMetrics"></select>
-            <label popover-placement="bottom" popover-title="Metric" uib-popover="{{metricPopoverText}}" popover-trigger="mouseenter" popover-append-to-body="true"><i class="fa fa-info-circle" aria-hidden="true"></i></label>
+            <label popover-placement="bottom" popover-title="Metric" uib-popover="{{metric.description}}" popover-trigger="mouseenter" popover-append-to-body="true"><i class="fa fa-info-circle" aria-hidden="true"></i></label>
         </div>
     </form>
 </div>
