@@ -458,8 +458,8 @@ angular.module('npn-viz-tool.vis-activity',[
         },
         link: function($scope) {
             $scope.metricPopoverText = 'description not found';
-            if($scope.metric && $scope.metric.description) {
-                $scope.metricPopoverText = $scope.metric.description;
+            if($scope.input.metric && $scope.input.metric.description) {
+                $scope.metricPopoverText = $scope.input.metric.description;
             }
             $scope.validYears = (function(current){
                 var thisYear = (new Date()).getFullYear(),
