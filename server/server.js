@@ -9,7 +9,7 @@ var express = require('express'),
     argv = require('minimist')(process.argv.slice(2)),
     port = Number(argv.port||8000),
     // either 'www.usanpn.org'; or 'www-dev.usanpn.org'; depending on where deployed
-    npn_host = 'www.usanpn.org';
+    npn_host = 'www-dev.usanpn.org';
 
 // validate port
 if(isNaN(port) || port < 0 || port > 65535) {

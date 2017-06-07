@@ -77,12 +77,21 @@ NG_DOCS={
     },
     {
       "section": "api",
-      "id": "npn-viz-tool.gridded-services:agddDefaultToday",
-      "shortName": "agddDefaultToday",
+      "id": "npn-viz-tool.gridded-services:agddDefaultTodayElevation",
+      "shortName": "agddDefaultTodayElevation",
       "type": "filter",
       "moduleName": "npn-viz-tool.gridded-services",
       "shortDescription": "Selects a default extent value for a doy layer of &quot;today&quot; (if found among the possibilities).",
       "keywords": "api default doy extent filter gridded-services layer npn-viz-tool possibilities selects today"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.gridded-services:agddDefaultTodayTime",
+      "shortName": "agddDefaultTodayTime",
+      "type": "filter",
+      "moduleName": "npn-viz-tool.gridded-services",
+      "shortDescription": "Selects a default extent value for a time layer of &quot;today&quot; (if found among the possibilities).",
+      "keywords": "api default extent filter gridded-services layer npn-viz-tool possibilities selects time today"
     },
     {
       "section": "api",
@@ -92,6 +101,33 @@ NG_DOCS={
       "moduleName": "npn-viz-tool.gridded-services",
       "shortDescription": "Filters an array of extent dates relative to days.",
       "keywords": "$filter api array dates days extent extentdates filter filters gridded-services npn-viz-tool relative today undefined year"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.gridded-services:gridded-opacity-slider",
+      "shortName": "gridded-opacity-slider",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.gridded-services",
+      "shortDescription": "Dynamically controls the opacity of map tiles.",
+      "keywords": "api controls currently directive dynamically gridded-services layer map npn-viz-tool opacity selected tiles"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.gridded-services:gridded-point-info-window",
+      "shortName": "gridded-point-info-window",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.gridded-services",
+      "shortDescription": "The base info window contents for gridded point data.  This directive doesn&#39;t",
+      "keywords": "api base contents currently data directive doesn general gridded gridded-services info infowindow intended latlng layer legend map maps npn-viz-tool open opened point re-use render returned selected window"
+    },
+    {
+      "section": "api",
+      "id": "npn-viz-tool.gridded-services:gridded-range-slider",
+      "shortName": "gridded-range-slider",
+      "type": "directive",
+      "moduleName": "npn-viz-tool.gridded-services",
+      "shortDescription": "Dynamically controls the opacity ranges of the data from the WMS Server.",
+      "keywords": "api controls currently data directive dynamically gridded-services layer map npn-viz-tool opacity ranges selected server wms"
     },
     {
       "section": "api",
@@ -185,15 +221,6 @@ NG_DOCS={
     },
     {
       "section": "api",
-      "id": "npn-viz-tool.gridded-services:map-vis-opacity-slider",
-      "shortName": "map-vis-opacity-slider",
-      "type": "directive",
-      "moduleName": "npn-viz-tool.gridded-services",
-      "shortDescription": "Dynamically controls the opacity of map tiles.",
-      "keywords": "api controls currently directive dynamically gridded-services layer map npn-viz-tool opacity selected tiles"
-    },
-    {
-      "section": "api",
       "id": "npn-viz-tool.gridded-services:map-vis-year-control",
       "shortName": "map-vis-year-control",
       "type": "directive",
@@ -226,7 +253,7 @@ NG_DOCS={
       "type": "object",
       "moduleName": "npn-viz-tool.gridded-services",
       "shortDescription": "A map layer object associated with a specific google map.",
-      "keywords": "api array arrives associated bounds constrain currently currentyearonly data defined description doesn false fetch fit getabstract getbounds getgriddeddata getlegend getmap gettitle google googlelayer gridded gridded-services imagemaptype indicates instance latlng latlngbounds layer layers legend location map maps method npn-viz-tool numbers object plotted point promise property rejected resolve resolved restrained selected server specific support supports supportsdata title true underlying year"
+      "keywords": "analytics api array arrives associated bounce bounds constrain currently currentyearonly data defined description doesn exists false fashion fetch fit function getabstract getbounds getgriddeddata getlegend getmap getstylerange gettitle google googlelayer gridded gridded-services imagemaptype indicates instance latlng latlngbounds layer layers legend location map maps method npn-viz-tool numbers object plotted point promise property range rejected resolve resolved restrained selected server set setstyle setstylerange specific string style support supports supportsdata title toggle tracked true underlying updated year"
     },
     {
       "section": "api",
@@ -235,7 +262,7 @@ NG_DOCS={
       "type": "object",
       "moduleName": "npn-viz-tool.gridded-services",
       "shortDescription": "A legend object associated with a specific map layer.",
-      "keywords": "api array associated cell cells colors data format formatpointdata formatted getcolors getdata getlabels getoriginallabels getpointdata getquantities gettitle gridded-services hex labels layer legend map method npn-viz-tool numberic numbers object original point quantities raw specific string strings text title translate undefined zero-index"
+      "keywords": "api array associate associated cell cells colors current data definitino definition dom format formatpointdata formatted getcolors getdata getlabels getoriginallabels getpointdata getquantities getstyledefinition gettitle gridded-services hex labels layer legend map method npn-viz-tool numberic numbers object original point quantities raw set setlayer specific string strings style text title translate undefined zero-index"
     },
     {
       "section": "api",
@@ -244,7 +271,7 @@ NG_DOCS={
       "type": "service",
       "moduleName": "npn-viz-tool.gridded-services",
       "shortDescription": "Interacts with the NPN geoserver WMS instance to supply map layer data.",
-      "keywords": "addition agdd anangular angualr angular api applied applies args arguments array associated base behavior boolean capabilities categories categorized category cell code configuration configure current currently data default define defined defines definition description displaying document driven eventually exposed exposes extent extent_values_filter extentdates false fetched filter format formatting gdd geo geo_server geoserver getlayers gridded gridded-services indicates indicating individual info inherit instance instances interact interacts involved json labels layer layers legend legend_label_filter legenddegrees legends level list location machine map maps merged method minimum names npn npn-viz-tool numbers object objects optional org organization organize over-ride plotting point points progress promise properties property provided re-organized rejected report reported resolved retrived select selected separated server service single specifies string strings subset supply support supported supports supports_data title today top translate true ui unspecified url usanpn valid values visualization wcs whilch windows wms year"
+      "keywords": "addition agdd anangular angualr angular api applied applies args arguments array associated base behavior boolean capabilities categories categorized category cell code configuration configure current currently data default define defined defines definition description displaying document driven eventually exposed exposes extent extent_values_filter extentdates false fetched filter format formatting gdd geo geo_server geoserver getlayers gridded gridded-services indicates indicating individual info inherit instance instances interact interacts involved json labels layer layers legend legend_label_filter legenddegrees legends level list location machine map maps merged method minimum names npn npn-viz-tool numbers object objects optional org organization organize over-ride plotting point points progress promise properties property provided re-organized rejected report reported resolved retrived select selected separated series server service single specifies string strings subset supply support supported supports supports_data time title today top translate true ui unspecified url usanpn valid values visualization wcs whilch windows wms year"
     },
     {
       "section": "api",
@@ -361,7 +388,7 @@ NG_DOCS={
       "type": "service",
       "moduleName": "npn-viz-tool.vis",
       "shortDescription": "Handles data gathering in a generic fashion for visualizations that should share, rather than",
-      "keywords": "actual allows api approximate approxy array base based callback chart coded coefficient common constant control convenience d3 data day defaults definitions deliver desired dialog drawing duplicate dynamically enabled fashion filter filtered filtering focused full gathering generate generic geographic getobservationdates getsizeinfo getsummarizeddata getvisualizations handles height image implicitly imprecise info isfilterempty issue leastsquares leastsquarescoeff lines list lists logic marginoverride mathematics method milliseconds networks npn-viz-tool number object observation one_day_millis open opensinglestationvisualization openvisualization overriding parameters params parsefloat perform property px receive regression replace request respect response result send service share shortcut single sites size sized squares statically station station_id style success summarized suspect svg told ui var vis visualization visualizations web width window x-series xseries y-series yseries"
+      "keywords": "actual allows api approximate approxy array base based callback chart coded coefficient common constant control convenience d3 data day defaults definitions deliver desired dialog drawing duplicate dynamically enabled fashion filter filtered filtering focused full gathering generate generic geographic getmagnitudedata getobservationdates getsiteleveldata getsizeinfo getsummarizeddata getvisualizations handles height image implicitly imprecise info isfilterempty issue leastsquares leastsquarescoeff level lines list lists logic magnitude marginoverride mathematics method milliseconds modal networks npn-viz-tool number object observation one_day_millis open opensinglestationvisualization openvisualization overriding parameters params parsefloat perform populate property px receive regression replace request resolve respect response result scope send service share shortcut single site sites size sized squares statically station station_id style success summarized suspect svg told ui var vis visualization visualizations web width window x-series xseries y-series yseries"
     },
     {
       "section": "api",

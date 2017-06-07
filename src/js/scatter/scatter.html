@@ -30,6 +30,10 @@
                 <label for="fitLinesInput">Fit Line{{toPlot.length > 1 ? 's' : ''}}</label>
                 <input type="checkbox" id="fitLinesInput" ng-model="selection.regressionLines" />
             </li>
+            <li>
+                <label for="individualPhenometrics">Use Individual Phenometrics</label>
+                <input type="checkbox" id="individualPhenometrics" ng-model="selection.useIndividualPhenometrics" />
+            </li>
             <li ng-if="!data"><button class="btn btn-primary" ng-click="visualize()">Visualize</button></li>
         </ul>
         <div id="vis-container">

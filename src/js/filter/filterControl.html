@@ -6,7 +6,7 @@
                max="{{selected.date.end_date || thisYear}}"
                ng-model="selected.date.start_date"
                uib-typeahead="year for year in validYears | lte:selected.date.end_date | filter:$viewValue"
-               required placeholder="From" /> - 
+               required placeholder="From" /> -
         <input id="end_date" type="number" class="form-control"
                 min="{{selected.date.start_date || 1900}}"
                 ng-model="selected.date.end_date"
@@ -16,7 +16,7 @@
                 ng-disabled="yearInputForm.$invalid || ((selected.date.end_date - selected.date.start_date) > 10)"
                 ng-click="addDateRangeToFilter()"
                 popover-placement="right" popover-popup-delay="500" popover-append-to-body="true"
-                popover-trigger="mouseenter" popover="Add this filter to the map"><i class="fa fa-plus"></i></button>
+                popover-trigger="'mouseenter'" uib-popover="Add this filter to the map"><i class="fa fa-plus"></i></button>
         </form>
         <p ng-if="selected.date.start_date < 2008" class="disclaimer">
             You have selected a starting year prior to 2008 when the contemprary phenology data begins.  Prior to 2008 there is
@@ -70,7 +70,7 @@
                         ng-disabled="!speciesInput.networks.length || networksMaxedOut()"
                         ng-click="addNetworksToFilter()"
                         popover-placement="right" popover-popup-delay="500"
-                        popover-trigger="mouseenter" uib-popover="Add this filter to the map" popover-append-to-body="true">
+                        popover-trigger="'mouseenter'" uib-popover="Add this filter to the map" popover-append-to-body="true">
                     <i class="fa fa-plus"></i>
                 </button>
             </div>
@@ -96,7 +96,7 @@
                         ng-disabled="!selected.species.length || speciesMaxedOut()"
                         ng-click="addSpeciesToFilter()"
                         popover-placement="right" popover-popup-delay="500"
-                        popover-trigger="mouseenter" uib-popover="Add this filter to the map" popover-append-to-body="true">
+                        popover-trigger="'mouseenter'" uib-popover="Add this filter to the map" popover-append-to-body="true">
                     <i class="fa" ng-class="{'fa-refresh fa-spin': findingSpecies, 'fa-plus': !findingSpecies}"></i>
                 </button>
             </div>

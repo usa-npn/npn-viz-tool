@@ -1,7 +1,7 @@
 <div class="toolbar">
   <ul class="tools-list">
     <li ng-repeat="t in tools" ng-class="{open: t.selected}"
-        popover-placement="right" uib-popover="{{(t.selected) ? 'Click to Collapse Menu' : t.title}}" popover-trigger="mouseenter" popover-popup-delay="1000" popover-append-to-body="true"
+        popover-placement="right" uib-popover="{{(t.selected) ? 'Click to Collapse Menu' : t.title}}" popover-trigger="'mouseenter'" popover-popup-delay="1000" popover-append-to-body="true"
         ng-click="select(t)">
       <i id="toolbar-icon-{{t.id}}" class="toolbar-icon fa {{t.icon}}"></i>
     </li>

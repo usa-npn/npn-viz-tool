@@ -18,6 +18,7 @@
         <gridded-year-control ng-switch-when="year" layer="selection.layer"></gridded-year-control>
     </div>
     <gridded-opacity-slider layer="selection.layer"></gridded-opacity-slider>
+    <gridded-range-slider layer="selection.layer"></gridded-range-slider>
     <p ng-if="selection.layer.abstract">{{selection.layer.getAbstract()}}</p>
     <p ng-if="selection.layer.$description" ng-bind-html="selection.layer.$description"></p>
 </div>

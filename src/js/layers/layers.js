@@ -2,13 +2,15 @@ angular.module('npn-viz-tool.layers',[
 'npn-viz-tool.filter',
 'ngResource'
 ])
-.factory('LayerService',['$rootScope','$http','$q','$log','uiGmapIsReady',function($rootScope,$http,$q,$log,uiGmapIsReady){
+.factory('LayerService',['$rootScope','$http','$q','$log','uiGmapIsReady','Analytics',function($rootScope,$http,$q,$log,uiGmapIsReady,Analytics){
     var layers = null,
         map = null,
         readyPromise = uiGmapIsReady.promise(1).then(function(instances){
             map = instances[0].map;
             $log.debug('LayerService - map is ready');
-            return $http.get('layers/layers.json').success(function(data) {
+            return $http.get('layers/layers.json')
+            .then(function(response){
+                var data = response.data;
                 layers = {};
                 data.forEach(function(layer,idx){
                     layer.index = idx;
@@ -69,7 +71,8 @@ angular.module('npn-viz-tool.layers',[
             def.resolve(layer);
         } else {
             $rootScope.$broadcast('layer-load-start',{});
-            $http.get('layers/'+layer.file).success(function(data){
+            $http.get('layers/'+layer.file).then(function(response){
+                var data = response.data;
                 if(data.type === 'GeometryCollection') {
                     $log.debug('Translating GeometryCollection to FeatureCollection');
                     // translate to FeatureCollection
@@ -203,6 +206,7 @@ angular.module('npn-viz-tool.layers',[
                         feature.setProperty('$style',style);
                     });
                     restyleSync();
+                    Analytics.trackEvent('filter-layer','on',layer.label);
                     def.resolve([map,layer.loaded]);
                 });
             });
@@ -216,6 +220,7 @@ angular.module('npn-viz-tool.layers',[
                     $log.debug('no such layer with id',id);
                     return def.reject(id);
                 }
+                Analytics.trackEvent('filter-layer','off',layer.label);
                 var unloaded = unloadLayer(layer);
                 def.resolve(unloaded);
             });
@@ -227,7 +232,7 @@ angular.module('npn-viz-tool.layers',[
     return {
         restrict: 'E',
         templateUrl: 'js/layers/layerControl.html',
-        controller: function($scope) {
+        link: function($scope) {
             $scope.hasSufficientCriteria = FilterService.hasSufficientCriteria;
             var eventListeners = [],
                 lastFeature;

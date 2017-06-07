@@ -130,7 +130,7 @@ angular.module('npn-viz-tool.map',[
         template: '<div id="npn-working" ng-show="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>',
         scope: {
         },
-        controller: function($scope) {
+        link: function($scope) {
             function startWorking() { $scope.working = true; }
             function stopWorking() { $scope.working = false;}
             startWorking();

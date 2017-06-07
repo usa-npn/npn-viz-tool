@@ -21,6 +21,16 @@
     </li>
     <li class="divider"></li>
     <li>
+        <Label for="onlyYesData">Only Show Yes Data</label>
+        <ul class="list-unstyled">
+            <li ng-repeat="option in [true,false]">
+                <input type="radio" name="onlyYesData" id="onlyYesData{{option}}" ng-model="settings.onlyYesData.value"
+                       ng-value="{{option}}" /> <label for="onlyYesData{{option}}">{{option | yesNo}}</label>
+            </li>
+        </ul>
+    </li>
+    <li class="divider"></li>
+    <li>
         <label>Species Tag Title</label>
         <ul class="list-unstyled">
             <li ng-repeat="option in settings.tagSpeciesTitle.options">
@@ -32,7 +42,7 @@
     </li>
     <li class="divider"></li>
     <li>
-        <label for="clusterMarkersSetting">Exclude less precise data from visualizations</label>
+        <label for="excludeLqd">Exclude less precise data from visualizations</label>
         <ul class="list-unstyled">
             <li ng-repeat="option in [true,false]">
                 <input type="radio" id="filterLqdSummary{{option}}" ng-model="settings.filterLqdSummary.value"
@@ -40,5 +50,12 @@
             </li>
         </ul>
         <p>Selecting <strong>Yes</strong> will exclude data points which lack a "no" record preceding the first "yes" record from certain visualizations. </p>
+    </li>
+    <li class="divider"></li>
+    <li>
+        <label for="dataPrecisionFilter">Data Precision Filter</label>
+        <select class="form-control" ng-model="settings.dataPrecisionFilter.value"
+            ng-options="days as days+' days' for days in settings.dataPrecisionFilter.options" />
+        <p style="margin: 15px 0px;">Less precise data is removed from the scatter plot and map visualizations by only plotting data points preceded or followed by a “no” within 30 days. This filter can be adjusted here to  7, 14, or 30 days.</p>
     </li>
 </ul>

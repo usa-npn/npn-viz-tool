@@ -56,7 +56,12 @@ angular.module('npn-viz-tool.gridded',[
          */
         addSharingUrlArgs: function(params) {
             if(service.layer) {
-                params['gl'] = service.layer.name+'/'+service.layer.extent.current.value;
+                var args = service.layer.name+'/'+service.layer.extent.current.value,
+                    range = service.layer.getStyleRange();
+                if(range) {
+                    args += '/'+range[0]+'/'+range[1];
+                }
+                params['gl'] = args;
             }
         },
         /**
@@ -164,6 +169,9 @@ angular.module('npn-viz-tool.gridded',[
                                                         },undefined)||l.extent.current;
                                     $scope.selection.layerCategory = c;
                                     $scope.selection.layer = l;
+                                    if(sharingUrlArgs.length === 4) {
+                                        l.setStyleRange([parseInt(sharingUrlArgs[2]),parseInt(sharingUrlArgs[3])]);
+                                    }
                                 } else {
                                     $log.warn('unable to find gridded layer named '+lname);
                                 }
@@ -226,19 +234,12 @@ angular.module('npn-viz-tool.gridded',[
                 $rootScope.$broadcast('gridded-layer-on',{layer:$scope.selection.activeLayer});
             });
             $scope.$watch('selection.activeLayer.extent.current',function(v) {
-
                 var layer;
-				
                 if(layer = $scope.selection.activeLayer) {
                     $log.debug('layer extent change ',layer.name,v);
                     noInfoWindows();
-					
-					layer.off().on();
-					
-
+					layer.bounce();
                 }
-
-				
             });
         }
     };

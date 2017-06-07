@@ -26,4 +26,34 @@ angular.module('npn-viz-tool.help',[
         }
     };
     return service;
+}])
+.directive('helpVideoControl',['$http','$sce',function($http,$sce) {
+    var DEFAULT_TITLE = 'Help videos';
+    return {
+        restrict: 'E',
+        template: '<a ng-show="videos.length" title="Help" href id="help-video-control" class="btn btn-default btn-xs" ng-click="visible = !visible;"><i class="fa fa-question"></i></a>'+
+        '<div ng-show="visible" id="help-video-content">'+
+        '<a class="close" href ng-click="visible = false"><i class="fa fa-times-circle-o" aria-hidden="true"></i></a>'+
+        '<h4>{{title}}<span ng-if="selection.video"> <a href ng-click="selection.video = null"><i class="fa fa-window-close" aria-hidden="true"></i></a></span></h4>'+
+        '<ul class="list-unstyled" ng-show="!selection.video">'+
+        '<li ng-repeat="video in videos"><a href ng-click="selection.video = video;">{{video.title}}</a></li>'+
+        '</ul>'+
+        '<span ng-if="selection.video" ng-bind-html="selection.video.$embed"></span>',
+        scope: {},
+        link: function($scope) {
+            $scope.visible = false;
+            $scope.$watch('visible',function() {
+                $scope.selection = {};
+            });
+            $scope.$watch('selection.video',function(v) {
+                $scope.title = v ? v.title : DEFAULT_TITLE;
+            });
+            $http.get('help-videos.json').then(function(response) {
+                $scope.videos = response.data.map(function(v) {
+                    v.$embed = $sce.trustAsHtml(v.embed);
+                    return v;
+                });
+            });
+        }
+    };
 }]);

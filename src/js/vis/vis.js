@@ -11,6 +11,8 @@ angular.module('npn-viz-tool.vis',[
     'npn-viz-tool.vis-scatter',
     'npn-viz-tool.vis-calendar',
     'npn-viz-tool.vis-map',
+    'npn-viz-tool.vis-time',
+    'npn-viz-tool.vis-activity',
     'ui.bootstrap'
 ])
 /**
@@ -22,8 +24,8 @@ angular.module('npn-viz-tool.vis',[
  * Handles data gathering in a generic fashion for visualizations that should share, rather than
  * duplicate such logic.
  */
-.factory('ChartService',['$window','$http','$log','$uibModal','FilterService','SettingsService',
-    function($window,$http,$log,$uibModal,FilterService,SettingsService){
+.factory('ChartService',['$window','$http','$log','$uibModal','$url','FilterService','SettingsService','Analytics',
+    function($window,$http,$log,$uibModal,$url,FilterService,SettingsService,Analytics){
     // some hard coded values that will be massaged into generated
     // values at runtime.
     var CHART_W = 930,
@@ -40,17 +42,22 @@ angular.module('npn-viz-tool.vis',[
             title: 'Scatter Plots',
             controller: 'ScatterVisCtrl',
             template: 'js/scatter/scatter.html',
-            description: 'This visualization plots selected geographic or climactic variables against estimated onset dates for individuals for up to three species/phenophase pairs.'
+            description: 'This visualization plots selected geographic or seasonal climatic variables against estimated onset dates at a site to region for individuals or sites for up to three species, phenophases or years.'
         },{
             title: 'Calendars',
             controller: 'CalendarVisCtrl',
             template: 'js/calendar/calendar.html',
-            description: 'This visualization illustrates annual timing of phenophase activity for selected species/phenophase pairs. Horizontal bars represent phenological activity at a site to regional level for up to two years.'
+            description: 'This visualization illustrates the daily timing of phenological activity for selected species and phenophases. Horizontal bars represent the annual patterns at a site to region for up to two years.'
+        },{
+            title: 'Activity Curves',
+            controller: 'ActivityCurvesVisCtrl',
+            template: 'js/activity/activity.html',
+            description: 'This visualization plots annual patterns of the timing and magnitude of phenological activity, based on proportion of “yes” records, animal abundances per hour and other metrics. Data are summarized at a weekly, biweekly or monthly scale for one or more sites,  for up to two species, phenophases, or years.'
         },{
             title: 'Maps',
             controller: 'MapVisCtrl',
             template: 'js/mapvis/mapvis.html',
-            description: 'This visualization maps ground-based observations against USA-NPN phenology maps, including Accumulated Growing Degree Days and Spring Index models.',
+            description: 'This visualization maps ground-based observations overlaid with USA-NPN phenology maps, including Accumulated Growing Degree Days and Spring Index models.',
             singleStation: false // doesn't make sense for a single station visualization.
         }],
         visualizeSingleStationId;
@@ -65,6 +72,13 @@ angular.module('npn-viz-tool.vis',[
         var keep = d.numdays_since_prior_no >= 0;
         if(!keep) {
             $log.debug('filtering less precise data from summary output',d);
+        }
+        return keep;
+    }
+    function filterLqSiteData(d) {
+        var keep = d.mean_numdays_since_prior_no >= 0;
+        if(!keep) {
+            $log.debug('filtering less precise data from site level output',d);
         }
         return keep;
     }
@@ -190,6 +204,58 @@ angular.module('npn-viz-tool.vis',[
         /**
          * @ngdoc method
          * @methodOf npn-viz-tool.vis:ChartService
+         * @name getMagnitudeData
+         * @description
+         *
+         * Issue a request for magnitude data.  Common parameters will be implicitly added like
+         * networks in the base filter or lists of sites if geographic filtering is enabled.
+         *
+         * @param {Object} params Parameters to send to the web service.
+         * @param {function} success The success callback to receive the data.
+         */
+        getMagnitudeData: function(params,success) {
+            $http({
+                method: 'POST',
+                url: $url('/npn_portal/observations/getMagnitudeData.json'),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                transformRequest: txformUrlEncoded,
+                data: addCommonParams(params)
+            }).then(function(response){
+                success(response.data);
+            });
+        },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
+         * @name getSiteLevelData
+         * @description
+         *
+         * Issue a request for site level data.  Common parameters will be implicitly added like
+         * networks in the base filter or lists of sites if geographic filtering is enabled.
+         *
+         * @param {Object} params Parameters to send to the web service.
+         * @param {function} success The success callback to receive the data.
+         */
+        getSiteLevelData: function(params,success) {
+            params.num_days_quality_filter = SettingsService.getSettingValue('dataPrecisionFilter');
+            $http({
+                method: 'POST',
+                url: $url('/npn_portal/observations/getSiteLevelData.json'),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                transformRequest: txformUrlEncoded,
+                data: addCommonParams(params)
+            }).then(function(response){
+                var data = response.data,
+                    minusSuspect = data.filter(filterSuspectSummaryData),
+                    filtered = minusSuspect.filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSiteData : angular.identity);
+                $log.debug('filtered out '+(data.length-minusSuspect.length)+'/'+data.length+' suspect records');
+                $log.debug('filtered out '+(minusSuspect.length-filtered.length)+'/'+minusSuspect.length+' LQD records.');
+                success(filtered,(minusSuspect.length !== filtered.length));
+            });
+        },
+        /**
+         * @ngdoc method
+         * @methodOf npn-viz-tool.vis:ChartService
          * @name getSummarizedData
          * @description
          *
@@ -202,16 +268,35 @@ angular.module('npn-viz-tool.vis',[
         getSummarizedData: function(params,success) {
             $http({
                 method: 'POST',
-                url: window.location.origin.replace('data', 'www') + '/npn_portal/observations/getSummarizedData.json',
+                url: $url('/npn_portal/observations/getSummarizedData.json'),
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
-            }).success(function(response){
-                var filtered = response
-                                .filter(filterSuspectSummaryData)
-                                .filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSummaryData : angular.identity);
-                $log.debug('filtered out '+(response.length-filtered.length)+'/'+response.length+' suspect records or with negative num_days_prior_no.');
-                success(filtered);
+            }).then(function(response){
+                var data = response.data,
+                    minusSuspect = data.filter(filterSuspectSummaryData),
+                    filtered = minusSuspect.filter(SettingsService.getSettingValue('filterLqdSummary') ? filterLqSummaryData : angular.identity),
+                    individuals = filtered.reduce(function(map,d){
+                        var key = d.individual_id+'/'+d.phenophase_id+'/'+d.first_yes_year;
+                        map[key] = map[key]||[];
+                        map[key].push(d);
+                        return map;
+                    },{}),
+                    uniqueIndividuals = [];
+                $log.debug('filtered out '+(data.length-minusSuspect.length)+'/'+data.length+' suspect records');
+                $log.debug('filtered out '+(minusSuspect.length-filtered.length)+'/'+minusSuspect.length+' LQD records.');
+                angular.forEach(individuals,function(arr,key){
+                    if(arr.length > 1) {
+                        // sort by first_yes_doy
+                        arr.sort(function(a,b){
+                            return a.first_yes_doy - b.first_yes_doy;
+                        });
+                    }
+                    // use the earliest record
+                    uniqueIndividuals.push(arr[0]);
+                });
+                $log.debug('filtered out '+(filtered.length-uniqueIndividuals.length)+'/'+filtered.length+ ' individual records (preferring lowest first_yes_doy)');
+                success(uniqueIndividuals,(minusSuspect.length !== filtered.length));
             });
         },
         /**
@@ -229,11 +314,13 @@ angular.module('npn-viz-tool.vis',[
         getObservationDates: function(params,success) {
             $http({
                 method: 'POST',
-                url: window.location.origin.replace('data', 'www') + '/npn_portal/observations/getObservationDates.json',
+                url: $url('/npn_portal/observations/getObservationDates.json'),
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 transformRequest: txformUrlEncoded,
                 data: addCommonParams(params)
-            }).success(success);
+            }).then(function(response) {
+                success(response.data);
+            });
         },
         /**
          * @ngdoc method
@@ -280,17 +367,23 @@ angular.module('npn-viz-tool.vis',[
          * @description Open a visualization dialog.
          *
          * @param {object} vis The visualization object.
+         * @param {object} resolve The resolve object used to populate the modal scope (if necessary).
          */
-        openVisualization: function(vis) {
-            if(!FilterService.isFilterEmpty()) {
-                return $uibModal.open({
+        openVisualization: function(vis,resolve) {
+            if(vis.noFilterRequired || !FilterService.isFilterEmpty()) {
+                var modalDef = {
                     templateUrl: vis.template,
                     controller: vis.controller,
                     windowClass: 'vis-dialog-window',
                     backdrop: 'static',
                     keyboard: false,
                     size: 'lg'
-                });
+                };
+                if(resolve) {
+                    modalDef.resolve = resolve;
+                }
+                Analytics.trackEvent('visualization','open',vis.title);
+                return $uibModal.open(modalDef);
             }
         }
     };
@@ -332,7 +425,7 @@ angular.module('npn-viz-tool.vis',[
         templateUrl: 'js/vis/visControl.html',
         scope: {
         },
-        controller: function($scope) {
+        link: function($scope) {
             $scope.isFilterEmpty = ChartService.isFilterEmpty;
             $scope.open = ChartService.openVisualization;
             $scope.visualizations = ChartService.getVisualizations();

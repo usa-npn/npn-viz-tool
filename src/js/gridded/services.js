@@ -7,6 +7,15 @@
  */
 angular.module('npn-viz-tool.gridded-services',[
 ])
+.provider('$url',[function(){
+    this.$get = ['$log',function($log){
+        var BASE_URL = window.location.origin.replace('data', 'www');
+        $log.debug('BASE_URL',BASE_URL);
+        return function(path) {
+            return BASE_URL+path;
+        };
+    }];
+}])
 .service('DateExtentUtil',[function(){
     var FMT_REGEX = /^(\d\d\d\d)-0?(\d+)-0?(\d+)/;
     return {
@@ -16,6 +25,57 @@ angular.module('npn-viz-tool.gridded-services',[
                 month = parseInt(match[2])-1,
                 day = parseInt(match[3]);
             return new Date(year,month,day);
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:gridded-point-info-window
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * The base info window contents for gridded point data.  This directive doesn't
+ * open the InfoWindow but is just used to render its contents (not intended for general re-use).
+ *
+ * @scope
+ * @param {number} point The point data returned by the layer.
+ * @param {object} layer The currently selected map layer.
+ * @param {object} legend The legend for the currently selected layer.
+ * @param {google.maps.LatLng} latLng The LatLng where the InfoWindow has been be opened.
+ */
+.directive('griddedPointInfoWindow',['$log','$timeSeriesVis',function($log,$timeSeriesVis){
+    return {
+        restrict: 'E',
+        template: '<div id="griddedPointInfoWindow" class="ng-cloak">'+
+        '<div ng-if="gridded_point_legend" class="gridded-legend-color" style="background-color: {{gridded_point_legend.color}};">&nbsp;</div>'+
+        '<div class="gridded-point-data">{{legend.formatPointData(point)}}</div>'+
+        '<ul class="list-unstyled" ng-if="timeSeries">'+
+        '<li><a href ng-click="timeSeries()">Show Time Series</a></li>'+
+        '</ul>'+
+        //'<pre>\n{{gridded_point_data}}\n{{gridded_point_legend}}</pre>'+
+        '</div>',
+        scope: {
+            point: '=',
+            layer: '=',
+            legend: '=',
+            latLng: '='
+        },
+        link: function($scope) {
+            var latLng = $scope.latLng,
+                point = $scope.point,
+                layer = $scope.layer,
+                legend = $scope.legend;
+            $log.debug('griddedPointInfoWindow:latLng',latLng);
+            $log.debug('griddedPointInfoWindow:point',point);
+            $log.debug('griddedPointInfoWindow:layer',layer);
+            $log.debug('griddedPointInfoWindow:legend',legend);
+            $scope.gridded_point_legend = $scope.legend.getPointData(point);
+            if(layer.supports_time_series) {
+                $scope.timeSeries = function() {
+                    $timeSeriesVis(layer,legend,latLng);
+                };
+            }
         }
     };
 }])
@@ -58,38 +118,26 @@ angular.module('npn-viz-tool.gridded-services',[
             layer.getGriddedData(latLng)
                 .then(function(tuples){
                     $log.debug('tuples',tuples);
-                    var html,compiled,
+                    var compiled,
                         point = tuples && tuples.length ? tuples[0] : undefined,
                         $scope = $rootScope.$new();
-
                     if(point === -9999 || isNaN(point)) {
                         $log.debug('received -9999 or Nan ignoring');
                         return;
                     }
-                    $scope.gridded_point_data = point;
-                    if(typeof($scope.gridded_point_data) === 'undefined') {
+                    if(typeof($scope.point = point) === 'undefined') {
+                        $log.debug('undefined point?');
                         return;
                     }
+                    $scope.layer = layer;
                     $scope.legend = legend;
-                    $scope.gridded_point_legend = legend.getPointData($scope.gridded_point_data);
-                    if($scope.gridded_point_legend){
-                        $log.debug('data from legend:',$scope.gridded_point_data,$scope.gridded_point_legend);
-                        html = '<div><div id="griddedPointInfoWindow" class="ng-cloak">';
-                        html += '<div class="gridded-legend-color" style="background-color: {{gridded_point_legend.color}};">&nbsp;</div>';
-                        html += '<div class="gridded-point-data">{{legend.formatPointData(gridded_point_data)}}</div>';
-                        //html += '<pre>\n{{gridded_point_data}}\n{{gridded_point_legend}}</pre>';
-                        html += '</div></div>';
-                        compiled = $compile(html)($scope);
-                        $timeout(function(){
-                            infoWindow.setContent(compiled.html());
-                            infoWindow.setPosition(latLng);
-                            infoWindow.open(map);
-                        });
-                    } else {
-                        infoWindow.setContent(legend.formatPointData($scope.gridded_point_data));
+                    $scope.latLng = latLng;
+                    compiled = $compile('<div><gridded-point-info-window point="point" layer="layer" legend="legend" lat-lng="latLng"></gridded-point-info-window></div>')($scope);
+                    $timeout(function(){
+                        infoWindow.setContent(compiled[0]);
                         infoWindow.setPosition(latLng);
                         infoWindow.open(map);
-                    }
+                    });
                 },function() {
                     $log.error('unable to get gridded data.');
                 });
@@ -113,7 +161,7 @@ angular.module('npn-viz-tool.gridded-services',[
 /**
  * @ngdoc directive
  * @restrict E
- * @name npn-viz-tool.gridded-services:map-vis-opacity-slider
+ * @name npn-viz-tool.gridded-services:gridded-opacity-slider
  * @module npn-viz-tool.gridded-services
  * @description
  *
@@ -125,20 +173,21 @@ angular.module('npn-viz-tool.gridded-services',[
 .directive('griddedOpacitySlider',['$log','$timeout','WmsService',function($log,$timeout,WmsService) {
     return {
         restrict: 'E',
-        template: '<div ng-if="layer" class="form-group"><label for="griddedOpacitySlider" style="margin-bottom: 15px;">Opacity</label><input ng-model="selection.opacity" type="text" id="griddedOpacitySlider" slider options="options" /></div>',
+        template: '<div ng-if="layer" class="form-group">'+
+        '<label for="griddedOpacitySlider" style="margin-bottom: 15px;">Opacity</label>'+
+        '<rzslider rz-slider-model="selection.opacity" rz-slider-options="options"></rzslider>'+
+        '</div>',
         scope: {
             layer: '='
         },
         link: function($scope) {
-
             $scope.selection = {
                 opacity: 75
             };
             $scope.options = {
-                from: 1,
-                to: 100,
-                step: 1,
-                dimension: ' %'
+                floor: 0,
+                ceil: 100,
+                step: 1
             };
             function updateOpacity() {
                 if($scope.layer) {
@@ -148,6 +197,89 @@ angular.module('npn-viz-tool.gridded-services',[
             $scope.$watch('layer.extent.current',updateOpacity);
             $scope.$watch('selection.opacity',updateOpacity);
             $scope.$watch('layer',updateOpacity);
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:gridded-range-slider
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Dynamically controls the opacity ranges of the data from the WMS Server.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
+ */
+.directive('griddedRangeSlider',['$log','$timeout','WmsService',function($log,$timeout,WmsService) {
+    return {
+        restrict: 'E',
+        template: '<div ng-if="legend" class="form-group">'+
+        '<label for="griddedRangeSlider" style="margin-bottom: 15px;">Range</label>'+
+        '<rzslider rz-slider-model="selection.min" rz-slider-high="selection.max" rz-slider-options="options"></rzslider>'+
+        '</div>',
+        scope: {
+            layer: '='
+        },
+        link: function($scope) {
+            $scope.$watch('layer',function(layer) {
+                delete $scope.legend;
+                if(layer) {
+                    layer.getLegend().then(function(legend){
+                        $scope.legend = legend;
+                        $log.debug('legend',legend);
+                        var data = $scope.data = legend.getData(),
+                            existingRange = layer.getStyleRange();
+                        $scope.selection = {
+                            min: (existingRange ? existingRange[0] : 0),
+                            max: (existingRange ? existingRange[1] : (data.length-1))
+                        };
+                        $scope.options = {
+                            //showTickValues: false,
+                            floor: 0,
+                            ceil: (data.length-1),
+                            step: 1,
+                            showTicks: true,
+                            showSelectionBar: true,
+                            translate: function(n) {
+                                return data[n].label;
+                            },
+                            getTickColor: function(n) {
+                                return data[n].color;
+                            },
+                            getPointerColor: function(n) {
+                                return data[n].color;
+                            },
+                            getSelectionBarColor: function(n) {
+                                return data[n].color;
+                            }
+                        };
+                    });
+                }
+            });
+            var timer;
+            function updateRange() {
+                if(timer) {
+                    $timeout.cancel(timer);
+                }
+                timer = $timeout(function(){
+                    var layer = $scope.layer,
+                        legend = $scope.legend,
+                        data = $scope.data;
+                    if(legend && data){
+                        if($scope.selection.min === $scope.options.floor &&
+                           $scope.selection.max === $scope.options.ceil) {
+                            // they have selected the complete range, don't send the style
+                            // definition with map tile requests...
+                            return layer.setStyleRange(undefined);
+                        }
+                        layer.setStyleRange([$scope.selection.min,$scope.selection.max]);
+                    }
+                },500);
+            }
+            $scope.$watch('selection.min',updateRange);
+            $scope.$watch('selection.max',updateRange);
         }
     };
 }])
@@ -283,7 +415,7 @@ angular.module('npn-viz-tool.gridded-services',[
                 $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,value){
                     return current||(formattedDate === dateFilter(value.date,fmt) ? value : undefined);
                 },undefined);
-				
+
             });
         }
     };
@@ -446,17 +578,17 @@ angular.module('npn-viz-tool.gridded-services',[
                        .attr('text-anchor','middle')
                        .text(legend.ldef.legend_units);
                 }
-				
+
 				svg.append('g').append('text').attr('dx',5)
                        .attr('dy',100+top_pad)
 					   .attr('font-size', '18px')
                        .attr('text-anchor','right').text(legend.ldef.title + ', ' + legend.ldef.extent.current.label);
-					   
+
 				svg.append('g').append('text').attr('dx',5)
                        .attr('dy',118+top_pad)
 					   .attr('font-size', '11px')
                        .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
-					   
+
             }
             $scope.$watch('legend',redraw);
 
@@ -577,14 +709,30 @@ angular.module('npn-viz-tool.gridded-services',[
 }])
 /**
  * @ngdoc filter
- * @name npn-viz-tool.gridded-services:agddDefaultToday
+ * @name npn-viz-tool.gridded-services:agddDefaultTodayElevation
  * @module npn-viz-tool.gridded-services
  * @description
  *
  * Selects a default extent value for a doy layer of "today" (if found among the possibilities).
  */
-.filter('agddDefaultToday',['dateFilter',function(dateFilter){
+.filter('agddDefaultTodayElevation',['dateFilter',function(dateFilter){
     var todayLabel = dateFilter(new Date(),'MMMM d');
+    return function(values) {
+        return values.reduce(function(dflt,v){
+            return dflt||(v.label == todayLabel ? v : undefined);
+        },undefined);
+    };
+}])
+/**
+ * @ngdoc filter
+ * @name npn-viz-tool.gridded-services:agddDefaultTodayTime
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Selects a default extent value for a time layer of "today" (if found among the possibilities).
+ */
+.filter('agddDefaultTodayTime',['dateFilter',function(dateFilter){
+    var todayLabel = dateFilter(new Date(),'longDate');
     return function(values) {
         return values.reduce(function(dflt,v){
             return dflt||(v.label == todayLabel ? v : undefined);
@@ -687,6 +835,7 @@ angular.module('npn-viz-tool.gridded-services',[
  *   <li><code>extent_default_filter</code> - specifies anangular filter and optional arguments used to select a default value.  (if not specified the default provided by the server will be used).</li>
  *   <li><code>legend_units</code> - specifies a string that should be placed on the legend below the cell labels (units separated from legend labels).</li>
  *   <li><code>supports_data</code> - specifies a boolean indicating if a layer supports plotting of data on it or not (default true).</li>
+ *   <li><code>supports_time_series</code> - specifies a boolean indicating if a layer supports plotting of time series data (default false).</li>
  *   <li>code>current_year_only</code> - if <code>supports_data</code> is true (or unspecified) the indicates that a given layer should only support plotting of data for the year of the currently selected extent on it (default false).</li>
  *   <li><code>description</code> - contains a description of a given layer.  this value can also be specified at the top level so that it applies to all layers in all categories (as the default).</li>
  * </ul>
@@ -734,7 +883,7 @@ angular.module('npn-viz-tool.gridded-services',[
  * Similarly both layers will use the same <code>extent_values_filter</code> whilch will filter valid extent values as reported
  * by the WMS to only those <em>before</em> "today".
  */
-.service('WmsService',['$log','$q','$http','$sce','$httpParamSerializer','$filter','DateExtentUtil','WcsService',function($log,$q,$http,$sce,$httpParamSerializer,$filter,DateExtentUtil,WcsService){
+.service('WmsService',['$log','$q','$http','$sce','$httpParamSerializer','$filter','DateExtentUtil','WcsService','Analytics',function($log,$q,$http,$sce,$httpParamSerializer,$filter,DateExtentUtil,WcsService,Analytics){
     function setGeoServerUrl(url) {
         GEOSERVER_URL = url;
         WMS_BASE_URL = GEOSERVER_URL+'/wms';
@@ -810,7 +959,7 @@ angular.module('npn-viz-tool.gridded-services',[
      *
      * A legend object associated with a specific map layer.
      */
-    function WmsMapLegend(color_map,ldef) {
+    function WmsMapLegend(color_map,ldef,legend_data) {
         function get_filter(filter_def) {
             var filter = $filter(filter_def.name);
             return function(l,q) {
@@ -840,6 +989,7 @@ angular.module('npn-viz-tool.gridded-services',[
             });
             return arr;
         },[]);
+        this.styleDefinition = legend_data;
         this.ldef = ldef;
         this.lformat = lformat;
         this.gformat = gformat;
@@ -847,7 +997,6 @@ angular.module('npn-viz-tool.gridded-services',[
         this.data = data.slice(1);
         this.length = this.data.length;
     }
-	
 
     /**
      * @ngdoc method
@@ -860,8 +1009,8 @@ angular.module('npn-viz-tool.gridded-services',[
      WmsMapLegend.prototype.setLayer = function(layer) {
      this.layer = layer;
              return this;
-     };	
-	
+     };
+
     /**
      * @ngdoc method
      * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
@@ -871,6 +1020,16 @@ angular.module('npn-viz-tool.gridded-services',[
      */
     WmsMapLegend.prototype.getData = function() {
         return this.data;
+    };
+    /**
+     * @ngdoc method
+     * @methodOf npn-viz-tool.gridded-services:WmsMapLegend
+     * @name  getStyleDefinition
+     * @description Get the raw style definition DOM.
+     * @returns {object} The style definitino DOM.
+     */
+    WmsMapLegend.prototype.getStyleDefinition = function() {
+        return this.styleDefinition;
     };
     /**
      * @ngdoc method
@@ -1004,6 +1163,7 @@ angular.module('npn-viz-tool.gridded-services',[
             width: boxSize,
             srs: 'EPSG:3857' // 'EPSG:4326'
         },
+        sldBody,
         googleLayer = new google.maps.ImageMapType({
             getTileUrl: function (coord, zoom) {
                 var proj = map.getProjection(),
@@ -1016,7 +1176,11 @@ angular.module('npn-viz-tool.gridded-services',[
                 if(l.extent && l.extent.current) {
                     l.extent.current.addToWmsParams(base);
                 }
-                return WMS_BASE_URL+'?'+$httpParamSerializer(angular.extend(base,wmsArgs,{bbox: [ctop.lng,cbot.lat,cbot.lng,ctop.lat].join(',')}));
+                var args = {bbox: [ctop.lng,cbot.lat,cbot.lng,ctop.lat].join(',')};
+                if(sldBody) {
+                    args.sld_body = sldBody;
+                }
+                return WMS_BASE_URL+'?'+$httpParamSerializer(angular.extend(base,wmsArgs,args));
             },
             tileSize: new google.maps.Size(boxSize, boxSize),
             isPng: true,
@@ -1039,6 +1203,85 @@ angular.module('npn-viz-tool.gridded-services',[
              */
             getMap: function() {
                 return map;
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
+             * @name  getStyleRange
+             * @description Get the style range, if any was set.
+             * @returns {Array|undefined} The range that was set.
+             */
+            getStyleRange: function() {
+                return l.styleRange;
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
+             * @name  setStyleRange
+             * @description Set the style range.
+             */
+            setStyleRange: function(range) {
+                function xmlToString(xmlData) {
+                    var xmlString;
+                    if (window.ActiveXObject){
+                        xmlString = xmlData.xml; // MSIE
+                    }
+                    else{
+                        xmlString = (new XMLSerializer()).serializeToString(xmlData);
+                    }
+                    return xmlString;
+                }
+                var self = this;
+                if(self.styleRange = range) {
+                    self.getLegend().then(function(legend){
+                        var styleDef = legend.getStyleDefinition(),
+                            data = legend.getData(),
+                            minQ = data[range[0]].quantity,
+                            maxQ = data[range[1]].quantity,
+                            $styleDef = $(styleDef),
+                            colors = $styleDef.find('ColorMapEntry'),
+                            colorMap = $styleDef.find('ColorMap');
+                        if(colors.length === 0) {
+                            colors = $styleDef.find('sld\\:ColorMapEntry'); // FF
+                        }
+                        if(colorMap.length === 0) {
+                            colorMap = $styleDef.find('sld\\:ColorMap'); // FF
+                        }
+                        if(colorMap) {
+                            colorMap.attr('type','intervals');
+                        }
+                        colors.each(function() {
+                            var cme = $(this),
+                                q = parseInt(cme.attr('quantity'));
+                            /*if(q === -9999) {
+                                cme.attr('opacity','0.0');
+                                //cme.remove();
+                            } else {*/
+                                cme.attr('opacity',(q > minQ && q <= maxQ) ? '1.0' : '0.0');
+                            /*}*/
+                        });
+                        var style = xmlToString(styleDef[0]);
+                        self.setStyle(style);
+                    });
+                } else {
+                    self.setStyle(undefined);
+                }
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
+             * @name  setStyle
+             * @description Set the style and its associated range (if any).
+             * @param {string} The style (XML as a string).
+             */
+            setStyle: function(style) {
+                if(style !== sldBody) { // avoid off/on if nothing is changing
+                    if(style) {
+                        $log.debug('style:',style);
+                    }
+                    sldBody = style;
+                    this.bounce();
+                }
             },
             /**
              * @ngdoc method
@@ -1109,11 +1352,29 @@ angular.module('npn-viz-tool.gridded-services',[
             /**
              * @ngdoc method
              * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
+             * @name  bounce
+             * @description
+             *  Toggle this layer off then on.  This function exists since off/on
+             *  are tracked by analytics and sometimes a layer needs to be updated
+             *  in this fashion.
+             * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
+             */
+            bounce: function() {
+                if(map.overlayMapTypes.length) {
+                    map.overlayMapTypes.pop();
+                }
+                map.overlayMapTypes.push(googleLayer);
+                return l;
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  on
              * @description Put this layer on the map.
              * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
              */
             on: function() {
+                Analytics.trackEvent('gridded-layer','on',this.getTitle());
                 map.overlayMapTypes.push(googleLayer);
                 return l;
             },
@@ -1126,6 +1387,7 @@ angular.module('npn-viz-tool.gridded-services',[
              */
             off: function() {
                 if(map.overlayMapTypes.length) {
+                    Analytics.trackEvent('gridded-layer','off',this.getTitle());
                     map.overlayMapTypes.pop();
                 }
                 return l;
@@ -1140,7 +1402,7 @@ angular.module('npn-viz-tool.gridded-services',[
             getLegend: function() {
 				var self = this,
                  def = $q.defer();
-				 
+
                 if(legends.hasOwnProperty(layer_def.name)) {
                     def.resolve(legends[layer_def.name]);
 					def.resolve(legends[layer_def.name].setLayer(self));
@@ -1163,12 +1425,12 @@ angular.module('npn-viz-tool.gridded-services',[
                         }
                         // this code is selecting the first if there are multiples....
                         // as is the case for si-x:leaf_anomaly
-                        legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def) : undefined;
+                        legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def,legend_data) : undefined;
                         def.resolve(legends[layer_def.name]);
 						def.resolve(legends[layer_def.name].setLayer(self));
                     },def.reject);
                 }
-				
+
                 return def.promise;
             },
             /**

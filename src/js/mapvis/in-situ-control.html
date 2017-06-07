@@ -1,7 +1,7 @@
 <div class="in-situ-control" ng-if="layer && layer.supportsData()">
     <div class="disable-curtain" ng-if="disableControl"></div>
     <hr />
-	<h4>Plot Observed Onset</h4>	
+	<h4>Plot Observed Onset</h4>
     <div class="form-group" ng-if="speciesList">
         <label for="selectedSpecies">Species</label>
         <select id="selectedSpecies" class="form-control" ng-model="selection.species"
@@ -27,7 +27,7 @@
                         ng-click="addSelectionToFilter()"
                         ng-disabled="!validSelection()"
                         popover-placement="left" popover-popup-delay="500"
-                        popover-trigger="mouseenter"
+                        popover-trigger="'mouseenter'"
                         uib-popover="Add this species/phenophase/year to the map"
                         popover-append-to-body="true">
                     <i class="fa fa-plus"></i>
@@ -41,7 +41,7 @@
                     ng-click="mapVisPlot()"
                     ng-disabled="!mapVisFilter.length"
                     popover-placement="left" popover-popup-delay="500"
-                    popover-trigger="mouseenter"
+                    popover-trigger="'mouseenter'"
                     uib-popover="Add this species/phenophase/year to the map"
                     popover-append-to-body="true">Plot data</button>
         </div>

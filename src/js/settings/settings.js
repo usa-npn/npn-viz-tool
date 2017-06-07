@@ -44,6 +44,17 @@ angular.module('npn-viz-tool.settings',[
             name: 'filter-lqd-summary',
             q: 'flqdf',
             value: true
+        },
+        onlyYesData: {
+            name: 'only-yes-data',
+            q: 'oyd',
+            value: false
+        },
+        dataPrecisionFilter: {
+            name: 'filter-data-precision',
+            q: 'fdp',
+            value: 30,
+            options: [7,14,30]
         }
     };
     return {
@@ -107,7 +118,7 @@ angular.module('npn-viz-tool.settings',[
     return {
         restrict: 'E',
         templateUrl: 'js/settings/settingsControl.html',
-        controller: function($scope) {
+        link: function($scope) {
             SettingsService.populateFromSharingUrlArgs($location.search()['ss']);
             $scope.settings = SettingsService.getSettings();
             function broadcastSettingChange(key) {
