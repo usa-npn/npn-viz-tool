@@ -1,16 +1,16 @@
 <vis-dialog title="Time Series" modal="modal">
     <div class="controls">
         <div class="threshold">
-            <label>AGDD Threshold</label>
+            <label>Select AGDD Threshold</label>
             <rzslider rz-slider-model="selection.threshold.value" rz-slider-options="selection.threshold.options"></rzslider>
         </div>
         <div class="days-of-the-year">
-            <label>Show days of the year</label>
+            <label>Select Days of Year</label>
             <rzslider rz-slider-model="selection.doys.value" rz-slider-options="selection.doys.options"></rzslider>
         </div>
         <div class="checkbox" ng-if="selection.lastYearValid">
             <label ng-disabled="working">
-              <input type="checkbox" ng-model="selection.showLastYear"> Show previous year’s data
+              <input type="checkbox" ng-model="selection.showLastYear"> Show data from previous year
             </label>
         </div>
     </div>

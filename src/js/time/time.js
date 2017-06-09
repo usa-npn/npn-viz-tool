@@ -265,7 +265,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             .attr('dy','2.5em')
             .attr('x',(sizing.width/2))
             .style('text-anchor', 'middle')
-            .text('Day of Year');
+            .text('Date');
         commonChartUpdates();
     }
 
@@ -586,7 +586,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     this.$get = ['ChartService',function(ChartService){
         return function(layer,legend,latLng) {
             ChartService.openVisualization({
-                title: 'Time Series',
+                title: 'Daily Accumulation',
                 noFilterRequired: true,
                 template: 'js/time/time.html',
                 controller: 'TimeSeriesVisCtrl'
