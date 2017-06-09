@@ -20,7 +20,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     $scope.modal = $uibModalInstance;
     $scope.latLng = latLng;
 
-    var degF = 'F',//'\u00B0F',//'°F',
+    var degF = '\u00B0' + 'F',
         dateFmt = 'yyyy-MM-dd',
         date = $filter('date'),
         number = $filter('number'),
