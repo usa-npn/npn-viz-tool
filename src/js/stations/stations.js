@@ -6,7 +6,7 @@ angular.module('npn-viz-tool.stations',[
     'npn-viz-tool.layers',
     'npn-viz-tool.vis'
 ])
-.factory('StationService',['$rootScope','$http','$log','FilterService','ChartService',function($rootScope,$http,$log,FilterService,ChartService){
+.factory('StationService',['$rootScope','$http','$log','$url','FilterService','ChartService',function($rootScope,$http,$log,$url,FilterService,ChartService){
     var infoWindow,
         markerEvents = {
         'click':function(m){
@@ -19,7 +19,8 @@ angular.module('npn-viz-tool.stations',[
             //m.info.setContent('<div class="station-details"><i class="fa fa-circle-o-notch fa-spin"></i></div>');
             //m.info.open(m.map,m);
             $log.debug('Fetching info for station '+m.model.station_id);
-            $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/stations/getStationDetails.json',{params:{ids: m.model.station_id}}).success(function(info){
+            $http.get($url('/npn_portal/stations/getStationDetails.json'),{params:{ids: m.model.station_id}}).then(function(response){
+                var info = response.data;
                 function litem(label,value) {
                     return value && value !== '' ?
                      '<li><label>'+label+':</label> '+value+'</li>' : '';
@@ -91,8 +92,8 @@ angular.module('npn-viz-tool.stations',[
     };
     return service;
 }])
-.directive('npnStations',['$http','$log','$timeout','LayerService','SettingsService','StationService','ClusterService','CacheService',
-    function($http,$log,$timeout,LayerService,SettingsService,StationService,ClusterService,CacheService){
+.directive('npnStations',['$http','$log','$timeout','$url','LayerService','SettingsService','StationService','ClusterService','CacheService',
+    function($http,$log,$timeout,$url,LayerService,SettingsService,StationService,ClusterService,CacheService){
     return {
         restrict: 'E',
         template: '<ui-gmap-markers models="regions.markers" idKey="\'name\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" isLabel="true"></ui-gmap-markers><ui-gmap-markers models="stations.markers" idKey="\'station_id\'" coords="\'self\'" icon="\'icon\'" options="\'markerOpts\'" doCluster="doCluster" events="markerEvents" clusterOptions="clusterOptions"></ui-gmap-markers>',
@@ -131,7 +132,8 @@ angular.module('npn-viz-tool.stations',[
             if(stationCounts) {
                 handleCounts(stationCounts);
             } else {
-                $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/stations/getStationCountByState.json').success(function(counts){
+                $http.get($url('/npn_portal/stations/getStationCountByState.json')).then(function(response){
+                    var counts = response.data;
                     CacheService.put('stations-counts-by-state',counts);
                     handleCounts(counts);
                 });
@@ -223,9 +225,10 @@ angular.module('npn-viz-tool.stations',[
                                         waitTime = 500; // give more time for map tiles to load
                                     }
                                     $timeout(function(){
-                                        $http.get(window.location.origin.replace('data', 'www') + '/npn_portal/stations/getAllStations.json',
+                                        $http.get($url('/npn_portal/stations/getAllStations.json'),
                                                     {params:{state_code:state}})
-                                            .success(function(data){
+                                            .then(function(response){
+                                                var data = response.data;
                                                 data.forEach(function(d){
                                                     d.markerOpts = {
                                                         title: d.station_name,

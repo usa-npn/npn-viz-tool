@@ -1,0 +1,32 @@
+<vis-dialog title="Daily Accumulation" modal="modal">
+    <div class="controls">
+        <div class="threshold">
+            <label>Select AGDD Threshold</label>
+            <rzslider rz-slider-model="selection.threshold.value" rz-slider-options="selection.threshold.options"></rzslider>
+        </div>
+        <div class="days-of-the-year">
+            <label>Select Days of Year</label>
+            <rzslider rz-slider-model="selection.doys.value" rz-slider-options="selection.doys.options"></rzslider>
+        </div>
+        <div class="checkbox" ng-if="selection.lastYearValid">
+            <label ng-disabled="working">
+              <input type="checkbox" ng-model="selection.showLastYear"> Show data from previous year
+            </label>
+        </div>
+    </div>
+    <div class="panel panel-default main-vis-panel" >
+        <div class="panel-body">
+            <center>
+            <div id="vis-container">
+                <div id="vis-working" ng-show="working"><i class="fa fa-circle-o-notch fa-spin fa-5x"></i></div>
+                <div class="chart-container">
+                    <vis-download ng-if="!working"
+                                  selector=".chart"
+                                  filename="time-series.png"></vis-download>
+                    <div><svg class="chart"></svg></div>
+                </div>
+            </div>
+            </center>
+        </div>
+    </div>
+</vis-dialog>

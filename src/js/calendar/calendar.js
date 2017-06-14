@@ -41,7 +41,7 @@ angular.module('npn-viz-tool.vis-calendar',[
             $scope.selection.species = list[0];
         }
     });
-	
+
 	function phenophaseListUpdate() {
 		$log.debug('Calling phenophase list update');
 		$scope.phenophaseList = [];
@@ -54,23 +54,23 @@ angular.module('npn-viz-tool.vis-calendar',[
 				$log.debug('phenophaseList',list);
 				if(list.length) {
 					list.splice(0,0,{phenophase_id: -1, phenophase_name: 'All phenophases'});
-					
+
 					$scope.selection.phenophase = list.length ? list[0] : undefined;
 
-				}				
-				
-				$scope.phenophaseList = list;							
-				
+				}
+
+				$scope.phenophaseList = list;
+
 			});
-			
-			
-			
+
+
+
 		}
-	}	
-	
+	}
+
     $scope.$watch('selection.species',phenophaseListUpdate);
     $scope.$watch('selection.year',phenophaseListUpdate);
-	
+
     function advanceColor() {
         if($scope.selection.color < $scope.colors.length) {
             $scope.selection.color++;
@@ -199,17 +199,17 @@ angular.module('npn-viz-tool.vis-calendar',[
               .call(yAxis)
               .call(moveYTickLabels);
           chart.selectAll('g .x.axis text')
-            .attr('style','font-size: 12px');
+            .attr('style','font-size: 14px');
 
           // hide y axis
           chart.selectAll('g .y.axis path')
             .style('display','none');
-			
+
 		  svg.append('g').append('text').attr('dx',5)
 			   .attr('dy',sizing.height + 61)
 			   .attr('font-size', '11px')
 			   .attr('font-style','italic')
-			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');			
+			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
 
           commonChartUpdates();
     },500);
@@ -218,7 +218,7 @@ angular.module('npn-viz-tool.vis-calendar',[
     $scope.yAxisConfig = {
         labelOffset: 4,
         bandPadding: 0.5,
-        fontSize: 12
+        fontSize: 14
     };
     function moveYTickLabels(g) {
       var dy = -1*((y.rangeBand()/2)+$scope.yAxisConfig.labelOffset);

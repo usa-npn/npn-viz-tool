@@ -3,16 +3,24 @@ angular.module('npn-viz-tool',[
 'npn-viz-tool.map',
 'uiGmapgoogle-maps',
 'ui.bootstrap',
+'angular-google-analytics',
 'ngAnimate'
 ])
-.config(['uiGmapGoogleMapApiProvider','$logProvider',function(uiGmapGoogleMapApiProvider,$logProvider) {
+.config(['uiGmapGoogleMapApiProvider','$logProvider','AnalyticsProvider','$locationProvider',function(uiGmapGoogleMapApiProvider,$logProvider,AnalyticsProvider,$locationProvider) {
+    $locationProvider.hashPrefix('');
     uiGmapGoogleMapApiProvider.configure({
         key: 'AIzaSyAsTM8XaktfkwpjEeDMXkNrojaiB2W5WyE',
-        v: '3.24',
+        v: '3.27',
         libraries: ['geometry','drawing']
     });
-    $logProvider.debugEnabled(window.location.hash && window.location.hash.match(/^#.*#debug/));
+    var debug = window.location.hash && window.location.hash.match(/^#.*#debug/);
+    $logProvider.debugEnabled(debug);
     window.onbeforeunload = function() {
         return 'You are about to navigate away from the USA-NPN Visualization Tool.  Are you sure you want to do this?';
     };
+
+    AnalyticsProvider.setAccount('UA-30327499-1');
+    if(debug) { // odd but feels wrong to call 'enterDebugMode' unless entering debug mode...
+        AnalyticsProvider.enterDebugMode(true);
+    }
 }]);

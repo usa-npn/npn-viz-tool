@@ -1,4 +1,7 @@
-@import "../lib/font-awesome/css/font-awesome.min.css";
+@import '../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap';
+@import '../../node_modules/font-awesome/scss/font-awesome.scss';
+@import '../../node_modules/angularjs-slider/dist/rzslider.scss';
+@import 'isteven-multi-select.css';
 
 @mixin rounded($r) {
   -webkit-border-radius: $r;
@@ -12,6 +15,15 @@ html, body {
 }
 body {
     overflow: hidden; // full screen map, no scrollbars
+}
+*[disabled] {
+    pointer-events: none;
+}
+*[uib-popover] {
+    cursor: pointer;
+}
+.rzslider .rz-pointer.rz-active:after {
+    background-color: #fff !important;
 }
 
 .angular-google-map-container {
@@ -85,7 +97,7 @@ body {
 }
 
 // toolbar
-$tb-content-width: 350px;
+$tb-content-width: 500px;
 $tb-content-padding: 15px;
 $tb-open-close-duration: 0.75s;
 $tb-bg: #fff;
@@ -142,7 +154,7 @@ $tool-content-overlap: 40px;
 
             @include tb-transition();
         }
-		
+
 		li:last-child{
 			margin-top:57px;
 		}
@@ -238,7 +250,7 @@ $control-font-size: 1.15em;
     font-size: $control-font-size;
 }
 // put the share-control in its original place...
-#reset-control,#share-control,#export-control {
+#reset-control,#share-control,#export-control,#help-video-control {
     @extend .little-npn-control;
     position: absolute;
     right: 10px;
@@ -254,18 +266,64 @@ $control-font-size: 1.15em;
 #reset-control {
     top: $controls-top + (2*$control-height) + (2*$control-margin);
 }
-#share-content {
+#help-video-control {
+    top: $controls-top + (4*$control-height) + (4*$control-margin);
+}
+#share-content,
+#help-video-content
+ {
     position: absolute;
     top: 50px;
-    right: 40px;
+    right: 50px;
     box-shadow: rgba(0, 0, 0, 0.29804) 0px 1px 4px -1px;
-    z-index: 1000;
+    z-index: 3000;
     padding: 10px;
     background: #eee;
     @include rounded(4px);
     border: 1px solid #aaa;
+}
+#help-video-content {
+    transition-property: all;
+    transition-duration: 1s;
+    transition-timing-function: ease-in-out;
+}
+body.modal-open {
+    #help-video-content {
+        top: 100%;
+        right: 100%;
+        transform: translate(100%,-100%);
+        opacity: 0.8;
+    }
+}
+#share-content {
     input {
         width: 400px;
+    }
+}
+#help-video-content {
+    min-width: 200px;
+    min-height: 200px;
+    >h4 {
+        margin-top: 0px;
+        a {
+            color: #000;
+            &:hover {
+                color: #000;
+            }
+        }
+    }
+    a.close {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        opacity: 1;
+        color: #000;
+        &:hover {
+            color: #000;
+        }
+    }
+    a:focus {
+        text-decoration: none;
     }
 }
 
@@ -285,10 +343,14 @@ ul.filter-tags {
             border-top-right-radius: 0px;
             border-bottom-right-radius: 0px;
         }
-        .phenophase-list {
+        .phenophase-list,
+        .network-dd {
             padding: 5px;
             li {
                 font-size: .9em;
+                >label {
+                    font-weight: normal;
+                }
             }
         }
         .popover-content {
@@ -335,7 +397,7 @@ ul.filter-tags.map-vis {
     ul {
         margin-bottom: 50px;
     }
-    li {
+    li:not(.rz-tick) {
         margin-top: 10px;
         padding-bottom: 10px;
         border-bottom: 1px solid #ccc;
@@ -627,7 +689,7 @@ $pulse-count: 60;
             opacity: 0.2;
             border-radius: 5px;
         }
-    }	
+    }
 }
 
 #griddedPointInfoWindow {
@@ -646,5 +708,70 @@ $pulse-count: 60;
 .gridded-layer-control {
     .reset-layer {
         font-size: 1.2em;
+    }
+}
+
+/*
+$slider-ctrl-size: 16px;
+.rzslider .rz-pointer {
+    top: -($slider-ctrl-size/2);
+    width: $slider-ctrl-size;
+    height: $slider-ctrl-size;
+    border-radius: ($slider-ctrl-size/2);
+    &:after {
+        top: 6px
+    }
+}*/
+
+text.gdd-info {
+    .gdd-label {
+        font-weight: bold;
+        &.average {
+            fill: black;
+        }
+        &.selected {
+            fill: blue;
+        }
+        &.forecast {
+            fill: red;
+        }
+        &.previous {
+            fill: orange;
+        }
+    }
+    .gdd-value {
+
+    }
+    .gdd-diff {
+        &.above {
+            fill: red;
+        }
+        &.below {
+            fill: blue;
+        }
+    }
+}
+.modal-body.vis-dialog {
+    font-size: 1.1em;
+}
+
+.modal-body.time-series {
+    .controls {
+        padding: 0px 20px;
+        .threshold .rzslider {
+            margin-top: 25px;
+        }
+    }
+}
+.modal-body.activity-curves {
+    li.control {
+        >h4,
+        .activity-curve-control {
+            display: inline-block;
+        }
+        >h4::after {
+            content:':';
+            margin-right: 10px;
+        }
     }
 }

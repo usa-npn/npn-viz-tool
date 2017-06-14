@@ -5,8 +5,8 @@ angular.module('npn-viz-tool.vis-scatter',[
     'npn-viz-tool.settings',
     'ui.bootstrap'
 ])
-.controller('ScatterVisCtrl',['$scope','$uibModalInstance','$http','$timeout','$filter','$log','FilterService','ChartService','SettingsService',
-    function($scope,$uibModalInstance,$http,$timeout,$filter,$log,FilterService,ChartService,SettingsService){
+.controller('ScatterVisCtrl',['$scope','$uibModalInstance','$timeout','$filter','$log','FilterService','ChartService',
+    function($scope,$uibModalInstance,$timeout,$filter,$log,FilterService,ChartService){
     $scope.modal = $uibModalInstance;
     var colorScale = FilterService.getColorScale();
     $scope.colors = colorScale.domain();
@@ -16,7 +16,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         {key: 'latitude', label: 'Latitude', axisFmt: d3.format('.2f')},
         {key: 'longitude', label: 'Longitude', axisFmt: d3.format('.2f')},
         {key:'elevation_in_meters',label:'Elevation (m)'},
-        {key:'first_yes_year', label: 'Year'},
+        {key:'fyy', label: 'Year'},
 
         {key:'prcp_fall',label:'Precip Fall (mm)'},
         {key:'prcp_spring',label:'Precip Spring (mm)'},
@@ -46,7 +46,8 @@ angular.module('npn-viz-tool.vis-scatter',[
     $scope.selection = {
         color: 0,
         axis: $scope.axis[0],
-        regressionLines: false
+        regressionLines: false,
+        useIndividualPhenometrics: false
     };
     $scope.$watch('selection.regressionLines',function(nv,ov) {
         if(nv !== ov) {
@@ -109,19 +110,36 @@ angular.module('npn-viz-tool.vis-scatter',[
         }
         return true;
     };
+    function clearData() {
+        $scope.data = data = undefined;
+        angular.forEach(chartServiceHandlers,function(handler) {
+            delete handler.data;
+        });
+    }
     $scope.addToPlot = function() {
         if($scope.canAddToPlot()) {
             $scope.toPlot.push(getNewToPlot());
             advanceColor();
-            $scope.data = data = undefined;
+            clearData();
         }
     };
     $scope.removeFromPlot = function(idx) {
         $scope.toPlot.splice(idx,1);
-        $scope.data = data = undefined;
+        clearData();
     };
 
     var data, // the data from the server....
+        chartServiceFunction = 'getSiteLevelData',
+        chartServiceHandlers = {
+            getSiteLevelData: {
+                dataFunc: function(d) { return d.mean_first_yes_doy; },
+                firstYesYearFunc: function(d) { return d.mean_first_yes_year; }
+            },
+            getSummarizedData: {
+                dataFunc: function(d) { return d.first_yes_doy; },
+                firstYesYearFunc: function(d) { return d.first_yes_year; }
+            }
+        },
         dateArg = FilterService.getFilter().getDateArg(),
         start_year = dateArg.arg.start_date,
         start_date = new Date(start_year,0),
@@ -159,7 +177,7 @@ angular.module('npn-viz-tool.vis-scatter',[
             .style('stroke','black')
             .style('opacity','0.8');
 
-        var fontSize = '12px';
+        var fontSize = '14px';
 
         chart.selectAll('.legend text')
              .style('font-size', fontSize)
@@ -217,13 +235,13 @@ angular.module('npn-viz-tool.vis-scatter',[
             .attr('dy','-3em')
             .attr('x',-1*(sizing.height/2)) // looks odd but to move in the Y we need to change X because of transform
             .style('text-anchor', 'middle')
-            .text('Onset DOY');
-			
+            .text('Onset Day of Year');
+
 		  svg.append('g').append('text').attr('dx',5)
 			   .attr('dy',sizing.height + 136)
 			   .attr('font-size', '11px')
 			   .attr('font-style','italic')
-			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');			
+			   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
 
         commonChartUpdates();
 
@@ -261,8 +279,9 @@ angular.module('npn-viz-tool.vis-scatter',[
           .style('stroke','#333')
           .style('stroke-width','1');
 
+        var dataFunc = chartServiceHandlers[chartServiceFunction].dataFunc;
         circles.attr('cx', function(d) { return x(d[$scope.selection.axis.key]); })
-          .attr('cy', function(d) { return y(d.first_yes_doy); })
+          .attr('cy', function(d) { return y(dataFunc(d)); })
           .attr('r', '5')
           .attr('fill',function(d) { return d.color; })
           .on('click',function(d){
@@ -285,7 +304,7 @@ angular.module('npn-viz-tool.vis-scatter',[
                         return o1[$scope.selection.axis.key] - o2[$scope.selection.axis.key];
                     }),
                     xSeries = datas.map(function(d) { return d[$scope.selection.axis.key]; }).filter(angular.isNumber),
-                    ySeries = datas.map(function(d) { return d.first_yes_doy; }).filter(angular.isNumber),
+                    ySeries = datas.map(dataFunc).filter(angular.isNumber),
                     leastSquaresCoeff = ChartService.leastSquares(xSeries,ySeries),
                     x1 = xSeries[0],
                     y1 = ChartService.approxY(leastSquaresCoeff,x1),
@@ -309,17 +328,17 @@ angular.module('npn-viz-tool.vis-scatter',[
 
         regression
             .attr('data-legend',function(d) { return d.legend; } )
-            .attr('data-legend-color',function(d) { return d.color; })
+            //.attr('data-legend-color',function(d) { return d.color; }) // no longer used, uses fill then stroke, added fill below
             .attr('x1', function(d) { return x(d.p1[0]); })
             .attr('y1', function(d) { return y(d.p1[1]); })
             .attr('x2', function(d) { return x(d.p2[0]); })
             .attr('y2', function(d) { return y(d.p2[1]); })
+            .attr('fill', function(d) { return d.color; })
             .attr('stroke', function(d) { return d.color; })
             .attr('stroke-width', $scope.selection.regressionLines ? 2 : 0);
             // FF doesn't like the use of display, so using stroke-width to hide
             // regression lines.
             //.style('display', $scope.selection.regressionLines ? 'inherit' : 'none');
-
 
         chart.select('.legend').remove();
         var legend = chart.append('g')
@@ -343,48 +362,77 @@ angular.module('npn-viz-tool.vis-scatter',[
         commonChartUpdates();
         $scope.working = false;
     }
-    $scope.visualize = function() {
-        if(data) {
-            return draw();
-        }
-        $scope.working = true;
-        $log.debug('visualize',$scope.selection.axis,$scope.toPlot);
-        var dateArg = FilterService.getFilter().getDateArg(),
-            params = {
-                climate_data: 1,
-                request_src: 'npn-vis-scatter-plot',
-                start_date: dateArg.getStartDate(),
-                end_date: dateArg.getEndDate()
-            },
-            i = 0,
-            colorMap = {};
-        angular.forEach($scope.toPlot,function(tp) {
-            colorMap[tp.species_id+'.'+tp.phenophase_id] = tp.color;
-            params['species_id['+i+']'] = tp.species_id;
-            params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
-        });
-        ChartService.getSummarizedData(params,function(response){
-            var filterLqd = SettingsService.getSettingValue('filterLqdSummary');
-            $scope.data = data = response.filter(function(d,i) {
-                var keep = true;
-                d.color = $scope.colorRange[colorMap[d.species_id+'.'+d.phenophase_id]];
-                if(d.color) {
-                    d.id = i;
-                    // this is the day # that will get plotted 1 being the first day of the start_year
-                    // 366 being the first day of start_year+1, etc.
-                    d.day_in_range = ((d.first_yes_year-start_year)*365)+d.first_yes_doy;
-                } else {
-                    // this can happen if a phenophase id spans two species but is only plotted for one
-                    // e.g. boxelder/breaking leaf buds, boxelder/unfolding leaves, red maple/breaking leaf buds
-                    // the service will return data for 'red maple/unfolding leaves' but the user hasn't requested
-                    // that be plotted so we need to discard this data.
-                    keep = false;
-                }
-                return keep;
+
+    function visFunc(chartFunction){
+        return function(){
+            chartServiceFunction = chartFunction;
+            data = chartServiceHandlers[chartServiceFunction].data;
+            if(data) {
+                return draw();
+            }
+            var dataFunc = chartServiceHandlers[chartServiceFunction].dataFunc,
+                firstYesYearFunc = chartServiceHandlers[chartServiceFunction].firstYesYearFunc;
+            $scope.working = true;
+            $log.debug('visualize',$scope.selection.axis,$scope.toPlot);
+            var dateArg = FilterService.getFilter().getDateArg(),
+                params = {
+                    climate_data: 1,
+                    request_src: 'npn-vis-scatter-plot',
+                    start_date: dateArg.getStartDate(),
+                    end_date: dateArg.getEndDate()
+                },
+                i = 0,
+                colorMap = {};
+            angular.forEach($scope.toPlot,function(tp) {
+                colorMap[tp.species_id+'.'+tp.phenophase_id] = tp.color;
+                params['species_id['+i+']'] = tp.species_id;
+                params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
             });
-            $scope.filteredDisclaimer = response.length != data.length;
-            $log.debug('scatterPlot data',data);
-            draw();
-        });
-    };
+            function processResponse(response,filteredLqd){
+                $scope.data = data = response.filter(function(d,i) {
+                    var keep = true;
+                    d.color = $scope.colorRange[colorMap[d.species_id+'.'+d.phenophase_id]];
+                    if(d.color) {
+                        d.id = i;
+                        // store the "first yes year" in a common place to use
+                        d.fyy = firstYesYearFunc(d);
+                        // the site vs summary data stores a few things under different keys
+                        // the key is the summary key (what the UI plots) and the value
+                        // is the site key if using site data just copy the value over to the
+                        // key the summary data would supply
+                        angular.forEach({
+                            daylength: 'mean_daylength',
+                            acc_prcp: 'mean_accum_prcp',
+                            gdd: 'mean_gdd'
+                        },function(siteKey,summaryKey){
+                            if(typeof(d[summaryKey]) === 'undefined') {
+                                d[summaryKey] = d[siteKey];
+                            }
+                        });
+                        // this is the day # that will get plotted 1 being the first day of the start_year
+                        // 366 being the first day of start_year+1, etc.
+                        d.day_in_range = ((d.fyy-start_year)*365)+dataFunc(d);
+                    } else {
+                        // this can happen if a phenophase id spans two species but is only plotted for one
+                        // e.g. boxelder/breaking leaf buds, boxelder/unfolding leaves, red maple/breaking leaf buds
+                        // the service will return data for 'red maple/unfolding leaves' but the user hasn't requested
+                        // that be plotted so we need to discard this data.
+                        keep = false;
+                    }
+                    return keep;
+                });
+                $scope.data = chartServiceHandlers[chartServiceFunction].data = data;
+                $scope.filteredDisclaimer = filteredLqd;
+                $log.debug('scatterPlot data',data);
+                draw();
+            }
+            ChartService[chartFunction](params,processResponse);
+        };
+    }
+    var visualizeSiteLevelData = visFunc('getSiteLevelData'),
+        visualizeSummarizedData = visFunc('getSummarizedData');
+    $scope.$watch('selection.useIndividualPhenometrics',function(summary){
+        delete $scope.data;
+        $scope.visualize = summary ? visualizeSummarizedData : visualizeSiteLevelData;
+    });
 }]);

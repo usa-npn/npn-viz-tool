@@ -15,7 +15,7 @@
             "args": [true]
         },
         "extent_default_filter": {
-            "name": "agddDefaultToday"
+            "name": "agddDefaultTodayElevation"
         },
         "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 2000,
@@ -35,12 +35,12 @@
             "name": "legendGddUnits",
             "args": [true]
         },
-        "extent_values_filter": {
-            "name": "extentDates",
-            "args": [null,"today"]
+        "extent_default_filter": {
+            "name": "agddDefaultTodayTime"
         },
         "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 2000,
+        "supports_time_series": true,
         "layers":[{
                 "name": "gdd:agdd"
             },{
@@ -79,9 +79,8 @@
             "name": "legendAgddAnomaly",
             "args": [true]
         },
-        "extent_values_filter": {
-            "name": "extentDates",
-            "args": [null,"today"]
+        "extent_default_filter": {
+            "name": "agddDefaultTodayTime"
         },
         "legend_units" : "Growing Degree Days",
         "legend_delimiter_every" : 100,
@@ -97,9 +96,9 @@
         },
         "current_year_only": true,
         "layers":[{
-				"name": "si-x:average_leaf_prism"				  
+				"name": "si-x:average_leaf_prism"
             },{
-				"name": "si-x:average_bloom_prism"                
+				"name": "si-x:average_bloom_prism"
             },{
                 "name": "si-x:arnoldred_leaf_prism"
             },{
@@ -118,15 +117,14 @@
         "legend_label_filter": {
             "name": "legendDoy"
         },
-        "extent_values_filter": {
-            "name": "extentDates",
-            "args": [null,"today"]
+        "extent_default_filter": {
+            "name": "agddDefaultTodayTime"
         },
         "current_year_only": true,
         "layers": [{
-				"name": "si-x:average_leaf_ncep"                
+				"name": "si-x:average_leaf_ncep"
             },{
-				"name": "si-x:average_bloom_ncep"                
+				"name": "si-x:average_bloom_ncep"
             },{
                 "name": "si-x:arnoldred_leaf_ncep"
             },{
@@ -173,9 +171,8 @@
         "legend_label_filter": {
             "name": "legendSixAnomaly"
         },
-        "extent_values_filter": {
-            "name": "extentDates",
-            "args": [null,"today"]
+        "extent_default_filter": {
+            "name": "agddDefaultTodayTime"
         },
         "layers": [{
                 "name": "si-x:leaf_anomaly"
@@ -186,6 +183,9 @@
         "name": "Spring Indices, 30-Year Average",
         "legend_label_filter": {
             "name": "legendDoy"
+        },
+        "extent_default_filter": {
+            "name": "agddDefaultTodayElevation"
         },
         "layers": [{
                 "name": "si-x:30yr_avg_six_leaf"

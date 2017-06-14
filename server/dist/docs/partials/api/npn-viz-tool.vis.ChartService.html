@@ -14,11 +14,25 @@ duplicate such logic.</p>
 </div></td></tr><tr><td>x</td><td><a href="" class="label type-hint type-hint-number">number</a></td><td><div class="approxy-page"><p>The value for x.</p>
 </div></td></tr></tbody></table></div>
 </li>
+<li><h3 id="methods_getmagnitudedata">getMagnitudeData(params, success)</h3>
+<div class="getmagnitudedata"><div class="getmagnitudedata-page"><p>Issue a request for magnitude data.  Common parameters will be implicitly added like
+networks in the base filter or lists of sites if geographic filtering is enabled.</p>
+</div><h5 id="methods_getmagnitudedata_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>params</td><td><a href="" class="label type-hint type-hint-object">Object</a></td><td><div class="getmagnitudedata-page"><p>Parameters to send to the web service.</p>
+</div></td></tr><tr><td>success</td><td><a href="" class="label type-hint type-hint-function">function</a></td><td><div class="getmagnitudedata-page"><p>The success callback to receive the data.</p>
+</div></td></tr></tbody></table></div>
+</li>
 <li><h3 id="methods_getobservationdates">getObservationDates(params, success)</h3>
 <div class="getobservationdates"><div class="getobservationdates-page"><p>Issue a request for observation.  Common parameters will be implicitly added like
 networks in the base filter or lists of sites if geographic filtering is enabled.</p>
 </div><h5 id="methods_getobservationdates_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>params</td><td><a href="" class="label type-hint type-hint-object">Object</a></td><td><div class="getobservationdates-page"><p>Parameters to send to the web service.</p>
 </div></td></tr><tr><td>success</td><td><a href="" class="label type-hint type-hint-function">function</a></td><td><div class="getobservationdates-page"><p>The success callback to receive the response data.</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_getsiteleveldata">getSiteLevelData(params, success)</h3>
+<div class="getsiteleveldata"><div class="getsiteleveldata-page"><p>Issue a request for site level data.  Common parameters will be implicitly added like
+networks in the base filter or lists of sites if geographic filtering is enabled.</p>
+</div><h5 id="methods_getsiteleveldata_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>params</td><td><a href="" class="label type-hint type-hint-object">Object</a></td><td><div class="getsiteleveldata-page"><p>Parameters to send to the web service.</p>
+</div></td></tr><tr><td>success</td><td><a href="" class="label type-hint type-hint-function">function</a></td><td><div class="getsiteleveldata-page"><p>The success callback to receive the data.</p>
 </div></td></tr></tbody></table></div>
 </li>
 <li><h3 id="methods_getsizeinfo">getSizeInfo(marginOverride)</h3>
@@ -62,9 +76,10 @@ networks in the base filter or lists of sites if geographic filtering is enabled
 </div></td></tr><tr><td>vis</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="opensinglestationvisualization-page"><p>The visualization object.</p>
 </div></td></tr></tbody></table></div>
 </li>
-<li><h3 id="methods_openvisualization">openVisualization(vis)</h3>
+<li><h3 id="methods_openvisualization">openVisualization(vis, resolve)</h3>
 <div class="openvisualization"><div class="openvisualization-page"><p>Open a visualization dialog.</p>
 </div><h5 id="methods_openvisualization_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>vis</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="openvisualization-page"><p>The visualization object.</p>
+</div></td></tr><tr><td>resolve</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="openvisualization-page"><p>The resolve object used to populate the modal scope (if necessary).</p>
 </div></td></tr></tbody></table></div>
 </li>
 </ul>

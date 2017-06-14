@@ -1,18 +1,24 @@
 angular.module('npn-viz-tool.toolbar',[
   'npn-viz-tool.help'
 ])
-.directive('toolbar', ['$rootScope','HelpService',function($rootScope,HelpService) {
+.directive('toolbar', ['$rootScope','$timeout','HelpService',function($rootScope,$timeout,HelpService) {
   return {
     restrict: 'E',
     templateUrl: 'js/toolbar/toolbar.html',
     transclude: true,
     scope: {},
-    controller: function($scope) {
+    controller: ['$scope',function($scope) {
       var tools = $scope.tools = [];
       function broadcastChange(t) {
         $rootScope.$broadcast('tool-'+(t.selected ? 'open' : 'close'),{
           tool: t
         });
+        if(t.selected) {
+            // in case toolbars contain sliders force them to re-layout
+            $timeout(function(){
+                $rootScope.$broadcast('rzSliderForceRender');
+            },500);
+        }
       }
       $scope.select = function(t) {
         t.selected = !t.selected;
@@ -27,7 +33,7 @@ angular.module('npn-viz-tool.toolbar',[
         $scope.open = t.selected = false;
         broadcastChange(t);
       };
-    }
+    }]
   };
 }])
 .directive('tool', [function() {

@@ -1,5 +1,4 @@
 var path = require('path'),
-    bower = require('bower'),
     fs = require('fs'),
     wrench = require('wrench'),
     server = null;
@@ -21,13 +20,8 @@ module.exports = function(grunt){
                      ' */\n'].join('\n')
         },
         clean: [
-          'coverage',
-          'bower_components'
+          'coverage'
         ],
-        bower: {
-            dest: '<%= dist %>/lib',
-            ignore: ['angular-mocks','jasmine.*']
-        },
         htmlhint: {
             build: {
                 options: {
@@ -81,6 +75,28 @@ module.exports = function(grunt){
                 },
                 src: [], // list generated in build.
                 dest: '<%= dist %>/<%= filename %>.js'
+            },
+            thirdParty: {
+                src: [
+                    'node_modules/jquery/dist/jquery.js',
+                    'node_modules/angular/angular.js',
+                    'node_modules/angular-animate/angular-animate.js',
+                    'node_modules/angular-resource/angular-resource.js',
+                    'node_modules/angular-sanitize/angular-sanitize.js',
+                    'node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
+                    'node_modules/lodash/lodash.js',
+                    'node_modules/angular-simple-logger/dist/angular-simple-logger.js',
+                    'node_modules/angular-google-maps/dist/angular-google-maps.js',
+                    'node_modules/isteven-angular-multiselect/isteven-multi-select.js',
+                    'node_modules/angular-md5/angular-md5.js',
+                    'node_modules/angularjs-slider/dist/rzslider.js',
+                    'node_modules/d3/d3.js',
+                    'node_modules/topojson/dist/topojson.js',
+                    'node_modules/d3-legend/d3.legend.js',
+                    'node_modules/innersvg-polyfill/innersvg.js',
+                    'node_modules/angular-google-analytics/dist/angular-google-analytics.js',
+                ],
+                dest: '<%= dist %>/<%= filename %>-3rdparty.js'
             }
         },
         uglify: {
@@ -90,6 +106,10 @@ module.exports = function(grunt){
             dist:{
                 src:['<%= concat.dist.dest %>'],
                 dest:'<%= dist %>/<%= filename %>.min.js'
+            },
+            thirdParty: {
+                src:['<%= dist %>/<%= filename %>-3rdparty.js'],
+                dest:'<%= dist %>/<%= filename %>-3rdparty.min.js'
             }
         },
         copy: {
@@ -104,6 +124,24 @@ module.exports = function(grunt){
                     src: '*.ico',
                     cwd: 'src/',
                     dest: '<%= dist %>/'
+                }],
+            },
+            thirdParty: {
+                files: [{
+                    expand: true,
+                    src: '**',
+                    cwd: 'node_modules/font-awesome/fonts',
+                    dest: '<%= dist %>/fonts'
+                },{
+                    expand: true,
+                    src: '**',
+                    cwd: 'node_modules/bootstrap-sass/assets/fonts',
+                    dest: '<%= dist %>/fonts'
+                },{
+                    expand: true,
+                    cwd: 'node_modules/isteven-angular-multiselect',
+                    src: ['isteven-multi-select.css'],
+                    dest: '<%= dist %>/css/'
                 }]
             },
             /* just keep one copy in dist, not in src
@@ -121,14 +159,6 @@ module.exports = function(grunt){
                     src: ['img/*'],
                     cwd: 'src/',
                     dest: '<%= dist %>/'
-                }]
-            },
-            bower_issues: {
-                files:[{
-                    expand: true,
-                    src:'*',
-                    cwd:'bower_components/lodash/dist/',
-                    dest: '<%= dist %>/lib/lodash'
                 }]
             }
         },
@@ -151,7 +181,7 @@ module.exports = function(grunt){
         delta: {
             index: {
                 files: ['src/*.html'],
-                tasks: ['htmlhint','after-test']
+                tasks: ['htmlhint','copy:html']
             },
             html: {
                 files: ['src/js/**/*.html'],
@@ -168,12 +198,12 @@ module.exports = function(grunt){
         },
         karma: {
           options: {
-            files: ['bower_components/jquery/dist/jquery.js',
-                'bower_components/angular/angular.js',
-                'bower_components/angular-resource/angular-resource.js',
-                'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
-                'bower_components/angular-mocks/angular-mocks.js',
-                'bower_components/jasmine-jquery/lib/jasmine-jquery.js',
+            files: ['node_modules/jquery/dist/jquery.js',
+                'node_modules/angular/angular.js',
+                'node_modules/angular-resource/angular-resource.js',
+                'node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
+                'node_modules/angular-mocks/angular-mocks.js',
+                'node_modules/jasmine-jquery/lib/jasmine-jquery.js',
                 'src/js/**/*.js',
                 {pattern: 'src/js/*/*.json', watched: true, served: true, included: false}],
             browsers: ['Chrome'],
@@ -212,7 +242,7 @@ module.exports = function(grunt){
     });
 
     grunt.registerTask('before-test',['htmlhint','jshint','html2js']);
-    grunt.registerTask('after-test',['sass','copy','build']);
+    grunt.registerTask('after-test',['sass','copy:html','copy:img','build']);
     grunt.registerTask('test',['karma:continuous']);
 
     grunt.renameTask('watch','delta');
@@ -220,6 +250,8 @@ module.exports = function(grunt){
 
     grunt.registerTask('default', ['before-test', 'test', 'after-test']);
     grunt.registerTask('no-test', ['before-test', 'after-test']);
+
+    grunt.registerTask('thirdParty',['concat:thirdParty','uglify:thirdParty','copy:thirdParty']);
 
     grunt.registerTask('build',function() {
         var jsSrc = [];
@@ -232,7 +264,7 @@ module.exports = function(grunt){
                 }
              });
         grunt.config('concat.dist.src', grunt.config('concat.dist.src').concat(jsSrc));
-        grunt.task.run(['concat','uglify']);
+        grunt.task.run(['concat','uglify:dist']);
     });
 
     grunt.registerTask('server',function() {
@@ -241,87 +273,4 @@ module.exports = function(grunt){
             server = grunt.util.spawn({cmd:'node',args:['server.js','--port=8000','--log=dev.log','--dev'],opts:{cwd:'server'}});
         }
     });
-
-    // per the bower.json spec (https://github.com/bower/bower.json-spec) the .main
-    // property lists the files required to use a package but should NOT include minimized
-    // files.  all grunt bower related plugins appear to use main as is and not intelligently
-    // deliver minified versions of things if they are also included...  so writing my own
-    // task to include bower production dependencies including ancillary copies of files
-    // like *.min.[js|css][.map]
-    // this implementation uses a vendor specific delivery method and retains the organization
-    // of files as they were delivered by the vender.  other grunt bower utilities typically
-    // re-organize things which could definitely break things (e.g. relative path usage in css).
-    grunt.registerTask('bower','local custom handling of bower component installation.',function(){
-        var done = this.async(),
-            config = grunt.config('bower'),
-            verbose = grunt.option('verbose');
-        function ancillary(bower_json,source) {
-            var ext = source.replace(/^[^\.]*\./,''),
-                ancillaryFilter = source.replace('.'+ext,'.*'+ext+'*');
-            grunt.file.expand({filter:'isFile',cwd:'.'},ancillaryFilter)
-                .forEach(function(f){
-                    if(f != source) {
-                        f = f.replace(/^bower_components\/[^\/]*\//,'');
-                        install(bower_json,f);
-                    }
-                });
-        }
-        function install(bower_json,asset) {
-            var source = path.join('./bower_components',bower_json.dir,asset).replace(/\/\*/,''),
-                sourceDir = fs.statSync(source).isDirectory(),
-                destination = path.join(bower_json.dest,asset.replace(/^dist\//,'').replace(/\/\*/,'')),
-                installAncillary = (arguments.length === 2 || (arguments.length === 3 && arguments[2]));
-            if(sourceDir){
-                if(verbose){
-                    grunt.log.writeln (['copying directory'.cyan, source.green,'to',destination.cyan].join(' '));
-                }
-                wrench.copyDirSyncRecursive(source, destination);
-            } else {
-                if(verbose) {
-                    grunt.log.writeln(['copying'.cyan,source,'to',destination].join(' '));
-                }
-                grunt.file.copy(source,destination);
-                if(installAncillary) {
-                    ancillary(bower_json,source);
-                }
-            }
-        }
-        function postInstall() {
-            grunt.log.writeln(['bower.install','complete'.green].join(' '));
-            grunt.file.mkdir(config.dest);
-            grunt.file.expand({filter:'isFile', cwd: '.'},'bower_components/*/bower.json')
-                .forEach(function(f){
-                    var bower_json = grunt.file.readJSON(f),
-                        ignore = false,i;
-                    bower_json.dir = f.replace(/\/bower.json/,'').replace(/^.*\//,'');
-                    if(config.ignore) {
-                        for(i = 0; i < config.ignore.length; i++) {
-                            if((ignore=(bower_json.dir.search(config.ignore[i]) != -1))) {
-                                break;
-                            }
-                        }
-                    }
-                    if(!ignore) {
-                        bower_json.dest = path.join(config.dest,bower_json.dir);
-                        if(typeof(bower_json.main) === 'string') {
-                            bower_json.main = [bower_json.main];
-                        }
-                        if(verbose){
-                            grunt.log.writeln(bower_json.name.green,bower_json.main);
-                        }
-                        bower_json.main.forEach(function(asset){install(bower_json,asset);});
-                    }
-                });
-            done();
-        }
-        bower.commands.install([],{})
-            .on('log', function(result){
-                if(verbose) {
-                    grunt.log.writeln(['bower',result.id.cyan,result.message].join(' '));
-                }
-            })
-            .on('error',grunt.fail.fatal)
-            .on('end',postInstall);
-    });
 };
-//test
