@@ -59,24 +59,24 @@ angular.module('npn-viz-tool.vis-activity',[
                 id: 'total_numanimals_in-phase',
                 sampleSize: 'in-phase_site_visits_sample_size',
                 label: 'Total Animals In Phase',
-                description: 'The sum of reported animal abundance for each site visit for all "yes" records for the species and phenophase within the selected time period.',
+                description: 'The sum of reported animal abundance for each site visit for the species and phenophase within the selected time period.',
             }, {
                 id: 'mean_numanimals_in-phase',
                 sampleSize: 'in-phase_per_hr_sites_sample_size',
                 label: 'Mean Animals In Phase',
-                description: 'The mean of reported animal abundance at each site visit for all "yes" records for the species and phenophase within the selected time period.',
+                description: 'The mean of reported animal abundance at each site visit for the species and phenophase within the selected time period.',
                 valueFormat: DECIMAL
             },{
                 id: 'mean_numanimals_in-phase_per_hr',
                 sampleSize: 'in-phase_per_hr_sites_sample_size',
                 label: 'Animals In Phase per Hour',
-                description: 'The mean of reported animal abundance corrected by the time spent searching for animals at each site visit for all "yes" records for the species and phenophase within the selected time period. Site visits with a search method of "Incidental" or where no search time or method were reported are excluded.',
+                description: 'The mean of reported animal abundance corrected by the time spent searching for animals at each site visit for the species and phenophase within the selected time period. Site visits with a search method of "Incidental" or where no search time or method were reported are excluded.',
                 valueFormat: DECIMAL
             },{
                 id: 'mean_numanimals_in-phase_per_hr_per_acre',
                 sampleSize: 'phase_per_hr_per_acre_sites_sample_size',
                 label: 'Animals In Phase per Hour per Acre',
-                description: 'The mean of reported animal abundance corrected by the time spent searching and search area for animals at each site visit for all "yes" records for the species and phenophase within the selected time period. Sites with no size reported and site visits with a search method other than "Area Search" or where no search time were reported are excluded.',
+                description: 'The mean of reported animal abundance corrected by the time spent searching and search area for animals at each site visit for the species and phenophase within the selected time period. Sites with no size reported and site visits with a search method other than "Area Search" or where no search time were reported are excluded.',
                 valueFormat: DECIMAL
             }])
         },
