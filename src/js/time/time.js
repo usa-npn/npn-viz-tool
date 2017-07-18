@@ -401,10 +401,10 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                     infos[key].style('display',null);
                     infoLabels[key].text((temps[key].year||'30-year Average')+': ');
                     temp = temps[key].gdd;
-                    infoValues[key].text(number(temp,0)+degF);
+                    infoValues[key].text(number(temp,0)+' GDD');
                     if(infoDiffs[key]) {
                         diff = temp-temps.average.gdd;
-                        text = ' ('+(diff > 0 ? '+' : '')+number(diff,0)+degF;
+                        text = ' ('+(diff > 0 ? '+' : '')+number(diff,0)+' GDD';
                         // on what day did the current temperature happen
                         for(i = 0; i < data.average.data.length; i++) {
                             if(dataFunc(data.average.data[i]) > temp) {
