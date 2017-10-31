@@ -849,7 +849,7 @@ angular.module('npn-viz-tool.gridded-services',[
  * <pre>
 {
     "geo_server": {
-        "url": "//geoserver.usanpn.org/geoserver"
+        "url": "//geoserver-dev.usanpn.org/geoserver"
     },
     "description" : "this is the default layer description.",
     "categories": [
