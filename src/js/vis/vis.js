@@ -463,7 +463,7 @@ angular.module('npn-viz-tool.vis',[
                     function toSolidBytes(match, p1) {
                         return String.fromCharCode('0x' + p1);
                     });
-                imgsrc = 'data:image/svg+xml;base64,'+ window.btoa(htmlForBase64);
+                var imgsrc = 'data:image/svg+xml;base64,'+ window.btoa(htmlForBase64);
 
                 var context = canvas.getContext('2d'),
                     image = new Image();
