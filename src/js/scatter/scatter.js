@@ -71,7 +71,17 @@ angular.module('npn-viz-tool.vis-scatter',[
     $scope.$watch('selection.species',function(){
         $scope.phenophaseList = [];
         if($scope.selection.species) {
-            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id).then(function(list){
+			
+			var start_year = FilterService.getFilter().getDateArg().arg.start_date;
+			var end_year = FilterService.getFilter().getDateArg().arg.end_date;
+			var years = [end_year];
+
+			while(end_year > start_year){
+				end_year = end_year-1;
+				years.push(end_year);
+			}
+						
+            FilterService.getFilter().getPhenophasesForSpecies($scope.selection.species.species_id,true,years).then(function(list){
                 $log.debug('phenophaseList',list);
                 $scope.phenophaseList = list;
                 if(list.length) {
@@ -367,6 +377,7 @@ angular.module('npn-viz-tool.vis-scatter',[
         return function(){
             chartServiceFunction = chartFunction;
             data = chartServiceHandlers[chartServiceFunction].data;
+			
             if(data) {
                 return draw();
             }
@@ -389,7 +400,10 @@ angular.module('npn-viz-tool.vis-scatter',[
                 params['phenophase_id['+(i++)+']'] = tp.phenophase_id;
             });
             function processResponse(response,filteredLqd){
+				$log.log('y tho');
+				$log.log(response);
                 $scope.data = data = response.filter(function(d,i) {
+
                     var keep = true;
                     d.color = $scope.colorRange[colorMap[d.species_id+'.'+d.phenophase_id]];
                     if(d.color) {
