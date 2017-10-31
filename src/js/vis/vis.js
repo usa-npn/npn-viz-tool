@@ -453,10 +453,17 @@ angular.module('npn-viz-tool.vis',[
                     html = chart.attr('version', 1.1)
                                 .attr('xmlns', 'http://www.w3.org/2000/svg')
                                 .node().parentNode.innerHTML,
-                    imgsrc = 'data:image/svg+xml;base64,'+ window.btoa(html),
                     canvas = document.querySelector('#visDownloadCanvas');
                 canvas.width = chart.attr('width');
                 canvas.height = chart.attr('height');
+
+                // see here (the unicode problem)
+                // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
+                var htmlForBase64 = encodeURIComponent(html).replace(/%([0-9A-F]{2})/g,
+                    function toSolidBytes(match, p1) {
+                        return String.fromCharCode('0x' + p1);
+                    });
+                imgsrc = 'data:image/svg+xml;base64,'+ window.btoa(htmlForBase64);
 
                 var context = canvas.getContext('2d'),
                     image = new Image();
