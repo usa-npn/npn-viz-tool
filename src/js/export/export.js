@@ -35,16 +35,16 @@ angular.module('npn-viz-tool.export',[
                 var serverUrl = '';
                 var popServerUrl = '';
                 if(location.hostname.includes('local')) {
-                    serverUrl = location.protocol + '//' + location.hostname;
-                    popServerUrl = serverUrl;
+                    serverUrl = 'https://data-dev.usanpn.org';
+                    popServerUrl = 'https://data-dev.usanpn.org';
                 }
                 else if(location.hostname.includes('dev')) {
-                    serverUrl = '//data-dev.usanpn.org';
-                    popServerUrl = '//data-dev.usanpn.org';
+                    serverUrl = 'https://data-dev.usanpn.org';
+                    popServerUrl = 'https://data-dev.usanpn.org';
                 }
                 else {
-                    serverUrl = '//data.usanpn.org';
-                    popServerUrl = '//data.usanpn.org';
+                    serverUrl = 'https://data.usanpn.org';
+                    popServerUrl = 'https://data.usanpn.org';
                 }
                 $http({
                     method: 'POST',
