@@ -11354,4 +11354,18 @@ text.gdd-info .gdd-diff.below {
   margin-right: 10px;
 }
 
+.npn-logo {
+  position: absolute;
+  bottom: 75px;
+  right: 15px;
+  width: 150px;
+}
+
+.usgs-logo {
+  position: absolute;
+  bottom: 130px;
+  right: 15px;
+  width: 150px;
+}
+
 /*# sourceMappingURL=npn-viz-tool.css.map */
