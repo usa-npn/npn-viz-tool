@@ -1,0 +1,688 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'C:\\Program Files\\nodejs\\node.exe',
+1 verbose cli   'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'install' ]
+2 info using npm@4.0.5
+3 info using node@v7.4.0
+4 silly loadCurrentTree Starting
+5 silly install loadCurrentTree
+6 silly install readLocalPackageData
+7 silly install normalizeTree
+8 silly loadCurrentTree Finishing
+9 silly loadIdealTree Starting
+10 silly install loadIdealTree
+11 silly cloneCurrentTree Starting
+12 silly install cloneCurrentTreeToIdealTree
+13 silly cloneCurrentTree Finishing
+14 silly loadShrinkwrap Starting
+15 silly install loadShrinkwrap
+16 silly loadShrinkwrap Finishing
+17 silly loadAllDepsIntoIdealTree Starting
+18 silly install loadAllDepsIntoIdealTree
+19 silly fetchNamedPackageData angular-google-maps
+20 silly mapToRegistry name angular-google-maps
+21 silly mapToRegistry using default registry
+22 silly mapToRegistry registry https://registry.npmjs.org/
+23 silly mapToRegistry data Result {
+23 silly mapToRegistry   raw: 'angular-google-maps',
+23 silly mapToRegistry   scope: null,
+23 silly mapToRegistry   escapedName: 'angular-google-maps',
+23 silly mapToRegistry   name: 'angular-google-maps',
+23 silly mapToRegistry   rawSpec: '',
+23 silly mapToRegistry   spec: 'latest',
+23 silly mapToRegistry   type: 'tag' }
+24 silly mapToRegistry uri https://registry.npmjs.org/angular-google-maps
+25 verbose request uri https://registry.npmjs.org/angular-google-maps
+26 verbose request no auth needed
+27 info attempt registry request try #1 at 9:03:38 AM
+28 verbose request id a9d3a7c5a185e61d
+29 http request GET https://registry.npmjs.org/angular-google-maps
+30 http 200 https://registry.npmjs.org/angular-google-maps
+31 verbose headers { 'content-type': 'application/json; charset=UTF-8',
+31 verbose headers   server: 'UploadServer',
+31 verbose headers   'cache-control': 'max-age=300',
+31 verbose headers   'last-modified': 'Thu, 5 Jan 2017 14:56:53 GMT',
+31 verbose headers   etag: '"586e5eb5-ecac"',
+31 verbose headers   'content-encoding': 'gzip',
+31 verbose headers   'content-length': '6853',
+31 verbose headers   'accept-ranges': 'bytes',
+31 verbose headers   date: 'Tue, 16 Jan 2018 16:06:49 GMT',
+31 verbose headers   via: '1.1 varnish',
+31 verbose headers   age: '199',
+31 verbose headers   connection: 'keep-alive',
+31 verbose headers   'x-served-by': 'cache-lax8637-LAX',
+31 verbose headers   'x-cache': 'HIT',
+31 verbose headers   'x-cache-hits': '1',
+31 verbose headers   'x-timer': 'S1516118810.910955,VS0,VE1',
+31 verbose headers   vary: 'Accept-Encoding, Accept' }
+32 silly get cb [ 200,
+32 silly get   { 'content-type': 'application/json; charset=UTF-8',
+32 silly get     server: 'UploadServer',
+32 silly get     'cache-control': 'max-age=300',
+32 silly get     'last-modified': 'Thu, 5 Jan 2017 14:56:53 GMT',
+32 silly get     etag: '"586e5eb5-ecac"',
+32 silly get     'content-encoding': 'gzip',
+32 silly get     'content-length': '6853',
+32 silly get     'accept-ranges': 'bytes',
+32 silly get     date: 'Tue, 16 Jan 2018 16:06:49 GMT',
+32 silly get     via: '1.1 varnish',
+32 silly get     age: '199',
+32 silly get     connection: 'keep-alive',
+32 silly get     'x-served-by': 'cache-lax8637-LAX',
+32 silly get     'x-cache': 'HIT',
+32 silly get     'x-cache-hits': '1',
+32 silly get     'x-timer': 'S1516118810.910955,VS0,VE1',
+32 silly get     vary: 'Accept-Encoding, Accept' } ]
+33 verbose get saving angular-google-maps to C:\Users\Lee\AppData\Roaming\npm-cache\registry.npmjs.org\angular-google-maps\.cache.json
+34 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+35 verbose makeDirectory C:\Users\Lee\AppData\Roaming\npm-cache creation not in flight; initializing
+36 verbose makeCacheDir UID & GID are irrelevant on win32
+37 silly resolveWithNewModule angular-google-maps@2.4.1 checking installable status
+38 silly cache add args [ 'angular-google-maps@^2.4.1', null ]
+39 verbose cache add spec angular-google-maps@^2.4.1
+40 silly cache add parsed spec Result {
+40 silly cache add   raw: 'angular-google-maps@^2.4.1',
+40 silly cache add   scope: null,
+40 silly cache add   escapedName: 'angular-google-maps',
+40 silly cache add   name: 'angular-google-maps',
+40 silly cache add   rawSpec: '^2.4.1',
+40 silly cache add   spec: '>=2.4.1 <3.0.0',
+40 silly cache add   type: 'range' }
+41 silly addNamed angular-google-maps@>=2.4.1 <3.0.0
+42 verbose addNamed ">=2.4.1 <3.0.0" is a valid semver range for angular-google-maps
+43 silly addNameRange { name: 'angular-google-maps',
+43 silly addNameRange   range: '>=2.4.1 <3.0.0',
+43 silly addNameRange   hasData: false }
+44 silly mapToRegistry name angular-google-maps
+45 silly mapToRegistry using default registry
+46 silly mapToRegistry registry https://registry.npmjs.org/
+47 silly mapToRegistry data Result {
+47 silly mapToRegistry   raw: 'angular-google-maps',
+47 silly mapToRegistry   scope: null,
+47 silly mapToRegistry   escapedName: 'angular-google-maps',
+47 silly mapToRegistry   name: 'angular-google-maps',
+47 silly mapToRegistry   rawSpec: '',
+47 silly mapToRegistry   spec: 'latest',
+47 silly mapToRegistry   type: 'tag' }
+48 silly mapToRegistry uri https://registry.npmjs.org/angular-google-maps
+49 verbose addNameRange registry:https://registry.npmjs.org/angular-google-maps not in flight; fetching
+50 verbose get https://registry.npmjs.org/angular-google-maps not expired, no request
+51 silly addNameRange number 2 { name: 'angular-google-maps',
+51 silly addNameRange   range: '>=2.4.1 <3.0.0',
+51 silly addNameRange   hasData: true }
+52 silly addNameRange versions [ 'angular-google-maps',
+52 silly addNameRange   [ '2.0.12',
+52 silly addNameRange     '2.0.13',
+52 silly addNameRange     '2.0.14',
+52 silly addNameRange     '2.0.16',
+52 silly addNameRange     '2.0.17',
+52 silly addNameRange     '2.0.18',
+52 silly addNameRange     '2.0.19',
+52 silly addNameRange     '2.0.20',
+52 silly addNameRange     '2.1.0',
+52 silly addNameRange     '2.1.1',
+52 silly addNameRange     '2.1.3',
+52 silly addNameRange     '2.1.4',
+52 silly addNameRange     '2.1.5',
+52 silly addNameRange     '2.1.6',
+52 silly addNameRange     '2.2.0',
+52 silly addNameRange     '2.2.1',
+52 silly addNameRange     '2.3.0',
+52 silly addNameRange     '2.3.1',
+52 silly addNameRange     '2.3.2',
+52 silly addNameRange     '2.3.3',
+52 silly addNameRange     '2.3.4',
+52 silly addNameRange     '2.4.0',
+52 silly addNameRange     '2.4.1' ] ]
+53 silly addNamed angular-google-maps@2.4.1
+54 verbose addNamed "2.4.1" is a plain semver version for angular-google-maps
+55 silly mapToRegistry name angular-google-maps
+56 silly mapToRegistry using default registry
+57 silly mapToRegistry registry https://registry.npmjs.org/
+58 silly mapToRegistry data Result {
+58 silly mapToRegistry   raw: 'angular-google-maps',
+58 silly mapToRegistry   scope: null,
+58 silly mapToRegistry   escapedName: 'angular-google-maps',
+58 silly mapToRegistry   name: 'angular-google-maps',
+58 silly mapToRegistry   rawSpec: '',
+58 silly mapToRegistry   spec: 'latest',
+58 silly mapToRegistry   type: 'tag' }
+59 silly mapToRegistry uri https://registry.npmjs.org/angular-google-maps
+60 verbose addRemoteTarball https://registry.npmjs.org/angular-google-maps/-/angular-google-maps-2.4.1.tgz not in flight; adding
+61 verbose addRemoteTarball [ 'https://registry.npmjs.org/angular-google-maps/-/angular-google-maps-2.4.1.tgz',
+61 verbose addRemoteTarball   'a0479f3a99cda690b72df536cf1c77d11e18ee23' ]
+62 info retry fetch attempt 1 at 9:03:38 AM
+63 info attempt registry request try #1 at 9:03:38 AM
+64 http fetch GET https://registry.npmjs.org/angular-google-maps/-/angular-google-maps-2.4.1.tgz
+65 http fetch 200 https://registry.npmjs.org/angular-google-maps/-/angular-google-maps-2.4.1.tgz
+66 silly fetchAndShaCheck shasum a0479f3a99cda690b72df536cf1c77d11e18ee23
+67 verbose addTmpTarball C:\cygwin64\tmp\npm-7096-8e690040\registry.npmjs.org\angular-google-maps\-\angular-google-maps-2.4.1.tgz not in flight; adding
+68 verbose addTmpTarball already have metadata; skipping unpack for angular-google-maps@2.4.1
+69 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+70 silly cache afterAdd angular-google-maps@2.4.1
+71 verbose afterAdd C:\Users\Lee\AppData\Roaming\npm-cache\angular-google-maps\2.4.1\package\package.json not in flight; writing
+72 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+73 verbose afterAdd C:\Users\Lee\AppData\Roaming\npm-cache\angular-google-maps\2.4.1\package\package.json written
+74 silly fetchNamedPackageData google-maps-utility-library-v3-infobox
+75 silly mapToRegistry name google-maps-utility-library-v3-infobox
+76 silly mapToRegistry using default registry
+77 silly mapToRegistry registry https://registry.npmjs.org/
+78 silly mapToRegistry data Result {
+78 silly mapToRegistry   raw: 'google-maps-utility-library-v3-infobox',
+78 silly mapToRegistry   scope: null,
+78 silly mapToRegistry   escapedName: 'google-maps-utility-library-v3-infobox',
+78 silly mapToRegistry   name: 'google-maps-utility-library-v3-infobox',
+78 silly mapToRegistry   rawSpec: '',
+78 silly mapToRegistry   spec: 'latest',
+78 silly mapToRegistry   type: 'tag' }
+79 silly mapToRegistry uri https://registry.npmjs.org/google-maps-utility-library-v3-infobox
+80 silly fetchNamedPackageData google-maps-utility-library-v3-keydragzoom
+81 silly mapToRegistry name google-maps-utility-library-v3-keydragzoom
+82 silly mapToRegistry using default registry
+83 silly mapToRegistry registry https://registry.npmjs.org/
+84 silly mapToRegistry data Result {
+84 silly mapToRegistry   raw: 'google-maps-utility-library-v3-keydragzoom',
+84 silly mapToRegistry   scope: null,
+84 silly mapToRegistry   escapedName: 'google-maps-utility-library-v3-keydragzoom',
+84 silly mapToRegistry   name: 'google-maps-utility-library-v3-keydragzoom',
+84 silly mapToRegistry   rawSpec: '',
+84 silly mapToRegistry   spec: 'latest',
+84 silly mapToRegistry   type: 'tag' }
+85 silly mapToRegistry uri https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom
+86 silly fetchNamedPackageData markerclustererplus
+87 silly mapToRegistry name markerclustererplus
+88 silly mapToRegistry using default registry
+89 silly mapToRegistry registry https://registry.npmjs.org/
+90 silly mapToRegistry data Result {
+90 silly mapToRegistry   raw: 'markerclustererplus',
+90 silly mapToRegistry   scope: null,
+90 silly mapToRegistry   escapedName: 'markerclustererplus',
+90 silly mapToRegistry   name: 'markerclustererplus',
+90 silly mapToRegistry   rawSpec: '',
+90 silly mapToRegistry   spec: 'latest',
+90 silly mapToRegistry   type: 'tag' }
+91 silly mapToRegistry uri https://registry.npmjs.org/markerclustererplus
+92 silly fetchOtherPackageData google-maps-utility-library-v3-markerwithlabel@git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git
+93 silly cache add args [ 'google-maps-utility-library-v3-markerwithlabel@git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git',
+93 silly cache add   null ]
+94 verbose cache add spec google-maps-utility-library-v3-markerwithlabel@git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git
+95 silly fetchOtherPackageData js-rich-marker@git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943
+96 silly cache add args [ 'js-rich-marker@git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943',
+96 silly cache add   null ]
+97 verbose cache add spec js-rich-marker@git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943
+98 verbose request uri https://registry.npmjs.org/google-maps-utility-library-v3-infobox
+99 verbose request no auth needed
+100 info attempt registry request try #1 at 9:03:46 AM
+101 http request GET https://registry.npmjs.org/google-maps-utility-library-v3-infobox
+102 verbose request uri https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom
+103 verbose request no auth needed
+104 info attempt registry request try #1 at 9:03:46 AM
+105 http request GET https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom
+106 verbose request uri https://registry.npmjs.org/markerclustererplus
+107 verbose request no auth needed
+108 info attempt registry request try #1 at 9:03:46 AM
+109 http request GET https://registry.npmjs.org/markerclustererplus
+110 silly cache add parsed spec Result {
+110 silly cache add   raw: 'google-maps-utility-library-v3-markerwithlabel@git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git',
+110 silly cache add   scope: null,
+110 silly cache add   escapedName: 'google-maps-utility-library-v3-markerwithlabel',
+110 silly cache add   name: 'google-maps-utility-library-v3-markerwithlabel',
+110 silly cache add   rawSpec: 'git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git',
+110 silly cache add   spec: 'git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git',
+110 silly cache add   type: 'hosted',
+110 silly cache add   hosted:
+110 silly cache add    { type: 'github',
+110 silly cache add      ssh: 'git@github.com:nmccready/google-maps-utility-library-v3-markerwithlabel.git',
+110 silly cache add      sshUrl: 'git+ssh://git@github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git',
+110 silly cache add      httpsUrl: 'git+https://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git',
+110 silly cache add      gitUrl: 'git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git',
+110 silly cache add      shortcut: 'github:nmccready/google-maps-utility-library-v3-markerwithlabel',
+110 silly cache add      directUrl: 'https://raw.githubusercontent.com/nmccready/google-maps-utility-library-v3-markerwithlabel/master/package.json' } }
+111 verbose addRemoteGit caching git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git
+112 verbose addRemoteGit git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git is a repository hosted by github
+113 silly tryClone cloning git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git via git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git
+114 verbose tryClone git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b not in flight; caching
+115 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes correctMkdir not in flight; initializing
+116 silly cache add parsed spec Result {
+116 silly cache add   raw: 'js-rich-marker@git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943',
+116 silly cache add   scope: null,
+116 silly cache add   escapedName: 'js-rich-marker',
+116 silly cache add   name: 'js-rich-marker',
+116 silly cache add   rawSpec: 'git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943',
+116 silly cache add   spec: 'git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943',
+116 silly cache add   type: 'hosted',
+116 silly cache add   hosted:
+116 silly cache add    { type: 'github',
+116 silly cache add      ssh: 'git@github.com:MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943',
+116 silly cache add      sshUrl: 'git+ssh://git@github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943',
+116 silly cache add      httpsUrl: 'git+https://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943',
+116 silly cache add      gitUrl: 'git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943',
+116 silly cache add      shortcut: 'github:MikaFima/js-rich-marker#0383f4bbdad4ddf154772fedbdd27e464600e943',
+116 silly cache add      directUrl: 'https://raw.githubusercontent.com/MikaFima/js-rich-marker/0383f4bbdad4ddf154772fedbdd27e464600e943/package.json' } }
+117 verbose addRemoteGit caching git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943
+118 verbose addRemoteGit git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943 is a repository hosted by github
+119 silly tryClone cloning git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943 via git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943
+120 verbose tryClone git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722 not in flight; caching
+121 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes correctMkdir already in flight; waiting
+122 verbose makeDirectory C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes creation not in flight; initializing
+123 http 200 https://registry.npmjs.org/google-maps-utility-library-v3-infobox
+124 verbose headers { 'content-type': 'application/json; charset=UTF-8',
+124 verbose headers   server: 'UploadServer',
+124 verbose headers   'cache-control': 'max-age=300',
+124 verbose headers   'last-modified': 'Sun, 28 May 2017 18:28:04 GMT',
+124 verbose headers   etag: '"592b16b4-1777"',
+124 verbose headers   'content-encoding': 'gzip',
+124 verbose headers   'content-length': '1496',
+124 verbose headers   'accept-ranges': 'bytes',
+124 verbose headers   date: 'Tue, 16 Jan 2018 16:06:57 GMT',
+124 verbose headers   via: '1.1 varnish',
+124 verbose headers   age: '207',
+124 verbose headers   connection: 'keep-alive',
+124 verbose headers   'x-served-by': 'cache-lax8637-LAX',
+124 verbose headers   'x-cache': 'HIT',
+124 verbose headers   'x-cache-hits': '1',
+124 verbose headers   'x-timer': 'S1516118818.672408,VS0,VE1',
+124 verbose headers   vary: 'Accept-Encoding, Accept' }
+125 silly get cb [ 200,
+125 silly get   { 'content-type': 'application/json; charset=UTF-8',
+125 silly get     server: 'UploadServer',
+125 silly get     'cache-control': 'max-age=300',
+125 silly get     'last-modified': 'Sun, 28 May 2017 18:28:04 GMT',
+125 silly get     etag: '"592b16b4-1777"',
+125 silly get     'content-encoding': 'gzip',
+125 silly get     'content-length': '1496',
+125 silly get     'accept-ranges': 'bytes',
+125 silly get     date: 'Tue, 16 Jan 2018 16:06:57 GMT',
+125 silly get     via: '1.1 varnish',
+125 silly get     age: '207',
+125 silly get     connection: 'keep-alive',
+125 silly get     'x-served-by': 'cache-lax8637-LAX',
+125 silly get     'x-cache': 'HIT',
+125 silly get     'x-cache-hits': '1',
+125 silly get     'x-timer': 'S1516118818.672408,VS0,VE1',
+125 silly get     vary: 'Accept-Encoding, Accept' } ]
+126 verbose get saving google-maps-utility-library-v3-infobox to C:\Users\Lee\AppData\Roaming\npm-cache\registry.npmjs.org\google-maps-utility-library-v3-infobox\.cache.json
+127 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+128 verbose makeCacheDir UID & GID are irrelevant on win32
+129 silly resolveWithNewModule google-maps-utility-library-v3-infobox@1.1.14 checking installable status
+130 silly cache add args [ 'google-maps-utility-library-v3-infobox@1.1.14', null ]
+131 verbose cache add spec google-maps-utility-library-v3-infobox@1.1.14
+132 silly cache add parsed spec Result {
+132 silly cache add   raw: 'google-maps-utility-library-v3-infobox@1.1.14',
+132 silly cache add   scope: null,
+132 silly cache add   escapedName: 'google-maps-utility-library-v3-infobox',
+132 silly cache add   name: 'google-maps-utility-library-v3-infobox',
+132 silly cache add   rawSpec: '1.1.14',
+132 silly cache add   spec: '1.1.14',
+132 silly cache add   type: 'version' }
+133 silly addNamed google-maps-utility-library-v3-infobox@1.1.14
+134 verbose addNamed "1.1.14" is a plain semver version for google-maps-utility-library-v3-infobox
+135 silly mapToRegistry name google-maps-utility-library-v3-infobox
+136 silly mapToRegistry using default registry
+137 silly mapToRegistry registry https://registry.npmjs.org/
+138 silly mapToRegistry data Result {
+138 silly mapToRegistry   raw: 'google-maps-utility-library-v3-infobox',
+138 silly mapToRegistry   scope: null,
+138 silly mapToRegistry   escapedName: 'google-maps-utility-library-v3-infobox',
+138 silly mapToRegistry   name: 'google-maps-utility-library-v3-infobox',
+138 silly mapToRegistry   rawSpec: '',
+138 silly mapToRegistry   spec: 'latest',
+138 silly mapToRegistry   type: 'tag' }
+139 silly mapToRegistry uri https://registry.npmjs.org/google-maps-utility-library-v3-infobox
+140 verbose addNameVersion registry:https://registry.npmjs.org/google-maps-utility-library-v3-infobox not in flight; fetching
+141 verbose get https://registry.npmjs.org/google-maps-utility-library-v3-infobox not expired, no request
+142 silly mapToRegistry name google-maps-utility-library-v3-infobox
+143 silly mapToRegistry using default registry
+144 silly mapToRegistry registry https://registry.npmjs.org/
+145 silly mapToRegistry data Result {
+145 silly mapToRegistry   raw: 'google-maps-utility-library-v3-infobox',
+145 silly mapToRegistry   scope: null,
+145 silly mapToRegistry   escapedName: 'google-maps-utility-library-v3-infobox',
+145 silly mapToRegistry   name: 'google-maps-utility-library-v3-infobox',
+145 silly mapToRegistry   rawSpec: '',
+145 silly mapToRegistry   spec: 'latest',
+145 silly mapToRegistry   type: 'tag' }
+146 silly mapToRegistry uri https://registry.npmjs.org/google-maps-utility-library-v3-infobox
+147 verbose addRemoteTarball https://registry.npmjs.org/google-maps-utility-library-v3-infobox/-/google-maps-utility-library-v3-infobox-1.1.14.tgz not in flight; adding
+148 verbose addRemoteTarball [ 'https://registry.npmjs.org/google-maps-utility-library-v3-infobox/-/google-maps-utility-library-v3-infobox-1.1.14.tgz',
+148 verbose addRemoteTarball   '69c888cef8bff869c32275e3413d90cc09392914' ]
+149 info retry fetch attempt 1 at 9:03:46 AM
+150 info attempt registry request try #1 at 9:03:46 AM
+151 http fetch GET https://registry.npmjs.org/google-maps-utility-library-v3-infobox/-/google-maps-utility-library-v3-infobox-1.1.14.tgz
+152 info git [ 'clone',
+152 info git   '--template=C:\\Users\\Lee\\AppData\\Roaming\\npm-cache\\_git-remotes\\_templates',
+152 info git   '--mirror',
+152 info git   'git://github.com/MikaFima/js-rich-marker.git',
+152 info git   'C:\\Users\\Lee\\AppData\\Roaming\\npm-cache\\_git-remotes\\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722' ]
+153 info git [ 'clone',
+153 info git   '--template=C:\\Users\\Lee\\AppData\\Roaming\\npm-cache\\_git-remotes\\_templates',
+153 info git   '--mirror',
+153 info git   'git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git',
+153 info git   'C:\\Users\\Lee\\AppData\\Roaming\\npm-cache\\_git-remotes\\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b' ]
+154 http 200 https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom
+155 verbose headers { 'content-type': 'application/json; charset=UTF-8',
+155 verbose headers   server: 'UploadServer',
+155 verbose headers   'cache-control': 'max-age=300',
+155 verbose headers   'last-modified': 'Fri, 13 May 2016 18:02:38 GMT',
+155 verbose headers   etag: '"573616be-f7b"',
+155 verbose headers   'content-encoding': 'gzip',
+155 verbose headers   'content-length': '1313',
+155 verbose headers   'accept-ranges': 'bytes',
+155 verbose headers   date: 'Tue, 16 Jan 2018 16:06:57 GMT',
+155 verbose headers   via: '1.1 varnish',
+155 verbose headers   age: '400',
+155 verbose headers   connection: 'keep-alive',
+155 verbose headers   'x-served-by': 'cache-lax8651-LAX',
+155 verbose headers   'x-cache': 'HIT',
+155 verbose headers   'x-cache-hits': '1',
+155 verbose headers   'x-timer': 'S1516118818.715350,VS0,VE1',
+155 verbose headers   vary: 'Accept-Encoding, Accept' }
+156 silly get cb [ 200,
+156 silly get   { 'content-type': 'application/json; charset=UTF-8',
+156 silly get     server: 'UploadServer',
+156 silly get     'cache-control': 'max-age=300',
+156 silly get     'last-modified': 'Fri, 13 May 2016 18:02:38 GMT',
+156 silly get     etag: '"573616be-f7b"',
+156 silly get     'content-encoding': 'gzip',
+156 silly get     'content-length': '1313',
+156 silly get     'accept-ranges': 'bytes',
+156 silly get     date: 'Tue, 16 Jan 2018 16:06:57 GMT',
+156 silly get     via: '1.1 varnish',
+156 silly get     age: '400',
+156 silly get     connection: 'keep-alive',
+156 silly get     'x-served-by': 'cache-lax8651-LAX',
+156 silly get     'x-cache': 'HIT',
+156 silly get     'x-cache-hits': '1',
+156 silly get     'x-timer': 'S1516118818.715350,VS0,VE1',
+156 silly get     vary: 'Accept-Encoding, Accept' } ]
+157 verbose get saving google-maps-utility-library-v3-keydragzoom to C:\Users\Lee\AppData\Roaming\npm-cache\registry.npmjs.org\google-maps-utility-library-v3-keydragzoom\.cache.json
+158 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+159 http 200 https://registry.npmjs.org/markerclustererplus
+160 verbose headers { 'content-type': 'application/json; charset=UTF-8',
+160 verbose headers   server: 'UploadServer',
+160 verbose headers   'cache-control': 'max-age=300',
+160 verbose headers   'last-modified': 'Wed, 1 Apr 2015 15:35:29 GMT',
+160 verbose headers   etag: '"551c1041-1757"',
+160 verbose headers   'content-encoding': 'gzip',
+160 verbose headers   'content-length': '1727',
+160 verbose headers   'accept-ranges': 'bytes',
+160 verbose headers   date: 'Tue, 16 Jan 2018 16:06:57 GMT',
+160 verbose headers   via: '1.1 varnish',
+160 verbose headers   age: '207',
+160 verbose headers   connection: 'keep-alive',
+160 verbose headers   'x-served-by': 'cache-lax8634-LAX',
+160 verbose headers   'x-cache': 'HIT',
+160 verbose headers   'x-cache-hits': '1',
+160 verbose headers   'x-timer': 'S1516118818.716658,VS0,VE1',
+160 verbose headers   vary: 'Accept-Encoding, Accept' }
+161 silly get cb [ 200,
+161 silly get   { 'content-type': 'application/json; charset=UTF-8',
+161 silly get     server: 'UploadServer',
+161 silly get     'cache-control': 'max-age=300',
+161 silly get     'last-modified': 'Wed, 1 Apr 2015 15:35:29 GMT',
+161 silly get     etag: '"551c1041-1757"',
+161 silly get     'content-encoding': 'gzip',
+161 silly get     'content-length': '1727',
+161 silly get     'accept-ranges': 'bytes',
+161 silly get     date: 'Tue, 16 Jan 2018 16:06:57 GMT',
+161 silly get     via: '1.1 varnish',
+161 silly get     age: '207',
+161 silly get     connection: 'keep-alive',
+161 silly get     'x-served-by': 'cache-lax8634-LAX',
+161 silly get     'x-cache': 'HIT',
+161 silly get     'x-cache-hits': '1',
+161 silly get     'x-timer': 'S1516118818.716658,VS0,VE1',
+161 silly get     vary: 'Accept-Encoding, Accept' } ]
+162 verbose get saving markerclustererplus to C:\Users\Lee\AppData\Roaming\npm-cache\registry.npmjs.org\markerclustererplus\.cache.json
+163 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+164 silly resolveWithNewModule google-maps-utility-library-v3-keydragzoom@2.0.9 checking installable status
+165 silly cache add args [ 'google-maps-utility-library-v3-keydragzoom@2.0.9', null ]
+166 verbose cache add spec google-maps-utility-library-v3-keydragzoom@2.0.9
+167 silly cache add parsed spec Result {
+167 silly cache add   raw: 'google-maps-utility-library-v3-keydragzoom@2.0.9',
+167 silly cache add   scope: null,
+167 silly cache add   escapedName: 'google-maps-utility-library-v3-keydragzoom',
+167 silly cache add   name: 'google-maps-utility-library-v3-keydragzoom',
+167 silly cache add   rawSpec: '2.0.9',
+167 silly cache add   spec: '2.0.9',
+167 silly cache add   type: 'version' }
+168 silly addNamed google-maps-utility-library-v3-keydragzoom@2.0.9
+169 verbose addNamed "2.0.9" is a plain semver version for google-maps-utility-library-v3-keydragzoom
+170 silly mapToRegistry name google-maps-utility-library-v3-keydragzoom
+171 silly mapToRegistry using default registry
+172 silly mapToRegistry registry https://registry.npmjs.org/
+173 silly mapToRegistry data Result {
+173 silly mapToRegistry   raw: 'google-maps-utility-library-v3-keydragzoom',
+173 silly mapToRegistry   scope: null,
+173 silly mapToRegistry   escapedName: 'google-maps-utility-library-v3-keydragzoom',
+173 silly mapToRegistry   name: 'google-maps-utility-library-v3-keydragzoom',
+173 silly mapToRegistry   rawSpec: '',
+173 silly mapToRegistry   spec: 'latest',
+173 silly mapToRegistry   type: 'tag' }
+174 silly mapToRegistry uri https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom
+175 verbose addNameVersion registry:https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom not in flight; fetching
+176 silly resolveWithNewModule markerclustererplus@2.1.4 checking installable status
+177 silly cache add args [ 'markerclustererplus@2.1.4', null ]
+178 verbose cache add spec markerclustererplus@2.1.4
+179 silly cache add parsed spec Result {
+179 silly cache add   raw: 'markerclustererplus@2.1.4',
+179 silly cache add   scope: null,
+179 silly cache add   escapedName: 'markerclustererplus',
+179 silly cache add   name: 'markerclustererplus',
+179 silly cache add   rawSpec: '2.1.4',
+179 silly cache add   spec: '2.1.4',
+179 silly cache add   type: 'version' }
+180 silly addNamed markerclustererplus@2.1.4
+181 verbose addNamed "2.1.4" is a plain semver version for markerclustererplus
+182 silly mapToRegistry name markerclustererplus
+183 silly mapToRegistry using default registry
+184 silly mapToRegistry registry https://registry.npmjs.org/
+185 silly mapToRegistry data Result {
+185 silly mapToRegistry   raw: 'markerclustererplus',
+185 silly mapToRegistry   scope: null,
+185 silly mapToRegistry   escapedName: 'markerclustererplus',
+185 silly mapToRegistry   name: 'markerclustererplus',
+185 silly mapToRegistry   rawSpec: '',
+185 silly mapToRegistry   spec: 'latest',
+185 silly mapToRegistry   type: 'tag' }
+186 silly mapToRegistry uri https://registry.npmjs.org/markerclustererplus
+187 verbose addNameVersion registry:https://registry.npmjs.org/markerclustererplus not in flight; fetching
+188 verbose get https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom not expired, no request
+189 verbose get https://registry.npmjs.org/markerclustererplus not expired, no request
+190 silly mapToRegistry name google-maps-utility-library-v3-keydragzoom
+191 silly mapToRegistry using default registry
+192 silly mapToRegistry registry https://registry.npmjs.org/
+193 silly mapToRegistry data Result {
+193 silly mapToRegistry   raw: 'google-maps-utility-library-v3-keydragzoom',
+193 silly mapToRegistry   scope: null,
+193 silly mapToRegistry   escapedName: 'google-maps-utility-library-v3-keydragzoom',
+193 silly mapToRegistry   name: 'google-maps-utility-library-v3-keydragzoom',
+193 silly mapToRegistry   rawSpec: '',
+193 silly mapToRegistry   spec: 'latest',
+193 silly mapToRegistry   type: 'tag' }
+194 silly mapToRegistry uri https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom
+195 verbose addRemoteTarball https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom/-/google-maps-utility-library-v3-keydragzoom-2.0.9.tgz not in flight; adding
+196 verbose addRemoteTarball [ 'https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom/-/google-maps-utility-library-v3-keydragzoom-2.0.9.tgz',
+196 verbose addRemoteTarball   '2dfa05fed2976d82fc1cc39fcc6175c01ec06477' ]
+197 silly mapToRegistry name markerclustererplus
+198 silly mapToRegistry using default registry
+199 silly mapToRegistry registry https://registry.npmjs.org/
+200 silly mapToRegistry data Result {
+200 silly mapToRegistry   raw: 'markerclustererplus',
+200 silly mapToRegistry   scope: null,
+200 silly mapToRegistry   escapedName: 'markerclustererplus',
+200 silly mapToRegistry   name: 'markerclustererplus',
+200 silly mapToRegistry   rawSpec: '',
+200 silly mapToRegistry   spec: 'latest',
+200 silly mapToRegistry   type: 'tag' }
+201 silly mapToRegistry uri https://registry.npmjs.org/markerclustererplus
+202 verbose addRemoteTarball https://registry.npmjs.org/markerclustererplus/-/markerclustererplus-2.1.4.tgz not in flight; adding
+203 verbose addRemoteTarball [ 'https://registry.npmjs.org/markerclustererplus/-/markerclustererplus-2.1.4.tgz',
+203 verbose addRemoteTarball   '901225180dd5d5fc0827753a18eee35afcf9c4f7' ]
+204 http fetch 200 https://registry.npmjs.org/google-maps-utility-library-v3-infobox/-/google-maps-utility-library-v3-infobox-1.1.14.tgz
+205 silly fetchAndShaCheck shasum 69c888cef8bff869c32275e3413d90cc09392914
+206 verbose addTmpTarball C:\cygwin64\tmp\npm-7096-8e690040\registry.npmjs.org\google-maps-utility-library-v3-infobox\-\google-maps-utility-library-v3-infobox-1.1.14.tgz not in flight; adding
+207 verbose addTmpTarball already have metadata; skipping unpack for google-maps-utility-library-v3-infobox@1.1.14
+208 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+209 silly cache afterAdd google-maps-utility-library-v3-infobox@1.1.14
+210 verbose afterAdd C:\Users\Lee\AppData\Roaming\npm-cache\google-maps-utility-library-v3-infobox\1.1.14\package\package.json not in flight; writing
+211 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+212 verbose afterAdd C:\Users\Lee\AppData\Roaming\npm-cache\google-maps-utility-library-v3-infobox\1.1.14\package\package.json written
+213 info retry fetch attempt 1 at 9:03:46 AM
+214 info attempt registry request try #1 at 9:03:46 AM
+215 http fetch GET https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom/-/google-maps-utility-library-v3-keydragzoom-2.0.9.tgz
+216 info retry fetch attempt 1 at 9:03:46 AM
+217 info attempt registry request try #1 at 9:03:46 AM
+218 http fetch GET https://registry.npmjs.org/markerclustererplus/-/markerclustererplus-2.1.4.tgz
+219 http fetch 200 https://registry.npmjs.org/google-maps-utility-library-v3-keydragzoom/-/google-maps-utility-library-v3-keydragzoom-2.0.9.tgz
+220 silly fetchAndShaCheck shasum 2dfa05fed2976d82fc1cc39fcc6175c01ec06477
+221 verbose addTmpTarball C:\cygwin64\tmp\npm-7096-8e690040\registry.npmjs.org\google-maps-utility-library-v3-keydragzoom\-\google-maps-utility-library-v3-keydragzoom-2.0.9.tgz not in flight; adding
+222 verbose addTmpTarball already have metadata; skipping unpack for google-maps-utility-library-v3-keydragzoom@2.0.9
+223 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+224 silly cache afterAdd google-maps-utility-library-v3-keydragzoom@2.0.9
+225 verbose afterAdd C:\Users\Lee\AppData\Roaming\npm-cache\google-maps-utility-library-v3-keydragzoom\2.0.9\package\package.json not in flight; writing
+226 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+227 verbose afterAdd C:\Users\Lee\AppData\Roaming\npm-cache\google-maps-utility-library-v3-keydragzoom\2.0.9\package\package.json written
+228 http fetch 200 https://registry.npmjs.org/markerclustererplus/-/markerclustererplus-2.1.4.tgz
+229 silly fetchAndShaCheck shasum 901225180dd5d5fc0827753a18eee35afcf9c4f7
+230 verbose addTmpTarball C:\cygwin64\tmp\npm-7096-8e690040\registry.npmjs.org\markerclustererplus\-\markerclustererplus-2.1.4.tgz not in flight; adding
+231 verbose addTmpTarball already have metadata; skipping unpack for markerclustererplus@2.1.4
+232 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+233 silly cache afterAdd markerclustererplus@2.1.4
+234 verbose afterAdd C:\Users\Lee\AppData\Roaming\npm-cache\markerclustererplus\2.1.4\package\package.json not in flight; writing
+235 verbose correctMkdir C:\Users\Lee\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+236 verbose afterAdd C:\Users\Lee\AppData\Roaming\npm-cache\markerclustererplus\2.1.4\package\package.json written
+237 verbose mirrorRemote git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git git clone git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git
+238 verbose setPermissions git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git skipping chownr on Windows
+239 verbose resolveHead git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git original treeish: master
+240 info git [ 'rev-list', '-n1', 'master' ]
+241 silly resolveHead git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git resolved treeish: 1e1ae841596ce41fb5cfaff301477393c5621d3d
+242 verbose resolveHead git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git resolved Git URL: git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git#1e1ae841596ce41fb5cfaff301477393c5621d3d
+243 silly resolveHead Git working directory: C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d
+244 info git [ 'clone',
+244 info git   'C:\\Users\\Lee\\AppData\\Roaming\\npm-cache\\_git-remotes\\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b',
+244 info git   'C:\\cygwin64\\tmp\\npm-7096-8e690040\\git-cache-8227def7\\1e1ae841596ce41fb5cfaff301477393c5621d3d' ]
+245 verbose mirrorRemote git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943 git clone git://github.com/MikaFima/js-rich-marker.git
+246 verbose setPermissions git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943 skipping chownr on Windows
+247 verbose resolveHead git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943 original treeish: 0383f4bbdad4ddf154772fedbdd27e464600e943
+248 info git [ 'rev-list', '-n1', '0383f4bbdad4ddf154772fedbdd27e464600e943' ]
+249 silly resolveHead git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943 resolved treeish: 0383f4bbdad4ddf154772fedbdd27e464600e943
+250 verbose resolveHead git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943 resolved Git URL: git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943
+251 silly resolveHead Git working directory: C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943
+252 info git [ 'clone',
+252 info git   'C:\\Users\\Lee\\AppData\\Roaming\\npm-cache\\_git-remotes\\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722',
+252 info git   'C:\\cygwin64\\tmp\\npm-7096-8e690040\\git-cache-b87ae07b\\0383f4bbdad4ddf154772fedbdd27e464600e943' ]
+253 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d: Cloning into 'C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d'...
+253 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d: fatal: '/cygdrive/c/Users/Lee/AppData/Roaming/npm-cache/_git-remotes/git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b/C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b' does not appear to be a git repository
+253 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d: fatal: Could not read from remote repository.
+253 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d:
+253 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d: Please make sure you have the correct access rights
+253 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d: and the repository exists.
+254 silly fetchPackageMetaData Error: Command failed: git -c core.longpaths=true clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d
+254 silly fetchPackageMetaData Cloning into 'C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d'...
+254 silly fetchPackageMetaData fatal: '/cygdrive/c/Users/Lee/AppData/Roaming/npm-cache/_git-remotes/git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b/C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b' does not appear to be a git repository
+254 silly fetchPackageMetaData fatal: Could not read from remote repository.
+254 silly fetchPackageMetaData
+254 silly fetchPackageMetaData Please make sure you have the correct access rights
+254 silly fetchPackageMetaData and the repository exists.
+254 silly fetchPackageMetaData
+254 silly fetchPackageMetaData     at ChildProcess.exithandler (child_process.js:211:12)
+254 silly fetchPackageMetaData     at emitTwo (events.js:106:13)
+254 silly fetchPackageMetaData     at ChildProcess.emit (events.js:191:7)
+254 silly fetchPackageMetaData     at maybeClose (internal/child_process.js:885:16)
+254 silly fetchPackageMetaData     at Socket.<anonymous> (internal/child_process.js:334:11)
+254 silly fetchPackageMetaData     at emitOne (events.js:96:13)
+254 silly fetchPackageMetaData     at Socket.emit (events.js:188:7)
+254 silly fetchPackageMetaData     at Pipe._handle.close [as _onclose] (net.js:501:12)
+254 silly fetchPackageMetaData  error for google-maps-utility-library-v3-markerwithlabel@git://github.com/nmccready/google-maps-utility-library-v3-markerwithlabel.git { Error: Command failed: git -c core.longpaths=true clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d
+254 silly fetchPackageMetaData Cloning into 'C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d'...
+254 silly fetchPackageMetaData fatal: '/cygdrive/c/Users/Lee/AppData/Roaming/npm-cache/_git-remotes/git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b/C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b' does not appear to be a git repository
+254 silly fetchPackageMetaData fatal: Could not read from remote repository.
+254 silly fetchPackageMetaData
+254 silly fetchPackageMetaData Please make sure you have the correct access rights
+254 silly fetchPackageMetaData and the repository exists.
+254 silly fetchPackageMetaData
+254 silly fetchPackageMetaData     at ChildProcess.exithandler (child_process.js:211:12)
+254 silly fetchPackageMetaData     at emitTwo (events.js:106:13)
+254 silly fetchPackageMetaData     at ChildProcess.emit (events.js:191:7)
+254 silly fetchPackageMetaData     at maybeClose (internal/child_process.js:885:16)
+254 silly fetchPackageMetaData     at Socket.<anonymous> (internal/child_process.js:334:11)
+254 silly fetchPackageMetaData     at emitOne (events.js:96:13)
+254 silly fetchPackageMetaData     at Socket.emit (events.js:188:7)
+254 silly fetchPackageMetaData     at Pipe._handle.close [as _onclose] (net.js:501:12)
+254 silly fetchPackageMetaData   killed: false,
+254 silly fetchPackageMetaData   code: 128,
+254 silly fetchPackageMetaData   signal: null,
+254 silly fetchPackageMetaData   cmd: 'git -c core.longpaths=true clone C:\\Users\\Lee\\AppData\\Roaming\\npm-cache\\_git-remotes\\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b C:\\cygwin64\\tmp\\npm-7096-8e690040\\git-cache-8227def7\\1e1ae841596ce41fb5cfaff301477393c5621d3d' }
+255 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722 C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943: Cloning into 'C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943'...
+255 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722 C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943: fatal: '/cygdrive/c/Users/Lee/AppData/Roaming/npm-cache/_git-remotes/git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722/C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722' does not appear to be a git repository
+255 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722 C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943: fatal: Could not read from remote repository.
+255 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722 C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943:
+255 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722 C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943: Please make sure you have the correct access rights
+255 error git clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722 C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943: and the repository exists.
+256 silly fetchPackageMetaData Error: Command failed: git -c core.longpaths=true clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722 C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943
+256 silly fetchPackageMetaData Cloning into 'C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943'...
+256 silly fetchPackageMetaData fatal: '/cygdrive/c/Users/Lee/AppData/Roaming/npm-cache/_git-remotes/git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722/C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722' does not appear to be a git repository
+256 silly fetchPackageMetaData fatal: Could not read from remote repository.
+256 silly fetchPackageMetaData
+256 silly fetchPackageMetaData Please make sure you have the correct access rights
+256 silly fetchPackageMetaData and the repository exists.
+256 silly fetchPackageMetaData
+256 silly fetchPackageMetaData     at ChildProcess.exithandler (child_process.js:211:12)
+256 silly fetchPackageMetaData     at emitTwo (events.js:106:13)
+256 silly fetchPackageMetaData     at ChildProcess.emit (events.js:191:7)
+256 silly fetchPackageMetaData     at maybeClose (internal/child_process.js:885:16)
+256 silly fetchPackageMetaData     at Process.ChildProcess._handle.onexit (internal/child_process.js:226:5)
+256 silly fetchPackageMetaData  error for js-rich-marker@git://github.com/MikaFima/js-rich-marker.git#0383f4bbdad4ddf154772fedbdd27e464600e943 { Error: Command failed: git -c core.longpaths=true clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722 C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943
+256 silly fetchPackageMetaData Cloning into 'C:\cygwin64\tmp\npm-7096-8e690040\git-cache-b87ae07b\0383f4bbdad4ddf154772fedbdd27e464600e943'...
+256 silly fetchPackageMetaData fatal: '/cygdrive/c/Users/Lee/AppData/Roaming/npm-cache/_git-remotes/git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722/C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722' does not appear to be a git repository
+256 silly fetchPackageMetaData fatal: Could not read from remote repository.
+256 silly fetchPackageMetaData
+256 silly fetchPackageMetaData Please make sure you have the correct access rights
+256 silly fetchPackageMetaData and the repository exists.
+256 silly fetchPackageMetaData
+256 silly fetchPackageMetaData     at ChildProcess.exithandler (child_process.js:211:12)
+256 silly fetchPackageMetaData     at emitTwo (events.js:106:13)
+256 silly fetchPackageMetaData     at ChildProcess.emit (events.js:191:7)
+256 silly fetchPackageMetaData     at maybeClose (internal/child_process.js:885:16)
+256 silly fetchPackageMetaData     at Process.ChildProcess._handle.onexit (internal/child_process.js:226:5)
+256 silly fetchPackageMetaData   killed: false,
+256 silly fetchPackageMetaData   code: 128,
+256 silly fetchPackageMetaData   signal: null,
+256 silly fetchPackageMetaData   cmd: 'git -c core.longpaths=true clone C:\\Users\\Lee\\AppData\\Roaming\\npm-cache\\_git-remotes\\git-github-com-MikaFima-js-rich-marker-git-0383f4bbdad4ddf154772fedbdd27e464600e943-e7abb722 C:\\cygwin64\\tmp\\npm-7096-8e690040\\git-cache-b87ae07b\\0383f4bbdad4ddf154772fedbdd27e464600e943' }
+257 silly rollbackFailedOptional Starting
+258 silly rollbackFailedOptional Finishing
+259 silly runTopLevelLifecycles Finishing
+260 silly install printInstalled
+261 verbose stack Error: Command failed: git -c core.longpaths=true clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d
+261 verbose stack Cloning into 'C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d'...
+261 verbose stack fatal: '/cygdrive/c/Users/Lee/AppData/Roaming/npm-cache/_git-remotes/git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b/C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b' does not appear to be a git repository
+261 verbose stack fatal: Could not read from remote repository.
+261 verbose stack
+261 verbose stack Please make sure you have the correct access rights
+261 verbose stack and the repository exists.
+261 verbose stack
+261 verbose stack     at ChildProcess.exithandler (child_process.js:211:12)
+261 verbose stack     at emitTwo (events.js:106:13)
+261 verbose stack     at ChildProcess.emit (events.js:191:7)
+261 verbose stack     at maybeClose (internal/child_process.js:885:16)
+261 verbose stack     at Socket.<anonymous> (internal/child_process.js:334:11)
+261 verbose stack     at emitOne (events.js:96:13)
+261 verbose stack     at Socket.emit (events.js:188:7)
+261 verbose stack     at Pipe._handle.close [as _onclose] (net.js:501:12)
+262 verbose cwd C:\viz\npn-viz-tool
+263 error Windows_NT 6.1.7601
+264 error argv "C:\\Program Files\\nodejs\\node.exe" "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "install"
+265 error node v7.4.0
+266 error npm  v4.0.5
+267 error code 128
+268 error Command failed: git -c core.longpaths=true clone C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d
+268 error Cloning into 'C:\cygwin64\tmp\npm-7096-8e690040\git-cache-8227def7\1e1ae841596ce41fb5cfaff301477393c5621d3d'...
+268 error fatal: '/cygdrive/c/Users/Lee/AppData/Roaming/npm-cache/_git-remotes/git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b/C:\Users\Lee\AppData\Roaming\npm-cache\_git-remotes\git-github-com-nmccready-google-maps-utility-library-v3-markerwithlabel-git-535ad55b' does not appear to be a git repository
+268 error fatal: Could not read from remote repository.
+268 error
+268 error Please make sure you have the correct access rights
+268 error and the repository exists.
+269 error If you need help, you may report this error at:
+269 error     <https://github.com/npm/npm/issues>
+270 verbose exit [ 1, true ]
