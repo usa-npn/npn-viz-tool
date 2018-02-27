@@ -132,6 +132,7 @@ angular.module('npn-viz-tool.gridded',[
                 map,
                 initCalled;
             function init() {
+                console.log('gridded.js init called getting maps');
                 if(initCalled) {
                     return;
                 }
@@ -198,6 +199,9 @@ angular.module('npn-viz-tool.gridded',[
             }
             $scope.$watch('selection.layerCategory',function(category) {
                 $log.debug('layer category change ',category);
+                if($scope.selection.layerCategory != null) {
+                    $rootScope.$broadcast('reset-pest-layer');
+                }
                 if($scope.selection.activeLayer) {
                     $log.debug('turning off layer ',$scope.selection.activeLayer.name);
                     var layer = $scope.selection.activeLayer;
@@ -239,6 +243,22 @@ angular.module('npn-viz-tool.gridded',[
                     $log.debug('layer extent change ',layer.name,v);
                     noInfoWindows();
 					layer.bounce();
+                }
+            });
+            $scope.$on('reset-gridded-layer',function() {
+                console.log('resetting the gridded layer');
+                delete $scope.selection.layerCategory;
+                delete $scope.selection.layer;
+                if($scope.selection.activeLayer) {
+                    $log.debug('turning off layer ',$scope.selection.activeLayer.name);
+                    var layer = $scope.selection.activeLayer;
+                    $scope.selection.activeLayer.off();
+                    delete $scope.selection.activeLayer;
+                    delete $scope.legend;
+                    delete GriddedControlService.legend;
+                    delete GriddedControlService.layer;
+                    noInfoWindows();
+                    //$rootScope.$broadcast('gridded-layer-off',{layer:layer});
                 }
             });
         }

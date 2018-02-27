@@ -1,0 +1,18 @@
+<div class="gridded-layer-control">
+
+    <div class="form-group">
+        <label for="selectedLayer">Layer</label>
+        <select id="selectedLayer" class="form-control" ng-model="selection.pest"
+                ng-options="l for l in pests"></select>
+    </div>
+   
+    <div class="extent-control" ></div>
+        <pest-date-control ng-if="selection.pest" layer="selection.layer"></pest-date-control>
+    </div>
+  
+    <p ng-if="selection.pest === 'Apple Maggot'">Apple maggot larvae cause damage to ripening fruit. If left untreated, these pests can spread across the entire tree. Apple maggots primarily affect apple trees, but can also impact plum, apricot, pear, cherry and hawthorn trees. Apple maggot can be controlled by bagging the fruit, trapping, and spraying with herbicide after adults emerge and before they lay eggs. <a href="https://www.usanpn.org/data/forecasts/Apple_maggot" target="_blank">Learn more</a></p>
+    <p ng-if="selection.pest === 'Emerald Ash Borer'">Emerald ash borer is a beetle that causes significant harm to ash trees throughout the eastern United States.  Adults lay eggs approximately 14 days after emergence, so spraying for adults is critical in the two-week window following emergence. <a href="https://www.usanpn.org/data/forecasts/EAB" target="_blank">Learn more</a></p>
+    <p ng-if="selection.pest === 'Hemlock Woolly Adelgid'">Hemlock woolly adelgid can be deadly to hemlock trees and, in the eastern United States, lacks enemies to keep the population in check.  Researchers are working to identify the best time of year to release predator insects or biocontrols to limit the spread and damage of this pest. <a href="https://www.usanpn.org/data/forecasts/HWA" target="_blank">Learn more</a></p>
+    <p ng-if="selection.pest === 'Lilac Borer'">Lilac borer (also known as ash borer) is a clear-wing moth that can damage lilac, ash, and privet trees and shrubs by burrowing into the heartwood. Trunk sprays should take place preceding or coinciding with adult emergence and subsequent egg hatch to kill larvae before they enter trunks. <a href="https://www.usanpn.org/data/forecasts/Lilac_borer" target="_blank">Learn more</a></p>
+    <p ng-if="selection.pest === 'Winter Moth'">Winter moth is a non-native insect pest that causes damage to deciduous trees, particularly maples and oaks.  This species can be controlled with a biological control or by treating caterpillars with insecticide. <a href="https://www.usanpn.org/data/forecasts/Winter_moth" target="_blank">Learn more</a></p>
+</div>

@@ -404,7 +404,7 @@ angular.module('npn-viz-tool.gridded-services',[
                     $log.debug('minDate',$scope.minDate);
                     $log.debug('maxDate',$scope.maxDate);
                 }
-            });
+            }, false);
             $scope.open = function() {
                 $scope.isOpen = true;
             };
@@ -417,6 +417,70 @@ angular.module('npn-viz-tool.gridded-services',[
                 },undefined);
 
             });
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:map-vis-date-control
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Control for pest date extents.
+ *
+ * @scope
+ * @param {object} layer The currently selected map layer.
+ */
+.directive('pestDateControl',['$log','dateFilter',function($log,dateFilter){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/pest/date-control.html',
+        scope: {
+            layer: '='
+        },
+        link: function($scope) {
+            // TODO - hide the today/clear buttons
+            $scope.$watch('layer',function(layer) {
+                if(layer && layer.extent.current) {
+                    $scope.options = {
+                        minDate: new Date(new Date().getFullYear() - 1, 0, 1),
+                        maxDate: new Date(new Date().getTime() + (6*24*60*60*1000) )
+                    };
+                    $scope.selection = layer.extent.current.date;
+                }
+            }, true);
+            $scope.open = function() {
+                $scope.isOpen = true;
+            };
+            $scope.$watch('selection',function(date) {
+                $log.debug('selection',date);
+                var fmt = 'longDate',
+                    formattedDate = dateFilter(date,fmt);
+                $scope.layer.extent.current = $scope.layer.extent.values.reduce(function(current,value){
+                    return current||(formattedDate === dateFilter(value.date,fmt) ? value : undefined);
+                },undefined);
+            });
+        }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:map-vis-layer-control
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Directive to control categorized selection of WMS layers.  This directive
+ * shares the parent scope.
+ */
+.directive('pestLayerControl',['$log',function($log){
+    return {
+        restrict: 'E',
+        templateUrl: 'js/pest/pest-layer-control.html',
+        link: function($scope) {
+            $scope.categories = ['Insect Pest Forecast', 'Tree Budburst Forecast', 'Pollen Forecast'];
+            $scope.pests = ['Apple Maggot', 'Emerald Ash Borer', 'Hemlock Woolly Adelgid', 'Lilac Borer', 'Winter Moth'];
         }
     };
 }])
@@ -436,6 +500,168 @@ angular.module('npn-viz-tool.gridded-services',[
         templateUrl: 'js/gridded/layer-control.html',
         link: function($scope) {
         }
+    };
+}])
+/**
+ * @ngdoc directive
+ * @restrict E
+ * @name npn-viz-tool.gridded-services:map-vis-legend
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Directive to dynamically display an interactive legend for a seleted map layer.
+ *
+ * @scope
+ * @param {object} legend The legend of the currently selected layer.
+ */
+.directive('pestLegend',['$log','$window',function($log,$window){
+    // geoserver-dev.usanpn.org/geoserver/rest/workspaces/gdd/styles/emerald_ash_borer.sld
+    return {
+        restrict: 'E',
+        templateUrl: 'js/gridded/pest-legend.html',
+        scope: {
+            legendId: '@',
+            legend: '='
+        },
+        link: function($scope,$element) {
+            var svgElement = $element.find('svg')[0];
+            function redraw() {
+                var legend = $scope.legend,
+                    svg = d3.select(svgElement);
+
+                svg.selectAll('g').remove(); // clean slate
+                if(!legend) {
+                    return;
+                }
+                $log.debug('legend.title',legend.getTitle());
+                $log.debug('legend.length',legend.length);
+                $log.debug('legend.colors',legend.getColors());
+                $log.debug('legend.quantities',legend.getQuantities());
+                $log.debug('legend.labels',legend.getLabels());
+                $log.debug('legend.original_labels',legend.getOriginalLabels());
+
+                var width = parseFloat(svg.style('width').replace('px','')),
+                    height = parseFloat(svg.style('height').replace('px','')),
+                    data = legend.getData(),
+                    cell_width = 20,
+                    cell_height = 20,
+                    top_pad = 35;
+
+                //remove ignores
+                var newData = [];
+                for(var j = 0; j < data.length; j++) {
+                    if(data[j].original_label.indexOf('ignore') == -1) {
+                        newData.push(data[j]);
+                    }
+                }
+                data = newData;
+
+                $log.debug('svg dimensions',width,height);
+                $log.debug('legend cell width',cell_width);
+
+                var g = svg.append('g'),
+                    cell = g.selectAll('g.cell')
+                 .data(data)
+                 .enter()
+                 .append('g')
+                 .attr('class','cell')
+                 .attr('transform',function(d,i) { return 'translate('+0+','+(i*cell_width)+')'; }) //{ return 'translate('+(i*cell_width)+','+top_pad+')'; }
+                 .append('rect')
+                 .attr('height',cell_height)
+                 .attr('width',cell_width)
+                 .style('stroke','black')
+                 .style('stroke-width','1px')
+                 .style('fill',function(d,i) { return d.color; });
+
+                cell.append('title')
+                 .text(function(d) { return d.label; });
+
+                function label_cell(cell,label,anchor) {
+                    cell.append('text')
+                        .attr('dx','2.4em')
+                        .attr('dy',(cell_width/1.5)/*cell_height+tick_length+(2*tick_padding)*/) // need to know line height of text
+                        .style('text-anchor',anchor)
+                        .text(label);
+                }
+                var cells = g.selectAll('g.cell')[0],
+                    mid_idx = Math.floor(cells.length/2);
+
+                for (var i = 0; i < data.length; i++) {
+                    label_cell(d3.select(cells[i]),data[i].original_label,'start');
+                }
+
+                var legendHeight = cell_height * data.length;
+
+                var pLegend = document.getElementsByClassName('pest-legend');
+                pLegend[0].style.height = legendHeight + 48 + 10 +'px';
+                pLegend[0].style.width = 405 + 'px';
+
+                var treatmentMethod = null;
+                if(legend.pest == 'Emerald Ash Borer' || legend.pest == 'Lilac Borer') {
+                    treatmentMethod = 'Spray adults';
+                } else if(legend.pest == 'Winter Moth') {
+                    treatmentMethod = 'Spray caterpillars';
+                }
+                if(treatmentMethod) {
+                    svg.append('g').append('text').attr('dx',5)
+                    .attr('dy',20+legendHeight)
+                    .attr('font-size', '16px')
+                    .attr('text-anchor','right').text(legend.pest + ' Forecast' + ', ' + legend.ldef.extent.current.label);
+
+                    svg.append('g').append('text').attr('dx',5)
+                   .attr('dy',38+legendHeight)
+                   .attr('font-size', '14px')
+                   .attr('text-anchor','right').text('Treatment method: ' + treatmentMethod);
+
+                    svg.append('g').append('text').attr('dx',5)
+                   .attr('dy',54+legendHeight)
+                   .attr('font-size', '11px')
+                   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
+                } else {
+                    svg.append('g').append('text').attr('dx',5)
+                    .attr('dy',30+legendHeight)
+                    .attr('font-size', '16px')
+                    .attr('text-anchor','right').text(legend.pest + ' Forecast' + ', ' + legend.ldef.extent.current.label);
+
+                    svg.append('g').append('text').attr('dx',5)
+                   .attr('dy',48+legendHeight)
+                   .attr('font-size', '11px')
+                   .attr('text-anchor','right').text('USA National Phenology Network, www.usanpn.org');
+                }
+                
+
+            }
+            $scope.$watch('legend',redraw);
+
+            $($window).bind('resize',redraw);
+			$scope.$watch('legend.layer.extent.current',redraw);
+            $scope.$on('$destroy',function(){
+                $log.debug('legend removing resize handler');
+                $($window).unbind('resize',redraw);
+            });
+        }
+    };
+}])
+/**
+ * @ngdoc filter
+ * @name npn-viz-tool.gridded-services:thirtyYearAvgDayOfYear
+ * @module npn-viz-tool.gridded-services
+ * @description
+ *
+ * Filter that translates a doy value (number) into date text of 'Month day'
+ * this filter uses a base year of 2010 since the 30 yr avg layers are based on
+ * 1981-2010 and 2010 is known to have been a 365 day year (unlike, for instance,
+ * 2016 which has 366 days).
+ */
+.filter('thirtyYearAvgDayOfYear',['dateFilter',function(dateFilter){
+    var JAN_ONE = new Date(2010/*(new Date()).getFullYear()*/,0),
+        ONE_DAY = (24*60*60*1000);
+    return function(doy,return_date) {
+        if(typeof(doy) === 'string') {
+            doy = parseFloat(doy);
+        }
+        var date = doy instanceof Date ? doy : new Date(JAN_ONE.getTime()+((doy-1)*ONE_DAY));
+        return return_date ? date : dateFilter(date,'MMMM d');
     };
 }])
 /**
@@ -1164,6 +1390,8 @@ angular.module('npn-viz-tool.gridded-services',[
             srs: 'EPSG:3857' // 'EPSG:4326'
         },
         sldBody,
+        pest,
+        pestOverlay,
         googleLayer = new google.maps.ImageMapType({
             getTileUrl: function (coord, zoom) {
                 var proj = map.getProjection(),
@@ -1369,6 +1597,57 @@ angular.module('npn-viz-tool.gridded-services',[
             /**
              * @ngdoc method
              * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
+             * @name  bouncePest
+             * @description
+             *  Toggle this layer off then on.  This function exists since off/on
+             *  are tracked by analytics and sometimes a layer needs to be updated
+             *  in this fashion.
+             * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
+             */
+            bouncePest: function(pest) {
+                if(pest) {
+                    var self = this,
+                        def = $q.defer();
+                    var pestUrl = 'https://data.usanpn.org:3006/v0/agdd/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0,10);
+                    if(location.hostname.includes('dev')) {
+                        pestUrl = 'https://data-dev.usanpn.org:3006/v0/agdd/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0,10);
+                    }
+                    $http.get(pestUrl,{
+                        params: {}
+                    }).then(function(response) {
+                        var regionBounds = {
+                            north: response.data.bbox[3],
+                            south: response.data.bbox[1],
+                            east: response.data.bbox[2],
+                            west: response.data.bbox[0]
+                          };
+                        
+                        if(pestOverlay) {
+                            pestOverlay.setMap(null);
+                        }
+
+                        pestOverlay = new google.maps.GroundOverlay(
+                            response.data.clippedImage,
+                            regionBounds,
+                            {clickable:false});
+
+                        pestOverlay.setOpacity(0.75);
+            
+                        pestOverlay.setMap(map);
+
+                        return l;
+                    
+                    },def.reject);
+                } else {
+                    if(pestOverlay) {
+                        pestOverlay.setMap(null);
+                    }
+                    return l;
+                }
+            },
+            /**
+             * @ngdoc method
+             * @methodOf npn-viz-tool.gridded-services:WmsMapLayer
              * @name  on
              * @description Put this layer on the map.
              * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
@@ -1376,6 +1655,26 @@ angular.module('npn-viz-tool.gridded-services',[
             on: function() {
                 Analytics.trackEvent('gridded-layer','on',this.getTitle());
                 map.overlayMapTypes.push(googleLayer);
+                return l;
+            },
+            onPest: function() {
+                // var imageBounds = {
+                //     north: 49.389657980456,
+                //     south: 25.8324511400651,
+                //     east: -69.9386512189563,
+                //     west: -109.0712618165
+                //   };
+                
+                // pestOverlay = new google.maps.GroundOverlay(
+                //       'https://data-dev.usanpn.org:3006/Emerald_Ash_Borer_2017-05-02_1517258760701_styled.png',
+                //       imageBounds,
+                //       {clickable:false});
+
+                // pestOverlay.setOpacity(0.75);
+                
+                // pestOverlay.setMap(map);
+
+                Analytics.trackEvent('gridded-layer','on',this.getTitle());
                 return l;
             },
             /**
@@ -1390,6 +1689,19 @@ angular.module('npn-viz-tool.gridded-services',[
                     Analytics.trackEvent('gridded-layer','off',this.getTitle());
                     map.overlayMapTypes.pop();
                 }
+                if(pestOverlay) {
+                    pestOverlay.setMap(null);
+                }
+                return l;
+            },
+            offPest: function() {
+                if(map.overlayMapTypes.length) {
+                    Analytics.trackEvent('gridded-layer','off',this.getTitle());
+                    map.overlayMapTypes.pop();
+                }
+                if(pestOverlay) {
+                    pestOverlay.setMap(null);
+                }
                 return l;
             },
             /**
@@ -1403,10 +1715,11 @@ angular.module('npn-viz-tool.gridded-services',[
 				var self = this,
                  def = $q.defer();
 
-                if(legends.hasOwnProperty(layer_def.name)) {
-                    def.resolve(legends[layer_def.name]);
-					def.resolve(legends[layer_def.name].setLayer(self));
-                } else {
+                // due to pestmap can no longer attempt to reuse the same legend
+                // if(legends.hasOwnProperty(layer_def.name) && self.pest == null) {
+                //     def.resolve(legends[layer_def.name]);
+				// 	def.resolve(legends[layer_def.name].setLayer(self));
+                // } else {
                     //http://geoserver.usanpn.org/geoserver/wms?request=GetStyles&layers=gdd%3A30yr_avg_agdd&service=wms&version=1.1.1
                     $http.get(WMS_BASE_URL,{
                         params: {
@@ -1419,17 +1732,57 @@ angular.module('npn-viz-tool.gridded-services',[
                         $log.debug('legend response',response);
                         var legend_data = $($.parseXML(response.data)),
                             color_map = legend_data.find('ColorMap');
+                        var user_style = legend_data.find('UserStyle');
                         if(color_map.length === 0) {
                             // FF
                             color_map = legend_data.find('sld\\:ColorMap');
+                            user_style = legend_data.find('sld\\:UserStyle');
                         }
+                        var userStyleArr = user_style.toArray();
                         // this code is selecting the first if there are multiples....
                         // as is the case for si-x:leaf_anomaly
-                        legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[0]),layer_def,legend_data) : undefined;
+                        var styleIndex = 0;
+                        var i = 0;
+                        if (self.pest === 'Emerald Ash Borer') {
+                            for (i = 0; i < userStyleArr.length; i++) {
+                                if(userStyleArr[i].firstElementChild.innerHTML === 'emerald_ash_borer') {
+                                    styleIndex = i;
+                                }
+                            }
+                        }
+                        else if (self.pest === 'Apple Maggot') {
+                            for (i = 0; i < userStyleArr.length; i++) {
+                                if(userStyleArr[i].firstElementChild.innerHTML === 'apple_maggot') {
+                                    styleIndex = i;
+                                }
+                            }
+                        }
+                        else if (self.pest === 'Hemlock Woolly Adelgid') {
+                            for (i = 0; i < userStyleArr.length; i++) {
+                                if(userStyleArr[i].firstElementChild.innerHTML === 'hemlock_woolly_adelgid') {
+                                    styleIndex = i;
+                                }
+                            }
+                        }
+                        else if (self.pest === 'Winter Moth') {
+                            for (i = 0; i < userStyleArr.length; i++) {
+                                if(userStyleArr[i].firstElementChild.innerHTML === 'winter_moth') {
+                                    styleIndex = i;
+                                }
+                            }
+                        }
+                        else if (self.pest === 'Lilac Borer') {
+                            for (i = 0; i < userStyleArr.length; i++) {
+                                if(userStyleArr[i].firstElementChild.innerHTML === 'lilac_borer') {
+                                    styleIndex = i;
+                                }
+                            }
+                        }
+                        legends[layer_def.name] = color_map.length !== 0 ? new WmsMapLegend($(color_map.toArray()[styleIndex]),layer_def,legend_data) : undefined;
                         def.resolve(legends[layer_def.name]);
 						def.resolve(legends[layer_def.name].setLayer(self));
                     },def.reject);
-                }
+                //}
 
                 return def.promise;
             },
@@ -1722,7 +2075,11 @@ angular.module('npn-viz-tool.gridded-services',[
                 wcsArgs.subset.push('http://www.opengis.net/def/axis/OGC/0/Long('+[edges[3].lng(),edges[1].lng()].join(',')+')');
                 wcsArgs.subset.push('http://www.opengis.net/def/axis/OGC/0/Lat('+[edges[2].lat(),edges[0].lat()].join(',')+')');
                 if(activeLayer.extent && activeLayer.extent.current) {
-                    activeLayer.extent.current.addToWcsParams(wcsArgs);
+                    if(activeLayer.pest !=null ) {
+                        wcsArgs.subset.push('http://www.opengis.net/def/axis/OGC/0/time("'+activeLayer.extent.current.value+'")');
+                    } else {
+                        activeLayer.extent.current.addToWcsParams(wcsArgs);
+                    }
                 }
                 $log.debug('wcsArgs',wcsArgs);
                 $http.get(wcs_base_url,{
