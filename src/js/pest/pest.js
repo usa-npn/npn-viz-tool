@@ -132,7 +132,6 @@ angular.module('npn-viz-tool.pest',[
                 map,
                 initCalled;
             function init() {
-                console.log('pest.js init called getting maps');
                 //if(initCalled) {
                 if($scope.layers != null) {
                     return;
@@ -226,7 +225,6 @@ angular.module('npn-viz-tool.pest',[
                 }
             });
             $scope.$on('reset-pest-layer',function() {
-                console.log('resetting the pest layer');
                 delete $scope.selection.pest;
                 delete $scope.layers;
                 if($scope.selection.activeLayer) {
@@ -242,7 +240,6 @@ angular.module('npn-viz-tool.pest',[
                 }
             });
             $scope.$watch('selection.pest',function(pest) {
-                console.log('changing pest');
                 if($scope.selection.pest != null) {
                     $rootScope.$broadcast('reset-gridded-layer');
                 }
@@ -261,16 +258,12 @@ angular.module('npn-viz-tool.pest',[
                         if($scope.layers.categories[i].name === 'Temperature Accumulations, Current Day') {
                             for( var j = 0; j < $scope.layers.categories[i].layers.length; j++) {
                                 if(pest === 'Hemlock Woolly Adelgid') {
-                                    console.log('setting active layer to agdd base 32');
                                     if ($scope.layers.categories[i].layers[j].name === 'gdd:agdd') {
-                                        console.log($scope.layers.categories[i].layers[j].name);
                                         $scope.selection.layer = $scope.layers.categories[i].layers[j];
                                         $scope.selection.activeLayer = $scope.layers.categories[i].layers[j];
                                     }
                                 } else {
-                                    console.log('setting active layer to agdd base 50');
                                     if ($scope.layers.categories[i].layers[j].name === 'gdd:agdd_50f') {
-                                        console.log($scope.layers.categories[i].layers[j].name);
                                         $scope.selection.layer = $scope.layers.categories[i].layers[j];
                                         $scope.selection.activeLayer = $scope.layers.categories[i].layers[j];
                                     }
@@ -306,7 +299,6 @@ angular.module('npn-viz-tool.pest',[
                 // }
                 
                 // check this https://gis.stackexchange.com/questions/10117/clipping-raster-with-vector-boundaries-using-qgis
-                console.log('got layer');
                 // console.log(layer);
                 // WmsService.getPestMap().then(function(pestMapData){
                 //     console.log('in then');
