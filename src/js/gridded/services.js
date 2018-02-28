@@ -1609,7 +1609,7 @@ angular.module('npn-viz-tool.gridded-services',[
                     var self = this,
                         def = $q.defer();
                     var pestUrl = 'https://data.usanpn.org:3006/v0/agdd/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0,10);
-                    if(location.hostname.includes('dev')) {
+                    if(location.hostname.indexOf('dev') != -1) {
                         pestUrl = 'https://data-dev.usanpn.org:3006/v0/agdd/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0,10);
                     }
                     $http.get(pestUrl,{
@@ -1745,35 +1745,36 @@ angular.module('npn-viz-tool.gridded-services',[
                         var i = 0;
                         if (self.pest === 'Emerald Ash Borer') {
                             for (i = 0; i < userStyleArr.length; i++) {
-                                if(userStyleArr[i].firstElementChild.innerHTML === 'emerald_ash_borer') {
+                                if(userStyleArr[i].firstElementChild.textContent === 'emerald_ash_borer') {
                                     styleIndex = i;
                                 }
                             }
                         }
                         else if (self.pest === 'Apple Maggot') {
+                            console.log('apple maggot');
                             for (i = 0; i < userStyleArr.length; i++) {
-                                if(userStyleArr[i].firstElementChild.innerHTML === 'apple_maggot') {
+                                if(userStyleArr[i].firstElementChild.textContent === 'apple_maggot') {
                                     styleIndex = i;
                                 }
                             }
                         }
                         else if (self.pest === 'Hemlock Woolly Adelgid') {
                             for (i = 0; i < userStyleArr.length; i++) {
-                                if(userStyleArr[i].firstElementChild.innerHTML === 'hemlock_woolly_adelgid') {
+                                if(userStyleArr[i].firstElementChild.textContent === 'hemlock_woolly_adelgid') {
                                     styleIndex = i;
                                 }
                             }
                         }
                         else if (self.pest === 'Winter Moth') {
                             for (i = 0; i < userStyleArr.length; i++) {
-                                if(userStyleArr[i].firstElementChild.innerHTML === 'winter_moth') {
+                                if(userStyleArr[i].firstElementChild.textContent === 'winter_moth') {
                                     styleIndex = i;
                                 }
                             }
                         }
                         else if (self.pest === 'Lilac Borer') {
                             for (i = 0; i < userStyleArr.length; i++) {
-                                if(userStyleArr[i].firstElementChild.innerHTML === 'lilac_borer') {
+                                if(userStyleArr[i].firstElementChild.textContent === 'lilac_borer') {
                                     styleIndex = i;
                                 }
                             }
