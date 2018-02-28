@@ -160,35 +160,35 @@ angular.module('npn-viz-tool.pest',[
                                     }
                                 }
                             }
-                            var sharingUrlArgs = PestControlService.getSharingUrlArgs(),lname,ext,c,l;
-                            if(sharingUrlArgs) {
-                                $log.debug('arguments from shared url',sharingUrlArgs);
-                                lname = sharingUrlArgs[0];
-                                ext = sharingUrlArgs[1];
-                                l = layers.categories.reduce(function(found,cat){
-                                    if(!found){
-                                        found = cat.layers.reduce(function(f,ly){
-                                            return f||(ly.name === lname ? ly : undefined);
-                                        },undefined);
-                                        if(found) {
-                                            c = cat;
-                                        }
-                                    }
-                                    return found;
-                                },undefined);
-                                if(l) {
-                                    l.extent.current = l.extent.values.reduce(function(found,extent){
-                                        return found||(extent.value === ext ? extent : undefined);
-                                    },undefined)||l.extent.current;
-                                    $scope.selection.layerCategory = c;
-                                    $scope.selection.layer = l;
-                                    if(sharingUrlArgs.length === 4) {
-                                        l.setStyleRange([parseInt(sharingUrlArgs[2]),parseInt(sharingUrlArgs[3])]);
-                                    }
-                                } else {
-                                    $log.warn('unable to find gridded layer named '+lname);
-                                }
-                            }
+                            // var sharingUrlArgs = PestControlService.getSharingUrlArgs(),lname,ext,c,l;
+                            // if(sharingUrlArgs) {
+                            //     $log.debug('arguments from shared url',sharingUrlArgs);
+                            //     lname = sharingUrlArgs[0];
+                            //     ext = sharingUrlArgs[1];
+                            //     l = layers.categories.reduce(function(found,cat){
+                            //         if(!found){
+                            //             found = cat.layers.reduce(function(f,ly){
+                            //                 return f||(ly.name === lname ? ly : undefined);
+                            //             },undefined);
+                            //             if(found) {
+                            //                 c = cat;
+                            //             }
+                            //         }
+                            //         return found;
+                            //     },undefined);
+                            //     if(l) {
+                            //         l.extent.current = l.extent.values.reduce(function(found,extent){
+                            //             return found||(extent.value === ext ? extent : undefined);
+                            //         },undefined)||l.extent.current;
+                            //         $scope.selection.layerCategory = c;
+                            //         $scope.selection.layer = l;
+                            //         if(sharingUrlArgs.length === 4) {
+                            //             l.setStyleRange([parseInt(sharingUrlArgs[2]),parseInt(sharingUrlArgs[3])]);
+                            //         }
+                            //     } else {
+                            //         $log.warn('unable to find gridded layer named '+lname);
+                            //     }
+                            // }
                         },function(){
                             $log.error('unable to get map layers?');
                         });
