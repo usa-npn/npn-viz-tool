@@ -25,6 +25,34 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         date = $filter('date'),
         number = $filter('number'),
         this_year = (new Date()).getFullYear(),
+        defaultThreshold = function() {
+            if(layer.pest === 'Hemlock Woolly Adelgid') {
+                return 1000;
+            } else if(layer.pest === 'Emerald Ash Borer') {
+                return 450;
+            } else if(layer.pest === 'Winter Moth') {
+                return 20;
+            } else if(layer.pest === 'Lilac Borer') {
+                return 500;
+            } else if(layer.pest === 'Apple Maggot') {
+                return 900;
+            } else {
+                return 1000;
+            }
+        },
+        defaultDoy = function() {
+            var selectedDate = new Date(layer.extent.current.date.getTime());
+            if(selectedDate.getMonth() > 10 || !layer.pest) {
+                return 365;
+            }
+            //preset default date to one month in future from selected date
+            selectedDate.setMonth(selectedDate.getMonth()+1);
+            var start = new Date(selectedDate.getFullYear(), 0, 0);
+            var diff = (selectedDate - start) + ((start.getTimezoneOffset() - selectedDate.getTimezoneOffset()) * 60 * 1000);
+            var oneDay = 1000 * 60 * 60 * 24;
+            var doy = Math.floor(diff / oneDay);
+            return doy;
+        },
         extent_year = layer.extent.current && layer.extent.current.date ? layer.extent.current.date.getFullYear() : this_year,
         start = (function(){
             var d = new Date();
@@ -103,7 +131,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         lastYearValid: extent_year > 2016, // time series data starts in 2016
         showLastYear: false,
         threshold: {
-            value: 1000,
+            value: defaultThreshold(),
             options: {
                 floor: 0,
                 ceil: yMax,
@@ -114,7 +142,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             }
         },
         doys: {
-            value: 365,
+            value: defaultDoy(),
             options: {
                 floor: 1,
                 ceil: 365,
@@ -569,6 +597,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             });
             $log.debug('draw',data);
 
+            doyTrim();
             updateAxes();
 
             addLine('average');

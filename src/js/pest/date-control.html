@@ -1,0 +1,13 @@
+<label>Date</label>
+<p class="input-group">
+  <input type="text" class="form-control"
+        uib-datepicker-popup="longDate"
+        ng-model="selection"
+        is-open="isOpen"
+        datepicker-options="options"
+        close-text="Close"
+        ng-click="open()" />
+  <span class="input-group-btn">
+    <button type="button" class="btn btn-default" ng-click="open()"><i class="glyphicon glyphicon-calendar"></i></button>
+  </span>
+</p>
