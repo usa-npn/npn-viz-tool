@@ -594,7 +594,12 @@ angular.module('npn-viz-tool.gridded-services',[
 
                 var pLegend = document.getElementsByClassName('pest-legend');
                 pLegend[0].style.height = legendHeight + 48 + 10 +'px';
-                pLegend[0].style.width = 405 + 'px';
+                if(legend.pest == 'Hemlock Woolly Adelgid') {
+                    pLegend[0].style.width = 445 + 'px';
+                } else {
+                    pLegend[0].style.width = 350 + 'px';
+                }
+                // pLegend[0].style.width = 405 + 'px';
 
                 var treatmentMethod = null;
                 if(legend.pest == 'Emerald Ash Borer' || legend.pest == 'Lilac Borer') {
