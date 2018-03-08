@@ -1,6 +1,6 @@
 {
     "geo_server": {
-        "url": "//geoserver-dev.usanpn.org/geoserver"
+        "url": "//geoserver.usanpn.org/geoserver"
     },
     "description" : "",
     "categories": [{
