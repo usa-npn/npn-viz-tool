@@ -1474,6 +1474,13 @@ angular.module('npn-viz-tool.gridded-services',[
                             $styleDef = $(styleDef),
                             colors = $styleDef.find('ColorMapEntry'),
                             colorMap = $styleDef.find('ColorMap');
+                        
+                        // only want the first style assosiated with the layer
+                        // todo: instead of picking first style, generalize to pick by name
+                        while (styleDef[0].firstElementChild.firstElementChild.children.length > 2) {
+                            styleDef[0].firstElementChild.firstElementChild.removeChild(styleDef[0].firstElementChild.firstElementChild.lastChild);
+                        }    
+
                         if(colors.length === 0) {
                             colors = $styleDef.find('sld\\:ColorMapEntry'); // FF
                         }
@@ -1493,6 +1500,7 @@ angular.module('npn-viz-tool.gridded-services',[
                                 cme.attr('opacity',(q > minQ && q <= maxQ) ? '1.0' : '0.0');
                             /*}*/
                         });
+                        
                         var style = xmlToString(styleDef[0]);
                         self.setStyle(style);
                     });
