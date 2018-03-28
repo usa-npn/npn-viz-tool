@@ -602,10 +602,10 @@ angular.module('npn-viz-tool.gridded-services',[
                 // pLegend[0].style.width = 405 + 'px';
 
                 var treatmentMethod = null;
-                if(legend.pest == 'Emerald Ash Borer' || legend.pest == 'Lilac Borer') {
-                    treatmentMethod = 'Spray adults';
+                if(legend.pest == 'Emerald Ash Borer' || legend.pest == 'Lilac Borer' || legend.pest == 'Apple Maggot') {
+                    treatmentMethod = 'Window for Managing Adults';
                 } else if(legend.pest == 'Winter Moth') {
-                    treatmentMethod = 'Spray caterpillars';
+                    treatmentMethod = 'Window for Managing Caterpillars';
                 }
                 if(treatmentMethod) {
                     svg.append('g').append('text').attr('dx',5)
@@ -616,7 +616,7 @@ angular.module('npn-viz-tool.gridded-services',[
                     svg.append('g').append('text').attr('dx',5)
                    .attr('dy',38+legendHeight)
                    .attr('font-size', '14px')
-                   .attr('text-anchor','right').text('Treatment method: ' + treatmentMethod);
+                   .attr('text-anchor','right').text(treatmentMethod);
 
                     svg.append('g').append('text').attr('dx',5)
                    .attr('dy',54+legendHeight)
