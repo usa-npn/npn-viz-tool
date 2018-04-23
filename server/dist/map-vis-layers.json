@@ -1,6 +1,6 @@
 {
     "geo_server": {
-        "url": "//geoserver.usanpn.org/geoserver"
+        "url": "//geoserver-dev.usanpn.org/geoserver"
     },
     "description" : "",
     "categories": [{
@@ -178,6 +178,18 @@
                 "name": "si-x:leaf_anomaly"
             },{
                 "name": "si-x:bloom_anomaly"
+            }]
+    },{
+        "name": "Spring Indices, Historical Annual Anomaly",
+        "supports_data": false,
+        "legend_label_filter": {
+            "name": "legendSixAnomaly"
+        },
+        "current_year_only": true,
+        "layers": [{
+                "name": "si-x:leaf_anomaly_prism"
+            },{
+                "name": "si-x:bloom_anomaly_prism"
             }]
     },{
         "name": "Spring Indices, 30-Year Average",
