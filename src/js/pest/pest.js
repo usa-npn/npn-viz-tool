@@ -338,7 +338,14 @@ angular.module('npn-viz-tool.pest',[
             $scope.$watch('selection.activeLayer.extent.current.date',function(v) {
                 noInfoWindows();
                 if($scope.selection && $scope.selection.activeLayer) {
+                    // console.log('-------');
+                    // console.log('date changed!!!');
+                    // console.log($scope.selection.activeLayer.name);
+                    // console.log($scope.selection.activeLayer.pest);
+                    // console.log($scope.selection.activeLayer.extent.current.date);
                     setTimeout(function () {
+                        // console.log('bouncing');
+                        // console.log('********');
                         $scope.selection.activeLayer.bouncePest($scope.selection.pest);
                     }, 500);
                 }
