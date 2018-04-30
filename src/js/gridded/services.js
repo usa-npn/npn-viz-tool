@@ -397,12 +397,12 @@ angular.module('npn-viz-tool.gridded-services',[
         link: function($scope) {
             // TODO - hide the today/clear buttons
             $scope.$watch('layer',function(layer) {
-                if(layer) {
+                if(layer && layer.extent.current) {
+                    $scope.options = {
+                        minDate: layer.extent.values[0].date,
+                        maxDate: layer.extent.values[layer.extent.values.length-1].date
+                    };
                     $scope.selection = layer.extent.current.date;
-                    $scope.minDate = layer.extent.values[0].date;
-                    $scope.maxDate = layer.extent.values[layer.extent.values.length-1].date;
-                    $log.debug('minDate',$scope.minDate);
-                    $log.debug('maxDate',$scope.maxDate);
                 }
             }, false);
             $scope.open = function() {
