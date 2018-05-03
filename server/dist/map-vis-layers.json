@@ -200,9 +200,9 @@
             "name": "agddDefaultTodayElevation"
         },
         "layers": [{
-                "name": "si-x:30yr_avg_six_leaf"
+                "name": "si-x:30yr_avg_4k_leaf"
             },{
-                "name": "si-x:30yr_avg_six_bloom"
+                "name": "si-x:30yr_avg_4k_bloom"
             }]
     }]
 }
