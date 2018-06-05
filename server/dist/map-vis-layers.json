@@ -90,27 +90,17 @@
                 "name": "gdd:agdd_anomaly_50f"
             }]
     },{
-        "name": "Spring Indices, Historical Annual",
+        "name": "Spring Indices, 30-Year Average",
         "legend_label_filter": {
             "name": "legendDoy"
         },
-        "current_year_only": true,
-        "layers":[{
-				"name": "si-x:average_leaf_prism"
+        "extent_default_filter": {
+            "name": "agddDefaultTodayElevation"
+        },
+        "layers": [{
+                "name": "si-x:30yr_avg_4k_leaf"
             },{
-				"name": "si-x:average_bloom_prism"
-            },{
-                "name": "si-x:arnoldred_leaf_prism"
-            },{
-                "name": "si-x:arnoldred_bloom_prism"
-            },{
-                "name": "si-x:lilac_leaf_prism"
-            },{
-                "name": "si-x:lilac_bloom_prism"
-            },{
-                "name": "si-x:zabelli_leaf_prism"
-            },{
-                "name": "si-x:zabelli_bloom_prism"
+                "name": "si-x:30yr_avg_4k_bloom"
             }]
     },{
         "name": "Spring Indices, Current Year",
@@ -180,6 +170,29 @@
                 "name": "si-x:bloom_anomaly"
             }]
     },{
+        "name": "Spring Indices, Historical Annual",
+        "legend_label_filter": {
+            "name": "legendDoy"
+        },
+        "current_year_only": true,
+        "layers":[{
+				"name": "si-x:average_leaf_prism"
+            },{
+				"name": "si-x:average_bloom_prism"
+            },{
+                "name": "si-x:arnoldred_leaf_prism"
+            },{
+                "name": "si-x:arnoldred_bloom_prism"
+            },{
+                "name": "si-x:lilac_leaf_prism"
+            },{
+                "name": "si-x:lilac_bloom_prism"
+            },{
+                "name": "si-x:zabelli_leaf_prism"
+            },{
+                "name": "si-x:zabelli_bloom_prism"
+            }]
+    },{
         "name": "Spring Indices, Historical Annual Anomaly",
         "supports_data": false,
         "legend_label_filter": {
@@ -190,19 +203,6 @@
                 "name": "si-x:leaf_anomaly_prism"
             },{
                 "name": "si-x:bloom_anomaly_prism"
-            }]
-    },{
-        "name": "Spring Indices, 30-Year Average",
-        "legend_label_filter": {
-            "name": "legendDoy"
-        },
-        "extent_default_filter": {
-            "name": "agddDefaultTodayElevation"
-        },
-        "layers": [{
-                "name": "si-x:30yr_avg_4k_leaf"
-            },{
-                "name": "si-x:30yr_avg_4k_bloom"
             }]
     }]
 }
