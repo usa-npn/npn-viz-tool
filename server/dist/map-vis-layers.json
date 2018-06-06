@@ -90,19 +90,6 @@
                 "name": "gdd:agdd_anomaly_50f"
             }]
     },{
-        "name": "Spring Indices, 30-Year Average",
-        "legend_label_filter": {
-            "name": "legendDoy"
-        },
-        "extent_default_filter": {
-            "name": "agddDefaultTodayElevation"
-        },
-        "layers": [{
-                "name": "si-x:30yr_avg_4k_leaf"
-            },{
-                "name": "si-x:30yr_avg_4k_bloom"
-            }]
-    },{
         "name": "Spring Indices, Current Year",
         "legend_label_filter": {
             "name": "legendDoy"
@@ -203,6 +190,19 @@
                 "name": "si-x:leaf_anomaly_prism"
             },{
                 "name": "si-x:bloom_anomaly_prism"
+            }]
+    },{
+        "name": "Spring Indices, 30-Year Average",
+        "legend_label_filter": {
+            "name": "legendDoy"
+        },
+        "extent_default_filter": {
+            "name": "agddDefaultTodayElevation"
+        },
+        "layers": [{
+                "name": "si-x:30yr_avg_4k_leaf"
+            },{
+                "name": "si-x:30yr_avg_4k_bloom"
             }]
     }]
 }
