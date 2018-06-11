@@ -90,29 +90,6 @@
                 "name": "gdd:agdd_anomaly_50f"
             }]
     },{
-        "name": "Spring Indices, Historical Annual",
-        "legend_label_filter": {
-            "name": "legendDoy"
-        },
-        "current_year_only": true,
-        "layers":[{
-				"name": "si-x:average_leaf_prism"
-            },{
-				"name": "si-x:average_bloom_prism"
-            },{
-                "name": "si-x:arnoldred_leaf_prism"
-            },{
-                "name": "si-x:arnoldred_bloom_prism"
-            },{
-                "name": "si-x:lilac_leaf_prism"
-            },{
-                "name": "si-x:lilac_bloom_prism"
-            },{
-                "name": "si-x:zabelli_leaf_prism"
-            },{
-                "name": "si-x:zabelli_bloom_prism"
-            }]
-    },{
         "name": "Spring Indices, Current Year",
         "legend_label_filter": {
             "name": "legendDoy"
@@ -178,6 +155,29 @@
                 "name": "si-x:leaf_anomaly"
             },{
                 "name": "si-x:bloom_anomaly"
+            }]
+    },{
+        "name": "Spring Indices, Historical Annual",
+        "legend_label_filter": {
+            "name": "legendDoy"
+        },
+        "current_year_only": true,
+        "layers":[{
+				"name": "si-x:average_leaf_prism"
+            },{
+				"name": "si-x:average_bloom_prism"
+            },{
+                "name": "si-x:arnoldred_leaf_prism"
+            },{
+                "name": "si-x:arnoldred_bloom_prism"
+            },{
+                "name": "si-x:lilac_leaf_prism"
+            },{
+                "name": "si-x:lilac_bloom_prism"
+            },{
+                "name": "si-x:zabelli_leaf_prism"
+            },{
+                "name": "si-x:zabelli_bloom_prism"
             }]
     },{
         "name": "Spring Indices, Historical Annual Anomaly",
