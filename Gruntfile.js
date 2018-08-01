@@ -19,7 +19,7 @@ module.exports = function(grunt){
     grunt.loadNpmTasks('grunt-htmlhint');
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-ngdocs');
-
+    
     grunt.util.linefeed = '\n';
 
     grunt.initConfig({
