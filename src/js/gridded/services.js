@@ -480,7 +480,7 @@ angular.module('npn-viz-tool.gridded-services',[
         templateUrl: 'js/pest/pest-layer-control.html',
         link: function($scope) {
             $scope.categories = ['Insect Pest Forecast', 'Tree Budburst Forecast', 'Pollen Forecast'];
-            $scope.pests = ['Apple Maggot', 'Emerald Ash Borer', 'Hemlock Woolly Adelgid', 'Lilac Borer', 'Winter Moth'];
+            $scope.pests = ['Apple Maggot', 'Eastern Tent Caterpillar', 'Emerald Ash Borer', 'Hemlock Woolly Adelgid', 'Lilac Borer', 'Winter Moth'];
         }
     };
 }])
@@ -1622,9 +1622,9 @@ angular.module('npn-viz-tool.gridded-services',[
                     var self = this,
                         def = $q.defer();
                     var pestUrl = 'https://data.usanpn.org:3006/v0/agdd/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0,10);
-                    if(location.hostname.indexOf('dev') != -1) {
+                    // if(location.hostname.indexOf('dev') != -1) {
                         pestUrl = 'https://data-dev.usanpn.org:3006/v0/agdd/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0,10);
-                    }
+                    // }
                     $http.get(pestUrl,{
                         params: {}
                     }).then(function(response) {
@@ -1759,6 +1759,14 @@ angular.module('npn-viz-tool.gridded-services',[
                         if (self.pest === 'Emerald Ash Borer') {
                             for (i = 0; i < userStyleArr.length; i++) {
                                 if(userStyleArr[i].firstElementChild.textContent === 'emerald_ash_borer') {
+                                    styleIndex = i;
+                                }
+                            }
+                        }
+                        else if (self.pest === 'Eastern Tent Caterpillar') {
+                            console.log('easter tent caterpillar');
+                            for (i = 0; i < userStyleArr.length; i++) {
+                                if(userStyleArr[i].firstElementChild.textContent === 'eastern_tent_caterpillar') {
                                     styleIndex = i;
                                 }
                             }
