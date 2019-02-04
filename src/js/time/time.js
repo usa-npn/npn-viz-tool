@@ -24,8 +24,16 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     var upperThresh = 0;
     var doubleSine = false;
     var timeSeriesUrl = $url('/npn_portal/stations/getTimeSeries.json');
+    // figure out how many days forward we can request relative to selected date (max of 6)
     var extentDate = new Date(layer.extent.current.date);
-    extentDate.setDate(extentDate.getDate() + 6);
+    var diffDays = Math.ceil((extentDate.getTime() - new Date().getTime())/(24*60*60*1000));
+    var selectedExtentDaysBeyondToday = 0;
+    if (diffDays > 0) {
+        selectedExtentDaysBeyondToday = diffDays;
+    }
+    var numAvailForecastDays = 6 - selectedExtentDaysBeyondToday;
+
+    extentDate.setDate(extentDate.getDate() + numAvailForecastDays);
     var timeSeriesStart = extentDate.getFullYear() + '-01-01';
     var timeSeriesEnd = extentDate.toISOString().split('T')[0];
     var nodeServer = 'https://data.usanpn.org:3006';
