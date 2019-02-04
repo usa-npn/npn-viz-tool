@@ -20,6 +20,34 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     $scope.modal = $uibModalInstance;
     $scope.latLng = latLng;
 
+    var lowerThresh = 0;
+    var upperThresh = 0;
+    var doubleSine = false;
+    var timeSeriesUrl = $url('/npn_portal/stations/getTimeSeries.json');
+    var extentDate = new Date(layer.extent.current.date);
+    extentDate.setDate(extentDate.getDate() + 6);
+    var timeSeriesStart = extentDate.getFullYear() + '-01-01';
+    var timeSeriesEnd = extentDate.toISOString().split('T')[0];
+    var nodeServer = 'https://data.usanpn.org:3006';
+    if(location.hostname.includes('local') || location.hostname.includes('dev')) {
+        nodeServer = 'https://data-dev.usanpn.org:3006';
+    }
+    if(layer.pest === 'Asian Longhorned Beetle' || layer.pest === 'Gypsy Moth') {
+        doubleSine = true;
+        lowerThresh = 50;
+        upperThresh = 86;
+        if(layer.pest === 'Gypsy Moth') {
+            lowerThresh = 37.4;
+            upperThresh = 104;
+        }
+        timeSeriesUrl = nodeServer + '/v0/agdd/double-sine/pointTimeSeries';
+    }
+    if(layer.pest == 'Eastern Tent Caterpillar' || layer.pest == 'Pine Needle Scale' || layer.pest == 'Bagworm') {
+        timeSeriesStart = extentDate.getFullYear() + '-03-01';
+        lowerThresh = 50;
+        timeSeriesUrl = nodeServer + '/v0/agdd/simple/pointTimeSeries';
+    }
+
     var degF = '\u00B0' + 'F',
         dateFmt = 'yyyy-MM-dd',
         date = $filter('date'),
@@ -36,6 +64,20 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 return 500;
             } else if(layer.pest === 'Apple Maggot') {
                 return 900;
+            } else if(layer.pest === 'Bronze Birch Borer') {
+                return 450;
+            } else if(layer.pest === 'Pine Needle Scale') {
+                return 298;
+            } else if(layer.pest === 'Eastern Tent Caterpillar') {
+                return 90;
+            } else if(layer.pest === 'Gypsy Moth') {
+                return 571;
+            } else if(layer.pest === 'Asian Longhorned Beetle') {
+                return 690;
+            } else if(layer.pest === 'Bagworm') {
+                return 600;
+            } else if(layer.pest === 'Magnolia Scale') {
+                return 1938;
             } else {
                 return 1000;
             }
@@ -85,10 +127,26 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             start_date: date(start,dateFmt),
             end_date: date(end,dateFmt),
             latitude: latLng.lat(),
-            longitude: latLng.lng()
+            longitude: latLng.lng(),
+            climateProvider: 'NCEP',
+            temperatureUnit: 'fahrenheit',
+            base: lowerThresh,
+            lowerThreshold: lowerThresh,
+            upperThreshold: upperThresh,
+            timeSeriesUrl: timeSeriesUrl,
+            startDate: timeSeriesStart,
+            endDate: timeSeriesEnd
         };
     avg_params.layer = (params.layer === 'gdd:agdd') ? 'gdd:30yr_avg_agdd' : 'gdd:30yr_avg_agdd_50f';
     var base_temp = (params.layer === 'gdd:agdd') ? 32 : 50;
+    if(layer.pest === 'Gypsy Moth') {
+        base_temp = 37.4;
+    }
+
+    var show30YearAvg = true;
+    if(layer.pest === 'Gypsy Moth' || layer.pest === 'Asian Longhorned Beetle' || layer.pest === 'Pine Needle Scale' || layer.pest === 'Bagworm' || layer.pest === 'Eastern Tent Caterpillar') {
+        show30YearAvg = false;
+    }
 
     $log.debug('TimeSeries.avg_params',avg_params);
     $log.debug('TimeSeries.params',params);
@@ -112,11 +170,17 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
         yMax = 20000, // the max possible, initially
         y = d3.scale.linear().range([sizing.height,0]).domain([0,yMax]),
         yAxis = d3.svg.axis().scale(y).orient('left'),
-        dataFunc = function(d) { return d.point_value; },
+        dataFunc = function(d) { 
+            return d.agdd != null ? d.agdd : d.point_value;
+            //return d.point_value; 
+        },
         idFunc = function(d) { return d.doy; }, // id is the doy which is the index.
         line = d3.svg.line() // TODO remove if decide to not use
             .x(function(d,i){ return x(d.doy); })
-            .y(function(d,i){ return y(d.point_value); }).interpolate('basis'),
+            .y(function(d,i){ 
+                return d.agdd != null ? y(d.agdd) : y(d.point_value);
+                //return y(d.point_value); 
+            }).interpolate('basis'),
         data = {}; // keys: selected,average[,previous];
 
     function addData(key,obj) {
@@ -430,7 +494,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                     infoLabels[key].text((temps[key].year||'30-year Average')+': ');
                     temp = temps[key].gdd;
                     infoValues[key].text(number(temp,0)+' GDD');
-                    if(infoDiffs[key]) {
+                    if(infoDiffs[key] && temps.average != null) {
                         diff = temp-temps.average.gdd;
                         text = ' ('+(diff > 0 ? '+' : '')+number(diff,0)+' GDD';
                         // on what day did the current temperature happen
@@ -514,11 +578,19 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                 lastEnd.setFullYear(lastStart.getFullYear());
                 lastEnd.setMonth(11);
                 lastEnd.setDate(31);
-                previous_params = angular.extend({},params,{start_date:date(lastStart,dateFmt),end_date:date(lastEnd,dateFmt)});
+                var tempStart = params.startDate.split('-');
+                var tempEnd = params.endDate.split('-');
+                var lastYearStartDateString = tempStart[0] - 1 + '-' + tempStart[1] + '-' + tempStart[2];
+                var lastYearEndDateString = tempEnd[0] - 1 + '-12-31';
+                previous_params = angular.extend({},params,{start_date:date(lastStart,dateFmt),end_date:date(lastEnd,dateFmt),startDate:lastYearStartDateString,endDate:lastYearEndDateString});
+                console.log(JSON.stringify(previous_params));
                 $log.debug('previous_params',previous_params);
-                $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
+                $http.get(timeSeriesUrl,{
                     params:previous_params
                 }).then(function(response) {
+                    if(response.data.timeSeries != null) {
+                        response.data = response.data.timeSeries;
+                    }
                     addData('previous',{
                         year: lastStart.getFullYear(),
                         color: 'orange',
@@ -551,10 +623,13 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             average: $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
                 params:avg_params
             }),
-            selected: $http.get($url('/npn_portal/stations/getTimeSeries.json'),{
+            selected: $http.get(timeSeriesUrl,{
                 params:params
             })
         }).then(function(results){
+            if(results.selected.data.timeSeries != null) {
+                results.selected.data = results.selected.data.timeSeries;
+            }
             if(forecast) {
                 // need to separate out <=today and >today
                 // this is kind of quick and dirty for doy
@@ -574,6 +649,9 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                     },{
                         selected: []
                     });
+                    if(!processed.forecast) {
+                        processed.forecast = [];
+                    }
                 addData('selected',{
                     year: start.getFullYear(),
                     color: 'blue',
@@ -591,16 +669,21 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
                     data: results.selected.data
                 });
             }
-            addData('average',{
-                color: 'black',
-                data: results.average.data
-            });
+            if(show30YearAvg) {
+                addData('average',{
+                    color: 'black',
+                    data: results.average.data
+                });
+            }
+            
             $log.debug('draw',data);
 
             doyTrim();
             updateAxes();
 
-            addLine('average');
+            if(show30YearAvg) {
+                addLine('average');
+            }
             addLine('selected');
             if(forecast) {
                 addLine('forecast');
