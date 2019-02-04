@@ -176,7 +176,6 @@ $tool-content-overlap: 40px;
     .toolbar-content.open {
         left: 0;
         border-right: 1px solid #aaa;
-
         @include tb-transition();
     }
 }
@@ -643,7 +642,7 @@ $pulse-count: 60;
 #griddedLegendMain {
     position: absolute;
     bottom: 20px;
-    left: 20px;
+    right: 20px;
     width: 60%;
     padding:8px;
     border: 1px solid #aaa;
@@ -659,7 +658,8 @@ $pulse-count: 60;
 #pestLegendMain {
     position: absolute;
     bottom: 20px;
-    left: 20px;
+    // left: 20px;
+    right: 20px;
     padding:8px;
     border: 1px solid #aaa;
     background-color: rgba(255,255,255,0.5);
@@ -794,13 +794,13 @@ text.gdd-info {
 .npn-logo{
 	position:absolute;
 	bottom:75px;
-	right:15px;
+	left:15px;
 	width:150px;
 }
 
 .usgs-logo{
 	position:absolute;
 	bottom:130px;
-	right:15px;
+	left:15px;
 	width:150px;
 }

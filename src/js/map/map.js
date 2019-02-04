@@ -40,14 +40,14 @@ angular.module('npn-viz-tool.map',[
                         mapTypeControl: true,
                         mapTypeControlOptions: {
                             //style: maps.MapTypeControlStyle.DROPDOWN_MENU,
-                            position: maps.ControlPosition.RIGHT_BOTTOM
+                            position: maps.ControlPosition.LEFT_BOTTOM
                         },
                         streetViewControl: false,
                         panControl: false,
                         zoomControl: true,
                         zoomControlOptions: {
                             style: maps.ZoomControlStyle.SMALL,
-                            position: maps.ControlPosition.RIGHT_TOP
+                            position: maps.ControlPosition.RIGHT_CENTER
                         },
                         styles: [{
                             featureType: 'poi',
