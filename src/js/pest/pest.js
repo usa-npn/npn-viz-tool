@@ -255,6 +255,16 @@ angular.module('npn-viz-tool.pest',[
                 // toggle between base32 and base50 underlying wms layer depending on selected pest
                 if($scope.layers && $scope.layers.categories) {
                     for( var i = 0; i < $scope.layers.categories.length; i++) {
+                        if($scope.layers.categories[i].name === 'Precip Accumulations, Current Day') {
+                            for( var k = 0; k < $scope.layers.categories[i].layers.length; k++) {
+                                if(pest === 'Buffel Grass') {
+                                    if ($scope.layers.categories[i].layers[k].name === 'precipitation:buffelgrass_prism') {
+                                        $scope.selection.layer = $scope.layers.categories[i].layers[k];
+                                        $scope.selection.activeLayer = $scope.layers.categories[i].layers[k];
+                                    }
+                                }
+                            }
+                        }
                         if($scope.layers.categories[i].name === 'Temperature Accumulations, Current Day') {
                             for( var j = 0; j < $scope.layers.categories[i].layers.length; j++) {
                                 if(pest === 'Hemlock Woolly Adelgid') {
@@ -342,12 +352,16 @@ angular.module('npn-viz-tool.pest',[
                     // console.log('date changed!!!');
                     // console.log($scope.selection.activeLayer.name);
                     // console.log($scope.selection.activeLayer.pest);
+                    // console.log($scope.selection.activeLayer.extent);
                     // console.log($scope.selection.activeLayer.extent.current.date);
-                    setTimeout(function () {
-                        // console.log('bouncing');
-                        // console.log('********');
+                    if($scope.selection.activeLayer.extent.current) {
                         $scope.selection.activeLayer.bouncePest($scope.selection.pest);
-                    }, 500);
+                    }
+
+                    // setTimeout(function () {
+                    //     // console.log('bouncing');
+                    //     // console.log('********');
+                    // }, 400);
                 }
                 
                 // var layer;

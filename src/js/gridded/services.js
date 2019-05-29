@@ -533,7 +533,7 @@ angular.module('npn-viz-tool.gridded-services', [
             templateUrl: 'js/pest/pest-layer-control.html',
             link: function ($scope) {
                 $scope.categories = ['Insect Pest Forecast', 'Tree Budburst Forecast', 'Pollen Forecast'];
-                $scope.pests = ['Apple Maggot', 'Asian Longhorned Beetle', 'Bagworm', 'Bronze Birch Borer', 'Eastern Tent Caterpillar', 'Emerald Ash Borer', 'Gypsy Moth', 'Hemlock Woolly Adelgid', 'Magnolia Scale', 'Lilac Borer', 'Pine Needle Scale', 'Winter Moth'];
+                $scope.pests = ['Apple Maggot', 'Asian Longhorned Beetle', 'Bagworm', 'Bronze Birch Borer', 'Eastern Tent Caterpillar', 'Emerald Ash Borer', 'Gypsy Moth', 'Hemlock Woolly Adelgid', 'Magnolia Scale', 'Lilac Borer', 'Pine Needle Scale', 'Winter Moth', 'Buffel Grass'];
             }
         };
     }])
@@ -969,6 +969,24 @@ angular.module('npn-viz-tool.gridded-services', [
     .filter('legendGddUnits', ['numberFilter', function (numberFilter) {
         return function (n, includeUnits) {
             return numberFilter(n, 0) + (includeUnits ? ' AGDD' : '');
+        };
+    }])
+        /**
+     * @ngdoc filter
+     * @name npn-viz-tool.gridded-services:legendInchesUnits
+     * @module npn-viz-tool.gridded-services
+     * @description
+     *
+     * Formats legend numbers for inches units.
+     *
+     * @example
+     * <pre>
+     * $filter('legendInchesUnits')(10.0) // 10 GDD
+     * </pre>
+     */
+    .filter('legendInchesUnits', ['numberFilter', function (numberFilter) {
+        return function (n, includeUnits) {
+            return n.toFixed(2) + (includeUnits ? ' inches' : '');
         };
     }])
     /**
@@ -1686,6 +1704,30 @@ angular.module('npn-viz-tool.gridded-services', [
                      * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
                      */
                     bouncePest: function (pest) {
+                        // if(pest == 'Buffel Grass') {
+                        //     var regionBounds = {
+                        //         north: 37.00426,
+                        //         south: 31.332177,
+                        //         east: -109.045223,
+                        //         west: -114.81651
+                        //     };
+
+                        //     if (pestOverlay) {
+                        //         pestOverlay.setMap(null);
+                        //     }
+
+                        //     pestOverlay = new google.maps.GroundOverlay(
+                        //         'https://geoserver-dev.usanpn.org/geoserver/wms?bbox=-12781315.428,3675016.642,-12139802.046,4439700.593&format=image%2Fpng&height=596&layers=precipitation:buffelgrass_prism&request=GetMap&service=WMS&srs=EPSG:3857&styles=&time=2018-12-31T00:00:00.000Z&transparent=true&version=1.1.1&width=500',
+                        //         regionBounds,
+                        //         { clickable: false });
+
+                        //     pestOverlay.setOpacity(0.75);
+
+                        //     pestOverlay.setMap(map);
+
+                        //     return l;
+                        // }
+                        // else 
                         if (pest) {
                             var self = this,
                                 def = $q.defer();

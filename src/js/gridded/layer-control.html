@@ -4,7 +4,7 @@
             uib-popover="Reset" popover-placement="right" popover-append-to-body="true" popover-trigger="mouseenter" popover-delay="500"><i class="fa fa-times-circle"></i></a>
         <label for="selectedCategory">Category</label>
         <select id="selectedCategory" class="form-control" ng-model="selection.layerCategory"
-                ng-options="cat as cat.name for cat in layers.categories"></select>
+                ng-options="cat as cat.name for cat in layers.categories | filter: '!Precip Accumulations, Current Day'"></select>
 
     </div>
     <div class="form-group" ng-if="selection.layerCategory">
