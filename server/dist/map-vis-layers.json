@@ -1,6 +1,6 @@
 {
     "geo_server": {
-        "url": "//geoserver.usanpn.org/geoserver"
+        "url": "//geoserver-dev.usanpn.org/geoserver"
     },
     "description" : "",
     "categories": [{
@@ -88,6 +88,26 @@
                 "name": "gdd:agdd_anomaly"
             },{
                 "name": "gdd:agdd_anomaly_50f"
+            }]
+    },{
+        "name": "Precip Accumulations, Current Day",
+        "supports_data": false,
+        "legend_label_filter": {
+            "name": "legendInchesUnits",
+            "args": [false]
+        },
+        "gridded_label_filter": {
+            "name": "legendInchesUnits",
+            "args": [true]
+        },
+        "extent_default_filter": {
+            "name": "agddDefaultTodayTime"
+        },
+        "legend_units" : "Growing Degree Days",
+        "legend_delimiter_every" : 2000,
+        "supports_time_series": false,
+        "layers":[{
+                "name": "precipitation:buffelgrass_prism"
             }]
     },{
         "name": "Spring Indices, Current Year",
