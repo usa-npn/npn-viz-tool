@@ -88,7 +88,7 @@ angular.module('npn-viz-tool.gridded-services', [
                     startDate = layer.extent.current.date.getFullYear() + '-03-01';
                     endDate = layer.extent.current.date.toISOString().split('T')[0];
                     lowerThreshold = 50;
-                    timeSeriesUrl = nodeServer + '/v0/agdd/simple/pointTimeSeries?climateProvider=NCEP&temperatureUnit=fahrenheit&startDate=' + startDate + '&endDate=' + endDate + '&base=' + lowerThreshold + '&latitude=' + latLng.lat() + '&longitude=' + latLng.lng();
+                    timeSeriesUrl = nodeServer + '/v1/agdd/simple/pointTimeSeries?climateProvider=NCEP&temperatureUnit=fahrenheit&startDate=' + startDate + '&endDate=' + endDate + '&base=' + lowerThreshold + '&latitude=' + latLng.lat() + '&longitude=' + latLng.lng();
                 }
                 if (layer.pest == 'Asian Longhorned Beetle' || layer.pest == 'Gypsy Moth') {
                     customAgdd = true;
@@ -100,11 +100,11 @@ angular.module('npn-viz-tool.gridded-services', [
                         lowerThreshold = 37.4;
                         upperThreshold = 104;
                     }
-                    timeSeriesUrl = nodeServer + '/v0/agdd/double-sine/pointTimeSeries?climateProvider=NCEP&temperatureUnit=fahrenheit&startDate=' + startDate + '&endDate=' + endDate + '&lowerThreshold=' + lowerThreshold + '&upperThreshold=' + upperThreshold + '&latitude=' + latLng.lat() + '&longitude=' + latLng.lng();
+                    timeSeriesUrl = nodeServer + '/v1/agdd/double-sine/pointTimeSeries?climateProvider=NCEP&temperatureUnit=fahrenheit&startDate=' + startDate + '&endDate=' + endDate + '&lowerThreshold=' + lowerThreshold + '&upperThreshold=' + upperThreshold + '&latitude=' + latLng.lat() + '&longitude=' + latLng.lng();
                 }
                 if (customAgdd) {
                     // if(location.hostname.indexOf('dev') != -1) {
-                    // pestUrl = 'https://data-dev.usanpn.org:3006/v0/agdd/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0,10);
+                    // pestUrl = 'https://data-dev.usanpn.org:3006/v1/phenoforecasts/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0,10);
                     // }
                     var self = this,
                         def = $q.defer();
@@ -533,7 +533,7 @@ angular.module('npn-viz-tool.gridded-services', [
             templateUrl: 'js/pest/pest-layer-control.html',
             link: function ($scope) {
                 $scope.categories = ['Insect Pest Forecast', 'Tree Budburst Forecast', 'Pollen Forecast'];
-                $scope.pests = ['Apple Maggot', 'Asian Longhorned Beetle', 'Bagworm', 'Bronze Birch Borer', 'Eastern Tent Caterpillar', 'Emerald Ash Borer', 'Gypsy Moth', 'Hemlock Woolly Adelgid', 'Magnolia Scale', 'Lilac Borer', 'Pine Needle Scale', 'Winter Moth', 'Buffel Grass'];
+                $scope.pests = ['Apple Maggot', 'Asian Longhorned Beetle', 'Bagworm', 'Bronze Birch Borer', 'Eastern Tent Caterpillar', 'Emerald Ash Borer', 'Gypsy Moth', 'Hemlock Woolly Adelgid', 'Magnolia Scale', 'Lilac Borer', 'Pine Needle Scale', 'Winter Moth', 'Buffelgrass'];
             }
         };
     }])
@@ -1704,7 +1704,7 @@ angular.module('npn-viz-tool.gridded-services', [
                      * @returns {npn-viz-tool.gridded-services:WmsMapLayer} this map layer instance.
                      */
                     bouncePest: function (pest) {
-                        // if(pest == 'Buffel Grass') {
+                        // if(pest == 'Buffelgrass') {
                         //     var regionBounds = {
                         //         north: 37.00426,
                         //         south: 31.332177,
@@ -1735,7 +1735,7 @@ angular.module('npn-viz-tool.gridded-services', [
                             if(location.hostname.includes('local') || location.hostname.includes('dev')) {
                                 nodeServer = 'https://data-dev.usanpn.org:3006';
                             }
-                            var pestUrl = nodeServer + '/v0/agdd/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0, 10);
+                            var pestUrl = nodeServer + '/v1/phenoforecasts/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0, 10);
                             $http.get(pestUrl, {
                                 params: {}
                             }).then(function (response) {

@@ -257,7 +257,7 @@ angular.module('npn-viz-tool.pest',[
                     for( var i = 0; i < $scope.layers.categories.length; i++) {
                         if($scope.layers.categories[i].name === 'Precip Accumulations, Current Day') {
                             for( var k = 0; k < $scope.layers.categories[i].layers.length; k++) {
-                                if(pest === 'Buffel Grass') {
+                                if(pest === 'Buffelgrass') {
                                     if ($scope.layers.categories[i].layers[k].name === 'precipitation:buffelgrass_prism') {
                                         $scope.selection.layer = $scope.layers.categories[i].layers[k];
                                         $scope.selection.activeLayer = $scope.layers.categories[i].layers[k];
