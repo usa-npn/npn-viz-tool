@@ -1,6 +1,6 @@
 {
     "geo_server": {
-        "url": "//geoserver.usanpn.org/geoserver"
+        "url": "//geoserver-dev.usanpn.org/geoserver"
     },
     "description" : "",
     "categories": [{
@@ -203,6 +203,21 @@
                 "name": "si-x:30yr_avg_4k_leaf"
             },{
                 "name": "si-x:30yr_avg_4k_bloom"
+            }]
+    },
+    {
+        "name": "INCA",
+        "supports_data": true,
+        "legend_label_filter": {
+            "name": "legendGddUnits"
+        },
+        "current_year_only": true,
+        "layers": [{
+                "name": "inca:CONUS_MidGup_Median_NAD83_02deg"
+            },{
+                "name": "inca:CONUS_MidGup_MAD_NAD83_02deg"
+            },{
+                "name": "inca:CONUS_MidGup_TSslope_NAD83_02deg"
             }]
     }]
 }
