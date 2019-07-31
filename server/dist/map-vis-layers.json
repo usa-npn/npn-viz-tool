@@ -211,13 +211,14 @@
         "legend_label_filter": {
             "name": "legendGddUnits"
         },
+        "legend_units" : "Testing units",
         "current_year_only": true,
         "layers": [{
-                "name": "inca:CONUS_MidGup_Median_NAD83_02deg"
+                "name": "inca:MidGup_Median_NAD83_02deg"
             },{
-                "name": "inca:CONUS_MidGup_MAD_NAD83_02deg"
+                "name": "inca:MidGdown_Median_NAD83_02deg"
             },{
-                "name": "inca:CONUS_MidGup_TSslope_NAD83_02deg"
+                "name": "inca:EVIarea_Median_NAD83_02deg"
             }]
     }]
 }
