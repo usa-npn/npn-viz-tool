@@ -79,9 +79,9 @@ angular.module('npn-viz-tool.gridded-services', [
                     lowerThreshold,
                     upperThreshold,
                     timeSeriesUrl;
-                var nodeServer = 'https://data.usanpn.org:3006';
+                var nodeServer = 'https://data.usanpn.org';
                 if(location.hostname.includes('local') || location.hostname.includes('dev')) {
-                    nodeServer = 'https://data-dev.usanpn.org:3006';
+                    nodeServer = 'https://data-dev.usanpn.org';
                 }
                 if (layer.pest == 'Eastern Tent Caterpillar' || layer.pest == 'Pine Needle Scale' || layer.pest == 'Bagworm') {
                     customAgdd = true;
@@ -1731,9 +1731,9 @@ angular.module('npn-viz-tool.gridded-services', [
                         if (pest) {
                             var self = this,
                                 def = $q.defer();
-                            var nodeServer = 'https://data.usanpn.org:3006';
+                            var nodeServer = 'https://data.usanpn.org';
                             if(location.hostname.includes('local') || location.hostname.includes('dev')) {
-                                nodeServer = 'https://data-dev.usanpn.org:3006';
+                                nodeServer = 'https://data-dev.usanpn.org';
                             }
                             var pestUrl = nodeServer + '/v1/phenoforecasts/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0, 10);
                             $http.get(pestUrl, {

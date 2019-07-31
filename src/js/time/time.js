@@ -36,9 +36,9 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     extentDate.setDate(extentDate.getDate() + numAvailForecastDays);
     var timeSeriesStart = extentDate.getFullYear() + '-01-01';
     var timeSeriesEnd = extentDate.toISOString().split('T')[0];
-    var nodeServer = 'https://data.usanpn.org:3006';
+    var nodeServer = 'https://data.usanpn.org';
     if(location.hostname.includes('local') || location.hostname.includes('dev')) {
-        nodeServer = 'https://data-dev.usanpn.org:3006';
+        nodeServer = 'https://data-dev.usanpn.org';
     }
     if(layer.pest === 'Asian Longhorned Beetle' || layer.pest === 'Gypsy Moth') {
         doubleSine = true;
@@ -48,12 +48,12 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
             lowerThresh = 37.4;
             upperThresh = 104;
         }
-        timeSeriesUrl = nodeServer + '/v0/agdd/double-sine/pointTimeSeries';
+        timeSeriesUrl = nodeServer + '/v1/agdd/double-sine/pointTimeSeries';
     }
     if(layer.pest == 'Eastern Tent Caterpillar' || layer.pest == 'Pine Needle Scale' || layer.pest == 'Bagworm') {
         timeSeriesStart = extentDate.getFullYear() + '-03-01';
         lowerThresh = 50;
-        timeSeriesUrl = nodeServer + '/v0/agdd/simple/pointTimeSeries';
+        timeSeriesUrl = nodeServer + '/v1/agdd/simple/pointTimeSeries';
     }
 
     var degF = '\u00B0' + 'F',
