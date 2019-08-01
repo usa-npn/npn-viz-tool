@@ -878,10 +878,17 @@ angular.module('npn-viz-tool.gridded-services', [
                             .text(legend.ldef.legend_units);
                     }
 
-                    svg.append('g').append('text').attr('dx', 5)
+                    if(legend.ldef.extent && legend.ldef.extent.current) {
+                        svg.append('g').append('text').attr('dx', 5)
                         .attr('dy', 100 + top_pad)
                         .attr('font-size', '18px')
                         .attr('text-anchor', 'right').text(legend.ldef.title + ', ' + legend.ldef.extent.current.label);
+                    } else { //inca //todo get title text
+                        svg.append('g').append('text').attr('dx', 5)
+                        .attr('dy', 100 + top_pad)
+                        .attr('font-size', '18px')
+                        .attr('text-anchor', 'right').text(legend.ldef.title);
+                    }
 
                     svg.append('g').append('text').attr('dx', 5)
                         .attr('dy', 118 + top_pad)

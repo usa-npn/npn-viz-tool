@@ -208,9 +208,6 @@
     {
         "name": "INCA",
         "supports_data": true,
-        "legend_label_filter": {
-            "name": "legendGddUnits"
-        },
         "legend_units" : "Testing units",
         "current_year_only": true,
         "layers": [{
