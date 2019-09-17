@@ -40,13 +40,17 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     if(location.hostname.includes('local') || location.hostname.includes('dev')) {
         nodeServer = 'https://data-dev.usanpn.org/geoservices';
     }
-    if(layer.pest === 'Asian Longhorned Beetle' || layer.pest === 'Gypsy Moth') {
+    if(layer.pest === 'Asian Longhorned Beetle' || layer.pest === 'Gypsy Moth' || layer.pest === 'Bronze Birch Borer' || layer.pest === 'Emerald Ash Borer' || layer.pest === 'Lilac Borer' || layer.pest === 'Magnolia Scale') {
         doubleSine = true;
         lowerThresh = 50;
         upperThresh = 86;
         if(layer.pest === 'Gypsy Moth') {
             lowerThresh = 37.4;
             upperThresh = 104;
+        }
+        if(layer.pest === 'Bronze Birch Borer' || layer.pest === 'Emerald Ash Borer' || layer.pest === 'Lilac Borer' || layer.pest === 'Magnolia Scale') {
+            lowerThresh = 50;
+            upperThresh = 150;
         }
         timeSeriesUrl = nodeServer + '/v1/agdd/double-sine/pointTimeSeries';
     }
