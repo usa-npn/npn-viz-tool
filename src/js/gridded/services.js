@@ -79,9 +79,9 @@ angular.module('npn-viz-tool.gridded-services', [
                     lowerThreshold,
                     upperThreshold,
                     timeSeriesUrl;
-                var nodeServer = 'https://data.usanpn.org:3006';
+                var nodeServer = 'https://data.usanpn.org/geoservices';
                 if(location.hostname.includes('local') || location.hostname.includes('dev')) {
-                    nodeServer = 'https://data-dev.usanpn.org:3006';
+                    nodeServer = 'https://data-dev.usanpn.org/geoservices';
                 }
                 if (layer.pest == 'Eastern Tent Caterpillar' || layer.pest == 'Pine Needle Scale' || layer.pest == 'Bagworm') {
                     customAgdd = true;
@@ -100,6 +100,14 @@ angular.module('npn-viz-tool.gridded-services', [
                         lowerThreshold = 37.4;
                         upperThreshold = 104;
                     }
+                    timeSeriesUrl = nodeServer + '/v0/agdd/double-sine/pointTimeSeries?climateProvider=NCEP&temperatureUnit=fahrenheit&startDate=' + startDate + '&endDate=' + endDate + '&lowerThreshold=' + lowerThreshold + '&upperThreshold=' + upperThreshold + '&latitude=' + latLng.lat() + '&longitude=' + latLng.lng();
+                }
+                if (layer.pest == 'Bronze Birch Borer' || layer.pest == 'Emerald Ash Borer' || layer.pest == 'Lilac Borer' || layer.pest == 'Magnolia Scale') {
+                    customAgdd = true;
+                    startDate = layer.extent.current.date.getFullYear() + '-01-01';
+                    endDate = layer.extent.current.date.toISOString().split('T')[0];
+                    lowerThreshold = 50;
+                    upperThreshold = 150;
                     timeSeriesUrl = nodeServer + '/v0/agdd/double-sine/pointTimeSeries?climateProvider=NCEP&temperatureUnit=fahrenheit&startDate=' + startDate + '&endDate=' + endDate + '&lowerThreshold=' + lowerThreshold + '&upperThreshold=' + upperThreshold + '&latitude=' + latLng.lat() + '&longitude=' + latLng.lng();
                 }
                 if (customAgdd) {
@@ -887,7 +895,7 @@ angular.module('npn-viz-tool.gridded-services', [
                         svg.append('g').append('text').attr('dx', 5)
                         .attr('dy', 100 + top_pad)
                         .attr('font-size', '18px')
-                        .attr('text-anchor', 'right').text(legend.ldef.title);
+                        .attr('text-anchor', 'right').text(legend.ldef.title + ' (2001-2017)');
                     }
 
                     svg.append('g').append('text').attr('dx', 5)
@@ -1696,9 +1704,9 @@ angular.module('npn-viz-tool.gridded-services', [
                         if (pest) {
                             var self = this,
                                 def = $q.defer();
-                            var nodeServer = 'https://data.usanpn.org:3006';
+                            var nodeServer = 'https://data.usanpn.org/geoservices';
                             if(location.hostname.includes('local') || location.hostname.includes('dev')) {
-                                nodeServer = 'https://data-dev.usanpn.org:3006';
+                                nodeServer = 'https://data-dev.usanpn.org/geoservices';
                             }
                             var pestUrl = nodeServer + '/v0/agdd/pestMap?species=' + pest + '&date=' + l.extent.current.value.substring(0, 10);
                             $http.get(pestUrl, {

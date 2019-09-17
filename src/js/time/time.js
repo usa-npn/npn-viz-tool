@@ -36,9 +36,9 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     extentDate.setDate(extentDate.getDate() + numAvailForecastDays);
     var timeSeriesStart = extentDate.getFullYear() + '-01-01';
     var timeSeriesEnd = extentDate.toISOString().split('T')[0];
-    var nodeServer = 'https://data.usanpn.org:3006';
+    var nodeServer = 'https://data.usanpn.org/geoservices';
     if(location.hostname.includes('local') || location.hostname.includes('dev')) {
-        nodeServer = 'https://data-dev.usanpn.org:3006';
+        nodeServer = 'https://data-dev.usanpn.org/geoservices';
     }
     if(layer.pest === 'Asian Longhorned Beetle' || layer.pest === 'Gypsy Moth') {
         doubleSine = true;
@@ -152,7 +152,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     }
 
     var show30YearAvg = true;
-    if(layer.pest === 'Gypsy Moth' || layer.pest === 'Asian Longhorned Beetle' || layer.pest === 'Pine Needle Scale' || layer.pest === 'Bagworm' || layer.pest === 'Eastern Tent Caterpillar') {
+    if(layer.pest === 'Gypsy Moth' || layer.pest === 'Asian Longhorned Beetle' || layer.pest === 'Pine Needle Scale' || layer.pest === 'Bagworm' || layer.pest === 'Eastern Tent Caterpillar' || layer.pest === 'Emerald Ash Borer' || layer.pest === 'Bronze Birch Borer' || layer.pest === 'Lilac Borer' || layer.pest === 'Magnolia Scale') {
         show30YearAvg = false;
     }
 
