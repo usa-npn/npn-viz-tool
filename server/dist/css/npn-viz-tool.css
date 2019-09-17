@@ -11239,7 +11239,7 @@ div[title="Stop drawing"] {
 #griddedLegendMain {
   position: absolute;
   bottom: 20px;
-  left: 20px;
+  right: 20px;
   width: 60%;
   padding: 8px;
   border: 1px solid #aaa;
@@ -11255,7 +11255,7 @@ div[title="Stop drawing"] {
 #pestLegendMain {
   position: absolute;
   bottom: 20px;
-  left: 20px;
+  right: 20px;
   padding: 8px;
   border: 1px solid #aaa;
   background-color: rgba(255, 255, 255, 0.5);
@@ -11375,14 +11375,14 @@ text.gdd-info .gdd-diff.below {
 .npn-logo {
   position: absolute;
   bottom: 75px;
-  right: 15px;
+  left: 15px;
   width: 150px;
 }
 
 .usgs-logo {
   position: absolute;
   bottom: 130px;
-  right: 15px;
+  left: 15px;
   width: 150px;
 }
 
