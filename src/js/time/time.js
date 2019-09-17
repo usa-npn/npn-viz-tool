@@ -152,7 +152,7 @@ function($scope,$uibModalInstance,$log,$filter,$http,$url,$q,$timeout,layer,lege
     }
 
     var show30YearAvg = true;
-    if(layer.pest === 'Gypsy Moth' || layer.pest === 'Asian Longhorned Beetle' || layer.pest === 'Pine Needle Scale' || layer.pest === 'Bagworm' || layer.pest === 'Eastern Tent Caterpillar') {
+    if(layer.pest === 'Gypsy Moth' || layer.pest === 'Asian Longhorned Beetle' || layer.pest === 'Pine Needle Scale' || layer.pest === 'Bagworm' || layer.pest === 'Eastern Tent Caterpillar' || layer.pest === 'Emerald Ash Borer' || layer.pest === 'Bronze Birch Borer' || layer.pest === 'Lilac Borer' || layer.pest === 'Magnolia Scale') {
         show30YearAvg = false;
     }
 

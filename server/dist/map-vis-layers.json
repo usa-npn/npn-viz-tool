@@ -224,5 +224,19 @@
             },{
                 "name": "si-x:30yr_avg_4k_bloom"
             }]
+    },
+    {
+        "name": "Land Surface Phenology",
+        "supports_data": true,
+        "current_year_only": true,
+        "layers": [{
+                "name": "inca:midgup_median_nad83_02deg"
+            },{
+                "name": "inca:midgdown_median_nad83_02deg"
+            },{
+                "name": "inca:eviarea_median_nad83_02deg"
+            },{
+                "name": "inca:midgdown_tsslope_nad83_02deg"
+            }]
     }]
 }

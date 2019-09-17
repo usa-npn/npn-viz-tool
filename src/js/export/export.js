@@ -48,7 +48,7 @@ angular.module('npn-viz-tool.export',[
                 }
                 $http({
                     method: 'POST',
-                    url: popServerUrl + ':3002/pop/search',
+                    url: popServerUrl + '/popservices/pop/search',
                     data: {'searchJson': params}
                 }).then(function(result){
                     if(location.hostname.includes('local')) {
