@@ -215,8 +215,6 @@
                 "name": "inca:midgdown_median_nad83_02deg"
             },{
                 "name": "inca:eviarea_median_nad83_02deg"
-            },{
-                "name": "inca:midgdown_tsslope_nad83_02deg"
             }]
     }]
 }
