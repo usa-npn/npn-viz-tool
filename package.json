@@ -5,7 +5,7 @@
   "author": "Paul Adams <paul@djcase.com>",
   "private": true,
   "devDependencies": {
-    "angular": "^1.6.4",
+    "angular": "^1.7.9",
     "angular-animate": "^1.6.4",
     "angular-google-analytics": "^1.1.8",
     "angular-google-maps": "^2.4.1",
