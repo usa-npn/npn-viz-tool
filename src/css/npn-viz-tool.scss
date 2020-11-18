@@ -811,3 +811,40 @@ text.gdd-info {
 	left:65px;
 	height:50px;
 }
+
+.warning-modal {
+  display: block; /* Hidden by default */
+  position: absolute; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 50%; 
+  top: 50%;
+  width: 25%;
+  height:30%;
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(255,255,255); /* Fallback color */
+  background-color: rgba(255,255,255,1.0); /* Black w/ opacity */
+  transform: translate(-50%, -50%);
+}
+
+.warning-modal-content{
+    height:100%
+}
+
+.warning-modal-text{
+    text-align:center;
+    padding:20px;
+}
+
+.warning-modal-buttons{
+    transform: translate(-50%, -50%);
+    position:absolute;
+    left:50%;
+    margin-top:10px;
+}
+
+.warning-modal-btn{
+    position:relative;
+    margin-top:5px;
+    left:50%;
+    transform: translate(-50%, -50%);
+}
