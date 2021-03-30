@@ -541,7 +541,7 @@ angular.module('npn-viz-tool.gridded-services', [
             templateUrl: 'js/pest/pest-layer-control.html',
             link: function ($scope) {
                 $scope.categories = ['Insect Pest Forecast', 'Tree Budburst Forecast', 'Pollen Forecast'];
-                $scope.pests = ['Apple Maggot', 'Asian Longhorned Beetle', 'Bagworm', 'Bronze Birch Borer', 'Eastern Tent Caterpillar', 'Emerald Ash Borer', 'Gypsy Moth', 'Hemlock Woolly Adelgid', 'Magnolia Scale', 'Lilac Borer', 'Pine Needle Scale', 'Winter Moth', 'Buffelgrass'];
+                $scope.pests = ['Apple Maggot', 'Asian Longhorned Beetle', 'Bagworm', 'Bronze Birch Borer', 'Eastern Tent Caterpillar', 'Emerald Ash Borer', 'Gypsy Moth', 'Hemlock Woolly Adelgid', 'Magnolia Scale', 'Lilac Borer', 'Pine Needle Scale', 'Winter Moth', 'Buffelgrass', 'Winter Wheat'];
             }
         };
     }])

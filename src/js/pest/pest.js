@@ -263,6 +263,12 @@ angular.module('npn-viz-tool.pest',[
                                         $scope.selection.activeLayer = $scope.layers.categories[i].layers[k];
                                     }
                                 }
+                                if(pest === 'Winter Wheat') {
+                                    if ($scope.layers.categories[i].layers[k].name === 'gdd:winter_wheat') {
+                                        $scope.selection.layer = $scope.layers.categories[i].layers[k];
+                                        $scope.selection.activeLayer = $scope.layers.categories[i].layers[k];
+                                    }
+                                }
                             }
                         }
                         if($scope.layers.categories[i].name === 'Temperature Accumulations, Current Day') {
